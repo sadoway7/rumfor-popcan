@@ -1,0 +1,61 @@
+<workflow_instructions>
+  <mode_overview>
+    This mode specializes in content creation for project documentation and marketing materials.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Understand the content request</action>
+      <details>
+        Parse the user's request to identify:
+        - Content type (blog post, documentation, marketing copy)
+        - Target audience and tone
+        - Key topics and keywords for SEO
+      </details>
+    </step>
+
+    <step number="2">
+      <action>Gather existing content context</action>
+      <tools>
+        <tool>read_file - Examine existing blog posts and docs for style and structure</tool>
+        <tool>list_files - Understand the blog directory structure</tool>
+      </tools>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="planning">
+      <description>Plan the content structure and strategy</description>
+      <steps>
+        <step>Outline the content structure</step>
+        <step>Research keywords and SEO optimization</step>
+        <step>Define the content goals and metrics</step>
+      </steps>
+    </phase>
+
+    <phase name="creation">
+      <description>Write and format the content</description>
+      <steps>
+        <step>Create the content in appropriate format</step>
+        <step>Add proper frontmatter for blog posts</step>
+        <step>Ensure accessibility and readability</step>
+      </steps>
+    </phase>
+
+    <phase name="review">
+      <description>Review and optimize the content</description>
+      <steps>
+        <step>Check for grammar and style consistency</step>
+        <step>Verify SEO elements</step>
+        <step>Validate links and references</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>Content is properly formatted and structured</criterion>
+    <criterion>SEO optimization is applied</criterion>
+    <criterion>Content aligns with project tone and style</criterion>
+    <criterion>All links and references are valid</criterion>
+  </completion_criteria>
+</workflow_instructions>

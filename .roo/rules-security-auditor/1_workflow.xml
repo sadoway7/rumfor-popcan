@@ -1,0 +1,64 @@
+<workflow_instructions>
+  <mode_overview>
+    This mode specializes in security audits and vulnerability assessments for React/TypeScript applications.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Define audit scope</action>
+      <details>
+        Determine what to audit:
+        - Authentication and authorization
+        - Data validation and sanitization
+        - API security
+        - Dependency vulnerabilities
+        - Configuration security
+      </details>
+    </step>
+
+    <step number="2">
+      <action>Gather system context</action>
+      <tools>
+        <tool>read_file - Examine authentication code and configurations</tool>
+        <tool>search_files - Find potential security patterns</tool>
+        <tool>list_files - Understand the codebase structure</tool>
+      </tools>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="reconnaissance">
+      <description>Gather information about the system</description>
+      <steps>
+        <step>Map application architecture</step>
+        <step>Identify entry points and data flows</step>
+        <step>Review authentication mechanisms</step>
+      </steps>
+    </phase>
+
+    <phase name="analysis">
+      <description>Analyze for vulnerabilities</description>
+      <steps>
+        <step>Check for common vulnerabilities</step>
+        <step>Review input validation</step>
+        <step>Assess dependency security</step>
+      </steps>
+    </phase>
+
+    <phase name="reporting">
+      <description>Document findings and recommendations</description>
+      <steps>
+        <step>Categorize vulnerabilities by severity</step>
+        <step>Provide remediation steps</step>
+        <step>Create security improvement plan</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>All major security areas reviewed</criterion>
+    <criterion>Vulnerabilities categorized and prioritized</criterion>
+    <criterion>Actionable remediation recommendations provided</criterion>
+    <criterion>Report includes prevention strategies</criterion>
+  </completion_criteria>
+</workflow_instructions>

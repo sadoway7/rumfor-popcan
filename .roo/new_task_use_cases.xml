@@ -1,0 +1,73 @@
+<new_task_use_cases>
+  <use_case name="parallel_feature_development">
+    <description>Use new_task to develop independent features simultaneously</description>
+    <examples>
+      <example>New payment provider integration while updating UI components</example>
+      <example>Adding analytics tracking while implementing new API endpoints</example>
+      <example>Blog content creation alongside feature development</example>
+    </examples>
+  </use_case>
+
+  <use_case name="specialized_audits">
+    <description>Delegate focused security or performance reviews</description>
+    <examples>
+      <example>Security audit via Security Auditor mode for vulnerability assessment</example>
+      <example>Performance profiling via Performance Optimizer mode for bottleneck analysis</example>
+      <example>Code quality audit via Debug mode for systematic issue identification</example>
+    </examples>
+  </use_case>
+
+  <use_case name="content_pipeline_management">
+    <description>Manage content creation workflows</description>
+    <examples>
+      <example>Blog post writing via Content Writer mode</example>
+      <example>Documentation updates via Content Writer mode</example>
+      <example>SEO optimization and content strategy planning</example>
+    </examples>
+  </use_case>
+
+  <use_case name="multi_environment_testing">
+    <description>Coordinate testing across different environments</description>
+    <examples>
+      <example>Parallel testing of authentication flows in development/staging/production</example>
+      <example>Cross-browser compatibility testing</example>
+      <example>Load testing different application components</example>
+    </examples>
+  </use_case>
+
+  <use_case name="cross_domain_refactoring">
+    <description>Break complex refactors into specialized subtasks</description>
+    <examples>
+      <example>Database schema changes via Database Specialist mode</example>
+      <example>UI component updates via UI Specialist mode</example>
+      <example>API modifications via Fullstack Developer mode</example>
+    </examples>
+  </use_case>
+
+  <use_case name="project_initialization">
+    <description>Establish project foundations and documentation</description>
+    <examples>
+      <example>Project setup via Project Setup mode for comprehensive planning</example>
+      <example>Documentation structure creation via Project Setup mode</example>
+      <example>AI priming file creation via Project Setup mode</example>
+    </examples>
+  </use_case>
+
+  <use_case name="project_initialization">
+    <description>Establish project foundations and documentation</description>
+    <examples>
+      <example>Project setup via Project Setup mode for comprehensive planning</example>
+      <example>Documentation structure creation via Project Setup mode</example>
+      <example>AI priming file creation via Project Setup mode</example>
+    </examples>
+  </use_case>
+
+  <use_case name="research_and_integration">
+    <description>Handle research and third-party integrations</description>
+    <examples>
+      <example>API documentation research and prototyping</example>
+      <example>Third-party service evaluation and integration planning</example>
+      <example>Technology stack research and feasibility studies</example>
+    </examples>
+  </use_case>
+</new_task_use_cases>

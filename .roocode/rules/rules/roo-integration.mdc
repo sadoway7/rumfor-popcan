@@ -1,0 +1,75 @@
+---
+description: Integration rules for working with Roo AI assistant
+globs:
+alwaysApply: true
+---
+
+# Roo Integration Rules
+
+This document provides guidelines for working effectively with Roo, the AI assistant in this Wasp SaaS project.
+
+## Roo's Capabilities
+
+Roo has access to various tools for development:
+- **Code execution**: Running terminal commands, installing dependencies
+- **File operations**: Reading, writing, searching, and modifying files
+- **Web browsing**: Testing applications, inspecting DOM
+- **Image generation**: Creating assets and diagrams
+- **Search and analysis**: Finding code patterns, exploring project structure
+
+## Working Modes
+
+Roo operates in different modes based on the task:
+
+- **🏗️ Architect** (`architect`): For planning, design, and strategizing complex problems
+- **💻 Code** (`code`): For writing, modifying, or refactoring code
+- **❓ Ask** (`ask`): For explanations, documentation, and technical questions
+- **🪲 Debug** (`debug`): For troubleshooting issues and diagnosing problems
+- **🪃 Orchestrator** (`orchestrator`): For complex multi-step projects requiring coordination
+
+## Best Practices
+
+### When to Use Each Mode
+
+- Use **Architect** mode for initial planning and system design
+- Switch to **Code** mode when ready to implement features
+- Use **Debug** mode when encountering errors or unexpected behavior
+- Use **Ask** mode for understanding concepts or getting recommendations
+- Use **Orchestrator** mode for large-scale refactoring or multi-feature development
+
+### Communication Guidelines
+
+- Be specific about what you want to accomplish
+- Provide context about the current state of the project
+- Ask Roo to use appropriate tools (e.g., "Use the browser to test the login flow")
+- Request mode switches when needed (e.g., "Switch to debug mode to investigate this error")
+
+### Code Implementation
+
+- Roo can modify files directly using search_replace and write_to_file tools
+- For complex changes, Roo will break them into manageable steps
+- Always verify changes by running tests or checking the application
+
+### Testing and Verification
+
+- Roo can start the development server and database
+- Use browser automation to test user flows
+- Request terminal commands to run tests or build processes
+
+## Project-Specific Integration
+
+Since this is a Wasp-based SaaS application:
+
+- Roo understands Wasp's file structure and conventions
+- Can work with Prisma schemas, Wasp configuration, and React components
+- Familiar with the boilerplate's authentication, payments, and admin features
+
+## Getting Help
+
+If you need assistance:
+- Ask Roo to explain any part of the codebase
+- Request code reviews or improvements
+- Ask for debugging help with specific errors
+- Request feature implementations following the existing patterns
+
+Roo will adapt its approach based on the project's rules and your specific requirements.

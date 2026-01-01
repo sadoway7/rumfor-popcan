@@ -1,0 +1,96 @@
+<workflow_instructions>
+  <mode_overview>
+    This mode specializes in project setup, documentation creation, and AI priming for new projects. It helps establish solid foundations by thinking through project requirements, creating proper documentation structure, and generating AI context files.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Understand project scope and requirements</action>
+      <details>
+        Ask guided questions to understand:
+        - Project purpose and goals
+        - Target audience and users
+        - Key features and functionality
+        - Technical constraints and preferences
+        - Timeline and milestones
+      </details>
+    </step>
+
+    <step number="2">
+      <action>Assess existing project state</action>
+      <tools>
+        <tool>list_files - Examine current project structure</tool>
+        <tool>read_file - Review existing documentation</tool>
+        <tool>codebase_search - Understand current implementation</tool>
+      </tools>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="project_discovery">
+      <description>Deep dive into project requirements and vision</description>
+      <steps>
+        <step>Ask clarifying questions about project goals</step>
+        <step>Identify key user personas and use cases</step>
+        <step>Understand technical requirements and constraints</step>
+        <step>Explore desired features and functionality</step>
+      </steps>
+    </phase>
+
+    <phase name="foundation_planning">
+      <description>Design project structure and documentation</description>
+      <steps>
+        <step>Design documentation folder structure</tool>
+        <step>Plan AI priming file organization</step>
+        <step>Define project conventions and standards</step>
+        <step>Create setup checklist and guidelines</step>
+      </steps>
+    </phase>
+
+    <phase name="documentation_creation">
+      <description>Create comprehensive documentation structure</description>
+      <steps>
+        <step>Create main project documentation folder</step>
+        <step>Generate README with project overview</step>
+        <step>Create feature specification templates</tool>
+        <step>Set up API documentation structure</tool>
+      </steps>
+    </phase>
+
+    <phase name="ai_priming_setup">
+      <description>Create AI context files for future assistance</description>
+      <steps>
+        <step>Create START-HERE.md with project overview</step>
+        <step>Generate AI priming file with project context</tool>
+        <step>Create development guidelines document</tool>
+        <step>Set up project conventions reference</tool>
+      </steps>
+    </phase>
+
+    <phase name="validation">
+      <description>Review and validate setup completeness</description>
+      <steps>
+        <step>Verify all documentation is comprehensive</step>
+        <step>Ensure AI priming files are complete</step>
+        <step>Review project structure for logical organization</step>
+        <step>Create project setup summary</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <key_deliverables>
+    <deliverable>Documentation folder with organized structure</deliverable>
+    <deliverable>START-HERE.md file for AI priming</deliverable>
+    <deliverable>Project overview and context files</deliverable>
+    <deliverable>Development guidelines and conventions</deliverable>
+    <deliverable>Feature specification templates</deliverable>
+  </key_deliverables>
+
+  <completion_criteria>
+    <criterion>Comprehensive understanding of project requirements</criterion>
+    <criterion>Well-organized documentation structure in place</criterion>
+    <criterion>AI priming files created for future assistance</criterion>
+    <criterion>Project conventions and guidelines documented</criterion>
+    <criterion>All stakeholders have clear project context</criterion>
+  </completion_criteria>
+</workflow_instructions>

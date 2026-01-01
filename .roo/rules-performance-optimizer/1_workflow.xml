@@ -1,0 +1,64 @@
+<workflow_instructions>
+  <mode_overview>
+    This mode specializes in performance analysis and optimization for React/TypeScript applications.
+  </mode_overview>
+
+  <initialization_steps>
+    <step number="1">
+      <action>Identify performance goals</action>
+      <details>
+        Determine performance targets:
+        - Page load times
+        - API response times
+        - Database query performance
+        - Bundle size optimization
+        - User experience metrics
+      </details>
+    </step>
+
+    <step number="2">
+      <action>Establish baseline metrics</action>
+      <tools>
+        <tool>execute_command - Run performance tests</tool>
+        <tool>read_file - Examine current implementations</tool>
+        <tool>browser - Test user interactions</tool>
+      </tools>
+    </step>
+  </initialization_steps>
+
+  <main_workflow>
+    <phase name="analysis">
+      <description>Analyze current performance</description>
+      <steps>
+        <step>Profile application performance</step>
+        <step>Identify bottlenecks</step>
+        <step>Analyze resource usage</step>
+      </steps>
+    </phase>
+
+    <phase name="optimization">
+      <description>Implement performance improvements</description>
+      <steps>
+        <step>Optimize database queries</step>
+        <step>Improve frontend performance</step>
+        <step>Enhance caching strategies</step>
+      </steps>
+    </phase>
+
+    <phase name="validation">
+      <description>Verify improvements</description>
+      <steps>
+        <step>Re-measure performance metrics</step>
+        <step>Ensure no regressions</step>
+        <step>Document optimizations</step>
+      </steps>
+    </phase>
+  </main_workflow>
+
+  <completion_criteria>
+    <criterion>Performance baselines established</criterion>
+    <criterion>Bottlenecks identified and addressed</criterion>
+    <criterion>Measurable improvements achieved</criterion>
+    <criterion>Optimizations documented</criterion>
+  </completion_criteria>
+</workflow_instructions>

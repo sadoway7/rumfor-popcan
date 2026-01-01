@@ -1,0 +1,71 @@
+<questioning_framework>
+  <overview>
+    This framework provides structured questions to help uncover project requirements, goals, and constraints during the project setup phase.
+  </overview>
+
+  <question_categories>
+    <category name="project_foundation">
+      <description>Questions to understand the core project purpose and vision</description>
+      <questions>
+        <question>What is the primary purpose of this project? What problem does it solve?</question>
+        <question>Who are your target users? What are their main needs and pain points?</question>
+        <question>What makes this project unique compared to existing solutions?</question>
+        <question>What are the key success metrics for this project?</question>
+      </questions>
+    </category>
+
+    <category name="technical_scope">
+      <description>Questions to understand technical requirements and constraints</description>
+      <questions>
+        <question>Do you have existing code, databases, or assets we should work with?</question>
+        <question>Are there specific technologies, frameworks, or tools you want to use or avoid?</question>
+        <question>Do you have any existing integrations or dependencies to consider?</question>
+        <question>What are your performance, scalability, or security requirements?</question>
+      </questions>
+    </category>
+
+    <category name="feature_prioritization">
+      <description>Questions to understand what features are most important</description>
+      <questions>
+        <question>What are the essential features that must be included in the first version?</question>
+        <question>What features would be nice to have but aren't critical for launch?</question>
+        <question>Are there any features you want to avoid or exclude?</question>
+        <question>How do you envision the user journey from start to finish?</question>
+      </questions>
+    </category>
+
+    <category name="project_logistics">
+      <description>Questions to understand timeline, resources, and constraints</description>
+      <questions>
+        <question>What is your target timeline for launching this project?</question>
+        <question>Do you have any external deadlines or dependencies to consider?</question>
+        <question>What resources (budget, team, tools) do you have available?</question>
+        <question>Are there any regulatory, compliance, or legal requirements?</question>
+      </questions>
+    </category>
+
+    <category name="ai_context">
+      <description>Questions to understand how to best set up AI assistance</description>
+      <questions>
+        <question>What kinds of tasks will you want AI help with most often?</question>
+        <question>Are there specific technical areas where you'll need specialized assistance?</question>
+        <question>How do you prefer to communicate complex requirements to AI?</question>
+        <question>What existing documentation or context should AI be aware of?</question>
+      </questions>
+    </category>
+  </question_categories>
+
+  <questioning_approach>
+    <principle>Start broad, then narrow down</principle>
+    <description>Begin with high-level questions about project vision, then progressively get more specific about implementation details.</description>
+    
+    <principle>Ask follow-up questions based on answers</principle>
+    <description>Use the user's responses to guide deeper questions rather than asking all questions in sequence.</description>
+    
+    <principle>Validate understanding regularly</principle>
+    <description>Summarize what you've learned and confirm accuracy before moving to the next area.</description>
+    
+    <principle>Document everything</principle>
+    <description>Take detailed notes of all responses to create comprehensive project context.</description>
+  </questioning_approach>
+</questioning_framework>

@@ -1,0 +1,35 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/users/"
+      ],
+      "alwaysAllow": [
+        "read_text_file",
+        "create_directory",
+        "list_directory",
+        "write_file"
+      ]
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "gitlab": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-gitlab"
+      ],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "glpat-JrbRfsAIOuuM7RbosWlnVm86MQp1OjIH.01.0w0mx6g3n",
+        "GITLAB_API_URL": "https://git.sadoway.ca/api/v4"
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+<mode_updates>
+  <update mode="testing-specialist">
+    <add_permission>browser</add_permission>
+    <restrict_edit>
+      <fileRegex>(__tests__/.*|__mocks__/.*|.*\.test\.(ts|tsx|js|jsx)$|.*\.spec\.(ts|tsx|js|jsx)$|e2e-tests/.*)</fileRegex>
+      <description>Test files, mocks, and e2e test suites only</description>
+    </restrict_edit>
+  </update>
+
+  <update mode="ui-specialist">
+    <add_permission>command</add_permission>
+  </update>
+
+  <file_restrictions>
+    <mode name="architect">
+      <restrict_edit>
+        <fileRegex>(.*\.md$|docs/.*)</fileRegex>
+        <description>Documentation files only</description>
+      </restrict_edit>
+    </mode>
+
+    <mode name="code">
+      <restrict_edit>
+        <fileRegex>(app/src/.*|app/public/.*)</fileRegex>
+        <description>Application source and public files</description>
+      </restrict_edit>
+    </mode>
+
+    <mode name="debug">
+      <restrict_edit>
+        <fileRegex>(app/src/.*|app/vite\.config\.(ts|js)$)</fileRegex>
+        <description>Source files and configuration for debugging</description>
+      </restrict_edit>
+    </mode>
+
+    <mode name="fullstack-developer">
+      <restrict_edit>
+        <fileRegex>(app/src/.*\.(ts|tsx|js|jsx)$|app/vite\.config\.(ts|js)$|app/package\.json$|app/src/api/.*|app/src/types/.*)</fileRegex>
+        <description>React application source files, API endpoints, types, and configuration</description>
+      </restrict_edit>
+    </mode>
+
+    <mode name="saas-builder">
+      <restrict_edit>
+        <fileRegex>(app/src/(components|pages|stores|services)/.*|app/src/business/.*|app/src/auth/.*)</fileRegex>
+        <description>Business logic components, stores, services, authentication, and user management</description>
+      </restrict_edit>
+    </mode>
+
+    <mode name="database-specialist">
+      <restrict_edit>
+        <fileRegex>(app/src/api/.*|app/src/types/.*|app/src/services/.*)</fileRegex>
+        <description>API endpoints, types, and data services</description>
+      </restrict_edit>
+    </mode>
+  </file_restrictions>
+</mode_updates>
