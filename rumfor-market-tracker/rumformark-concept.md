@@ -4,8 +4,8 @@
 
 **Application Name:** Rumfor Market Tracker
 **Purpose:** Community-driven platform for tracking and connecting artisans with local markets
-**Technology Stack:** PHP 7.4+, PostgreSQL, Bootstrap 5, JavaScript
-**Target Platform:** Mobile-first web application (planned rebuild)
+**Technology Stack:** Vite + React + TypeScript, UnoCSS, Zustand (state management), TanStack Query (data fetching), React Router (routing), React Hook Form + Zod (forms & validation), Radix UI (accessible UI primitives), Lucide React (icons), date-fns (dates), Axios (HTTP client)
+**Target Platform:** Mobile-first Progressive Web App (PWA)
 
 ---
 
@@ -128,7 +128,7 @@ The application addresses several key challenges faced by artisan vendors:
 
 #### Step-by-Step Journey
 
-1. **Landing Page (index.php)**
+1. **Landing Page (HomePage.tsx)**
    - User arrives at homepage
    - Sees hero section with:
      - Quick category browsing (Farmers Market, Arts & Crafts, etc.)
@@ -154,12 +154,12 @@ The application addresses several key challenges faced by artisan vendors:
      - Date Range (next week, next month, etc.)
      - Accessibility features
 
-4. **Market Detail View (market_detail.php)**
-   - **Hero Section:** Large photo gallery with market info overlay
-   - **Market Information:** Name, location, description, contact details, fees
+4. **Market Detail View (MarketDetailPage.tsx)**
+   - **Hero Section:** Large photo gallery with market info overlay (MarketHero.tsx)
+   - **Market Information:** Name, location, description, contact details, fees (MarketInfo.tsx)
    - **Promoter Status:** Shows if market is claimed by verified promoter
    - **Action Buttons:** Track/Apply/Manage (context-dependent)
-   - **Community Features:** Hashtag voting, photo gallery, comments
+   - **Community Features:** Hashtag voting (HashtagVoting.tsx), photo gallery (PhotoGallery.tsx), comments (CommentList.tsx)
 
 5. **Decision Points**
    - **Not Interested:** User can leave or continue browsing
@@ -201,10 +201,10 @@ The application addresses several key challenges faced by artisan vendors:
    - **Standard Fields:** Application notes (textarea)
    - **Custom Fields:** Promoter-defined questions/requirements
      - Text fields, textareas, dropdowns, checkboxes
-   - **Validation:** Required fields marked, real-time validation
+   - **Validation:** Zod schema validation with real-time feedback
 
 3. **Submit Application**
-   - Form submission with CSRF protection
+   - Form submission with React Hook Form + Zod validation
    - Status changes from "interested" to "applied"
    - Success notification shown
    - Email sent to promoter (if configured)
@@ -239,9 +239,9 @@ The application addresses several key challenges faced by artisan vendors:
    - Gains access to management features
 
 2. **Application Review**
-   - Access promoter dashboard (promoter_applications.php)
+   - Access promoter dashboard (PromoterDashboardPage.tsx)
    - Filter applications by status (pending, approved, rejected)
-   - Review individual applications (applicant_details.php)
+   - Review individual applications (ApplicationDetails.tsx component)
 
 3. **Application Processing**
    - View complete application details
@@ -269,9 +269,9 @@ The application addresses several key challenges faced by artisan vendors:
 
 #### Comment Discussion Flow
 1. **Start Discussion:** Click comment box → type message
-2. **Post Comment:** Submit with CSRF protection
+2. **Post Comment:** Submit with React Hook Form validation
 3. **Threaded Replies:** Click "Reply" on any comment
-4. **Emoji Reactions:** Click emoji buttons to react
+4. **Emoji Reactions:** Click Lucide React emoji buttons to react
 5. **Comment Management:** Users can delete their own comments
 
 #### Hashtag Voting Flow
@@ -304,7 +304,7 @@ The application addresses several key challenges faced by artisan vendors:
 
 **Data Inputs:** Username, email, password, notification preferences
 **Data Outputs:** User profile data, authentication status
-**Dependencies:** None (foundational feature)
+**Dependencies:** Zustand for auth state, TanStack Query for server state
 
 #### 2. Market Discovery & Search
 **Capabilities:**
@@ -502,6 +502,81 @@ The application addresses several key challenges faced by artisan vendors:
 
 ## 5. Data & State Management Concepts
 
+#### Modern State Architecture
+
+#### Client State (Zustand)
+- **Authentication State:** User login status, permissions, profile data
+- **UI State:** Modal states, loading states, form data
+- **Feature State:** Filter preferences, search history, theme settings
+
+#### Server State (TanStack Query)
+- **Market Data:** Listings, details, search results with caching
+- **User Data:** Profiles, applications, tracked markets
+- **Community Data:** Comments, photos, hashtags with real-time updates
+- **Admin Data:** Moderation queue, user management, analytics
+
+#### Implementation Architecture
+
+The application follows a feature-based architecture with clear separation of concerns:
+
+```
+src/
+├── features/              # Feature-based modules
+│   ├── auth/             # Authentication logic
+│   ├── markets/          # Market data and operations
+│   ├── applications/     # Application management
+│   ├── community/        # Comments, photos, hashtags
+│   ├── tracking/         # Todo lists, expenses
+│   ├── notifications/    # Notification system
+│   └── admin/           # Admin functionality
+├── components/           # Reusable UI components
+├── pages/               # Page components with routing
+├── layouts/             # Layout wrappers by role
+├── hooks/               # Custom React hooks
+├── utils/               # Utility functions
+├── types/               # TypeScript type definitions
+├── config/              # Application configuration
+└── lib/                 # Shared libraries
+```
+
+#### Feature-Based Organization Benefits
+
+- **Maintainability:** Each feature is self-contained
+- **Scalability:** Easy to add new features without affecting others
+- **Team Collaboration:** Different teams can work on different features
+- **Code Reusability:** Components and hooks shared across features
+- **Type Safety:** Comprehensive TypeScript coverage per feature
+
+#### Core Component Architecture
+
+##### UI Components (`src/components/ui/`)
+- **Base Components:** Button, Input, Card, Modal built with Radix UI
+- **Business Components:** MarketCard, CommentList, PhotoGallery
+- **Feature Components:** VendorTodoList, PromoterApplicationReview
+- **Layout Components:** Header, Footer, Sidebar, BottomNav
+
+##### Feature Modules (`src/features/`)
+- **auth/:** Authentication, authorization, session management
+- **markets/:** Market discovery, search, filtering, tracking
+- **applications/:** Vendor applications, promoter review system
+- **community/:** Comments, photos, hashtags, voting
+- **tracking/:** Todo lists, expense tracking, market planning
+- **notifications/:** Real-time notifications, email preferences
+- **admin/:** User management, content moderation, analytics
+
+##### Page Components (`src/pages/`)
+- **Core Pages:** HomePage, MarketDetailPage, MyMarketsPage
+- **Auth Pages:** LoginPage, RegisterPage, PasswordRecoveryPage
+- **Feature Pages:** VendorDashboard, PromoterDashboard, AdminDashboard
+- **Utility Pages:** ProfilePage, SettingsPage, NotificationsPage
+
+##### Layout System (`src/layouts/`)
+- **MainLayout:** Default application layout
+- **AuthLayout:** Authentication-specific layout
+- **VendorLayout:** Vendor dashboard layout
+- **PromoterLayout:** Promoter dashboard layout
+- **AdminLayout:** Admin panel layout
+
 ### Data Entity Relationships
 
 #### Core Entities
@@ -589,10 +664,10 @@ The application addresses several key challenges faced by artisan vendors:
 - **Expense Amounts:** Positive values, reasonable upper limits
 
 #### Security Validation
-- **CSRF Protection:** Tokens on all forms and AJAX requests
-- **SQL Injection Prevention:** Prepared statements throughout
-- **XSS Protection:** Input sanitization and output escaping
-- **File Upload Security:** Type validation, size limits, malware scanning
+- **CSRF Protection:** Modern security headers and token validation
+- **API Security:** Rate limiting and input sanitization
+- **XSS Protection:** React's built-in XSS protection
+- **File Upload Security:** Client-side validation with server verification
 
 ---
 
@@ -618,17 +693,17 @@ The application addresses several key challenges faced by artisan vendors:
 ### Screen Hierarchy
 
 #### Level 1: Core Screens
-- **Homepage (index.php):** Market discovery and browsing
-- **Market Detail (market_detail.php):** Comprehensive market view
-- **My Markets (my_markets.php):** Personal dashboard
-- **Login/Register:** Authentication flows
+- **Homepage (HomePage.tsx):** Market discovery and browsing
+- **Market Detail (MarketDetailPage.tsx):** Comprehensive market view
+- **My Markets (MyMarketsPage.tsx):** Personal dashboard
+- **Login/Register (LoginPage.tsx, RegisterPage.tsx):** Authentication flows
 
 #### Level 2: Feature Screens
-- **Market Planning (market_planning.php):** Todo management
-- **Promoter Applications (promoter_applications.php):** Application management
-- **Applicant Details (applicant_details.php):** Individual application review
-- **Profile:** User account management
-- **Settings:** User preferences
+- **Market Planning (VendorDashboard.tsx):** Todo management (VendorTodoList.tsx)
+- **Promoter Applications (PromoterDashboardPage.tsx):** Application management (PromoterApplicationReview.tsx)
+- **Applicant Details (ApplicationDetails component):** Individual application review
+- **Profile (ProfilePage.tsx):** User account management
+- **Settings (SettingsPage.tsx):** User preferences
 
 #### Level 3: Utility Screens
 - **Create Market:** Market listing creation
@@ -871,9 +946,9 @@ Content Views
 
 ### Third-Party Functionality
 
-#### Bootstrap 5 Framework
-- **Purpose:** UI components and responsive design
-- **Integration:** CDN delivery with custom theme overrides
+#### UnoCSS Framework
+- **Purpose:** Utility-first CSS framework for responsive design
+- **Integration:** Atomic CSS with custom design tokens
 - **Customization:** Black & white design system implementation
 
 #### Font System
@@ -883,37 +958,37 @@ Content Views
 
 #### Icon System
 - **Purpose:** Visual indicators and navigation
-- **Integration:** Bootstrap Icons via CDN
-- **Customization:** Consistent icon usage patterns
+- **Integration:** Lucide React icon library
+- **Customization:** Consistent icon usage patterns with TypeScript support
 
 ### API Endpoints (Internal)
 
-#### AJAX Endpoints
-- **Photo Voting:** `/vote_on_photo.php`
-- **Hashtag Voting:** `/vote_on_hashtag.php`
-- **Status Updates:** `/update_market_status.php`
-- **Comment Reactions:** `/vote_on_comment.php`
-- **Application Processing:** `/review_application.php`
-- **Notification Fetching:** `/get_notifications.php`
+#### API Endpoints (REST)
+- **Photo Voting:** `POST /api/photos/{id}/vote`
+- **Hashtag Voting:** `POST /api/hashtags/{id}/vote`
+- **Status Updates:** `PATCH /api/tracking/{id}`
+- **Comment Reactions:** `POST /api/comments/{id}/reactions`
+- **Application Processing:** `PATCH /api/applications/{id}`
+- **Notification Fetching:** `GET /api/notifications`
 
 #### Data Fetching Endpoints
-- **Market Photos:** `/get_market_photos.php`
-- **Hashtag Voting:** `/get_hashtag_voting.php`
-- **Top Hashtags:** `/get_top_hashtags.php`
-- **Application Data:** `/get_application.php`
+- **Market Photos:** `GET /api/markets/{id}/photos`
+- **Hashtag Voting:** `GET /api/markets/{id}/hashtag-votes`
+- **Top Hashtags:** `GET /api/hashtags/top`
+- **Application Data:** `GET /api/applications/{id}`
 
 ### Authentication & Security
 
-#### Session Management
-- **Framework:** Native PHP sessions
-- **Security:** CSRF tokens, session regeneration
-- **Persistence:** Configurable session lifetime
+#### Authentication Management
+- **Framework:** JWT tokens with refresh mechanism
+- **Security:** HTTP-only cookies, modern security headers
+- **Persistence:** Token refresh with automatic renewal
 
 #### Data Validation
-- **Input Sanitization:** Built-in PHP functions
-- **SQL Injection Prevention:** Prepared statements
-- **XSS Protection:** Output escaping
-- **File Security:** Upload validation and scanning
+- **Input Validation:** Zod schema validation
+- **API Security:** Input sanitization and rate limiting
+- **XSS Protection:** React's built-in XSS protection
+- **File Security:** Client-side validation with server verification
 
 ---
 
@@ -922,10 +997,10 @@ Content Views
 ### Current Implementation Issues
 
 #### Technical Debt
-- **Mixed Architecture:** PHP procedural with some OOP elements
-- **Database Schema:** Complex with many migrations, potential normalization issues
-- **CSS Organization:** 7 separate CSS files, inconsistent patterns
-- **JavaScript:** Inline scripts mixed with external files
+- **Legacy Architecture:** Previous PHP implementation being modernized
+- **Database Schema:** PostgreSQL with optimized schemas and proper indexing
+- **CSS Organization:** Single UnoCSS configuration with design tokens
+- **TypeScript:** Fully typed components with strict mode
 - **Performance:** No caching layer, N+1 query issues
 - **Security:** Some areas lack comprehensive input validation
 
@@ -993,7 +1068,7 @@ Content Views
 #### Architecture Modernization
 - **API-First Design:** RESTful API backend
 - **Component System:** Reusable UI components
-- **State Management:** Centralized application state
+- **State Management:** Zustand for client state, TanStack Query for server state
 - **Progressive Web App:** Offline functionality and app-like experience
 
 #### Data Optimization
@@ -1021,10 +1096,10 @@ Content Views
 - Photo upload and gallery
 
 **Technical Stack:**
-- Next.js or React for component-based architecture
-- Tailwind CSS for utility-first styling
-- Supabase or Firebase for backend-as-a-service
-- Progressive Web App capabilities
+- Vite + React + TypeScript for component-based architecture
+- UnoCSS for utility-first styling
+- Modern backend API with PostgreSQL
+- Progressive Web App capabilities with service workers
 
 ### Phase 2: Core Features (6 months)
 **Additional Features:**
@@ -1083,15 +1158,15 @@ Content Views
 ### Technical Architecture Recommendations
 
 #### Frontend Architecture
-- **Component Library:** Design system with consistent components
-- **State Management:** Context API or Redux for complex state
-- **Routing:** Next.js App Router for modern routing
-- **Styling:** Tailwind with custom design tokens
+- **Component Library:** Design system with Radix UI primitives
+- **State Management:** Zustand for client state, TanStack Query for server state
+- **Routing:** React Router for modern routing
+- **Styling:** UnoCSS with custom design tokens
 
 #### Backend Architecture
 - **API Design:** RESTful API with GraphQL for complex queries
 - **Authentication:** JWT tokens with refresh mechanism
-- **Database:** PostgreSQL with optimized schemas
+- **Database:** PostgreSQL with optimized schemas and proper indexing
 - **File Storage:** Cloud storage (AWS S3, Cloudflare R2)
 
 #### Performance & Scalability
@@ -1102,9 +1177,775 @@ Content Views
 
 ---
 
+## 11. Modern Technology Stack Benefits
+
+### How Our Stack Addresses Original Pain Points
+
+#### **Vite + React + TypeScript**
+- **Build Performance:** Lightning-fast HMR for rapid development
+- **Type Safety:** Compile-time error catching prevents runtime issues
+- **Modern Development:** ES modules, tree-shaking, and optimized bundling
+- **Developer Experience:** Superior debugging and autocomplete
+
+#### **UnoCSS**
+- **Atomic CSS:** Instant styles without CSS conflicts
+- **Design Tokens:** Consistent theming and brand compliance
+- **Bundle Size:** Only used styles included in final bundle
+- **Performance:** Zero runtime CSS processing
+
+#### **Zustand (State Management)**
+- **Lightweight:** Minimal boilerplate compared to Redux
+- **TypeScript Native:** Full type inference and safety
+- **Developer Experience:** Simple API with powerful features
+- **Performance:** Optimized re-renders with selective subscriptions
+
+#### **TanStack Query (Data Fetching)**
+- **Caching Strategy:** Intelligent data caching and synchronization
+- **Background Updates:** Stale-while-revalidate for smooth UX
+- **Error Handling:** Robust error states and retry mechanisms
+- **Optimistic Updates:** Immediate UI updates with rollback capability
+
+#### **React Router**
+- **Code Splitting:** Automatic route-based code splitting
+- **Type Safety:** Full TypeScript support for routes and params
+- **Performance:** Optimized navigation with preloading
+- **Developer Tools:** Excellent debugging and route visualization
+
+#### **React Hook Form + Zod**
+- **Performance:** Minimal re-renders with efficient form handling
+- **Type Safety:** Runtime validation with compile-time type inference
+- **User Experience:** Real-time validation feedback
+- **Bundle Size:** Tree-shakeable validation schemas
+
+#### **Radix UI**
+- **Accessibility:** WCAG compliant components out of the box
+- **Customization:** Styleable primitives without sacrificing accessibility
+- **Consistency:** Unifies design patterns across the application
+- **Future-Proof:** Built for React 18+ and modern browser APIs
+
+#### **Lucide React**
+- **Bundle Optimization:** Tree-shakeable SVG icons
+- **Type Safety:** Full TypeScript support
+- **Performance:** Lightweight SVG icons with minimal footprint
+- **Consistency:** Unified icon system across the application
+
+#### **date-fns**
+- **Tree-Shakeable:** Only import functions you need
+- **TypeScript Native:** Full type safety for date operations
+- **Performance:** Optimized date manipulation functions
+- **Modern:** ES modules and tree-shaking support
+
+#### **Axios**
+- **Type Safety:** Full TypeScript support for HTTP requests
+- **Interceptors:** Centralized request/response handling
+- **Cancelation:** Built-in request cancellation support
+- **Error Handling:** Comprehensive error handling and retry logic
+
+## 12. Design Philosophy & Size Considerations
+
+### Core Design Principles
+
+#### **"Simple and Working" Philosophy**
+
+##### **Reddit's Approach: Minimalist but Powerful**
+- **Single-Column Layout:** Everything flows in one clean column
+- **Consistent Card Sizing:** All content fits the same width pattern
+- **Clear Hierarchy:** Title, meta info, actions - always in same order
+- **Whitespace Usage:** Generous spacing prevents visual clutter
+- **Immediate Action:** Every interaction has instant visual feedback
+
+**Philosophy:** "Users come for content, stay for community"
+- Content takes priority over chrome
+- Actions are obvious and immediate
+- No unnecessary UI elements
+- Mobile-first design decisions
+
+##### **GitHub's Approach: Information-Dense but Scannable**
+- **Dense Information:** Maximum information per screen real estate
+- **Clear Typography:** Different font weights create clear hierarchy
+- **Status Indicators:** Visual badges communicate state instantly
+- **Keyboard Efficiency:** Power users can navigate without mouse
+- **Progressive Disclosure:** Details available when needed
+
+**Philosophy:** "Tools should get out of the way"
+- Interface adapts to user expertise
+- Information architecture is logical and predictable
+- Consistent patterns across all features
+- Speed and efficiency are primary goals
+
+#### **Size & Spacing Philosophy**
+
+##### **Reddit's Size Approach**
+```
+Card Structure:
+├── Large Image (dominates card)
+├── Medium Title (2-3 lines max)
+├── Small Meta (1 line: author, subreddit, time)
+├── Tiny Actions (inline: vote, comment, share)
+└── Minimal Padding (16px around content)
+```
+
+**Key Principles:**
+- **Visual Hierarchy:** Image > Title > Meta > Actions
+- **Scannable Text:** No paragraph text, just titles and snippets
+- **Compact Actions:** All actions visible in 1-2 lines
+- **Consistent Margins:** Every element has predictable spacing
+
+##### **GitHub's Size Approach**
+```
+List Structure:
+├── Icon + Title (left-aligned)
+├── Description (1 line, muted)
+├── Meta Info (tags, status badges)
+├── Actions (dropdown menu)
+└── Dense Padding (8px between items)
+```
+
+**Key Principles:**
+- **Information Density:** More data per screen
+- **Clear Grouping:** Related information clustered together
+- **Status Visibility:** Important info always visible
+- **Efficient Navigation:** Minimum clicks to complete tasks
+
+#### **Adapted Philosophy for Market Context**
+
+##### **Market Card Philosophy**
+```
+Market Card Design:
+├── Hero Image (tall, aspect-ratio specific)
+├── Title + Location (2 lines max)
+├── Key Stats (dates, attendees, fees)
+├── Community Indicators (comments, photos, votes)
+└── Action Buttons (track, apply - primary/secondary)
+```
+
+**Design Rules:**
+- **Content First:** Market information dominates the card
+- **Quick Decision:** User can assess market in 3 seconds
+- **Clear Actions:** Primary action is obvious, secondary available
+- **Mobile Optimized:** Single thumb can access all actions
+
+##### **Application Management Philosophy**
+```
+Application List Design:
+├── Applicant Avatar + Name
+├── Market Name + Status Badge
+├── Application Date + Notes
+├── Quick Actions (approve/reject/edit)
+└── Bulk Selection (checkbox)
+```
+
+**Efficiency Rules:**
+- **Batch Operations:** Select multiple, act on all
+- **Status Clarity:** Color-coded badges for instant recognition
+- **Minimal Clicks:** Common actions accessible in 1-2 clicks
+- **Keyboard Friendly:** Power users can navigate without mouse
+
+#### **Implementation Philosophy**
+
+##### **Reddit-Inspired Community Features**
+- **Voting System:** Simple up/down voting on markets and comments
+- **Comment Threading:** Nested discussions with clear depth limits
+- **Content Discovery:** Trending, new, and personalized feeds
+- **User Profiles:** Simple contributor profiles with history
+
+##### **GitHub-Inspired Management Tools**
+- **Status Boards:** Kanban-style application pipeline
+- **Activity Feeds:** Chronological updates on market activity
+- **Advanced Search:** Powerful filtering with saved searches
+- **Bulk Operations:** Select multiple items for batch actions
+
+#### **Size Guidelines for Implementation**
+
+##### **Card Dimensions**
+- **Market Cards:** 320px width on mobile, 400px on desktop
+- **Image Height:** 200px (4:5 aspect ratio)
+- **Text Lines:** Maximum 2 lines for titles, 1 line for meta
+- **Padding:** 16px internal padding, 12px between cards
+
+##### **List Items**
+- **Row Height:** 72px minimum for touch targets
+- **Avatar Size:** 40px for user avatars
+- **Icon Size:** 16px for status indicators
+- **Text Hierarchy:** 16px titles, 14px body, 12px meta
+
+##### **Button Sizing**
+- **Touch Targets:** Minimum 44px height
+- **Primary Actions:** Full-width on mobile, auto-width on desktop
+- **Secondary Actions:** Compact buttons with icons
+- **Icon Buttons:** 32px with 16px icons
+
+#### **Content Hierarchy Principles**
+
+##### **Information Priority**
+1. **Primary:** Market name, location, dates
+2. **Secondary:** Price, capacity, category
+3. **Tertiary:** Photos, comments, votes
+4. **Quaternary:** Promoter info, application status
+
+##### **Visual Weight Distribution**
+- **70% Content:** Market information and community data
+- **20% Actions:** Track, apply, share buttons
+- **10% Navigation:** Back, menu, filter controls
+
+This approach ensures the interface is simple enough for casual users but powerful enough for power users, following the "complex enough to be useful, simple enough to be learnable" principle.
+
+## 13. Friction Reduction Strategy
+
+### Understanding User Friction Points
+
+#### **Friction vs. Flow**
+- **Friction**: Any obstacle that slows down or stops user progress
+- **Flow**: Seamless progression from intention to completion
+- **Goal**: Convert friction points into flow opportunities
+
+#### **Types of Friction in Market Applications**
+
+##### **1. Registration & Onboarding Friction**
+**Current Friction Points:**
+- Long registration forms requiring immediate completion
+- Email verification delays
+- Complex password requirements
+- Unclear value proposition during signup
+
+**Friction Reduction Strategies:**
+```
+Progressive Registration:
+├── Step 1: Email only (30 seconds)
+├── Step 2: Essential info (name, location) during first market interaction
+├── Step 3: Optional details (bio, preferences) after first success
+└── Step 4: Complete profile after 3+ market interactions
+
+Social Login Options:
+├── "Continue with Google" (primary)
+├── "Continue with Apple" (iOS users)
+└── "Continue with Email" (fallback)
+
+Immediate Value Delivery:
+├── Browse markets without registration
+├── Save 1 market without registration
+├── Apply requires registration (but pre-fills discovered preferences)
+└── Post-application: "Want to track more markets? Create free account"
+```
+
+##### **2. Market Discovery Friction**
+**Current Friction Points:**
+- Too many filter options overwhelming new users
+- Search results not relevant to user's location/interests
+- Cannot easily compare similar markets
+- No way to save searches for later
+
+**Friction Reduction Strategies:**
+```
+Smart Defaults:
+├── Auto-detect user location (with permission)
+├── Show "markets near you" on first visit
+├── Popular categories pre-selected based on location
+└── "Trending in your area" as default view
+
+Progressive Filtering:
+├── Show 3-5 most useful filters initially
+├── "Advanced filters" button reveals more options
+├── Save filter combinations as "My preferences"
+└── One-click "Clear all filters" button
+
+Comparison Mode:
+├── "Compare" button on market cards
+├── Side-by-side comparison view (max 3 markets)
+├── Highlight differences automatically
+└── Save comparison as PDF or share link
+```
+
+##### **3. Application Process Friction**
+**Current Friction Points:**
+- Application forms too long or complex
+- Required fields unclear or confusing
+- No draft saving capability
+- Unclear application status tracking
+
+**Friction Reduction Strategies:**
+```
+Intelligent Form Design:
+├── Pre-fill from user profile (name, email, location)
+├── Smart field ordering (most common first)
+├── Real-time validation with helpful messages
+├── Auto-save drafts every 30 seconds
+└── "Skip for now" options on non-essential fields
+
+Application Flow Optimization:
+├── 3-step process: Basic Info → Market Specific → Submit
+├── Progress indicator showing completion percentage
+├── "Save & Continue Later" prominent button
+├── Confirmation page with next steps clearly stated
+└── Instant email confirmation with tracking link
+
+Status Communication:
+├── Real-time status updates via push notification
+├── Visual timeline: Applied → Under Review → Decision
+├── Estimated review time displayed
+└── "Need help?" link to promoter contact
+```
+
+##### **4. Navigation & Information Friction**
+**Current Friction Points:**
+- Unclear navigation structure
+- Important information buried in multiple clicks
+- No breadcrumbs or way to understand current location
+- Inconsistent terminology across the app
+
+**Friction Reduction Strategies:**
+```
+Contextual Navigation:
+├── "Back to markets" always available
+├── "My applications" prominent in user menu
+├── Recent markets shown in quick access menu
+└── Breadcrumb navigation for deep pages
+
+Information Hierarchy:
+├── Most important info above the fold
+├── Expandable sections for details
+├── "Key details" vs "Additional information" split
+└── Related markets suggested at bottom
+
+Consistent Language:
+├── Use familiar terms ("Market" not "Event Listing")
+├── Consistent action words (Apply, Track, Share)
+├── Clear status labels (Interested, Applied, Booked)
+└── Tooltip explanations for technical terms
+```
+
+##### **5. Mobile Interaction Friction**
+**Current Friction Points:**
+- Small touch targets requiring precise taps
+- Forms that require zoom to complete
+- Thumb-unfriendly navigation
+- Slow loading on mobile networks
+
+**Friction Reduction Strategies:**
+```
+Touch-Optimized Design:
+├── 44px minimum touch targets
+├── Primary actions in thumb zone (bottom 1/3)
+├── Swipe gestures for common actions
+└── Pull-to-refresh on all list views
+
+Mobile-First Forms:
+├── Large input fields with appropriate keyboards
+├── Auto-focus next field on completion
+├── "Next" button always visible
+└── Skip complex fields on small screens
+
+Performance Optimization:
+├── Lazy load images and content
+├── Progressive web app capabilities
+├── Offline viewing of saved markets
+└── Fast tap responses (no 300ms delay)
+```
+
+#### **Friction Measurement & Testing**
+
+##### **Key Metrics to Track**
+```
+Registration Funnel:
+├── Registration start rate
+├── Registration completion rate
+├── Time to complete registration
+└── Drop-off points in registration flow
+
+Application Funnel:
+├── Market detail → Application start rate
+├── Application start → submission rate
+├── Time to complete application
+└── Draft abandonment rate
+
+User Engagement:
+├── Markets browsed per session
+├── Time to find relevant market
+├── Return visit rate within 7 days
+└── Feature adoption rate
+```
+
+##### **Friction Testing Methods**
+- **User Journey Mapping**: Track actual user paths through the app
+- **Heat Map Analysis**: Identify where users click most/least
+- **Session Recording**: Watch real users complete tasks
+- **A/B Testing**: Compare high-friction vs. low-friction designs
+- **User Surveys**: "How easy was it to...?" after key actions
+
+#### **Implementation Priority for Friction Reduction**
+
+##### **Phase 1: Critical Friction Removal (Month 1)**
+- Remove registration barriers for browsing
+- Simplify initial market search
+- Reduce form fields in applications
+- Add auto-save functionality
+
+##### **Phase 2: Flow Optimization (Month 2)**
+- Implement smart defaults and pre-filling
+- Add progress indicators and confirmations
+- Optimize mobile touch targets
+- Create comparison and saving features
+
+##### **Phase 3: Advanced Friction Reduction (Month 3)**
+- Implement predictive search and recommendations
+- Add contextual help and tooltips
+- Create efficient batch operations
+- Optimize performance for slow connections
+
+#### **Design Principles for Friction Reduction**
+
+##### **The "3-Second Rule"**
+- User should understand what to do in 3 seconds
+- User should complete common task in 3 taps
+- User should see feedback within 3 seconds
+
+##### **The "Progressive Disclosure" Principle**
+- Show essential information first
+- Reveal advanced options on demand
+- Allow users to go deeper only if they want to
+
+##### **The "Confirmation over Correction" Principle**
+- Prevent errors rather than fixing them
+- Ask for confirmation on important actions
+- Provide easy way to undo mistakes
+
+##### **The "Contextual Assistance" Principle**
+- Help when and where users need it
+- Provide examples and templates
+- Offer shortcuts for power users
+
+This friction reduction strategy ensures users can accomplish their goals with minimal effort, increasing adoption and engagement while reducing support requests and user frustration.
+
+## 14. Low-Level Design Process
+
+### Design Methodology Framework
+
+#### **The "Design-Thinking-First" Approach**
+
+##### **1. Problem Definition Phase**
+```
+User Research Integration:
+├── Define user personas (Vendor, Promoter, Admin)
+├── Map user journeys for key workflows
+├── Identify pain points and friction points
+├── Set success metrics for each user type
+└── Define design constraints (mobile-first, accessibility)
+
+Competitive Analysis:
+├── Analyze similar platforms (Eventbrite, Facebook Events)
+├── Identify best practices and common patterns
+├── Find gaps in current market solutions
+└── Define unique value propositions
+```
+
+##### **2. Information Architecture Phase**
+```
+Content Strategy:
+├── Define content hierarchy for each page type
+├── Create content inventory and audit
+├── Map content relationships and dependencies
+├── Define content governance and moderation rules
+└── Plan content lifecycle (creation, updates, archival)
+
+Navigation Design:
+├── Create site map with clear hierarchy
+├── Define navigation patterns (tab bar, sidebar, breadcrumbs)
+├── Plan search and filtering architecture
+├── Design information scent and wayfinding
+└── Define empty states and error handling
+```
+
+#### **Component-Based Design System**
+
+##### **Atomic Design Methodology**
+```
+Atoms (UI Foundation):
+├── Typography scale (h1-h6, body, caption)
+├── Color palette (primary, secondary, semantic)
+├── Spacing system (4px grid system)
+├── Icon system (Lucide React integration)
+├── Form elements (input, select, textarea, button)
+└── Accessibility foundations (contrast, focus states)
+
+Molecules (Function Groups):
+├── Search bar with filters
+├── Market card (image, title, meta, actions)
+├── Comment thread (author, content, reactions)
+├── Application form section
+├── Status badge with tooltip
+└── Navigation menu item
+
+Organisms (Complex Components):
+├── Market grid/list with pagination
+├── Application review interface
+├── User dashboard with multiple widgets
+├── Photo gallery with lightbox
+├── Notification center
+└── Admin moderation queue
+
+Templates (Page Layouts):
+├── Market listing page template
+├── Application management template
+├── User dashboard template
+├── Admin panel template
+└── Mobile-responsive layouts
+
+Pages (Final Implementation):
+├── HomePage.tsx
+├── MarketDetailPage.tsx
+├── MyMarketsPage.tsx
+├── ApplicationReviewPage.tsx
+└── AdminDashboardPage.tsx
+```
+
+##### **Design Token System**
+```
+UnoCSS Configuration:
+├── Colors: semantic naming (color-primary, color-success, color-warning)
+├── Typography: scale-based sizing (text-xs to text-6xl)
+├── Spacing: consistent scale (space-1 to space-96)
+├── Breakpoints: mobile-first (sm:, md:, lg:, xl:)
+├── Shadows: elevation levels (shadow-sm to shadow-2xl)
+├── Border radius: consistent rounding (rounded-sm to rounded-full)
+└── Animation: timing and easing curves
+
+Implementation in Components:
+className="text-lg text-primary bg-white rounded-lg shadow-sm p-4"
+```
+
+#### **Interaction Design Process**
+
+##### **User Flow Mapping**
+```
+Primary User Flows:
+├── Flow 1: Discover Market → Track Market → Apply
+├── Flow 2: Browse Markets → Compare → Save → Share
+├── Flow 3: Review Applications → Approve/Reject → Communicate
+├── Flow 4: Track Applications → Update Status → Complete Market
+└── Flow 5: Upload Photos → Vote → Comment → Engage
+
+Flow Documentation:
+├── Start state and trigger conditions
+├── Step-by-step user actions
+├── System responses and feedback
+├── Decision points and branching logic
+├── Error states and recovery paths
+└── Success states and next actions
+```
+
+##### **Micro-Interaction Design**
+```
+Feedback Patterns:
+├── Button press: immediate visual feedback
+├── Form submission: loading state + progress indicator
+├── Success actions: subtle animation + confirmation message
+├── Error states: clear error message + retry option
+├── Hover states: subtle elevation or color change
+└── Focus states: clear focus indicator for accessibility
+
+Animation Principles:
+├── Purpose: guide attention, show relationships, provide feedback
+├── Duration: 150ms for micro-interactions, 300ms for transitions
+├── Easing: ease-out for entrances, ease-in for exits
+├── Performance: transform and opacity only (hardware acceleration)
+└── Accessibility: respect prefers-reduced-motion
+```
+
+#### **Responsive Design Implementation**
+
+##### **Mobile-First Breakpoint Strategy**
+```
+Breakpoint System:
+├── Mobile (default): 320px - 768px
+├── Tablet (sm): 768px - 1024px
+├── Desktop (md): 1024px - 1440px
+├── Large (lg): 1440px - 1920px
+└── XL (xl): 1920px+
+
+Component Responsiveness:
+├── Stack layout: vertical on mobile, horizontal on desktop
+├── Navigation: bottom tabs on mobile, sidebar on desktop
+├── Market cards: single column mobile, multi-column desktop
+├── Forms: single column mobile, multi-column desktop
+└── Dashboards: vertical scroll mobile, grid layout desktop
+```
+
+##### **Progressive Enhancement Strategy**
+```
+Core Functionality (All Devices):
+├── Market browsing and search
+├── Basic market information display
+├── Simple tracking and application
+├── Mobile-optimized touch interactions
+└── Offline capability for saved content
+
+Enhanced Experience (Larger Screens):
+├── Multi-column layouts
+├── Advanced filtering sidebar
+├── Bulk operations and keyboard shortcuts
+├── Detailed analytics and reporting
+└── Advanced search with saved queries
+
+Progressive Enhancement:
+├── Start with mobile-first HTML structure
+├── Add CSS for larger screens with min-width queries
+├── Enhance with JavaScript for interactive features
+├── Add PWA features for app-like experience
+└── Implement advanced features for capable devices
+```
+
+#### **Component Development Process**
+
+##### **Component Specification Template**
+```typescript
+// Component: MarketCard
+interface MarketCardProps {
+  market: Market;
+  onTrack: (marketId: string) => void;
+  onApply: (marketId: string) => void;
+  className?: string;
+  variant?: 'default' | 'compact' | 'detailed';
+}
+
+// States to handle:
+// - Loading state (skeleton UI)
+// - Error state (fallback content)
+// - Empty state (no market data)
+// - Hover states (desktop)
+// - Active states (selected)
+// - Disabled states (unavailable actions)
+
+// Accessibility requirements:
+// - ARIA labels for actions
+// - Keyboard navigation support
+// - Screen reader announcements
+// - Focus management
+// - Color contrast compliance
+```
+
+##### **State Management Integration**
+```
+Zustand Store Structure:
+├── authStore: authentication state
+├── uiStore: global UI state (modals, loading)
+├── marketsStore: market data and filters
+├── applicationsStore: application state
+├── notificationsStore: notification management
+└── adminStore: admin panel state
+
+TanStack Query Integration:
+├── Query keys for data caching
+├── Mutation hooks for updates
+├── Error handling and retry logic
+├── Optimistic updates for better UX
+└── Background refetch for data freshness
+```
+
+#### **Testing & Validation Process**
+
+##### **Design Validation Checklist**
+```
+Functional Testing:
+├── All interactive elements work as expected
+├── Forms validate input and show helpful errors
+├── Navigation works on all devices and screen sizes
+├── Performance meets target metrics (Core Web Vitals)
+└── Accessibility standards are met (WCAG 2.1 AA)
+
+User Testing Protocol:
+├── Task-based usability testing (5-8 users)
+├── A/B testing for high-impact changes
+├── Analytics review for behavior insights
+├── Heat mapping for interaction patterns
+└── Session recordings for qualitative insights
+
+Quality Assurance:
+├── Cross-browser testing (Chrome, Firefox, Safari, Edge)
+├── Device testing (iOS Safari, Android Chrome)
+├── Network condition testing (3G, 4G, WiFi)
+├── Accessibility testing (screen readers, keyboard-only)
+└── Performance testing (load times, bundle size)
+```
+
+##### **Continuous Design Improvement**
+```
+Feedback Loops:
+├── Analytics monitoring for user behavior
+├── User feedback collection and analysis
+├── Support ticket analysis for friction points
+├── A/B test results for design decisions
+└── Performance monitoring for optimization opportunities
+
+Design System Evolution:
+├── Component usage analytics
+├── Design token adoption tracking
+├── Pattern library maintenance
+├── Documentation updates
+└── Team training and onboarding
+```
+
+#### **Implementation Guidelines**
+
+##### **Code Organization Standards**
+```
+Component Structure:
+├── Single responsibility principle
+├── Props interface definition
+├── Internal state management
+├── Event handler organization
+├── CSS class management (UnoCSS utilities)
+└── Accessibility feature implementation
+
+File Naming Conventions:
+├── PascalCase for components (MarketCard.tsx)
+├── camelCase for hooks (useMarketData.ts)
+├── kebab-case for utilities (format-currency.ts)
+├── UPPER_CASE for constants (MARKET_STATUS.ts)
+└── Descriptive names that explain purpose
+```
+
+##### **Performance Optimization**
+```
+Frontend Optimization:
+├── Code splitting by route
+├── Lazy loading for images and components
+├── Bundle size monitoring and optimization
+├── Critical CSS inlining
+├── Service worker implementation
+└── CDN integration for static assets
+
+State Management Optimization:
+├── Selective re-rendering with React.memo
+├── Efficient subscription patterns with Zustand
+├── Query caching strategies with TanStack Query
+├── Debounced search and filter inputs
+└── Optimistic updates for better perceived performance
+```
+
+This low-level design process ensures consistent, high-quality implementation while maintaining flexibility for iteration and improvement based on user feedback and analytics.
+
 ## Conclusion
 
-This comprehensive audit reveals that Rumfor Market Tracker is a feature-rich platform with strong community-building potential. The current implementation demonstrates solid business logic and user engagement features, but would benefit from a mobile-first redesign to better serve its primary user base of artisan vendors.
+This comprehensive audit reveals that Rumfor Market Tracker is a feature-rich platform with strong community-building potential. The modern technology stack implementation addresses the original pain points while providing a superior development experience and user experience.
+
+**Key Improvements with Modern Stack:**
+- **Performance:** Optimized bundling, caching, and loading strategies
+- **Developer Experience:** Type safety, hot reloading, and modern tooling
+- **User Experience:** Real-time validation, optimistic updates, and smooth interactions
+- **Maintainability:** Clean architecture with separation of concerns
+- **Scalability:** Component-based architecture with proper state management
+- **Accessibility:** WCAG compliant components and interactions
+- **Mobile-First:** Progressive Web App capabilities with offline support
+
+**Technical Achievements:**
+- Zero runtime CSS processing with UnoCSS
+- Intelligent data fetching and caching with TanStack Query
+- Type-safe state management with Zustand
+- Accessibility-first UI components with Radix UI
+- Modern form handling with React Hook Form + Zod validation
+- Optimized bundle sizes through tree-shaking and code splitting
+
+The rebuild prioritizes mobile experience while maintaining all core functionality, positioning the platform for significant user growth and market expansion.
 
 **Key Strengths:**
 - Comprehensive feature set covering the full vendor journey

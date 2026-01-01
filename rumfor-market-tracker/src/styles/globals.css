@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand Colors - Dark Professional Theme */
+    --background: 220 13% 6%;          /* Very dark gray */
+    --foreground: 220 14% 98%;         /* Soft off-white */
+    --surface: 220 13% 10%;            /* Slightly lighter dark */
+    --surface-2: 220 13% 12%;          /* Layered surface */
+    
+    /* Primary Accent - Calm Blue (used sparingly) */
+    --accent: 215 84% 56%;             /* Professional blue */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Text Hierarchy */
+    --muted: 220 9% 46%;               /* Light gray for secondary text */
+    --muted-foreground: 220 9% 65%;    /* Muted gray for hints */
+    
+    /* Status Colors - Muted, not fluorescent */
+    --success: 142 76% 36%;            /* Muted green */
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;             /* Muted amber */
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;          /* Muted red */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border System */
+    --border: 220 13% 18%;             /* Subtle borders */
+    --input: 220 13% 18%;
+    --ring: 215 84% 56%;
+    
+    /* Border Radius */
+    --radius: 0.25rem;                 /* Gently rounded corners */
+  }
+  
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer utilities {
+  /* Additional utilities for the dark theme */
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+  
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+  
+  .bg-surface {
+    background-color: hsl(var(--surface));
+  }
+  
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+  
+  .text-muted {
+    color: hsl(var(--muted));
+  }
+  
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+  
+  .text-accent-foreground {
+    color: hsl(var(--accent-foreground));
+  }
+  
+  .ring-accent {
+    --tw-ring-color: hsl(var(--accent));
+  }
+}
