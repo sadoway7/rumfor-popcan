@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -8,21 +8,17 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { cn } from '@/utils/cn'
+import { useAuthStore } from '@/features/auth/authStore'
+import { marketsApi } from '@/features/markets/marketsApi'
+import { Market, MarketCategory } from '@/types'
 import { 
   ArrowLeft, 
   MapPin, 
   Calendar, 
   Store, 
   Phone, 
-  Mail, 
   DollarSign, 
-  Users, 
-  Heart,
-  Car,
   Accessibility,
-  Clock,
-  Info,
-  AlertCircle,
   CheckCircle,
   Plus,
   X
@@ -110,6 +106,7 @@ const paymentMethods = [
 
 export function VendorAddMarketForm() {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState<MarketFormData>({
     name: '',
@@ -185,15 +182,34 @@ export function VendorAddMarketForm() {
     setIsSubmitting(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      const marketData: Omit<Market, 'id' | 'createdAt' | 'updatedAt'> = {
+        name: formData.name,
+        description: formData.description,
+        category: formData.category as MarketCategory,
+        promoterId: user?.id || '',
+        location: formData.location,
+        schedule: formData.schedule.map(scheduleItem => ({
+          ...scheduleItem,
+          id: `schedule-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        })),
+        status: 'draft',
+        marketType: 'user-created',
+        images: [],
+        tags: formData.additionalInfo.tags,
+        accessibility: formData.accessibility,
+        contact: formData.contact,
+        applicationFields: []
+      }
+
+      const response = await marketsApi.createMarket(marketData)
       
-      // In real app, submit to API
-      console.log('Submitting market:', formData)
-      
-      // Show success and redirect
-      alert('Market added successfully! You can now track this market and plan your participation.')
-      navigate('/vendor')
+      if (response.success && response.data) {
+        // Show success and redirect
+        alert('Market added successfully! You can now track this market and plan your participation.')
+        navigate('/vendor')
+      } else {
+        throw new Error(response.error || 'Failed to create market')
+      }
     } catch (error) {
       console.error('Error submitting market:', error)
       alert('Failed to submit market. Please try again.')

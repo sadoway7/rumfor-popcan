@@ -567,6 +567,25 @@ export const adminApi = {
     })
   },
 
+  // Contact Form Submission
+  async submitContactForm(formData: {
+    name: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+    userType: 'vendor' | 'promoter' | 'visitor' | 'other';
+    priority: 'low' | 'medium' | 'high';
+  }): Promise<ApiResponse<{ ticketId: string }>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const ticketId = `contact-${Date.now()}`;
+        console.log('Contact form submitted:', formData);
+        resolve({ success: true, data: { ticketId } });
+      }, 1000);
+    });
+  },
+
   // Audit Logs
   async getAuditLogs(_filters?: { userId?: string; action?: string; dateRange?: { start: string; end: string } }): Promise<PaginatedResponse<AuditLog>> {
     return new Promise((resolve) => {

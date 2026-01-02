@@ -24,6 +24,8 @@ import { VendorDashboardPage } from '@/pages/vendor/VendorDashboardPage'
 import { BusinessPlanningPage } from '@/pages/vendor/BusinessPlanningPage'
 import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
 import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
+import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
+import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
 
 // Promoter pages
 import { PromoterDashboardPage } from '@/pages/promoter/PromoterDashboardPage'
@@ -144,6 +146,22 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><MarketCalendarPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/add-market" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><AddMarketPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/add-market/vendor" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><VendorAddMarketForm /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />

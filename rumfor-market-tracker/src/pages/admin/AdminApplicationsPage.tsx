@@ -27,7 +27,7 @@ import {
 } from 'lucide-react'
 
 export function AdminApplicationsPage() {
-  const { applications, isLoading, error } = useApplications()
+  const { applications, isLoading, error, searchApplications, applyFilters, updateStatus } = useApplications()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus] = useState<string>('all')
 
@@ -110,19 +110,35 @@ export function AdminApplicationsPage() {
   }
 
   const handleSearch = useCallback(async () => {
-    // In real implementation, use searchApplications from the hook
-    console.log(`Searching for: ${searchQuery}`)
-  }, [searchQuery])
+    if (searchQuery.trim()) {
+      await searchApplications(searchQuery)
+    }
+  }, [searchQuery, searchApplications])
 
   const handleStatusFilter = useCallback(async (status: string) => {
-    // In real implementation, use applyFilters from the hook
-    console.log(`Filtering by status: ${status}`)
-  }, [])
+    const newFilters = status === 'all' ? {} : { status: [status as ApplicationStatus] }
+    await applyFilters(newFilters)
+  }, [applyFilters])
 
   const handleApplicationAction = useCallback(async (applicationId: string, action: 'approve' | 'reject' | 'under-review') => {
-    // Mock action - in real implementation, this would call the API
-    console.log(`Action ${action} on application ${applicationId}`)
-  }, [])
+    let status: ApplicationStatus
+    
+    switch (action) {
+      case 'approve':
+        status = 'approved'
+        break
+      case 'reject':
+        status = 'rejected'
+        break
+      case 'under-review':
+        status = 'under-review'
+        break
+      default:
+        return
+    }
+    
+    await updateStatus(applicationId, status)
+  }, [updateStatus])
 
 
 

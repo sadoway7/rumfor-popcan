@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useMarketsStore } from '../marketsStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'
 import { Market, MarketFilters } from '@/types'
 
@@ -290,11 +291,41 @@ export const useMarket = (id: string) => {
 // Hook for tracked markets
 export const useTrackedMarkets = () => {
   const store = useMarketsStore()
+  const { user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [trackedMarkets, setTrackedMarkets] = useState<Market[]>([])
 
-  const trackedMarkets = store.markets.filter(market => 
-    store.trackedMarketIds.includes(market.id)
-  )
+  const refreshTracked = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      
+      // Get user ID from auth store
+      const userId = user?.id
+      if (!userId) {
+        console.warn('No authenticated user found for tracked markets')
+        setTrackedMarkets([])
+        store.setTrackedMarketIds([])
+        return
+      }
+      
+      const response = await marketsApi.getUserTrackedMarkets(userId)
+      
+      setTrackedMarkets(response.data)
+      
+      // Update trackedMarketIds in store for consistency
+      store.setTrackedMarketIds(response.data.map(market => market.id))
+    } catch (error) {
+      console.error('Failed to load tracked markets:', error)
+      store.setError(error instanceof Error ? error.message : 'Failed to load tracked markets')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user?.id])
+
+  // Load tracked markets on mount
+  useEffect(() => {
+    refreshTracked()
+  }, [refreshTracked])
 
   return {
     trackedMarkets,
@@ -303,12 +334,6 @@ export const useTrackedMarkets = () => {
     trackMarket: store.trackMarket,
     untrackMarket: store.untrackMarket,
     isMarketTracked: store.isMarketTracked,
-    refreshTracked: async () => {
-      // In a real app, this would fetch tracked markets from the API
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      setIsLoading(false)
-    }
+    refreshTracked
   }
 }

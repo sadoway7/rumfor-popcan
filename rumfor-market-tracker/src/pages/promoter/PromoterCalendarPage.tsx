@@ -31,7 +31,6 @@ export function PromoterCalendarPage() {
   const { user } = useAuthStore()
   const { markets } = useMarkets()
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
   const [selectedMarket, setSelectedMarket] = useState<string>('')
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -87,17 +86,7 @@ export function PromoterCalendarPage() {
   // Calendar navigation functions
   const navigateCalendar = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate)
-    switch (viewMode) {
-      case 'month':
-        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1))
-        break
-      case 'week':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7))
-        break
-      case 'day':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1))
-        break
-    }
+    newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1))
     setCurrentDate(newDate)
   }
 
@@ -209,11 +198,7 @@ export function PromoterCalendarPage() {
     }))
   ]
 
-  const viewModeOptions: SelectOption[] = [
-    { value: 'month', label: 'Month View' },
-    { value: 'week', label: 'Week View' },
-    { value: 'day', label: 'Day View' }
-  ]
+
 
   return (
     <div className="space-y-6">
@@ -237,12 +222,7 @@ export function PromoterCalendarPage() {
               className="w-48"
               placeholder="Filter by market"
             />
-            <Select
-              value={viewMode}
-              onValueChange={(value) => setViewMode(value as 'month' | 'week' | 'day')}
-              options={viewModeOptions}
-              className="w-40"
-            />
+
             <Button
               variant="outline"
               onClick={() => {/* Refresh data */}}
@@ -351,105 +331,68 @@ export function PromoterCalendarPage() {
                   Today
                 </Button>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === 'month' ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('month')}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  Month
-                </Button>
-                <Button
-                  variant={viewMode === 'week' ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('week')}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  Week
-                </Button>
-                <Button
-                  variant={viewMode === 'day' ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('day')}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-1" />
-                  Day
-                </Button>
-              </div>
+
             </div>
 
             {/* Calendar Grid */}
-            {viewMode === 'month' && (
-              <div className="space-y-4">
-                {/* Day headers */}
-                <div className="grid grid-cols-7 gap-1">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Calendar days */}
-                <div className="grid grid-cols-7 gap-1">
-                  {getDaysInMonth(currentDate).map((day, index) => {
-                    if (!day) {
-                      return <div key={index} className="p-2 h-24"></div>
-                    }
-                    
-                    const dayEvents = getEventsForDate(day)
-                    const isToday = day.toDateString() === new Date().toDateString()
-                    
-                    return (
-                      <div
-                        key={index}
-                        className={cn(
-                          "p-2 h-24 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors",
-                          isToday && "bg-primary/10 border-primary"
-                        )}
-                      >
-                        <div className={cn(
-                          "text-sm font-medium mb-1",
-                          isToday ? "text-primary" : ""
-                        )}>
-                          {day.getDate()}
-                        </div>
-                        <div className="space-y-1">
-                          {dayEvents.slice(0, 2).map(event => (
-                            <div
-                              key={event.id}
-                              className={cn(
-                                "text-xs p-1 rounded border truncate",
-                                getStatusColor(event.status)
-                              )}
-                              title={event.title}
-                            >
-                              {event.title}
-                            </div>
-                          ))}
-                          {dayEvents.length > 2 && (
-                            <div className="text-xs text-muted-foreground">
-                              +{dayEvents.length - 2} more
-                            </div>
-                          )}
-                        </div>
+            <div className="space-y-4">
+              {/* Day headers */}
+              <div className="grid grid-cols-7 gap-1">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Calendar days */}
+              <div className="grid grid-cols-7 gap-1">
+                {getDaysInMonth(currentDate).map((day, index) => {
+                  if (!day) {
+                    return <div key={index} className="p-2 h-24"></div>
+                  }
+                  
+                  const dayEvents = getEventsForDate(day)
+                  const isToday = day.toDateString() === new Date().toDateString()
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "p-2 h-24 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors",
+                        isToday && "bg-primary/10 border-primary"
+                      )}
+                    >
+                      <div className={cn(
+                        "text-sm font-medium mb-1",
+                        isToday ? "text-primary" : ""
+                      )}>
+                        {day.getDate()}
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 2).map(event => (
+                          <div
+                            key={event.id}
+                            className={cn(
+                              "text-xs p-1 rounded border truncate",
+                              getStatusColor(event.status)
+                            )}
+                            title={event.title}
+                          >
+                            {event.title}
+                          </div>
+                        ))}
+                        {dayEvents.length > 2 && (
+                          <div className="text-xs text-muted-foreground">
+                            +{dayEvents.length - 2} more
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            )}
-
-            {/* Week and Day views would go here */}
-            {viewMode !== 'month' && (
-              <div className="text-center py-12 text-muted-foreground">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>{viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} view coming soon</p>
-                <p className="text-sm">For now, please use Month view</p>
-              </div>
-            )}
+            </div>
           </Card>
         </div>
 

@@ -157,8 +157,8 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
   }
 
   const handleExport = () => {
-    // TODO: Implement CSV/PDF export functionality
-    console.log('Export expenses functionality to be implemented')
+    // Export functionality not yet implemented
+    alert('Export functionality will be available in a future update.')
   }
 
   const formatCurrency = (amount: number) => {

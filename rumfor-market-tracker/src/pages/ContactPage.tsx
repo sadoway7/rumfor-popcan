@@ -15,6 +15,7 @@ import {
   Alert,
   Select
 } from '@/components/ui'
+import { adminApi } from '@/features/admin/adminApi'
 import { 
   Mail, 
   Phone, 
@@ -46,6 +47,7 @@ type ContactFormData = z.infer<typeof contactSchema>
 export function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [ticketId, setTicketId] = useState<string>('')
 
   const {
     register,
@@ -61,13 +63,16 @@ export function ContactPage() {
     setSubmitStatus('idle')
     
     try {
-      // Simulate API call - replace with actual contact form submission
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      console.log('Form submitted:', data)
-      setSubmitStatus('success')
-      reset()
+      const response = await adminApi.submitContactForm(data)
+      if (response.success && response.data) {
+        setTicketId(response.data.ticketId)
+        setSubmitStatus('success')
+        reset()
+      } else {
+        setSubmitStatus('error')
+      }
     } catch (error) {
+      console.error('Contact form submission error:', error)
       setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
@@ -196,6 +201,11 @@ export function ContactPage() {
                       <p className="text-sm mt-1">
                         Thank you for contacting us. We'll get back to you within 24-48 hours.
                       </p>
+                      {ticketId && (
+                        <p className="text-xs mt-1 text-muted-foreground">
+                          Ticket ID: {ticketId}
+                        </p>
+                      )}
                     </div>
                   </Alert>
                 )}

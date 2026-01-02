@@ -6,10 +6,11 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Progress } from '@/components/ui/Progress'
 import { cn } from '@/utils/cn'
+import { useTodos } from '@/features/tracking/hooks/useTodos'
+import { useExpenses } from '@/features/tracking/hooks/useExpenses'
 import { 
   Calendar, 
   MapPin, 
-  Clock, 
   CheckSquare, 
   DollarSign, 
   Users, 
@@ -17,7 +18,6 @@ import {
   Accessibility, 
   Heart,
   Plus,
-  Edit,
   ArrowRight
 } from 'lucide-react'
 
@@ -35,29 +35,11 @@ interface VendorMarketTracking {
   updatedAt: string
 }
 
-// Interface for individual todo item
-interface TodoItem {
-  id: string
-  title: string
-  completed: boolean
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  dueDate?: string
-}
 
-// Interface for individual expense item
-interface ExpenseItem {
-  id: string
-  title: string
-  amount: number
-  category: string
-  date: string
-}
 
 interface VendorMarketRowProps {
   market: Market
   tracking?: VendorMarketTracking
-  todos?: TodoItem[]
-  expenses?: ExpenseItem[]
   onUpdateStatus?: (marketId: string, status: string) => void
   onCreateTodo?: (marketId: string) => void
   onAddExpense?: (marketId: string) => void
@@ -86,14 +68,15 @@ const statusColors = {
 export const VendorMarketRow: React.FC<VendorMarketRowProps> = ({
   market,
   tracking,
-  todos = [],
-  expenses = [],
   onUpdateStatus,
   onCreateTodo,
   onAddExpense,
   onCompleteTodo,
   className
 }) => {
+  // Get real todo and expense data for this market
+  const { todos } = useTodos(market.id)
+  const { expenses } = useExpenses(market.id)
   const formatSchedule = (schedule: Market['schedule']) => {
     if (!schedule || schedule.length === 0) return 'Schedule TBD'
     
@@ -141,6 +124,9 @@ export const VendorMarketRow: React.FC<VendorMarketRowProps> = ({
   // Get recent todos (max 3) and expenses (max 3)
   const recentTodos = todos.slice(0, 3)
   const recentExpenses = expenses.slice(0, 3)
+
+  // Calculate total expenses for this market
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
 
   return (
     <Card className={cn('overflow-hidden hover:shadow-lg transition-shadow', className)}>
@@ -337,7 +323,7 @@ export const VendorMarketRow: React.FC<VendorMarketRowProps> = ({
           <div className="bg-surface-2 rounded-lg p-3">
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground">
-                ${tracking?.totalExpenses || 0}
+                ${totalExpenses}
               </div>
               <div className="text-sm text-muted-foreground">Total Spent</div>
             </div>

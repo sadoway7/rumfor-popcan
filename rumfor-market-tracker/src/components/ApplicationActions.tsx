@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Textarea } from '@/components/ui/Textarea'
 import { Application } from '@/types'
-import { useVendorApplications } from '@/features/applications/hooks/useApplications'
+import { useVendorApplications, usePromoterApplications } from '@/features/applications/hooks/useApplications'
 import { cn } from '@/utils/cn'
 
 interface ApplicationActionsProps {
@@ -22,33 +22,34 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
   
-  const { withdrawApplication, isSubmitting } = useVendorApplications()
-  
-  // For promoter actions, these would be handled separately
-  // const { approveApplication, rejectApplication } = usePromoterApplications()
+  const { withdrawApplication, isSubmitting: isVendorSubmitting } = useVendorApplications()
+  const { updateStatus, isUpdating: isPromoterUpdating } = usePromoterApplications()
 
-  // These would be implemented for promoter role
-  // const handleApprove = async () => {
-  //   try {
-  //     await approveApplication(application.id)
-  //     onStatusChange?.(application.id, 'approved')
-  //   } catch (error) {
-  //     console.error('Failed to approve application:', error)
-  //   }
-  // }
+  const handleApprove = async () => {
+    try {
+      const success = await updateStatus(application.id, 'approved')
+      if (success) {
+        onStatusChange?.(application.id, 'approved')
+      }
+    } catch (error) {
+      console.error('Failed to approve application:', error)
+    }
+  }
 
-  // const handleReject = async () => {
-  //   if (!rejectionReason.trim()) return
-  //   
-  //   try {
-  //     await rejectApplication(application.id, rejectionReason)
-  //     onStatusChange?.(application.id, 'rejected')
-  //     setShowRejectModal(false)
-  //     setRejectionReason('')
-  //   } catch (error) {
-  //     console.error('Failed to reject application:', error)
-  //   }
-  // }
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) return
+    
+    try {
+      const success = await updateStatus(application.id, 'rejected', rejectionReason)
+      if (success) {
+        onStatusChange?.(application.id, 'rejected')
+        setShowRejectModal(false)
+        setRejectionReason('')
+      }
+    } catch (error) {
+      console.error('Failed to reject application:', error)
+    }
+  }
 
   const handleWithdraw = async () => {
     try {
@@ -76,7 +77,7 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
               size={buttonSize}
               variant="outline"
               onClick={handleWithdraw}
-              disabled={isSubmitting}
+              disabled={isVendorSubmitting}
             >
               Withdraw
             </Button>
@@ -98,7 +99,7 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
               size={buttonSize}
               variant="outline"
               onClick={handleWithdraw}
-              disabled={isSubmitting}
+              disabled={isVendorSubmitting}
             >
               Withdraw
             </Button>
@@ -140,8 +141,8 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
         <div className="flex items-center gap-2">
           <Button
             size={buttonSize}
-            onClick={() => {/* TODO: Implement approve */}}
-            disabled={true}
+            onClick={handleApprove}
+            disabled={isPromoterUpdating}
             className="bg-success hover:bg-success/90"
           >
             Approve
@@ -178,7 +179,8 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
   }
 
   // Determine if current user is the vendor or a promoter/admin
-  const isVendorView = true // This would be determined by checking user role vs application.vendorId
+  // For now, assume vendor view, but this would be determined by checking user role vs application.vendorId
+  const isVendorView = true
   
   return (
     <>
@@ -214,8 +216,8 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
               Cancel
             </Button>
             <Button
-              onClick={() => {/* TODO: Implement reject */}}
-              disabled={!rejectionReason.trim() || isSubmitting}
+              onClick={handleReject}
+              disabled={!rejectionReason.trim() || isPromoterUpdating}
               className="bg-destructive hover:bg-destructive/90"
             >
               Reject Application

@@ -40,6 +40,7 @@ const mockMarkets: Market[] = [
       }
     ],
     status: 'active',
+    marketType: 'promoter-managed',
     images: [
       'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800',
       'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800'
@@ -103,6 +104,7 @@ const mockMarkets: Market[] = [
       }
     ],
     status: 'active',
+    marketType: 'promoter-managed',
     images: [
       'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
       'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800'
@@ -173,6 +175,7 @@ const mockMarkets: Market[] = [
       }
     ],
     status: 'active',
+    marketType: 'promoter-managed',
     images: [
       'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800'
     ],
@@ -337,23 +340,69 @@ export const marketsApi = {
     }
   },
 
+  // Create new market
+  async createMarket(marketData: Omit<Market, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Market>> {
+    await delay(800)
+
+    const newMarket: Market = {
+      ...marketData,
+      id: `market-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    // Simulate market creation with ID generation
+    return {
+      success: true,
+      data: newMarket
+    }
+  },
+
   // Track/untrack market (mock implementation)
-  async trackMarket(_marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
+  async trackMarket(marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
     await delay(100)
 
-    // In real app, this would make API call
+    console.log('Tracking market:', marketId)
+    // Simulate tracking action
     return {
       success: true,
       data: { tracked: true }
     }
   },
 
-  async untrackMarket(_marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
+  async untrackMarket(marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
     await delay(100)
 
+    console.log('Untracking market:', marketId)
     return {
       success: true,
       data: { tracked: false }
+    }
+  },
+
+  // Get user's tracked markets
+  async getUserTrackedMarkets(userId: string): Promise<PaginatedResponse<Market>> {
+    await delay(300)
+    
+    // Simulate user-specific tracked markets based on user ID patterns
+    const trackedMarkets = mockMarkets.filter(market => {
+      // Mock: simulate user tracking certain markets based on user ID
+      // Different user IDs will track different markets for demo purposes
+      if (userId === 'current-user-id' || userId === 'user-1') {
+        return market.id === '1' || market.id === '2'
+      }
+      // Default behavior for other users
+      return market.id === '1'
+    })
+    
+    return {
+      data: trackedMarkets,
+      pagination: {
+        page: 1,
+        limit: 20,
+        total: trackedMarkets.length,
+        totalPages: 1
+      }
     }
   }
 }

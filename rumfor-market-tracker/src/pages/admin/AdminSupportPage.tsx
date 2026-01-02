@@ -239,21 +239,42 @@ export function AdminSupportPage() {
   }
 
   const handleSearch = useCallback(() => {
+    // In a real implementation, this would call a search function
+    // For now, we'll implement basic client-side filtering
     console.log(`Searching for: ${searchQuery}`)
   }, [searchQuery])
 
   const handleStatusFilter = useCallback((status: string) => {
     setSelectedStatus(status)
+    // In a real implementation, this would apply filters to the support tickets
     console.log(`Filtering by status: ${status}`)
   }, [])
 
   const handlePriorityFilter = useCallback((priority: string) => {
     setSelectedPriority(priority)
+    // In a real implementation, this would apply filters to the support tickets
     console.log(`Filtering by priority: ${priority}`)
   }, [])
 
   const handleTicketAction = useCallback((ticketId: string, action: 'resolve' | 'assign' | 'close') => {
-    console.log(`Action ${action} on ticket ${ticketId}`)
+    // In a real implementation, these would call the support API
+    try {
+      switch (action) {
+        case 'resolve':
+          console.log(`Resolving ticket ${ticketId}`)
+          break
+        case 'assign':
+          console.log(`Assigning ticket ${ticketId}`)
+          break
+        case 'close':
+          console.log(`Closing ticket ${ticketId}`)
+          break
+        default:
+          console.warn(`Unknown action: ${action}`)
+      }
+    } catch (error) {
+      console.error(`Failed to ${action} ticket:`, error)
+    }
   }, [])
 
   useEffect(() => {

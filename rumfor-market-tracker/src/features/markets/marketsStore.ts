@@ -39,6 +39,7 @@ interface MarketsState {
   // Tracking actions
   trackMarket: (marketId: string) => void
   untrackMarket: (marketId: string) => void
+  setTrackedMarketIds: (marketIds: string[]) => void
   isMarketTracked: (marketId: string) => boolean
   
   // Pagination actions
@@ -195,6 +196,8 @@ export const useMarketsStore = create<MarketsState>()(
       untrackMarket: (marketId) => set((state) => ({
         trackedMarketIds: state.trackedMarketIds.filter(id => id !== marketId)
       })),
+      
+      setTrackedMarketIds: (marketIds) => set({ trackedMarketIds: marketIds }),
       
       isMarketTracked: (marketId) => {
         const { trackedMarketIds } = get()

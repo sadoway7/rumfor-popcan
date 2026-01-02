@@ -52,6 +52,7 @@ const mockApplications: Application[] = [
           isRecurring: true
         }
       ],
+      marketType: 'promoter-managed',
       status: 'active',
       images: ['https://picsum.photos/800/600?random=1'],
       tags: ['organic', 'local', 'fresh-produce'],
@@ -156,6 +157,7 @@ const mockApplications: Application[] = [
           isRecurring: true
         }
       ],
+      marketType: 'promoter-managed',
       status: 'active',
       images: ['https://picsum.photos/800/600?random=2'],
       tags: ['handmade', 'local-artisans', 'crafts'],

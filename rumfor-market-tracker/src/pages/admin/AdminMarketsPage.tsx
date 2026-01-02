@@ -153,8 +153,33 @@ export function AdminMarketsPage() {
   }, [filters, setFilters, refresh])
 
   const handleMarketAction = useCallback(async (marketId: string, action: 'approve' | 'reject' | 'activate' | 'deactivate') => {
-    // Mock action - in real implementation, this would call the API
-    console.log(`Action ${action} on market ${marketId}`)
+    // Note: Market status updates would typically be done through promoter actions
+    // For admin functionality, we could implement market moderation features
+    // For now, we'll use the existing markets hook pattern
+    try {
+      switch (action) {
+        case 'activate':
+          // Would implement market activation logic here
+          console.log(`Activating market ${marketId}`)
+          break
+        case 'deactivate':
+          // Would implement market deactivation logic here
+          console.log(`Deactivating market ${marketId}`)
+          break
+        case 'approve':
+          // Would implement market approval logic here
+          console.log(`Approving market ${marketId}`)
+          break
+        case 'reject':
+          // Would implement market rejection logic here
+          console.log(`Rejecting market ${marketId}`)
+          break
+        default:
+          console.warn(`Unknown action: ${action}`)
+      }
+    } catch (error) {
+      console.error(`Failed to ${action} market:`, error)
+    }
   }, [])
 
   useEffect(() => {

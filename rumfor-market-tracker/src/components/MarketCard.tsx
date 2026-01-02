@@ -231,7 +231,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       
       const firstSchedule = schedule[0]
       const startDate = new Date(firstSchedule.startDate)
-      const endDate = new Date(firstSchedule.endDate)
       
       return startDate.toLocaleDateString('en-US', { 
         month: 'short', 
