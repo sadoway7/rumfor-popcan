@@ -7,16 +7,19 @@ import {
   Bell,
   AlertCircle,
   Clock,
-  Plus
+  Plus,
+  Store
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { VendorMarketRow } from '@/components/VendorMarketRow'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
 import { useNotificationsStore } from '@/features/notifications/notificationsStore'
+import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { cn } from '@/utils/cn'
 
 export function VendorDashboardPage() {
@@ -25,6 +28,84 @@ export function VendorDashboardPage() {
   const { todos, isLoading: todosLoading } = useTodos()
   const { expenses, isLoading: expensesLoading } = useExpenses()
   const { notifications, unreadCount } = useNotificationsStore()
+  
+  // Mock tracked markets for demo - in real app this would come from API
+  const trackedMarkets = [
+    {
+      id: 'market-1',
+      name: 'Downtown Farmers Market',
+      description: 'Weekly farmers market in the heart of downtown',
+      category: 'farmers-market' as const,
+      promoterId: 'promoter-1',
+      promoter: { 
+        id: 'promoter-1', 
+        firstName: 'Sarah', 
+        lastName: 'Johnson', 
+        email: 'sarah@example.com', 
+        role: 'promoter' as const,
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+        isEmailVerified: true,
+        isActive: true
+      },
+      location: { address: '123 Main St', city: 'Springfield', state: 'IL', zipCode: '62701', country: 'USA' },
+      schedule: [{ id: '1', dayOfWeek: 6, startTime: '08:00', endTime: '14:00', startDate: '2024-01-06', endDate: '2024-12-31', isRecurring: true }],
+      status: 'active' as const,
+      marketType: 'promoter-managed' as const,
+      applicationStatus: 'under-review' as const,
+      images: ['/api/placeholder/400/200'],
+      tags: ['local', 'organic', 'fresh'],
+      accessibility: { wheelchairAccessible: true, parkingAvailable: true, restroomsAvailable: true, familyFriendly: true, petFriendly: true },
+      contact: { phone: '(555) 123-4567' },
+      applicationFields: [],
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    {
+      id: 'market-2',
+      name: 'Artisan Craft Fair',
+      description: 'Monthly craft fair featuring local artisans',
+      category: 'craft-show' as const,
+      location: { address: '456 Oak Ave', city: 'Springfield', state: 'IL', zipCode: '62702', country: 'USA' },
+      schedule: [{ id: '2', dayOfWeek: 0, startTime: '10:00', endTime: '16:00', startDate: '2024-02-04', endDate: '2024-02-04', isRecurring: false }],
+      status: 'active' as const,
+      marketType: 'user-created' as const,
+      images: ['/api/placeholder/400/200'],
+      tags: ['handmade', 'artisan', 'crafts'],
+      accessibility: { wheelchairAccessible: false, parkingAvailable: true, restroomsAvailable: true, familyFriendly: true, petFriendly: false },
+      contact: {},
+      applicationFields: [],
+      createdAt: '2024-01-15T00:00:00Z',
+      updatedAt: '2024-01-15T00:00:00Z'
+    }
+  ]
+  
+  // Mock tracking data for each market
+  const trackingData = {
+    'market-1': {
+      id: 'track-1',
+      userId: user?.id || '',
+      marketId: 'market-1',
+      status: 'applied' as const,
+      notes: 'Excited to participate!',
+      todoCount: 3,
+      todoProgress: 66,
+      totalExpenses: 150,
+      createdAt: '2024-01-10T00:00:00Z',
+      updatedAt: '2024-01-20T00:00:00Z'
+    },
+    'market-2': {
+      id: 'track-2',
+      userId: user?.id || '',
+      marketId: 'market-2',
+      status: 'interested' as const,
+      todoCount: 1,
+      todoProgress: 25,
+      totalExpenses: 0,
+      createdAt: '2024-01-18T00:00:00Z',
+      updatedAt: '2024-01-18T00:00:00Z'
+    }
+  }
 
   // Get recent activity
   const recentApplications = applications.slice(0, 3)
@@ -86,10 +167,16 @@ export function VendorDashboardPage() {
               {unreadCount} new
             </Badge>
           )}
-          <Link to="/vendor/applications">
+          <Link to="/markets">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Store className="w-4 h-4" />
+              Find a Market
+            </Button>
+          </Link>
+          <Link to="/vendor/add-market">
             <Button className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              New Application
+              Add Market
             </Button>
           </Link>
         </div>
@@ -157,6 +244,71 @@ export function VendorDashboardPage() {
           </div>
         </Card>
       </div>
+
+      {/* My Markets Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Store className="w-5 h-5" />
+            My Markets
+          </h2>
+          <Link to="/markets">
+            <Button variant="ghost" size="sm">Browse Markets</Button>
+          </Link>
+        </div>
+        
+        <div className="space-y-4">
+          {trackedMarkets.map((market) => (
+            <VendorMarketRow
+              key={market.id}
+              market={market}
+              tracking={trackingData[market.id as keyof typeof trackingData]}
+              todos={[
+                { id: '1', title: 'Prepare booth setup', completed: true, priority: 'high' },
+                { id: '2', title: 'Order business cards', completed: false, priority: 'medium' },
+                { id: '3', title: 'Pack display materials', completed: false, priority: 'low' }
+              ]}
+              expenses={[
+                { id: '1', title: 'Booth fee', amount: 50, category: 'booth-fee', date: '2024-01-15' },
+                { id: '2', title: 'Gas & parking', amount: 25, category: 'transportation', date: '2024-01-15' },
+                { id: '3', title: 'Business cards', amount: 15, category: 'marketing', date: '2024-01-10' }
+              ]}
+              onUpdateStatus={(marketId, status) => {
+                console.log('Update status:', marketId, status)
+                // TODO: Implement status update
+              }}
+              onCreateTodo={(marketId) => {
+                console.log('Create todo for:', marketId)
+                // TODO: Navigate to todo creation
+              }}
+              onAddExpense={(marketId) => {
+                console.log('Add expense for:', marketId)
+                // TODO: Navigate to expense creation
+              }}
+              onCompleteTodo={(todoId) => {
+                console.log('Complete todo:', todoId)
+                // TODO: Implement todo completion
+              }}
+            />
+          ))}
+        </div>
+        
+        {trackedMarkets.length === 0 && (
+          <div className="text-center py-8">
+            <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No markets tracked yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Start tracking markets to get organized and plan your participation
+            </p>
+            <Link to="/markets">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Browse Markets
+              </Button>
+            </Link>
+          </div>
+        )}
+      </Card>
 
       {/* Quick Actions */}
       <Card className="p-6">

@@ -14,7 +14,7 @@ export function RoleRoute({
   children, 
   allowedRoles, 
   fallbackRedirect = '/unauthorized',
-  requireEmailVerification = true 
+  requireEmailVerification = false 
 }: RoleRouteProps) {
   const { 
     user, 

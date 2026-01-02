@@ -28,8 +28,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary: 'bg-accent text-accent-foreground hover:bg-accent/90 active:bg-accent/80',
-      secondary: 'bg-surface text-foreground hover:bg-surface/80 active:bg-surface/60 border border-border',
-      outline: 'border border-border bg-transparent hover:bg-surface/50 active:bg-surface/30 text-foreground',
+      secondary: 'bg-surface text-foreground hover:bg-surface/80 active:bg-surface/60',
+      outline: 'bg-transparent hover:bg-surface/50 active:bg-surface/30 text-foreground',
       ghost: 'hover:bg-surface/50 active:bg-surface/30 text-foreground',
       destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80',
     }

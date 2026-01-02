@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
+import { Calendar, MapPin, Clock, Accessibility, Car, Heart } from 'lucide-react'
 
 interface MarketCardProps {
   market: Market
@@ -14,7 +15,7 @@ interface MarketCardProps {
   isTracked?: boolean
   isLoading?: boolean
   showTrackButton?: boolean
-  variant?: 'default' | 'compact' | 'featured'
+  variant?: 'default' | 'compact' | 'featured' | 'minimal'
 }
 
 const categoryLabels = {
@@ -68,14 +69,34 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const formatSchedule = (schedule: Market['schedule']) => {
     if (!schedule || schedule.length === 0) return 'Schedule TBD'
     
+    // Get unique days and their dates
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const days = schedule
-      .map(s => dayNames[s.dayOfWeek])
-      .filter((day, index, arr) => arr.indexOf(day) === index) // Remove duplicates
-      .join(', ')
+    const dates = schedule
+      .map(s => {
+        const startDate = new Date(s.startDate)
+        const endDate = new Date(s.endDate)
+        
+        return {
+          dayName: dayNames[s.dayOfWeek],
+          startDate: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          endDate: endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          startTime: s.startTime,
+          endTime: s.endTime
+        }
+      })
+      .filter((item, index, arr) => 
+        arr.findIndex(t => t.dayName === item.dayName) === index // Remove duplicates
+      )
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     
-    const time = schedule[0]
-    return `${days} ${time.startTime}-${time.endTime}`
+    if (dates.length === 1) {
+      return `${dates[0].startDate} ${dates[0].startTime}-${dates[0].endTime}`
+    } else {
+      const times = dates[0].startTime === dates[dates.length - 1].startTime && 
+                   dates[0].endTime === dates[dates.length - 1].endTime
+      const dateList = dates.map(d => d.startDate).join(', ')
+      return times ? `${dateList} ${dates[0].startTime}-${dates[0].endTime}` : `${dateList} (var. times)`
+    }
   }
 
   const formatLocation = (location: Market['location']) => {
@@ -199,6 +220,116 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             </div>
           </div>
         </Card>
+      </Link>
+    )
+  }
+
+  // Minimal modern variant with overlay name on image
+  if (variant === 'minimal') {
+    const formatScheduleDate = (schedule: Market['schedule']) => {
+      if (!schedule || schedule.length === 0) return null
+      
+      const firstSchedule = schedule[0]
+      const startDate = new Date(firstSchedule.startDate)
+      const endDate = new Date(firstSchedule.endDate)
+      
+      return startDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: startDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+      })
+    }
+
+    return (
+      <Link to={`/markets/${market.id}`} className="block group">
+        <div className={cn(
+          'bg-surface hover:bg-surface-2 transition-all duration-200 cursor-pointer',
+          'rounded-lg overflow-hidden',
+          className
+        )}>
+          {/* Image with overlaid name */}
+          {market.images && market.images.length > 0 && (
+            <div className="relative h-48">
+              <img
+                src={market.images[0]}
+                alt={market.name}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Category badge */}
+              <div className="absolute top-3 left-3">
+                <Badge className={cn('text-xs font-medium backdrop-blur-sm', categoryColors[market.category])}>
+                  {categoryLabels[market.category]}
+                </Badge>
+              </div>
+              
+              {/* Market name overlay - big and catchy */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4">
+                <h3 className="text-white font-bold text-lg leading-tight group-hover:text-accent transition-colors drop-shadow-lg">
+                  {market.name}
+                </h3>
+              </div>
+            </div>
+          )}
+          
+          {/* Content - clean info below image */}
+          <div className="p-4 space-y-3">
+            {/* Date and location */}
+            <div className="space-y-1">
+              {formatScheduleDate(market.schedule) && (
+                <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {formatScheduleDate(market.schedule)}
+                </div>
+              )}
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {formatLocation(market.location)}
+              </div>
+            </div>
+            
+            {/* Schedule and accessibility */}
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                {formatSchedule(market.schedule)}
+              </div>
+              
+              {/* Large, clear accessibility icons */}
+              <div className="flex items-center gap-3">
+                {market.accessibility.wheelchairAccessible && (
+                  <div className="flex items-center gap-1" title="Wheelchair Accessible">
+                    <Accessibility className="w-6 h-6" />
+                  </div>
+                )}
+                {market.accessibility.parkingAvailable && (
+                  <div className="flex items-center gap-1" title="Parking Available">
+                    <Car className="w-6 h-6" />
+                  </div>
+                )}
+                {market.accessibility.familyFriendly && (
+                  <div className="flex items-center gap-1" title="Family Friendly">
+                    <Heart className="w-6 h-6" />
+                  </div>
+                )}
+                
+                <div className="flex-1" />
+                
+                {showTrackButton && (
+                  <Button
+                    variant={isTracked ? "primary" : "ghost"}
+                    size="sm"
+                    onClick={handleTrackClick}
+                    disabled={isLoading}
+                    className="h-7 px-3 text-xs"
+                  >
+                    {isTracked ? '✓' : '+'}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </Link>
     )
   }

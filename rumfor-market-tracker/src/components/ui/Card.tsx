@@ -1,4 +1,4 @@
-import React from 'react'
+eimport React from 'react'
 import { cn } from '@/utils/cn'
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -11,9 +11,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const baseClasses = 'rounded-lg transition-all duration-200'
 
     const variants = {
-      default: 'bg-surface border border-border',
-      outlined: 'bg-surface border-2 border-border',
-      elevated: 'bg-surface border border-border surface-shadow',
+      default: 'bg-surface',
+      outlined: 'bg-surface',
+      elevated: 'bg-surface surface-shadow',
     }
 
     const paddings = {

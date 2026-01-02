@@ -76,11 +76,13 @@ export interface Market {
   name: string
   description: string
   category: MarketCategory
-  promoterId: string
-  promoter: User
+  promoterId?: string // Optional - only for promoter-managed markets
+  promoter?: User // Only exists for promoter-managed markets
   location: Location
   schedule: MarketSchedule[]
   status: MarketStatus
+  marketType: MarketType // NEW: user-created or promoter-managed
+  applicationStatus?: ApplicationStatus // Only for promoter-managed markets
   images: string[]
   tags: string[]
   accessibility: AccessibilityFeatures
@@ -100,6 +102,22 @@ export type MarketCategory =
   | 'community-event'
 
 export type MarketStatus = 'draft' | 'active' | 'cancelled' | 'completed'
+
+export type MarketType = 'user-created' | 'promoter-managed'
+
+// User Market Tracking relationship
+export interface UserMarketTracking {
+  id: string
+  userId: string
+  marketId: string
+  status: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled'
+  notes?: string
+  todoCount: number
+  todoProgress: number
+  totalExpenses: number
+  createdAt: string
+  updatedAt: string
+}
 
 export interface Location {
   address: string

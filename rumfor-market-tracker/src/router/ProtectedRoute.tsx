@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ 
   children, 
   redirectTo = '/auth/login',
-  requireEmailVerification = true 
+  requireEmailVerification = false 
 }: ProtectedRouteProps) {
   const { 
     isAuthenticated, 

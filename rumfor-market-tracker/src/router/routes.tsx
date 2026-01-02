@@ -21,6 +21,8 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 
 // Vendor pages
 import { VendorDashboardPage } from '@/pages/vendor/VendorDashboardPage'
+import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
+import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
 import { BusinessPlanningPage } from '@/pages/vendor/BusinessPlanningPage'
 import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
 import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
@@ -49,6 +51,9 @@ import { MarketDetailPage } from '@/pages/markets/MarketDetailPage'
 
 // Application pages
 import { MyApplicationsPage, ApplicationDetailPage, ApplicationFormPage } from '@/pages/applications'
+
+// Dashboard redirect
+import { DashboardRedirectPage } from '@/pages/DashboardRedirectPage'
 
 export function AppRoutes() {
   return (
@@ -115,7 +120,7 @@ export function AppRoutes() {
 
       <Route path="/vendor/planning" element={
         <ProtectedRoute>
-          <RoleRoute allowedRoles={['vendor', 'admin']}>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><BusinessPlanningPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
@@ -123,7 +128,7 @@ export function AppRoutes() {
 
       <Route path="/vendor/todos" element={
         <ProtectedRoute>
-          <RoleRoute allowedRoles={['vendor', 'admin']}>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><BusinessPlanningPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
@@ -131,7 +136,7 @@ export function AppRoutes() {
 
       <Route path="/vendor/expenses" element={
         <ProtectedRoute>
-          <RoleRoute allowedRoles={['vendor', 'admin']}>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><FinancialReportsPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
@@ -141,6 +146,23 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><MarketCalendarPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      {/* Market Addition Routes */}
+      <Route path="/vendor/add-market" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <MainLayout><AddMarketPage /></MainLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/add-market/vendor" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <MainLayout><VendorAddMarketForm /></MainLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -270,9 +292,9 @@ export function AppRoutes() {
 
       {/* Generic Dashboard Route - Redirects to role-specific dashboard */}
       <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <RoleRoute allowedRoles={['visitor', 'vendor', 'promoter', 'admin']}>
-            <div>Dashboard - Redirecting...</div>
+        <ProtectedRoute requireEmailVerification={false}>
+          <RoleRoute allowedRoles={['visitor', 'vendor', 'promoter', 'admin']} requireEmailVerification={false}>
+            <DashboardRedirectPage />
           </RoleRoute>
         </ProtectedRoute>
       } />

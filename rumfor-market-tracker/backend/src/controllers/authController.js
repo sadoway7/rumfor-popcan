@@ -93,6 +93,12 @@ const login = catchAsync(async (req, res, next) => {
   // Remove password from response
   user.password = undefined
 
+  // Auto-verify user if not already verified (development mode)
+  if (!user.isEmailVerified) {
+    user.isEmailVerified = true
+    await user.save()
+  }
+
   sendSuccess(res, {
     user,
     tokens

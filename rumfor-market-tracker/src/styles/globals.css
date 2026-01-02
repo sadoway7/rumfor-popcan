@@ -4,19 +4,26 @@
 
 @layer base {
   :root {
-    /* Brand Colors - Dark Professional Theme */
-    --background: 220 13% 6%;          /* Very dark gray */
-    --foreground: 220 14% 98%;         /* Soft off-white */
-    --surface: 220 13% 10%;            /* Slightly lighter dark */
-    --surface-2: 220 13% 12%;          /* Layered surface */
+    /* Brand Colors - Light Grey System for Better Contrast */
+    --background: 220 8% 96%;           /* Very light grey background */
+    --foreground: 220 15% 15%;          /* Dark text for high contrast */
+    --surface: 0 0% 100%;               /* Pure white surfaces */
+    --surface-2: 220 8% 94%;            /* Light grey for cards */
+    --surface-3: 220 8% 90%;            /* Slightly darker light grey */
     
-    /* Primary Accent - Calm Blue (used sparingly) */
-    --accent: 215 84% 56%;             /* Professional blue */
+    /* Unique & Sophisticated Color Palette */
+    --accent: 160 35% 28%;              /* Deep sage green - organic & unique */
     --accent-foreground: 0 0% 100%;
+    --accent-light: 160 35% 38%;        /* Lighter sage for hovers */
+    --accent-glow: 160 35% 28% / 0.12;  /* Subtle glow effect */
     
-    /* Text Hierarchy */
-    --muted: 220 9% 46%;               /* Light gray for secondary text */
-    --muted-foreground: 220 9% 65%;    /* Muted gray for hints */
+    /* Secondary & Tertiary Accents - Warm & Natural */
+    --accent-secondary: 35 75% 52%;     /* Warm amber - earthy & distinctive */
+    --accent-tertiary: 18 45% 38%;      /* Soft terracotta - organic warmth */
+    
+    /* Text Hierarchy - High contrast for light theme */
+    --muted: 220 8% 45%;               /* Darker muted text for better readability */
+    --muted-foreground: 220 8% 35%;    /* Even darker for better hierarchy */
     
     /* Status Colors - Muted, not fluorescent */
     --success: 142 76% 36%;            /* Muted green */
@@ -26,23 +33,40 @@
     --destructive: 0 84% 60%;          /* Muted red */
     --destructive-foreground: 0 0% 100%;
     
-    /* Border System */
-    --border: 220 13% 18%;             /* Subtle borders */
-    --input: 220 13% 18%;
-    --ring: 215 84% 56%;
+    /* No Borders - Pure Color Design */
+    --ring: 268 85% 58%;               /* Purple focus ring */
+    
+    /* Glow and Shadow Effects */
+    --shadow-glow: 268 85% 58% / 0.1;
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
     
     /* Border Radius */
     --radius: 0.25rem;                 /* Gently rounded corners */
   }
   
-  * {
-    @apply border-border;
+  /* Dark mode variables */
+  .dark {
+    --background: 220 10% 8%;           /* Rich dark gray - not pure black */
+    --foreground: 220 15% 95%;          /* Warm off-white */
+    --surface: 220 10% 12%;             /* Layered surfaces for depth */
+    --surface-2: 220 10% 16%;           /* Subtle secondary surfaces */
+    --surface-3: 220 10% 20%;           /* Tertiary surfaces */
+    
+    --muted: 220 8% 65%;               /* Improved contrast */
+    --muted-foreground: 220 8% 80%;    /* Better hierarchy */
   }
+  
+  /* Removed global border rule - using organic design */
   
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* Rich background texture with depth */
+    background-image: 
+      radial-gradient(circle at 20% 80%, hsl(var(--accent) / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--accent-secondary) / 0.02) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(var(--surface) / 0.05) 0%, transparent 50%);
   }
   
   html {
@@ -57,7 +81,7 @@
 }
 
 @layer utilities {
-  /* Additional utilities for the dark theme */
+  /* Enhanced utilities for the modern dark theme - No borders */
   .bg-background {
     background-color: hsl(var(--background));
   }
@@ -70,9 +94,15 @@
     background-color: hsl(var(--surface));
   }
   
-  .border-border {
-    border-color: hsl(var(--border));
+  .bg-surface-2 {
+    background-color: hsl(var(--surface-2));
   }
+  
+  .bg-surface-3 {
+    background-color: hsl(var(--surface-3));
+  }
+  
+  /* No border utilities needed */
   
   .text-muted {
     color: hsl(var(--muted));
@@ -86,11 +116,52 @@
     background-color: hsl(var(--accent));
   }
   
+  .bg-accent-light {
+    background-color: hsl(var(--accent-light));
+  }
+  
   .text-accent-foreground {
     color: hsl(var(--accent-foreground));
   }
   
   .ring-accent {
     --tw-ring-color: hsl(var(--accent));
+  }
+  
+  /* Modern glow effects */
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--shadow-glow));
+  }
+  
+  .glow-accent-sm {
+    box-shadow: 0 0 10px hsl(var(--shadow-glow));
+  }
+  
+  /* Organic shapes */
+  .blob {
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  }
+  
+  .blob-2 {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  
+  /* Smooth animations */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes glow {
+    from { box-shadow: 0 0 10px hsl(var(--shadow-glow)); }
+    to { box-shadow: 0 0 20px hsl(var(--shadow-glow)); }
   }
 }

@@ -167,7 +167,8 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
 
       {/* Advanced Filters */}
       {showAdvancedFilters && (
-        <div className="mt-6 pt-6 border-t space-y-6">
+        <div className="mt-6 pt-6 space-y-6">
+          <div className="h-px bg-surface-2/50" />
           {/* Categories */}
           <div>
             <h4 className="text-sm font-medium mb-3">Categories</h4>
@@ -237,7 +238,7 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
                     ...localFilters.accessibility,
                     wheelchairAccessible: e.target.checked
                   })}
-                  className="rounded border-border"
+                  className="rounded"
                 />
                 <span className="text-sm">Wheelchair Accessible</span>
               </label>
@@ -249,7 +250,7 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
                     ...localFilters.accessibility,
                     parkingAvailable: e.target.checked
                   })}
-                  className="rounded border-border"
+                  className="rounded"
                 />
                 <span className="text-sm">Parking Available</span>
               </label>
@@ -261,7 +262,7 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
                     ...localFilters.accessibility,
                     restroomsAvailable: e.target.checked
                   })}
-                  className="rounded border-border"
+                  className="rounded"
                 />
                 <span className="text-sm">Restrooms Available</span>
               </label>
