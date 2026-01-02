@@ -1,13 +1,30 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
+import { MarketCalendar } from '@/components/MarketCalendar'
+import { EmailAlertsSettings } from '@/components/EmailAlertsSettings'
+import { ExportModal } from '@/components/ExportModal'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
+import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 
 export const MyMarketsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'tracked' | 'recent'>('tracked')
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [showEmailSettings, setShowEmailSettings] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [emailPreferences, setEmailPreferences] = useState({
+    marketUpdates: true,
+    applicationDeadlines: true,
+    newMarketAnnouncements: true,
+    eventReminders: true,
+    weeklyDigest: false,
+    marketingEmails: false,
+    frequency: 'immediate' as 'immediate' | 'daily' | 'weekly' | 'monthly'
+  })
+  
   const {
     trackedMarkets,
     trackedMarketIds,
@@ -28,6 +45,17 @@ export const MyMarketsPage: React.FC = () => {
 
   const handleRefresh = async () => {
     await refreshTracked()
+  }
+
+  const handleMarketSelect = (market: Market) => {
+    // Navigate to market detail or perform other action
+    console.log('Selected market:', market.name)
+  }
+
+  const handleEmailSettingsSave = async (preferences: any) => {
+    // Save email preferences - in a real app, this would call an API
+    setEmailPreferences(preferences)
+    console.log('Email preferences saved:', preferences)
   }
 
   return (
@@ -221,29 +249,80 @@ export const MyMarketsPage: React.FC = () => {
                 </Button>
               </Link>
               
-              <Button variant="outline" className="w-full justify-start" disabled>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setShowCalendar(true)}
+              >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v4m-4-4h.01M16 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                View Calendar (Coming Soon)
+                View Calendar
               </Button>
               
-              <Button variant="outline" className="w-full justify-start" disabled>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setShowEmailSettings(true)}
+              >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                Email Alerts (Coming Soon)
+                Email Alerts
               </Button>
               
-              <Button variant="outline" className="w-full justify-start" disabled>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => setShowExportModal(true)}
+              >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Export List (Coming Soon)
+                Export List
               </Button>
             </div>
           </Card>
         )}
+
+        {/* Calendar Modal */}
+        {showCalendar && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold">Market Calendar</h2>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowCalendar(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+                <MarketCalendar
+                  markets={trackedMarkets}
+                  onMarketSelect={handleMarketSelect}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email Alerts Settings Modal */}
+        <EmailAlertsSettings
+          isOpen={showEmailSettings}
+          onClose={() => setShowEmailSettings(false)}
+          onSave={handleEmailSettingsSave}
+          initialPreferences={emailPreferences}
+        />
+
+        {/* Export Modal */}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          markets={trackedMarkets}
+        />
       </div>
     </div>
   )

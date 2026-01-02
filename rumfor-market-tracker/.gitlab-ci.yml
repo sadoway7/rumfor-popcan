@@ -1,0 +1,235 @@
+# GitLab CI/CD Pipeline for Rumfor Market Tracker
+# React + TypeScript + Vite application with E2E testing
+
+stages:
+  - install
+  - build
+  - test
+  - e2e
+  - security
+  - deploy
+
+# Global variables
+variables:
+  NODE_VERSION: "18"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  CI_DEBUG_TRACE: "false"
+
+# Cache configuration
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
+    - e2e-tests/node_modules/
+
+# Base job template
+.base_job_template: &base_job_template
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest --activate || npm install -g pnpm@latest
+    - npm ci
+    - npm run type-check || true
+
+# Install dependencies stage
+install_dependencies:
+  stage: install
+  <<: *base_job_template
+  script:
+    - echo "Installing main application dependencies..."
+    - npm ci
+    - echo "Installing E2E test dependencies..."
+    - cd ../e2e-tests && npm ci
+    - cd ../rumfor-market-tracker
+  artifacts:
+    paths:
+      - node_modules/
+      - ../e2e-tests/node_modules/
+    expire_in: 1 hour
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Build stage
+build_application:
+  stage: build
+  <<: *base_job_template
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Building application..."
+    - npm run build
+    - echo "Build completed successfully"
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+    when: always
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Code quality and linting stage
+lint_and_quality:
+  stage: test
+  <<: *base_job_template
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Running ESLint..."
+    - npm run lint
+    - echo "Running Prettier check..."
+    - npx prettier --check "src/**/*.{ts,tsx,js,jsx,css,md}"
+    - echo "Code quality checks completed"
+  artifacts:
+    reports:
+      junit: eslint-report.xml
+    when: always
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Type checking stage
+type_check:
+  stage: test
+  <<: *base_job_template
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Running TypeScript type checking..."
+    - npm run type-check
+    - echo "Type checking completed"
+  artifacts:
+    paths:
+      - *.tsbuildinfo
+    when: always
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# E2E Tests stage
+e2e_tests:
+  stage: e2e
+  image: mcr.microsoft.com/playwright:focal
+  dependencies:
+    - install_dependencies
+    - build_application
+  variables:
+    PLAYWRIGHT_BROWSERS_PATH: 0
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest --activate || npm install -g pnpm@latest
+    - cd ../e2e-tests && npm ci
+    - npx playwright install --with-deps chromium
+    - cd ../rumfor-market-tracker
+  script:
+    - echo "Starting E2E tests..."
+    - echo "Building application for testing..."
+    - npm run build
+    - echo "Starting preview server for E2E tests..."
+    - npm run preview -- --host --port 4173 &
+    - sleep 10
+    - echo "Running E2E tests..."
+    - cd ../e2e-tests
+    - E2E_BASE_URL=http://localhost:4173 npm run e2e:playwright
+    - echo "E2E tests completed"
+  artifacts:
+    when: always
+    paths:
+      - e2e-tests/test-results/
+      - e2e-tests/playwright-report/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# Security scanning stage
+security_scan:
+  stage: security
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - echo "Running security scan..."
+    - npm audit --audit-level=moderate
+    - echo "Checking for known vulnerabilities..."
+    - npx audit-ci --moderate
+    - echo "Security scan completed"
+  allow_failure: true
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# GitLab Pages deployment
+pages:
+  stage: deploy
+  image: node:${NODE_VERSION}-alpine
+  dependencies:
+    - build_application
+  script:
+    - echo "Deploying to GitLab Pages..."
+    - mkdir -p public
+    - cp -r dist/* public/
+    - echo "Pages deployment completed"
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 hour
+  only:
+    - main
+
+# Staging deployment (placeholder for future use)
+deploy_staging:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build_application
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Add your staging deployment commands here"
+    - echo "Staging deployment completed"
+  environment:
+    name: staging
+    url: https://staging.example.com
+  when: manual
+  only:
+    - develop
+
+# Production deployment (placeholder for future use)
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build_application
+  script:
+    - echo "Deploying to production environment..."
+    - echo "Add your production deployment commands here"
+    - echo "Production deployment completed"
+  environment:
+    name: production
+    url: https://app.example.com
+  when: manual
+  only:
+    - main
+
+# Cleanup job (runs after other jobs)
+cleanup:
+  stage: test
+  image: alpine:latest
+  script:
+    - echo "Cleaning up temporary files..."
+    - rm -rf node_modules/.cache
+    - find . -name "*.log" -delete
+    - echo "Cleanup completed"
+  when: always
+  only:
+    - merge_requests
+    - main
+    - develop

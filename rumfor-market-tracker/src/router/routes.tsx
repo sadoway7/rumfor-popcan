@@ -10,6 +10,7 @@ import { RoleRoute } from './RoleRoute'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { PasswordRecoveryPage } from '@/pages/auth/PasswordRecoveryPage'
+import { EmailVerificationPage } from '@/pages/auth/EmailVerificationPage'
 import { HomePage } from '@/pages/HomePage'
 import { AboutPage } from '@/pages/AboutPage'
 import { ContactPage } from '@/pages/ContactPage'
@@ -63,6 +64,7 @@ export function AppRoutes() {
       <Route path="/auth/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
       <Route path="/auth/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
       <Route path="/auth/forgot-password" element={<AuthLayout><PasswordRecoveryPage /></AuthLayout>} />
+      <Route path="/auth/verify-email" element={<AuthLayout><EmailVerificationPage /></AuthLayout>} />
 
       {/* Protected Routes */}
       <Route path="/profile" element={

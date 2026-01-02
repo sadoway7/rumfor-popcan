@@ -43,17 +43,17 @@ export const useExpenses = (marketId?: string) => {
     if (data) {
       setExpenses(data)
     }
-  }, [data, setExpenses])
+  }, [data])
 
   // Sync loading states
   React.useEffect(() => {
     setLoadingExpenses(isQueryLoading)
-  }, [isQueryLoading, setLoadingExpenses])
+  }, [isQueryLoading])
 
   // Sync error states
   React.useEffect(() => {
     setExpensesError(queryError?.message || null)
-  }, [queryError, setExpensesError])
+  }, [queryError])
 
   // Create expense mutation
   const createExpenseMutation = useMutation({
@@ -177,7 +177,7 @@ export const useExpenseSummary = (marketId?: string) => {
     if (data) {
       setExpenseSummary(data)
     }
-  }, [data, setExpenseSummary])
+  }, [data])
 
   return {
     summary: data,

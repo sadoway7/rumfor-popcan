@@ -60,21 +60,26 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const store = useMarketsStore()
   const [isTracking, setIsTracking] = useState(false)
 
-  // Load markets function
+  // Load markets function - dependencies fixed to prevent infinite loops
   const loadMarkets = useCallback(async (loadOptions?: { 
     filters?: MarketFilters
     page?: number
     limit?: number 
   }) => {
-    const filters = loadOptions?.filters || store.filters
-    const page = loadOptions?.page || store.currentPage
-    const currentLimit = loadOptions?.limit || limit
+    // Extract stable values to avoid recreation
+    const currentFilters = store.filters
+    const currentPage = store.currentPage
+    const currentLimit = limit
+
+    const filters = loadOptions?.filters || currentFilters
+    const page = loadOptions?.page || currentPage
+    const actualLimit = loadOptions?.limit || currentLimit
 
     try {
       store.setLoading(true)
       store.clearError()
 
-      const response = await marketsApi.getMarkets(filters, page, currentLimit)
+      const response = await marketsApi.getMarkets(filters, page, actualLimit)
       
       if (response.pagination) {
         store.setMarkets(response.data)
@@ -92,9 +97,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       store.setLoading(false)
     }
-  }, [store, limit])
+  }, [limit]) // Only depend on limit, not store
 
-  // Search markets function
+  // Search markets function - fixed dependencies
   const searchMarkets = useCallback(async (query: string) => {
     try {
       store.setSearching(true)
@@ -116,9 +121,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       store.setSearching(false)
     }
-  }, [store])
+  }, []) // No dependencies needed
 
-  // Track market function
+  // Track market function - fixed dependencies
   const trackMarket = useCallback(async (marketId: string) => {
     try {
       setIsTracking(true)
@@ -136,9 +141,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       setIsTracking(false)
     }
-  }, [store])
+  }, []) // No dependencies needed
 
-  // Untrack market function
+  // Untrack market function - fixed dependencies
   const untrackMarket = useCallback(async (marketId: string) => {
     try {
       setIsTracking(true)
@@ -156,7 +161,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       setIsTracking(false)
     }
-  }, [store])
+  }, []) // No dependencies needed
 
   // Pagination helpers
   const nextPage = useCallback(() => {

@@ -15,25 +15,12 @@ interface MarketGridProps {
   trackedMarketIds?: string[]
   isTracking?: boolean
   variant?: 'grid' | 'list' | 'compact'
-  columns?: {
-    sm?: number
-    md?: number
-    lg?: number
-    xl?: number
-  }
   className?: string
   emptyStateProps?: {
     title?: string
     description?: string
     action?: React.ReactNode
   }
-}
-
-const defaultColumns = {
-  sm: 1,
-  md: 2,
-  lg: 3,
-  xl: 4
 }
 
 export const MarketGrid: React.FC<MarketGridProps> = ({
@@ -46,7 +33,6 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   trackedMarketIds = [],
   isTracking = false,
   variant = 'grid',
-  columns = defaultColumns,
   className,
   emptyStateProps
 }) => {
@@ -57,10 +43,11 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     }
     
     if (variant === 'compact') {
-      return `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3`
+      return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'
     }
     
-    return `grid grid-cols-1 sm:grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg} xl:grid-cols-${columns.xl} gap-6`
+    // Use fixed classes instead of dynamic ones for Tailwind purging
+    return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6'
   }
 
   // Show loading state

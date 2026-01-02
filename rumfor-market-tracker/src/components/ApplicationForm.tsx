@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Market, CustomField, Application } from '@/types'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { cn } from '@/utils/cn'
+import { Upload, X, FileText, Image, AlertCircle } from 'lucide-react'
 
 interface ApplicationFormProps {
   market: Market
@@ -19,6 +20,15 @@ interface ApplicationFormProps {
   onSuccess?: (application: Application) => void
   onCancel?: () => void
   className?: string
+}
+
+interface UploadedFile {
+  id: string
+  name: string
+  size: number
+  type: string
+  url?: string
+  file: File
 }
 
 // Default form schema
@@ -52,6 +62,9 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
 }) => {
   const [isDraft, setIsDraft] = useState(false)
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({})
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [uploadErrors, setUploadErrors] = useState<string[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const { createApplication, updateApplication, submitApplication, isSubmitting } = useVendorApplications()
 
@@ -155,6 +168,51 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
       ...prev,
       [fieldName]: value
     }))
+  }
+
+  // File upload handlers
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    const newFiles: UploadedFile[] = []
+    const errors: string[] = []
+
+    files.forEach(file => {
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        errors.push(`${file.name}: File size must be less than 10MB`)
+        return
+      }
+
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(`${file.name}: Unsupported file type`)
+        return
+      }
+
+      // Create uploaded file object
+      const uploadedFile: UploadedFile = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file
+      }
+
+      newFiles.push(uploadedFile)
+    })
+
+    if (errors.length > 0) {
+      setUploadErrors(errors)
+    } else {
+      setUploadErrors([])
+    }
+
+    setUploadedFiles(prev => [...prev, ...newFiles])
+  }
+
+  const removeFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId))
   }
 
   // Render custom field
@@ -285,17 +343,74 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
               {field.name}
               {field.required && <span className="text-destructive ml-1">*</span>}
             </label>
-            <Input
-              type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  handleCustomFieldChange(field.name, file.name)
-                }
-              }}
-              className={error ? 'border-destructive' : ''}
-            />
+            
+            {/* File Upload Area */}
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+              <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose Files
+                </Button>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  or drag and drop files here
+                </p>
+              </div>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
+            
+            {/* Uploaded Files List */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Uploaded Files:</p>
+                {uploadedFiles.map((file) => (
+                  <div key={file.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center space-x-2">
+                      {file.type.startsWith('image/') ? (
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm">{file.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(file.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {uploadErrors.length > 0 && (
+              <div className="space-y-1">
+                {uploadErrors.map((error, index) => (
+                  <p key={index} className="text-sm text-destructive flex items-center">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {error}
+                  </p>
+                ))}
+              </div>
+            )}
+            
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         )

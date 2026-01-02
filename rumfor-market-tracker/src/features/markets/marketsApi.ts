@@ -194,13 +194,13 @@ const mockMarkets: Market[] = [
   }
 ]
 
-// API simulation delay
+// API simulation delay (reduced for better UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export const marketsApi = {
   // Get all markets with optional filtering
   async getMarkets(filters?: MarketFilters, page = 1, limit = 20): Promise<PaginatedResponse<Market>> {
-    await delay(500) // Simulate network delay
+    await delay(100) // Reduced delay for better UX
 
     let filteredMarkets = [...mockMarkets]
 
@@ -269,7 +269,7 @@ export const marketsApi = {
 
   // Get market by ID
   async getMarketById(id: string): Promise<ApiResponse<Market>> {
-    await delay(300)
+    await delay(80)
 
     const market = mockMarkets.find(m => m.id === id)
     
@@ -288,7 +288,7 @@ export const marketsApi = {
 
   // Search markets
   async searchMarkets(query: string): Promise<ApiResponse<Market[]>> {
-    await delay(400)
+    await delay(150)
 
     if (!query.trim()) {
       return {
@@ -314,7 +314,7 @@ export const marketsApi = {
 
   // Get popular markets
   async getPopularMarkets(limit = 10): Promise<ApiResponse<Market[]>> {
-    await delay(300)
+    await delay(80)
 
     // For now, just return first few markets as "popular"
     const popular = mockMarkets.slice(0, limit)
@@ -327,7 +327,7 @@ export const marketsApi = {
 
   // Get markets by category
   async getMarketsByCategory(category: string): Promise<ApiResponse<Market[]>> {
-    await delay(300)
+    await delay(80)
 
     const results = mockMarkets.filter(market => market.category === category)
 
@@ -339,7 +339,7 @@ export const marketsApi = {
 
   // Track/untrack market (mock implementation)
   async trackMarket(_marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
-    await delay(200)
+    await delay(100)
 
     // In real app, this would make API call
     return {
@@ -349,7 +349,7 @@ export const marketsApi = {
   },
 
   async untrackMarket(_marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
-    await delay(200)
+    await delay(100)
 
     return {
       success: true,

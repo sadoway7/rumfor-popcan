@@ -41,7 +41,7 @@ export const useComments = (marketId: string) => {
         setComments([...comments, ...commentsResponse.data])
       }
     }
-  }, [commentsResponse, page, comments, setComments])
+  }, [commentsResponse, page, comments])
 
   // Mutations
   const createCommentMutation = useMutation({

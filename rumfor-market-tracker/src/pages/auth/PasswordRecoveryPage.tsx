@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
+import { usePasswordReset } from '@/features/auth/hooks/usePasswordReset'
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Alert, Spinner } from '@/components/ui'
 import { ArrowLeft, Mail, KeyRound } from 'lucide-react'
 
@@ -13,40 +14,57 @@ const passwordRecoverySchema = z.object({
 type PasswordRecoveryFormData = z.infer<typeof passwordRecoverySchema>
 
 export function PasswordRecoveryPage() {
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const {
+    isRequestingReset,
+    error,
+    success,
+    requestPasswordReset,
+    clearErrors,
+    clearSuccess,
+    resetState,
+  } = usePasswordReset()
+
   const [email, setEmail] = React.useState('')
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    watch,
   } = useForm<PasswordRecoveryFormData>({
     resolver: zodResolver(passwordRecoverySchema),
   })
 
+  const watchedEmail = watch('email')
+
+  React.useEffect(() => {
+    // Clear errors when email changes
+    if (error) {
+      clearErrors()
+    }
+  }, [watchedEmail, clearErrors])
+
+  React.useEffect(() => {
+    // Clear success state when component unmounts
+    return () => {
+      resetState()
+    }
+  }, [resetState])
+
   const onSubmit = async (data: PasswordRecoveryFormData) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      setEmail(data.email)
-      
-      // TODO: Replace with actual password recovery API call
-      // await passwordRecoveryApi.requestReset(data.email)
-      
-      // Mock API call for development
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      setIsSubmitted(true)
-    } catch (error) {
-      setError('Failed to send reset email. Please try again.')
-    } finally {
-      setIsLoading(false)
+    setEmail(data.email)
+    clearErrors()
+    clearSuccess()
+    
+    const result = await requestPasswordReset(data.email)
+    
+    if (!result.success) {
+      // Error is already set in the hook
+      console.error('Password reset request failed:', result.error)
     }
   }
 
-  if (isSubmitted) {
+  if (success) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -73,7 +91,10 @@ export function PasswordRecoveryPage() {
                 <p className="text-sm text-muted-foreground">
                   Didn't receive the email? Check your spam folder or{' '}
                   <button
-                    onClick={() => setIsSubmitted(false)}
+                    onClick={() => {
+                      clearSuccess()
+                      setEmail('')
+                    }}
                     className="text-accent hover:text-accent/80 transition-colors font-medium"
                   >
                     try again
@@ -142,9 +163,9 @@ export function PasswordRecoveryPage() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={isLoading}
+                disabled={isRequestingReset}
               >
-                {isLoading ? (
+                {isRequestingReset ? (
                   <>
                     <Spinner className="mr-2 h-4 w-4" />
                     Sending reset link...

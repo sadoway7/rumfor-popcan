@@ -393,14 +393,14 @@ export const useApplications = () => {
     if (!isLoading && applications.length === 0) {
       loadApplications()
     }
-  }, [applications.length, isLoading, loadApplications])
+  }, [applications.length, isLoading])
 
   // Load my applications when user changes
   useEffect(() => {
     if (user?.id) {
       loadMyApplications()
     }
-  }, [user?.id, loadMyApplications])
+  }, [user?.id])
 
   return {
     // Data

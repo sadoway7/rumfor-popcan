@@ -19,6 +19,7 @@ interface MarketsState {
   currentPage: number
   totalPages: number
   hasMore: boolean
+  totalMarkets: number
   
   // Error handling
   error: string | null
@@ -43,6 +44,8 @@ interface MarketsState {
   // Pagination actions
   setCurrentPage: (page: number) => void
   setHasMore: (hasMore: boolean) => void
+  setTotalPages: (totalPages: number) => void
+  setTotalMarkets: (totalMarkets: number) => void
   
   // Loading and error actions
   setLoading: (loading: boolean) => void
@@ -77,6 +80,7 @@ export const useMarketsStore = create<MarketsState>()(
       searchQuery: '',
       currentPage: 1,
       totalPages: 0,
+      totalMarkets: 0,
       hasMore: false,
       error: null,
 
@@ -200,6 +204,8 @@ export const useMarketsStore = create<MarketsState>()(
       // Pagination actions
       setCurrentPage: (page) => set({ currentPage: page }),
       setHasMore: (hasMore) => set({ hasMore }),
+      setTotalPages: (totalPages: number) => set({ totalPages }),
+      setTotalMarkets: (totalMarkets: number) => set({ totalMarkets }),
 
       // Loading and error actions
       setLoading: (loading) => set({ isLoading: loading }),

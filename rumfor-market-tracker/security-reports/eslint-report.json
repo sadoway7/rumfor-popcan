@@ -1,0 +1,4 @@
+
+> rumfor-market-tracker@0.0.0 lint:ci
+> eslint . --ext ts,tsx --format json --output-file eslint-report.json
+

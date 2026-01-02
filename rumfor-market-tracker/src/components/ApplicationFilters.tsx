@@ -6,17 +6,28 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { Card } from '@/components/ui/Card'
 import { ApplicationStatus } from '@/types'
 import { cn } from '@/utils/cn'
+import { Filter, X, RotateCcw, Search, Calendar, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
 
 export interface ApplicationFilters {
   search: string
   status: ApplicationStatus | 'all'
   marketId: string
+  vendorId?: string
+  category?: string[]
+  location?: {
+    city?: string
+    state?: string
+  }
   dateRange: {
     from: string
     to: string
   }
-  sortBy: 'createdAt' | 'updatedAt' | 'marketName' | 'status'
+  sortBy: 'createdAt' | 'updatedAt' | 'marketName' | 'status' | 'vendorName' | 'applicationCount'
   sortOrder: 'asc' | 'desc'
+  hasDocuments?: boolean
+  reviewedBy?: string
+  priority?: 'high' | 'medium' | 'low'
+  tags?: string[]
 }
 
 interface ApplicationFiltersProps {

@@ -5,13 +5,24 @@ import { useAuthStore } from '@/features/auth/authStore'
 interface ProtectedRouteProps {
   children: React.ReactNode
   redirectTo?: string
+  requireEmailVerification?: boolean
 }
 
-export function ProtectedRoute({ children, redirectTo = '/auth/login' }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore()
+export function ProtectedRoute({ 
+  children, 
+  redirectTo = '/auth/login',
+  requireEmailVerification = true 
+}: ProtectedRouteProps) {
+  const { 
+    isAuthenticated, 
+    isLoading, 
+    user, 
+    isEmailVerified,
+    isTokenRefreshing 
+  } = useAuthStore()
   const location = useLocation()
 
-  if (isLoading) {
+  if (isLoading || isTokenRefreshing) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -22,8 +33,19 @@ export function ProtectedRoute({ children, redirectTo = '/auth/login' }: Protect
     )
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />
+  }
+
+  // Check email verification requirement
+  if (requireEmailVerification && !isEmailVerified) {
+    return (
+      <Navigate 
+        to={`/auth/verify-email${location.search}`} 
+        state={{ from: location }} 
+        replace 
+      />
+    )
   }
 
   return <>{children}</>

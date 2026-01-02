@@ -44,17 +44,17 @@ export const useTodos = (marketId?: string) => {
     if (data) {
       setTodos(data)
     }
-  }, [data, setTodos])
+  }, [data])
 
   // Sync loading states
   React.useEffect(() => {
     setLoadingTodos(isQueryLoading)
-  }, [isQueryLoading, setLoadingTodos])
+  }, [isQueryLoading])
 
   // Sync error states
   React.useEffect(() => {
     setTodosError(queryError?.message || null)
-  }, [queryError, setTodosError])
+  }, [queryError])
 
   // Create todo mutation
   const createTodoMutation = useMutation({
@@ -197,7 +197,7 @@ export const useTodoTemplates = (category?: string) => {
     if (data) {
       setTodoTemplates(data)
     }
-  }, [data, setTodoTemplates])
+  }, [data])
 
   return {
     templates: data || [],

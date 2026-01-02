@@ -4,12 +4,15 @@ import { Application, ApplicationStatus } from '@/types'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Progress } from '@/components/ui/Progress'
 import { cn } from '@/utils/cn'
+import { Clock, CheckCircle, XCircle, AlertCircle, FileText } from 'lucide-react'
 
 interface ApplicationCardProps {
   application: Application
   variant?: 'default' | 'compact' | 'detailed'
   showActions?: boolean
+  showProgress?: boolean
   onApprove?: (id: string) => void
   onReject?: (id: string) => void
   onWithdraw?: (id: string) => void
@@ -39,6 +42,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
   application,
   variant = 'default',
   showActions = true,
+  showProgress = false,
   onApprove,
   onReject,
   onWithdraw,
@@ -51,6 +55,46 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
       month: 'short',
       day: 'numeric'
     })
+  }
+
+  const getStatusIcon = (status: ApplicationStatus) => {
+    switch (status) {
+      case 'draft':
+        return <FileText className="h-4 w-4" />
+      case 'submitted':
+        return <Clock className="h-4 w-4" />
+      case 'under-review':
+        return <AlertCircle className="h-4 w-4" />
+      case 'approved':
+        return <CheckCircle className="h-4 w-4" />
+      case 'rejected':
+        return <XCircle className="h-4 w-4" />
+      case 'withdrawn':
+        return <XCircle className="h-4 w-4" />
+      default:
+        return <FileText className="h-4 w-4" />
+    }
+  }
+
+  const getProgressValue = (status: ApplicationStatus) => {
+    switch (status) {
+      case 'draft': return 20
+      case 'submitted': return 40
+      case 'under-review': return 60
+      case 'approved': return 100
+      case 'rejected': return 80
+      case 'withdrawn': return 0
+      default: return 0
+    }
+  }
+
+  const getDaysAgo = (dateString: string) => {
+    const days = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24))
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    if (days < 7) return `${days} days ago`
+    if (days < 30) return `${Math.floor(days / 7)} weeks ago`
+    return `${Math.floor(days / 30)} months ago`
   }
 
   const getActionButtons = () => {
@@ -166,14 +210,21 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
             <div className="flex items-center gap-2 mt-2">
               <Badge 
                 variant="outline" 
-                className={cn('text-xs', statusColors[application.status])}
+                className={cn('text-xs flex items-center gap-1', statusColors[application.status])}
               >
+                {getStatusIcon(application.status)}
                 {statusLabels[application.status]}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {formatDate(application.createdAt)}
+                {getDaysAgo(application.createdAt)}
               </span>
             </div>
+            
+            {showProgress && (
+              <div className="mt-2">
+                <Progress value={getProgressValue(application.status)} className="h-1" />
+              </div>
+            )}
           </div>
           
           {showActions && (
@@ -203,11 +254,21 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
               </Link>
               <Badge 
                 variant="outline" 
-                className={cn(statusColors[application.status])}
+                className={cn('flex items-center gap-1', statusColors[application.status])}
               >
+                {getStatusIcon(application.status)}
                 {statusLabels[application.status]}
               </Badge>
             </div>
+            
+            {showProgress && (
+              <div className="mb-4">
+                <Progress value={getProgressValue(application.status)} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {getProgressValue(application.status)}% complete
+                </p>
+              </div>
+            )}
             
             <p className="text-muted-foreground mb-3">
               {application.market.location.address}, {application.market.location.city}, {application.market.location.state}
@@ -279,8 +340,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
             </Link>
             <Badge 
               variant="outline" 
-              className={cn(statusColors[application.status])}
+              className={cn('flex items-center gap-1', statusColors[application.status])}
             >
+              {getStatusIcon(application.status)}
               {statusLabels[application.status]}
             </Badge>
           </div>

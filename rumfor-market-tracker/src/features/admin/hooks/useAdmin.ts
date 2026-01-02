@@ -35,7 +35,7 @@ export function useAdmin() {
     fetchModerationQueue()
     fetchPromoterVerifications()
     fetchSystemSettings()
-  }, [])
+  }, []) // Empty dependency array to prevent infinite loops
 
   return {
     stats,

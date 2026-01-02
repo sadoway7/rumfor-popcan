@@ -1,0 +1,140 @@
+# Security Scanning Configuration for Rumfor Market Tracker
+# This file configures various security scanning tools
+
+# SAST (Static Application Security Testing) Configuration
+sast:
+  # CodeQL Analysis
+  codeql:
+    enabled: true
+    language: javascript
+    query-filters:
+      - include:
+          kind: problem
+          precision: high
+      - exclude:
+          id: js/useless-assignment-to-local
+
+  # ESLint Security Plugin
+  eslint_security:
+    enabled: true
+    plugins:
+      - "@typescript-eslint"
+      - "security"
+    rules:
+      security/detect-object-injection: error
+      security/detect-non-literal-regexp: error
+      security/detect-unsafe-regex: error
+      security/detect-buffer-noassert: error
+      security/detect-child-process: error
+      security/detect-disable-mustache-escape: error
+      security/detect-eval-with-expression: error
+      security/detect-no-csrf-before-method-override: error
+      security/detect-non-literal-fs-filename: error
+      security/detect-non-literal-require: error
+
+# Dependency Scanning Configuration
+dependency_scanning:
+  # npm audit
+  npm_audit:
+    enabled: true
+    level: moderate
+    fail_on: vulnerabilities
+
+  # Snyk Security Scanner
+  snyk:
+    enabled: true
+    test_dependencies: true
+    monitor_project: false
+    severity_threshold: medium
+
+  # Yarn Audit (if using yarn)
+  yarn_audit:
+    enabled: false
+    level: moderate
+
+# Container Scanning Configuration
+container_scanning:
+  # Trivy Scanner
+  trivy:
+    enabled: true
+    severity: HIGH,CRITICAL
+    exit_code: 1
+
+# Secret Scanning Configuration
+secret_scanning:
+  # GitLeaks
+  gitleaks:
+    enabled: true
+    config: .gitleaks.toml
+    fail_on: warnings
+
+# License Scanning Configuration
+license_scanning:
+  # FOSSA
+  fossa:
+    enabled: false
+    organization: your-org
+
+  # SPDX License Checker
+  spdx:
+    enabled: true
+    licenses:
+      - MIT
+      - Apache-2.0
+      - BSD-3-Clause
+      - ISC
+
+# Code Quality Gates
+quality_gates:
+  # Code Coverage Threshold
+  coverage:
+    threshold: 80
+    lines: 80
+    functions: 80
+    branches: 80
+
+  # Code Quality Metrics
+  code_quality:
+    complexity_threshold: 10
+    maintainability_index: 70
+    technical_debt_ratio: 5
+
+  # Performance Thresholds
+  performance:
+    bundle_size_threshold: 2MB
+    build_time_threshold: 300s
+    test_time_threshold: 120s
+
+# Security Policies
+security_policies:
+  # Vulnerability Disclosure
+  vulnerability_disclosure:
+    enabled: true
+    contact_email: security@your-domain.com
+
+  # Security Headers
+  security_headers:
+    content_security_policy: true
+    x_frame_options: DENY
+    x_content_type_options: nosniff
+    strict_transport_security: true
+
+# Compliance Requirements
+compliance:
+  # GDPR
+  gdpr:
+    data_protection: true
+    privacy_by_design: true
+
+  # SOC 2
+  soc2:
+    access_control: true
+    change_management: true
+
+# Incident Response
+incident_response:
+  # Security Incident Handling
+  incident_handling:
+    response_plan: SECURITY_INCIDENT_PLAN.md
+    escalation_matrix: ESCALATION_MATRIX.md
+    communication_template: INCIDENT_TEMPLATE.md

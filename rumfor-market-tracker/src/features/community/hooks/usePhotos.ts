@@ -40,7 +40,7 @@ export const usePhotos = (marketId: string) => {
         setPhotos([...photos, ...photosResponse.data])
       }
     }
-  }, [photosResponse, page, photos, setPhotos])
+  }, [photosResponse, page, photos])
 
   // Mutations
   const uploadPhotoMutation = useMutation({
