@@ -998,7 +998,7 @@ Content Views
 
 #### Technical Debt
 - **Legacy Architecture:** Previous PHP implementation being modernized
-- **Database Schema:** PostgreSQL with optimized schemas and proper indexing
+- **Database Schema:** MongoDB Atlas with flexible document schemas and proper indexing
 - **CSS Organization:** Single UnoCSS configuration with design tokens
 - **TypeScript:** Fully typed components with strict mode
 - **Performance:** No caching layer, N+1 query issues
@@ -1098,7 +1098,7 @@ Content Views
 **Technical Stack:**
 - Vite + React + TypeScript for component-based architecture
 - UnoCSS for utility-first styling
-- Modern backend API with PostgreSQL
+- Modern backend API with MongoDB Atlas
 - Progressive Web App capabilities with service workers
 
 ### Phase 2: Core Features (6 months)
@@ -1166,7 +1166,7 @@ Content Views
 #### Backend Architecture
 - **API Design:** RESTful API with GraphQL for complex queries
 - **Authentication:** JWT tokens with refresh mechanism
-- **Database:** PostgreSQL with optimized schemas and proper indexing
+- **Database:** MongoDB Atlas with flexible document schemas and proper indexing
 - **File Storage:** Cloud storage (AWS S3, Cloudflare R2)
 
 #### Performance & Scalability

@@ -12,8 +12,9 @@ VITE_AUTH_DOMAIN=your-auth-domain.auth0.com
 VITE_AUTH_CLIENT_ID=your-auth-client-id
 VITE_AUTH_AUDIENCE=your-auth-audience
 
-### Database Configuration (if using external DB)
-DATABASE_URL=postgresql://user:password@host:port/database
+### Database Configuration (MongoDB Atlas)
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/rumfor-market-tracker
+DB_NAME=rumfor-market-tracker
 
 ### Third-party Services
 VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key

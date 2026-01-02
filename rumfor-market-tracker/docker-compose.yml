@@ -39,24 +39,9 @@ services:
       timeout: 10s
       retries: 3
 
-  # PostgreSQL Database (future use)
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: rumfor_market_tracker
-      POSTGRES_USER: rumfor_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_123}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U rumfor_user -d rumfor_market_tracker"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # MongoDB Atlas - Cloud-hosted database (no local setup required)
+  # Visit https://cloud.mongodb.com/ to set up your MongoDB Atlas cluster
+  # No local PostgreSQL setup needed - using MongoDB Atlas instead
 
   # Reverse Proxy (Traefik)
   traefik:

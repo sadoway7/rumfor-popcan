@@ -82,6 +82,7 @@ rumfor-v2026/
 - Node.js 18+
 - npm 9+
 - Git
+- MongoDB Atlas account (for database)
 
 ### Development Setup
 
