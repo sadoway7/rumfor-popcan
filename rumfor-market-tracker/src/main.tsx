@@ -7,6 +7,14 @@ import App from './App.tsx'
 import './styles/globals.css'
 import 'uno.css'
 
+// Enable React Router v7 future flags to suppress warnings
+if (typeof window !== 'undefined') {
+  (window as any).ReactRouterV6_future = {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  }
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

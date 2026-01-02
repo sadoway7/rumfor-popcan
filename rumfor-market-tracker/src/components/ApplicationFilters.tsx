@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { Card } from '@/components/ui/Card'
 import { ApplicationStatus } from '@/types'
 import { cn } from '@/utils/cn'
-import { Filter, X, RotateCcw, Search, Calendar, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
+
 
 export interface ApplicationFilters {
   search: string

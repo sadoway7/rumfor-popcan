@@ -60,26 +60,22 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const store = useMarketsStore()
   const [isTracking, setIsTracking] = useState(false)
 
-  // Load markets function - dependencies fixed to prevent infinite loops
+  // Load markets function - completely stable to prevent infinite loops
   const loadMarkets = useCallback(async (loadOptions?: { 
     filters?: MarketFilters
     page?: number
     limit?: number 
   }) => {
-    // Extract stable values to avoid recreation
-    const currentFilters = store.filters
-    const currentPage = store.currentPage
-    const currentLimit = limit
-
-    const filters = loadOptions?.filters || currentFilters
-    const page = loadOptions?.page || currentPage
-    const actualLimit = loadOptions?.limit || currentLimit
-
     try {
       store.setLoading(true)
       store.clearError()
 
-      const response = await marketsApi.getMarkets(filters, page, actualLimit)
+      // Get current values directly from store
+      const currentFilters = loadOptions?.filters || store.filters
+      const page = loadOptions?.page || store.currentPage
+      const actualLimit = loadOptions?.limit || limit
+
+      const response = await marketsApi.getMarkets(currentFilters, page, actualLimit)
       
       if (response.pagination) {
         store.setMarkets(response.data)
@@ -97,7 +93,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       store.setLoading(false)
     }
-  }, [limit]) // Only depend on limit, not store
+  }, []) // No dependencies - function is completely stable
 
   // Search markets function - fixed dependencies
   const searchMarkets = useCallback(async (query: string) => {
@@ -163,32 +159,34 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     }
   }, []) // No dependencies needed
 
-  // Pagination helpers
+  // Pagination helpers - made stable to prevent re-renders
   const nextPage = useCallback(() => {
+    const currentPage = store.currentPage
     if (store.hasMore) {
-      const nextPageNum = store.currentPage + 1
+      const nextPageNum = currentPage + 1
       loadMarkets({ page: nextPageNum })
     }
-  }, [store.hasMore, store.currentPage, loadMarkets])
+  }, []) // No dependencies - stable function
 
   const previousPage = useCallback(() => {
-    if (store.currentPage > 1) {
-      const prevPageNum = store.currentPage - 1
+    const currentPage = store.currentPage
+    if (currentPage > 1) {
+      const prevPageNum = currentPage - 1
       loadMarkets({ page: prevPageNum })
     }
-  }, [store.currentPage, loadMarkets])
+  }, []) // No dependencies - stable function
 
-  // Refresh function
+  // Refresh function - made stable
   const refresh = useCallback(async () => {
-    await loadMarkets()
-  }, [loadMarkets])
+    loadMarkets()
+  }, []) // No dependencies - stable function
 
-  // Auto-load markets on mount if enabled
+  // Auto-load markets on mount if enabled - only runs once
   useEffect(() => {
     if (autoLoad) {
       loadMarkets()
     }
-  }, [autoLoad, loadMarkets])
+  }, [autoLoad]) // Only depends on autoLoad, not loadMarkets
 
   // Remove automatic filter initialization to prevent infinite loop
   // Filters should be set manually by components, not automatically
@@ -273,7 +271,7 @@ export const useMarket = (id: string) => {
       setIsLoading(false)
       return null
     }
-  }, [id, store])
+  }, [id]) // Only depend on id, not store
 
   useEffect(() => {
     if (id) {

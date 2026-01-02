@@ -239,6 +239,14 @@ The project uses GitLab CI/CD for automated deployment:
 - **Develop Branch**: Automatically deployed to GitLab Pages staging
 - **Feature Branches**: Full CI/CD pipeline runs for testing
 
+## 🗄️ Database
+
+**MongoDB Atlas** - Cloud-hosted MongoDB database providing:
+- Automatic scaling and backup
+- Easy development/production synchronization
+- Flexible schema design for evolving application requirements
+- Built-in security and monitoring
+
 ### Manual Deployment
 
 #### Build for Production
@@ -262,6 +270,12 @@ docker-compose up -d
 ```
 
 #### Environment Configuration
+
+#### Database Setup
+1. **MongoDB Atlas**: Create a free account at [mongodb.com/atlas](https://mongodb.com/atlas)
+2. **Connection String**: Get your connection string and add to `.env`
+3. **Database Collections**: The application will auto-create collections as needed
+
 See [GITLAB_ENVIRONMENT_VARIABLES.md](./GITLAB_ENVIRONMENT_VARIABLES.md) for complete setup.
 
 ## 📝 Contributing
