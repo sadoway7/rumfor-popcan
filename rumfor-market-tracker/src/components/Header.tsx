@@ -1,4 +1,4 @@
- iimport React from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useNotificationsStore } from '@/features/notifications/notificationsStore'

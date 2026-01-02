@@ -21,8 +21,6 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 
 // Vendor pages
 import { VendorDashboardPage } from '@/pages/vendor/VendorDashboardPage'
-import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
-import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
 import { BusinessPlanningPage } from '@/pages/vendor/BusinessPlanningPage'
 import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
 import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
@@ -146,23 +144,6 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><MarketCalendarPage /></DashboardLayout>
-          </RoleRoute>
-        </ProtectedRoute>
-      } />
-
-      {/* Market Addition Routes */}
-      <Route path="/vendor/add-market" element={
-        <ProtectedRoute>
-          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <MainLayout><AddMarketPage /></MainLayout>
-          </RoleRoute>
-        </ProtectedRoute>
-      } />
-
-      <Route path="/vendor/add-market/vendor" element={
-        <ProtectedRoute>
-          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <MainLayout><VendorAddMarketForm /></MainLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
