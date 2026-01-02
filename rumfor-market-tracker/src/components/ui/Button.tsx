@@ -24,14 +24,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
+    const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50'
 
     const variants = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800',
-      secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 active:bg-gray-400',
-      outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 active:bg-gray-100',
-      ghost: 'hover:bg-gray-100 hover:text-gray-900',
-      destructive: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
+      primary: 'bg-accent text-accent-foreground hover:bg-accent/90 active:bg-accent/80',
+      secondary: 'bg-surface text-foreground hover:bg-surface/80 active:bg-surface/60 border border-border',
+      outline: 'border border-border bg-transparent hover:bg-surface/50 active:bg-surface/30 text-foreground',
+      ghost: 'hover:bg-surface/50 active:bg-surface/30 text-foreground',
+      destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80',
     }
 
     const sizes = {

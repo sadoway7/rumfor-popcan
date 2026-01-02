@@ -11,9 +11,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const baseClasses = 'rounded-lg transition-all duration-200'
 
     const variants = {
-      default: 'bg-white shadow-sm border border-gray-200',
-      outlined: 'bg-white border-2 border-gray-300',
-      elevated: 'bg-white shadow-lg',
+      default: 'bg-surface border border-border',
+      outlined: 'bg-surface border-2 border-border',
+      elevated: 'bg-surface border border-border surface-shadow',
     }
 
     const paddings = {
@@ -61,7 +61,7 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-lg font-semibold leading-none tracking-tight text-gray-900', className)}
+      className={cn('text-lg font-semibold leading-none tracking-tight text-foreground', className)}
       {...props}
     />
   )
@@ -74,7 +74,7 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescriptionPr
   ({ className, ...props }, ref) => (
     <p
       ref={ref}
-      className={cn('text-sm text-gray-600', className)}
+      className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
   )

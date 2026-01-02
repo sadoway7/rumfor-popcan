@@ -20,11 +20,24 @@ export interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  // Password reset
+  isPasswordResetLoading: boolean
+  passwordResetSuccess: boolean
+  passwordResetError: string | null
+  // Email verification
+  isEmailVerificationLoading: boolean
+  emailVerificationSuccess: boolean
+  emailVerificationError: string | null
+  isEmailVerified: boolean
+  // Token refresh
+  isTokenRefreshing: boolean
+  tokenRefreshError: string | null
 }
 
 export interface LoginCredentials {
   email: string
   password: string
+  rememberMe?: boolean
 }
 
 export interface RegisterData {
@@ -33,6 +46,28 @@ export interface RegisterData {
   firstName: string
   lastName: string
   role: UserRole
+}
+
+export interface PasswordResetRequest {
+  email: string
+}
+
+export interface PasswordResetConfirm {
+  token: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface EmailVerificationRequest {
+  token: string
+}
+
+export interface ResendVerificationRequest {
+  email: string
+}
+
+export interface TokenRefreshRequest {
+  token: string
 }
 
 // Market Types
@@ -136,7 +171,7 @@ export interface Application {
   updatedAt: string
 }
 
-export type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected'
+export type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected' | 'withdrawn'
 
 export interface Document {
   id: string
@@ -333,8 +368,180 @@ export interface MarketFilters {
   }
 }
 
+export interface ApplicationFilters {
+  status?: ApplicationStatus[]
+  marketId?: string
+  vendorId?: string
+  dateRange?: {
+    start: string
+    end: string
+  }
+  search?: string
+}
+
 export interface SortOption {
   field: string
   direction: 'asc' | 'desc'
   label: string
+}
+
+// Admin Types
+export interface AdminStats {
+  totalUsers: number
+  totalMarkets: number
+  totalApplications: number
+  totalRevenue: number
+  activeUsers: number
+  pendingApplications: number
+  reportedContent: number
+  systemHealth: number
+  userGrowthRate: number
+  applicationSuccessRate: number
+  marketplaceActivity: number
+  contentModerationQueue: number
+}
+
+export interface UserWithStats extends User {
+  totalApplications: number
+  approvedApplications: number
+  rejectedApplications: number
+  lastActiveAt: string
+  isVerified: boolean
+  reportedContent: number
+}
+
+export interface ModerationItem {
+  id: string
+  type: 'comment' | 'photo' | 'market' | 'user-report' | 'application'
+  contentId: string
+  reportedBy: string
+  reporter: User
+  target: {
+    id: string
+    type: 'comment' | 'photo' | 'market' | 'user' | 'application'
+    content: string
+    author?: User
+  }
+  reason: string
+  description: string
+  status: 'pending' | 'approved' | 'rejected' | 'resolved'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  assignedTo?: string
+  createdAt: string
+  updatedAt: string
+  resolvedAt?: string
+  resolvedBy?: string
+  resolution?: string
+}
+
+export interface PromoterVerification {
+  id: string
+  userId: string
+  user: User
+  businessName: string
+  businessDescription: string
+  businessLicense: string
+  businessAddress: Location
+  taxId: string
+  website?: string
+  socialMedia?: {
+    facebook?: string
+    instagram?: string
+    twitter?: string
+  }
+  references: BusinessReference[]
+  status: 'pending' | 'under-review' | 'verified' | 'rejected'
+  submittedAt: string
+  reviewedAt?: string
+  reviewedBy?: string
+  notes?: string
+  documents: Document[]
+}
+
+export interface BusinessReference {
+  name: string
+  company: string
+  email: string
+  phone: string
+  relationship: string
+  yearsKnown: number
+}
+
+export interface AdminFilters {
+  userFilters?: {
+    role?: UserRole[]
+    isActive?: boolean
+    dateRange?: { start: string; end: string }
+    search?: string
+    sortBy?: string
+    sortDirection?: 'asc' | 'desc'
+  }
+  moderationFilters?: {
+    type?: string[]
+    status?: string[]
+    priority?: string[]
+    assignedTo?: string
+    dateRange?: { start: string; end: string }
+    search?: string
+  }
+  applicationFilters?: {
+    status?: ApplicationStatus[]
+    marketId?: string
+    dateRange?: { start: string; end: string }
+    search?: string
+  }
+}
+
+export interface SystemSettings {
+  id: string
+  key: string
+  value: string
+  type: 'string' | 'number' | 'boolean' | 'json'
+  description: string
+  category: 'general' | 'moderation' | 'notifications' | 'payments' | 'features'
+  isPublic: boolean
+  updatedAt: string
+  updatedBy: string
+}
+
+export interface EmailTemplate {
+  id: string
+  name: string
+  subject: string
+  content: string
+  variables: string[]
+  category: 'welcome' | 'application' | 'moderation' | 'notification' | 'marketing'
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AuditLog {
+  id: string
+  userId: string
+  user: User
+  action: string
+  resource: string
+  resourceId: string
+  details: Record<string, any>
+  ipAddress: string
+  userAgent: string
+  createdAt: string
+}
+
+export interface BulkOperation {
+  id: string
+  type: 'user-role' | 'user-suspend' | 'content-approve' | 'content-reject' | 'application-bulk-review'
+  targetIds: string[]
+  parameters: Record<string, any>
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  progress: number
+  total: number
+  results?: {
+    success: string[]
+    failed: { id: string; error: string }[]
+  }
+  createdBy: string
+  createdAt: string
+  completedAt?: string
 }

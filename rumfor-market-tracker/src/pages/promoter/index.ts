@@ -1,0 +1,1 @@
+export { PromoterDashboardPage } from './PromoterDashboardPage'

@@ -1,14 +1,36 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { AuthState, User, LoginCredentials, RegisterData } from '@/types'
+import { AuthState, User, LoginCredentials, RegisterData, PasswordResetRequest, PasswordResetConfirm, EmailVerificationRequest, ResendVerificationRequest } from '@/types'
+import { authApi } from './authApi'
 
 interface AuthStore extends AuthState {
+  // Core auth methods
   login: (credentials: LoginCredentials) => Promise<void>
   register: (data: RegisterData) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
+  
+  // Password reset methods
+  forgotPassword: (request: PasswordResetRequest) => Promise<void>
+  resetPassword: (request: PasswordResetConfirm) => Promise<void>
+  
+  // Email verification methods
+  verifyEmail: (request: EmailVerificationRequest) => Promise<void>
+  resendVerification: (request: ResendVerificationRequest) => Promise<void>
+  
+  // Token management
+  refreshToken: () => Promise<void>
+  
+  // Utility methods
   updateUser: (user: Partial<User>) => void
   clearError: () => void
   setLoading: (loading: boolean) => void
+  clearPasswordResetError: () => void
+  clearEmailVerificationError: () => void
+  clearPasswordResetSuccess: () => void
+  clearEmailVerificationSuccess: () => void
+  
+  // Check if email needs verification
+  needsEmailVerification: () => boolean
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -20,35 +42,34 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      
+      // Password reset state
+      isPasswordResetLoading: false,
+      passwordResetSuccess: false,
+      passwordResetError: null,
+      
+      // Email verification state
+      isEmailVerificationLoading: false,
+      emailVerificationSuccess: false,
+      emailVerificationError: null,
+      isEmailVerified: false,
+      
+      // Token refresh state
+      isTokenRefreshing: false,
+      tokenRefreshError: null,
 
-      // Actions
+      // Core authentication methods
       login: async (credentials: LoginCredentials) => {
         try {
           set({ isLoading: true, error: null })
           
-          // TODO: Replace with actual API call
-          // const response = await authApi.login(credentials)
-          // const { user, token } = response.data
-          
-          // Mock login for development
-          const mockUser: User = {
-            id: '1',
-            email: credentials.email,
-            firstName: 'John',
-            lastName: 'Doe',
-            role: 'vendor',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isEmailVerified: true,
-            isActive: true,
-          }
-          
-          const mockToken = 'mock-jwt-token'
+          const { user, token } = await authApi.login(credentials)
           
           set({
-            user: mockUser,
-            token: mockToken,
+            user,
+            token,
             isAuthenticated: true,
+            isEmailVerified: user.isEmailVerified,
             isLoading: false,
             error: null,
           })
@@ -65,29 +86,13 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null })
           
-          // TODO: Replace with actual API call
-          // const response = await authApi.register(data)
-          // const { user, token } = response.data
-          
-          // Mock registration for development
-          const mockUser: User = {
-            id: Math.random().toString(36).substr(2, 9),
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            role: data.role,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isEmailVerified: false,
-            isActive: true,
-          }
-          
-          const mockToken = 'mock-jwt-token'
+          const { user, token } = await authApi.register(data)
           
           set({
-            user: mockUser,
-            token: mockToken,
+            user,
+            token,
             isAuthenticated: true,
+            isEmailVerified: user.isEmailVerified,
             isLoading: false,
             error: null,
           })
@@ -100,20 +105,181 @@ export const useAuthStore = create<AuthStore>()(
         }
       },
 
-      logout: () => {
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          error: null,
-        })
+      logout: async () => {
+        try {
+          await authApi.logout()
+        } catch (error) {
+          console.warn('Logout API call failed:', error)
+        } finally {
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isEmailVerified: false,
+            error: null,
+            isLoading: false,
+            isPasswordResetLoading: false,
+            passwordResetSuccess: false,
+            passwordResetError: null,
+            isEmailVerificationLoading: false,
+            emailVerificationSuccess: false,
+            emailVerificationError: null,
+            isTokenRefreshing: false,
+            tokenRefreshError: null,
+          })
+        }
       },
 
+      // Password reset methods
+      forgotPassword: async (request: PasswordResetRequest) => {
+        try {
+          set({ 
+            isPasswordResetLoading: true, 
+            passwordResetError: null, 
+            passwordResetSuccess: false 
+          })
+          
+          await authApi.forgotPassword(request.email)
+          
+          set({
+            isPasswordResetLoading: false,
+            passwordResetSuccess: true,
+            passwordResetError: null,
+          })
+        } catch (error) {
+          set({
+            isPasswordResetLoading: false,
+            passwordResetError: error instanceof Error ? error.message : 'Password reset request failed',
+            passwordResetSuccess: false,
+          })
+          throw error
+        }
+      },
+
+      resetPassword: async (request: PasswordResetConfirm) => {
+        try {
+          set({ 
+            isPasswordResetLoading: true, 
+            passwordResetError: null, 
+            passwordResetSuccess: false 
+          })
+          
+          await authApi.resetPassword(request.token, request.newPassword)
+          
+          set({
+            isPasswordResetLoading: false,
+            passwordResetSuccess: true,
+            passwordResetError: null,
+          })
+        } catch (error) {
+          set({
+            isPasswordResetLoading: false,
+            passwordResetError: error instanceof Error ? error.message : 'Password reset failed',
+            passwordResetSuccess: false,
+          })
+          throw error
+        }
+      },
+
+      // Email verification methods
+      verifyEmail: async (request: EmailVerificationRequest) => {
+        try {
+          set({ 
+            isEmailVerificationLoading: true, 
+            emailVerificationError: null, 
+            emailVerificationSuccess: false 
+          })
+          
+          await authApi.verifyEmail(request.token)
+          
+          // Update user verification status
+          const { user } = get()
+          if (user) {
+            set({
+              user: { ...user, isEmailVerified: true },
+              isEmailVerified: true,
+            })
+          }
+          
+          set({
+            isEmailVerificationLoading: false,
+            emailVerificationSuccess: true,
+            emailVerificationError: null,
+          })
+        } catch (error) {
+          set({
+            isEmailVerificationLoading: false,
+            emailVerificationError: error instanceof Error ? error.message : 'Email verification failed',
+            emailVerificationSuccess: false,
+          })
+          throw error
+        }
+      },
+
+      resendVerification: async (request: ResendVerificationRequest) => {
+        try {
+          set({ 
+            isEmailVerificationLoading: true, 
+            emailVerificationError: null, 
+            emailVerificationSuccess: false 
+          })
+          
+          await authApi.resendVerification(request.email)
+          
+          set({
+            isEmailVerificationLoading: false,
+            emailVerificationSuccess: true,
+            emailVerificationError: null,
+          })
+        } catch (error) {
+          set({
+            isEmailVerificationLoading: false,
+            emailVerificationError: error instanceof Error ? error.message : 'Failed to resend verification email',
+            emailVerificationSuccess: false,
+          })
+          throw error
+        }
+      },
+
+      // Token refresh method
+      refreshToken: async () => {
+        const { token } = get()
+        if (!token) {
+          throw new Error('No token available to refresh')
+        }
+
+        try {
+          set({ isTokenRefreshing: true, tokenRefreshError: null })
+          
+          const { user, token: newToken } = await authApi.refreshToken(token)
+          
+          set({
+            user,
+            token: newToken,
+            isAuthenticated: true,
+            isEmailVerified: user.isEmailVerified,
+            isTokenRefreshing: false,
+            tokenRefreshError: null,
+          })
+        } catch (error) {
+          set({
+            isTokenRefreshing: false,
+            tokenRefreshError: error instanceof Error ? error.message : 'Token refresh failed',
+          })
+          
+          // If token refresh fails, log out the user
+          get().logout()
+          throw error
+        }
+      },
+
+      // Utility methods
       updateUser: (updates: Partial<User>) => {
         const { user } = get()
         if (user) {
           set({
             user: { ...user, ...updates },
+            isEmailVerified: updates.isEmailVerified ?? user.isEmailVerified,
           })
         }
       },
@@ -125,6 +291,27 @@ export const useAuthStore = create<AuthStore>()(
       setLoading: (loading: boolean) => {
         set({ isLoading: loading })
       },
+
+      clearPasswordResetError: () => {
+        set({ passwordResetError: null })
+      },
+
+      clearEmailVerificationError: () => {
+        set({ emailVerificationError: null })
+      },
+
+      clearPasswordResetSuccess: () => {
+        set({ passwordResetSuccess: false })
+      },
+
+      clearEmailVerificationSuccess: () => {
+        set({ emailVerificationSuccess: false })
+      },
+
+      needsEmailVerification: () => {
+        const { user, isEmailVerified } = get()
+        return user ? !isEmailVerified : false
+      },
     }),
     {
       name: 'auth-storage',
@@ -133,6 +320,7 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        isEmailVerified: state.isEmailVerified,
       }),
     }
   )
