@@ -404,20 +404,22 @@ export const MarketDetailPage: React.FC = () => {
               </Card>
 
               {/* Market Promoter */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Market Organizer</h3>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {market.promoter.firstName[0]}{market.promoter.lastName[0]}
-                    </span>
+              {market.promoter && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Market Organizer</h3>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium">
+                        {market.promoter.firstName[0]}{market.promoter.lastName[0]}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{market.promoter.firstName} {market.promoter.lastName}</p>
+                      <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{market.promoter.firstName} {market.promoter.lastName}</p>
-                    <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
 
               {/* Quick Actions */}
               <Card className="p-6">

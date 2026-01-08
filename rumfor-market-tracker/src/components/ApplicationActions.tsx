@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Textarea } from '@/components/ui/Textarea'
 import { Application } from '@/types'
 import { useVendorApplications, usePromoterApplications } from '@/features/applications/hooks/useApplications'
+import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
 
 interface ApplicationActionsProps {
@@ -179,8 +180,8 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
   }
 
   // Determine if current user is the vendor or a promoter/admin
-  // For now, assume vendor view, but this would be determined by checking user role vs application.vendorId
-  const isVendorView = true
+  const { user } = useAuthStore()
+  const isVendorView = user?.id === application.vendorId || user?.role === 'vendor'
   
   return (
     <>

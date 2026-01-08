@@ -1,12 +1,12 @@
-import { 
-  AdminStats, 
-  UserWithStats, 
-  ModerationItem, 
-  PromoterVerification, 
-  AdminFilters, 
-  SystemSettings, 
-  EmailTemplate, 
-  AuditLog, 
+import {
+  AdminStats,
+  UserWithStats,
+  ModerationItem,
+  PromoterVerification,
+  AdminFilters,
+  SystemSettings,
+  EmailTemplate,
+  AuditLog,
   BulkOperation,
   User,
   Application,
@@ -14,6 +14,88 @@ import {
   ApiResponse,
   PaginatedResponse
 } from '@/types'
+
+// Environment configuration
+const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:3001/api'
+
+// Mock data for development
+
+// API simulation delay (reduced for better UX)
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// HTTP client with interceptors
+class HttpClient {
+  private baseURL: string
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`
+
+    // Add auth token if available
+    const token = localStorage.getItem('auth-storage')
+      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
+      : null
+
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 'Request failed'
+        )
+      }
+
+      return await response.json()
+    } catch (error) {
+      throw error
+    }
+  }
+
+  get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' })
+  }
+
+  post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' })
+  }
+}
+
+const httpClient = new HttpClient(API_BASE_URL)
 
 // Mock data for development
 const mockAdminStats: AdminStats = {
@@ -170,63 +252,113 @@ const mockPromoterVerifications: PromoterVerification[] = [
 export const adminApi = {
   // Dashboard & Analytics
   async getAdminStats(): Promise<ApiResponse<AdminStats>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ success: true, data: mockAdminStats })
-      }, 500)
-    })
+    if (isMockMode) {
+      await delay(500)
+      return { success: true, data: mockAdminStats }
+    } else {
+      const response = await httpClient.get<ApiResponse<AdminStats>>('/admin/stats')
+      return response
+    }
   },
 
-  async getUserAnalytics(_dateRange: { start: string; end: string }): Promise<ApiResponse<any>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: {
-            userGrowth: [
-              { date: '2023-01', users: 850 },
-              { date: '2023-02', users: 920 },
-              { date: '2023-03', users: 1050 },
-              { date: '2023-04', users: 1150 },
-              { date: '2023-05', users: 1200 },
-              { date: '2023-06', users: 1250 }
-            ],
-            roleDistribution: [
-              { role: 'visitor', count: 650, percentage: 52 },
-              { role: 'vendor', count: 350, percentage: 28 },
-              { role: 'promoter', count: 200, percentage: 16 },
-              { role: 'admin', count: 50, percentage: 4 }
-            ]
+  async getRecentActivities(): Promise<ApiResponse<any[]>> {
+    if (isMockMode) {
+      await delay(300)
+      return {
+        success: true,
+        data: [
+          {
+            id: '1',
+            type: 'user_registered',
+            message: 'New vendor registered: Sarah Johnson',
+            timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago
+            icon: 'Users',
+            color: 'text-blue-500'
+          },
+          {
+            id: '2',
+            type: 'market_created',
+            message: 'New market created: Downtown Artisan Fair',
+            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+            icon: 'Store',
+            color: 'text-green-500'
+          },
+          {
+            id: '3',
+            type: 'application_submitted',
+            message: 'Application submitted for Spring Market 2024',
+            timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
+            icon: 'FileText',
+            color: 'text-yellow-500'
           }
-        })
-      }, 600)
-    })
+        ].slice(0, 5) // Limit to 5 recent activities
+      }
+    } else {
+      const response = await httpClient.get<ApiResponse<any[]>>('/admin/activities/recent')
+      return response
+    }
   },
 
-  async getMarketAnalytics(_dateRange: { start: string; end: string }): Promise<ApiResponse<any>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          success: true,
-          data: {
-            marketActivity: [
-              { date: '2023-01', applications: 45, markets: 12 },
-              { date: '2023-02', applications: 52, markets: 15 },
-              { date: '2023-03', applications: 68, markets: 18 },
-              { date: '2023-04', applications: 71, markets: 20 },
-              { date: '2023-05', applications: 59, markets: 22 },
-              { date: '2023-06', applications: 45, markets: 20 }
-            ],
-            categoryDistribution: [
-              { category: 'farmers-market', count: 35, percentage: 41 },
-              { category: 'arts-crafts', count: 25, percentage: 29 },
-              { category: 'food-festival', count: 15, percentage: 18 },
-              { category: 'flea-market', count: 10, percentage: 12 }
-            ]
-          }
-        })
-      }, 550)
-    })
+  async getUserAnalytics(dateRange: { start: string; end: string }): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(600)
+      return {
+        success: true,
+        data: {
+          userGrowth: [
+            { date: '2023-01', users: 850 },
+            { date: '2023-02', users: 920 },
+            { date: '2023-03', users: 1050 },
+            { date: '2023-04', users: 1150 },
+            { date: '2023-05', users: 1200 },
+            { date: '2023-06', users: 1250 }
+          ],
+          roleDistribution: [
+            { role: 'visitor', count: 650, percentage: 52 },
+            { role: 'vendor', count: 350, percentage: 28 },
+            { role: 'promoter', count: 200, percentage: 16 },
+            { role: 'admin', count: 50, percentage: 4 }
+          ]
+        }
+      }
+    } else {
+      const queryParams = new URLSearchParams()
+      queryParams.append('startDate', dateRange.start)
+      queryParams.append('endDate', dateRange.end)
+      const response = await httpClient.get<ApiResponse<any>>(`/admin/analytics/users?${queryParams}`)
+      return response
+    }
+  },
+
+  async getMarketAnalytics(dateRange: { start: string; end: string }): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(550)
+      return {
+        success: true,
+        data: {
+          marketActivity: [
+            { date: '2023-01', applications: 45, markets: 12 },
+            { date: '2023-02', applications: 52, markets: 15 },
+            { date: '2023-03', applications: 68, markets: 18 },
+            { date: '2023-04', applications: 71, markets: 20 },
+            { date: '2023-05', applications: 59, markets: 22 },
+            { date: '2023-06', applications: 45, markets: 20 }
+          ],
+          categoryDistribution: [
+            { category: 'farmers-market', count: 35, percentage: 41 },
+            { category: 'arts-crafts', count: 25, percentage: 29 },
+            { category: 'food-festival', count: 15, percentage: 18 },
+            { category: 'flea-market', count: 10, percentage: 12 }
+          ]
+        }
+      }
+    } else {
+      const queryParams = new URLSearchParams()
+      queryParams.append('startDate', dateRange.start)
+      queryParams.append('endDate', dateRange.end)
+      const response = await httpClient.get<ApiResponse<any>>(`/admin/analytics/markets?${queryParams}`)
+      return response
+    }
   },
 
   // User Management
@@ -614,6 +746,66 @@ export const adminApi = {
           }
         })
       }, 400)
+    })
+  },
+
+  // Vendor Messaging (for promoters)
+  async sendMessageToVendor(vendorId: string, message: string): Promise<ApiResponse<{ messageId: string }>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const messageId = `msg-${Date.now()}`
+        console.log('Sending message to vendor:', vendorId, 'Message:', message)
+        resolve({ success: true, data: { messageId } })
+      }, 500)
+    })
+  },
+
+  // Vendor Blacklisting (for promoters)
+  async blacklistVendor(vendorId: string, reason: string): Promise<ApiResponse<User>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const user = mockUsers.find(u => u.id === vendorId)
+        if (user) {
+          // In a real app, this would create a blacklist record and update user status
+          console.log('Blacklisting vendor:', vendorId, 'Reason:', reason)
+          user.updatedAt = new Date().toISOString()
+        }
+        resolve({ success: true, data: user! })
+      }, 500)
+    })
+  },
+
+  // Unblacklist vendor
+  async unblacklistVendor(vendorId: string): Promise<ApiResponse<User>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const user = mockUsers.find(u => u.id === vendorId)
+        if (user) {
+          console.log('Unblacklisting vendor:', vendorId)
+          user.updatedAt = new Date().toISOString()
+        }
+        resolve({ success: true, data: user! })
+      }, 500)
+    })
+  },
+
+  // Market Status Update (for promoters)
+  async updateMarketStatus(marketId: string, status: string): Promise<ApiResponse<any>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('Updating market status:', marketId, 'to status:', status)
+        resolve({ success: true, data: { id: marketId, status } })
+      }, 500)
+    })
+  },
+
+  // Market Deletion (for promoters)
+  async deleteMarket(marketId: string, reason?: string): Promise<ApiResponse<any>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('Deleting market:', marketId, 'Reason:', reason)
+        resolve({ success: true, data: { id: marketId, deleted: true } })
+      }, 500)
     })
   }
 }

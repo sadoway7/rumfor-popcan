@@ -51,6 +51,24 @@ const statusConfig: Record<StatusType, {
     variant: 'muted',
     className: 'bg-gray-50 text-gray-700 border-gray-200',
     description: 'Application was withdrawn by the vendor'
+  },
+  'open': {
+    label: 'Open',
+    variant: 'default',
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    description: 'Market is open for applications'
+  },
+  'accepting-applications': {
+    label: 'Accepting Applications',
+    variant: 'success',
+    className: 'bg-green-50 text-green-700 border-green-200',
+    description: 'Market is currently accepting applications'
+  },
+  'closed': {
+    label: 'Closed',
+    variant: 'muted',
+    className: 'bg-gray-50 text-gray-700 border-gray-200',
+    description: 'Market applications are closed'
   }
 }
 
@@ -68,6 +86,12 @@ const getStatusProgress = (status: StatusType): { current: number; total: number
       return { current: 4, total: 5 }
     case 'withdrawn':
       return { current: 0, total: 5 }
+    case 'open':
+      return { current: 1, total: 3 }
+    case 'accepting-applications':
+      return { current: 2, total: 3 }
+    case 'closed':
+      return { current: 3, total: 3 }
     default:
       return { current: 0, total: 5 }
   }

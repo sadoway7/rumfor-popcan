@@ -17,6 +17,10 @@ interface AdminState {
   // Dashboard stats
   stats: AdminStats | null
   isLoadingStats: boolean
+
+  // Recent activities
+  recentActivities: any[]
+  isLoadingActivities: boolean
   
   // Users
   users: UserWithStats[]
@@ -66,6 +70,7 @@ interface AdminState {
 interface AdminActions {
   // Dashboard
   fetchAdminStats: () => Promise<void>
+  fetchRecentActivities: () => Promise<void>
   
   // Users
   fetchUsers: (filters?: AdminFilters['userFilters']) => Promise<void>
@@ -123,6 +128,8 @@ type AdminStore = AdminState & AdminActions
 const initialState: AdminState = {
   stats: null,
   isLoadingStats: false,
+  recentActivities: [],
+  isLoadingActivities: false,
   users: [],
   usersPagination: null,
   isLoadingUsers: false,
@@ -168,6 +175,20 @@ export const useAdminStore = create<AdminStore>()(
           console.error('Failed to fetch admin stats:', error)
         } finally {
           set({ isLoadingStats: false })
+        }
+      },
+
+      fetchRecentActivities: async () => {
+        set({ isLoadingActivities: true })
+        try {
+          const response = await adminApi.getRecentActivities()
+          if (response.success && response.data) {
+            set({ recentActivities: response.data })
+          }
+        } catch (error) {
+          console.error('Failed to fetch recent activities:', error)
+        } finally {
+          set({ isLoadingActivities: false })
         }
       },
       

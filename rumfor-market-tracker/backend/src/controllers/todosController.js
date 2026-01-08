@@ -5,7 +5,7 @@ const { validateTodoCreation, validateMongoId, validatePagination } = require('.
 
 // Get todos for vendor and market
 const getTodos = catchAsync(async (req, res, next) => {
-  const { marketId } = req.params
+  const { marketId } = req.query
   const {
     page = 1,
     limit = 20,

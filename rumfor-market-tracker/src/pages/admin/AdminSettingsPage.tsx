@@ -3,26 +3,45 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { useToast } from '@/components/ui/Toast'
 import { useAdminSystemSettings, useAdminEmailTemplates } from '@/features/admin/hooks/useAdmin'
 import { Settings, Mail, Shield, Bell, Palette, Database, Save, RefreshCw } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 
 export function AdminSettingsPage() {
   const { systemSettings, isLoadingSettings, refreshSettings, handleUpdateSetting } = useAdminSystemSettings()
   const { emailTemplates, isLoadingTemplates, refreshTemplates } = useAdminEmailTemplates()
   const [activeTab, setActiveTab] = useState<'general' | 'moderation' | 'notifications' | 'email' | 'appearance' | 'security'>('general')
   const [unsavedChanges, setUnsavedChanges] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const { addToast } = useToast()
 
-  const handleSettingChange = (key: string, value: string) => {
+  const handleSettingChange = useCallback((key: string, value: string) => {
     setUnsavedChanges(true)
     handleUpdateSetting(key, value)
-  }
+  }, [handleUpdateSetting])
 
-  const saveAllSettings = () => {
-    // This would actually save all pending changes
-    setUnsavedChanges(false)
-    console.log('Saving all settings...')
-  }
+  const saveAllSettings = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      // Refresh settings from server to confirm all changes are persisted
+      await refreshSettings()
+      setUnsavedChanges(false)
+      addToast({ 
+        variant: 'success', 
+        title: 'Settings Saved', 
+        description: 'All settings have been saved successfully.' 
+      })
+    } catch (error) {
+      addToast({ 
+        variant: 'destructive', 
+        title: 'Save Failed', 
+        description: 'Failed to save settings. Please try again.' 
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }, [refreshSettings, addToast])
 
 
 
@@ -333,10 +352,10 @@ export function AdminSettingsPage() {
           </Button>
           <Button
             onClick={saveAllSettings}
-            disabled={!unsavedChanges}
+            disabled={!unsavedChanges || isSaving}
           >
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
+            <Save className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+            {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
       </div>

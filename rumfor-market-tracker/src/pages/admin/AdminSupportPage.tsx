@@ -1,20 +1,20 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Table } from '@/components/ui/Table'
-import { 
-  MessageSquare, 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Edit, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
+import { useToast } from '@/components/ui/Toast'
+import {
+  MessageSquare,
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Eye,
+  CheckCircle,
+  XCircle,
   Clock,
   Calendar,
   AlertTriangle,
@@ -27,139 +27,55 @@ import {
   Users,
   BookOpen
 } from 'lucide-react'
-
-interface SupportTicket {
-  id: string
-  title: string
-  description: string
-  status: 'open' | 'in-progress' | 'resolved' | 'closed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  category: 'technical' | 'billing' | 'account' | 'general'
-  userId: string
-  user: {
-    firstName: string
-    lastName: string
-    email: string
-  }
-  createdAt: string
-  updatedAt: string
-  assignedTo?: string
-}
-
-interface FAQItem {
-  id: string
-  question: string
-  answer: string
-  category: string
-  isActive: boolean
-  views: number
-  createdAt: string
-  updatedAt: string
-}
+import {
+  useSupportTickets,
+  useResolveTicket,
+  useAssignTicket,
+  useCloseTicket,
+  useFAQs,
+  useToggleFAQActive
+} from '@/features/admin/hooks/useSupport'
+import type { SupportTicket, FAQItem } from '@/features/admin/supportApi'
 
 export function AdminSupportPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [selectedPriority, setSelectedPriority] = useState<string>('all')
   const [activeTab, setActiveTab] = useState<'tickets' | 'faq' | 'contacts'>('tickets')
+  const { addToast } = useToast()
 
-  // Mock data for demonstration
-  const supportTickets: SupportTicket[] = [
-    {
-      id: '1',
-      title: 'Cannot login to my account',
-      description: 'Getting error message when trying to log in',
-      status: 'open',
-      priority: 'high',
-      category: 'account',
-      userId: 'user1',
-      user: {
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah@example.com'
-      },
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: '2',
-      title: 'Payment processing issue',
-      description: 'Credit card payment failed multiple times',
-      status: 'in-progress',
-      priority: 'urgent',
-      category: 'billing',
-      userId: 'user2',
-      user: {
-        firstName: 'Mike',
-        lastName: 'Chen',
-        email: 'mike@example.com'
-      },
-      createdAt: '2024-01-14T14:20:00Z',
-      updatedAt: '2024-01-15T09:15:00Z',
-      assignedTo: 'admin1'
-    },
-    {
-      id: '3',
-      title: 'Market listing not showing',
-      description: 'My market listing disappeared from search results',
-      status: 'resolved',
-      priority: 'medium',
-      category: 'technical',
-      userId: 'user3',
-      user: {
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane@example.com'
-      },
-      createdAt: '2024-01-13T16:45:00Z',
-      updatedAt: '2024-01-14T11:20:00Z',
-      assignedTo: 'admin2'
-    }
-  ]
+  // Build filters
+  const filters = useMemo(() => ({
+    search: searchQuery || undefined,
+    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+    priority: selectedPriority !== 'all' ? selectedPriority : undefined,
+  }), [searchQuery, selectedStatus, selectedPriority])
 
-  const faqItems: FAQItem[] = [
-    {
-      id: '1',
-      question: 'How do I apply to a market?',
-      answer: 'Navigate to the market page and click the "Apply Now" button to start your application.',
-      category: 'applications',
-      isActive: true,
-      views: 245,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    {
-      id: '2',
-      question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards, PayPal, and bank transfers for market fees.',
-      category: 'payments',
-      isActive: true,
-      views: 189,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    {
-      id: '3',
-      question: 'How long does application approval take?',
-      answer: 'Application approval typically takes 3-5 business days depending on the market.',
-      category: 'applications',
-      isActive: false,
-      views: 156,
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-10T00:00:00Z'
-    }
-  ]
+  // TanStack Query hooks
+  const { data: ticketsData, isLoading: isLoadingTickets, refetch: refetchTickets } = useSupportTickets(filters)
+  const { data: faqsData, isLoading: isLoadingFAQs, refetch: refetchFAQs } = useFAQs()
 
-  // Statistics
-  const ticketStats = {
+  // Mutation hooks
+  const resolveTicket = useResolveTicket()
+  const assignTicket = useAssignTicket()
+  const closeTicket = useCloseTicket()
+  const toggleFAQActive = useToggleFAQActive()
+
+  // Extract data
+  const supportTickets = ticketsData?.data || []
+  const faqItems = faqsData?.data || []
+
+  // Calculate stats
+  const ticketStats = useMemo(() => ({
     total: supportTickets.length,
     open: supportTickets.filter(t => t.status === 'open').length,
     inProgress: supportTickets.filter(t => t.status === 'in-progress').length,
     resolved: supportTickets.filter(t => t.status === 'resolved').length,
     urgent: supportTickets.filter(t => t.priority === 'urgent').length,
-  }
+  }), [supportTickets])
 
-  const recentActivity = [
+  // Recent activity mock (would come from API)
+  const recentActivity = useMemo(() => [
     {
       id: '1',
       action: 'ticket_created',
@@ -188,7 +104,7 @@ export function AdminSupportPage() {
       timestamp: '3 hours ago',
       type: 'info'
     }
-  ]
+  ], [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -239,47 +155,48 @@ export function AdminSupportPage() {
   }
 
   const handleSearch = useCallback(() => {
-    // In a real implementation, this would call a search function
-    // For now, we'll implement basic client-side filtering
-    console.log(`Searching for: ${searchQuery}`)
-  }, [searchQuery])
+    refetchTickets()
+  }, [refetchTickets])
 
   const handleStatusFilter = useCallback((status: string) => {
     setSelectedStatus(status)
-    // In a real implementation, this would apply filters to the support tickets
-    console.log(`Filtering by status: ${status}`)
   }, [])
 
   const handlePriorityFilter = useCallback((priority: string) => {
     setSelectedPriority(priority)
-    // In a real implementation, this would apply filters to the support tickets
-    console.log(`Filtering by priority: ${priority}`)
   }, [])
 
-  const handleTicketAction = useCallback((ticketId: string, action: 'resolve' | 'assign' | 'close') => {
-    // In a real implementation, these would call the support API
+  const handleTicketAction = useCallback(async (ticketId: string, action: 'resolve' | 'assign' | 'close') => {
     try {
       switch (action) {
         case 'resolve':
-          console.log(`Resolving ticket ${ticketId}`)
+          await resolveTicket.mutateAsync(ticketId)
+          addToast({ variant: 'success', title: 'Success', description: 'Ticket resolved successfully' })
           break
         case 'assign':
-          console.log(`Assigning ticket ${ticketId}`)
+          await assignTicket.mutateAsync({ ticketId, adminId: 'current-admin' })
+          addToast({ variant: 'success', title: 'Success', description: 'Ticket assigned successfully' })
           break
         case 'close':
-          console.log(`Closing ticket ${ticketId}`)
+          await closeTicket.mutateAsync(ticketId)
+          addToast({ variant: 'success', title: 'Success', description: 'Ticket closed successfully' })
           break
-        default:
-          console.warn(`Unknown action: ${action}`)
       }
     } catch (error) {
-      console.error(`Failed to ${action} ticket:`, error)
+      addToast({ variant: 'destructive', title: 'Error', description: `Failed to ${action} ticket` })
     }
+  }, [resolveTicket, assignTicket, closeTicket, addToast])
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('')
+    setSelectedStatus('all')
+    setSelectedPriority('all')
   }, [])
 
-  useEffect(() => {
-    // Component mounted
-  }, [])
+  const handleRefresh = useCallback(() => {
+    refetchTickets()
+    refetchFAQs()
+  }, [refetchTickets, refetchFAQs])
 
   const renderTicketsTab = () => (
     <div className="space-y-6">
@@ -295,11 +212,11 @@ export function AdminSupportPage() {
               className="w-full"
             />
           </div>
-          <Button onClick={handleSearch}>
+          <Button onClick={handleSearch} disabled={isLoadingTickets}>
             <Search className="h-4 w-4 mr-2" />
             Search
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleClearFilters}>
             <Filter className="h-4 w-4 mr-2" />
             Clear Filters
           </Button>
@@ -339,10 +256,12 @@ export function AdminSupportPage() {
           <h3 className="text-lg font-semibold">Support Tickets</h3>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button variant="outline" size="sm">
-              <MoreVertical className="h-4 w-4" />
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoadingTickets}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingTickets ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
         </div>
@@ -400,20 +319,28 @@ export function AdminSupportPage() {
                   <Button variant="outline" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     onClick={() => handleTicketAction(record.id, 'resolve')}
-                    disabled={record.status === 'resolved'}
+                    disabled={record.status === 'resolved' || resolveTicket.isPending}
                   >
                     <CheckCircle className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTicketAction(record.id, 'close')}
+                    disabled={record.status === 'closed' || closeTicket.isPending}
+                  >
+                    <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
               )
             }
           ]}
           data={supportTickets}
-          loading={false}
+          loading={isLoadingTickets}
           emptyText="No support tickets found"
         />
       </Card>
@@ -427,13 +354,9 @@ export function AdminSupportPage() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">FAQ Management</h3>
           <div className="flex items-center gap-2">
-            <Button variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Add FAQ Item
-            </Button>
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export FAQ
+            <Button variant="outline" onClick={handleRefresh} disabled={isLoadingFAQs}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingFAQs ? 'animate-spin' : ''}`} />
+              Refresh
             </Button>
           </div>
         </div>
@@ -487,7 +410,12 @@ export function AdminSupportPage() {
                   <Button variant="outline" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleFAQActive.mutate(record.id)}
+                    disabled={toggleFAQActive.isPending}
+                  >
                     {record.isActive ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
                   </Button>
                 </div>
@@ -495,7 +423,7 @@ export function AdminSupportPage() {
             }
           ]}
           data={faqItems}
-          loading={false}
+          loading={isLoadingFAQs}
           emptyText="No FAQ items found"
         />
       </Card>
@@ -667,15 +595,15 @@ export function AdminSupportPage() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Button variant="outline" className="h-16 flex flex-col items-center gap-2">
+          <Button variant="outline" className="h-16 flex flex-col items-center gap-2" onClick={() => setActiveTab('tickets')}>
             <MessageSquare className="h-5 w-5" />
             <span>View Tickets</span>
           </Button>
-          <Button variant="outline" className="h-16 flex flex-col items-center gap-2">
+          <Button variant="outline" className="h-16 flex flex-col items-center gap-2" onClick={() => setActiveTab('faq')}>
             <BookOpen className="h-5 w-5" />
             <span>Manage FAQ</span>
           </Button>
-          <Button variant="outline" className="h-16 flex flex-col items-center gap-2">
+          <Button variant="outline" className="h-16 flex flex-col items-center gap-2" onClick={() => setActiveTab('contacts')}>
             <Users className="h-5 w-5" />
             <span>Support Team</span>
           </Button>

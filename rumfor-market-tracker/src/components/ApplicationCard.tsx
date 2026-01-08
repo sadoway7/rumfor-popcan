@@ -27,6 +27,9 @@ const statusColors: Record<ApplicationStatus, string> = {
   'approved': 'bg-success/10 text-success border-success/20',
   'rejected': 'bg-destructive/10 text-destructive border-destructive/20',
   'withdrawn': 'bg-muted text-muted-foreground border-muted',
+  'open': 'bg-success/10 text-success border-success/20',
+  'accepting-applications': 'bg-success/10 text-success border-success/20',
+  'closed': 'bg-muted text-muted-foreground border-muted',
 }
 
 const statusLabels: Record<ApplicationStatus, string> = {
@@ -36,6 +39,9 @@ const statusLabels: Record<ApplicationStatus, string> = {
   'approved': 'Approved',
   'rejected': 'Rejected',
   'withdrawn': 'Withdrawn',
+  'open': 'Open',
+  'accepting-applications': 'Accepting Applications',
+  'closed': 'Closed',
 }
 
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({
@@ -71,6 +77,12 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
         return <XCircle className="h-4 w-4" />
       case 'withdrawn':
         return <XCircle className="h-4 w-4" />
+      case 'open':
+        return <CheckCircle className="h-4 w-4" />
+      case 'accepting-applications':
+        return <Clock className="h-4 w-4" />
+      case 'closed':
+        return <XCircle className="h-4 w-4" />
       default:
         return <FileText className="h-4 w-4" />
     }
@@ -84,6 +96,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({
       case 'approved': return 100
       case 'rejected': return 80
       case 'withdrawn': return 0
+      case 'open': return 25
+      case 'accepting-applications': return 50
+      case 'closed': return 0
       default: return 0
     }
   }

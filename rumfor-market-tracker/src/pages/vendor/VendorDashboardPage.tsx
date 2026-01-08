@@ -98,14 +98,14 @@ export function VendorDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Welcome back, {user?.firstName}!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Welcome back, {user?.firstName}!</h1>
           <p className="text-muted-foreground mt-1">
             Here's what's happening with your market business
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {unreadCount > 0 && (
             <Badge variant="destructive" className="flex items-center gap-1">
               <Bell className="w-3 h-3" />

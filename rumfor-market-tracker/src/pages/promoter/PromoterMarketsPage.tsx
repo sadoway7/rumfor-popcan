@@ -20,14 +20,19 @@ import { Select, SelectOption } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
 import { Table } from '@/components/ui/Table'
 import { Textarea } from '@/components/ui/Textarea'
+import { useToast } from '@/components/ui/Toast'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
+import { useApplications } from '@/features/applications/hooks/useApplications'
 import { useAuthStore } from '@/features/auth/authStore'
+import { adminApi } from '@/features/admin/adminApi'
 import { Market, MarketStatus, MarketCategory } from '@/types'
 import { cn } from '@/utils/cn'
 
 export function PromoterMarketsPage() {
   const { user } = useAuthStore()
   const { markets, isLoading: marketsLoading } = useMarkets()
+  const { applications } = useApplications()
+  const { addToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [categoryFilter, setCategoryFilter] = useState<string>('')
@@ -38,11 +43,17 @@ export function PromoterMarketsPage() {
     market: Market | null
   } | null>(null)
   const [deleteReason, setDeleteReason] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Filter markets created by current promoter
   const myMarkets = useMemo(() => {
     return markets.filter(market => market.promoterId === user?.id)
   }, [markets, user?.id])
+
+  // Get IDs of markets created by this promoter
+  const myMarketIds = useMemo(() => {
+    return myMarkets.map(market => market.id)
+  }, [myMarkets])
 
   // Apply filters
   const filteredMarkets = useMemo(() => {
@@ -104,25 +115,46 @@ export function PromoterMarketsPage() {
   }
 
   const handleStatusChange = async (marketId: string, newStatus: MarketStatus) => {
+    setIsLoading(true)
     try {
-      // In a real app, this would call an API to update the market
-      console.log('Update market:', marketId, 'to status:', newStatus)
-      // For now, just simulate success
+      await adminApi.updateMarketStatus(marketId, newStatus)
+      addToast({
+        title: 'Status Updated',
+        description: `Market status changed to ${newStatus}`,
+        variant: 'success'
+      })
     } catch (error) {
-      console.error('Failed to update market status:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to update market status',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleDeleteMarket = async () => {
     if (!actionModal?.market || !deleteReason.trim()) return
     
+    setIsLoading(true)
     try {
-      // In a real app, this would call an API to update the market status
-      console.log('Delete market:', actionModal.market.id, 'reason:', deleteReason)
+      await adminApi.deleteMarket(actionModal.market.id, deleteReason)
+      addToast({
+        title: 'Market Deleted',
+        description: `${actionModal.market.name} has been deleted`,
+        variant: 'success'
+      })
       setActionModal(null)
       setDeleteReason('')
     } catch (error) {
-      console.error('Failed to delete market:', error)
+      addToast({
+        title: 'Error',
+        description: 'Failed to delete market',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -131,13 +163,21 @@ export function PromoterMarketsPage() {
     const total = myMarkets.length
     const active = myMarkets.filter(m => m.status === 'active').length
     const draft = myMarkets.filter(m => m.status === 'draft').length
-    const totalApplications = filteredMarkets.reduce((sum) => {
-      // This would come from actual application data
-      return sum + Math.floor(Math.random() * 20) + 1
+    
+    // Calculate actual application counts from applications data
+    const applicationCounts: Record<string, number> = {}
+    applications.forEach(app => {
+      if (myMarketIds.includes(app.marketId)) {
+        applicationCounts[app.marketId] = (applicationCounts[app.marketId] || 0) + 1
+      }
+    })
+    
+    const totalApplications = filteredMarkets.reduce((sum, market) => {
+      return sum + (applicationCounts[market.id] || 0)
     }, 0)
 
-    return { total, active, draft, totalApplications }
-  }, [myMarkets, filteredMarkets])
+    return { total, active, draft, totalApplications, applicationCounts }
+  }, [myMarkets, myMarketIds, applications, filteredMarkets])
 
   const statusFilterOptions: SelectOption[] = [
     { value: '', label: 'All Status' },
@@ -217,9 +257,8 @@ export function PromoterMarketsPage() {
     {
       key: 'applications',
       title: 'Applications',
-      render: () => {
-        // Mock application count - in real app, this would come from joined data
-        const appCount = Math.floor(Math.random() * 20) + 1
+      render: (_: any, record: Market) => {
+        const appCount = stats.applicationCounts[record.id] || 0
         return (
           <div className="text-center">
             <div className="font-medium">{appCount}</div>
@@ -634,9 +673,10 @@ export function PromoterMarketsPage() {
                     </Button>
                     <Button
                       onClick={handleDeleteMarket}
+                      disabled={isLoading}
                       className="bg-destructive hover:bg-destructive/90"
                     >
-                      Delete Market
+                      {isLoading ? 'Deleting...' : 'Delete Market'}
                     </Button>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Progress } from '@/components/ui/Progress'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin, Clock, DollarSign, CheckSquare, Users, Car, Accessibility, Heart } from 'lucide-react'
+import { Calendar, MapPin, DollarSign, CheckSquare, Users, Car, Accessibility, Heart } from 'lucide-react'
 
 // Interface for vendor market tracking relationship
 interface VendorMarketTracking {

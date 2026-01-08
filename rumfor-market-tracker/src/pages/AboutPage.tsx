@@ -43,25 +43,25 @@ export function AboutPage() {
       name: 'Sarah Chen',
       role: 'Founder & CEO',
       description: 'Former event coordinator with 10+ years in community market management.',
-      image: '/api/placeholder/150/150'
+      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop'
     },
     {
       name: 'Marcus Rodriguez',
       role: 'CTO',
       description: 'Full-stack developer passionate about building tools that bring communities together.',
-      image: '/api/placeholder/150/150'
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop'
     },
     {
       name: 'Emily Johnson',
       role: 'Head of Product',
       description: 'Product designer focused on creating intuitive experiences for market organizers.',
-      image: '/api/placeholder/150/150'
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop'
     },
     {
       name: 'David Kim',
       role: 'Community Manager',
       description: 'Dedicated to supporting our users and building strong vendor relationships.',
-      image: '/api/placeholder/150/150'
+      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop'
     }
   ]
 

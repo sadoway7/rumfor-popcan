@@ -31,7 +31,7 @@ export const useTodos = (marketId?: string) => {
     queryKey: ['todos', user?.id, marketId],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      const response = await trackingApi.getTodos(user.id, marketId)
+      const response = await trackingApi.getTodos(marketId)
       return response.data
     },
     enabled: !!user?.id,

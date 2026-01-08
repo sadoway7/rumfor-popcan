@@ -161,14 +161,14 @@ export function AdminApplicationsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Application Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Application Management</h1>
           <p className="text-muted-foreground">
             Review and manage all vendor applications
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
             Export Applications
@@ -181,7 +181,7 @@ export function AdminApplicationsPage() {
       </div>
 
       {/* Application Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>

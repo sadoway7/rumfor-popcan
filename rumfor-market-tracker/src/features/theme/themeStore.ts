@@ -36,9 +36,9 @@ export const useThemeStore = create<ThemeStore>()(
 
 // Initialize theme on app load
 export const initializeTheme = () => {
-  const { theme, toggleTheme } = useThemeStore.getState()
+  const { theme } = useThemeStore.getState()
   const root = document.documentElement
-  
+
   if (theme === 'dark') {
     root.classList.add('dark')
   } else {

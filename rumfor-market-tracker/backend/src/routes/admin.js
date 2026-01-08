@@ -1,95 +1,42 @@
 const express = require('express')
 const router = express.Router()
 
+const {
+  getDashboard,
+  getUsers,
+  updateUser,
+  getMarkets,
+  updateMarket,
+  getModerationQueue,
+  moderateContent,
+  getSettings,
+  updateSettings
+} = require('../controllers/adminController')
+
 const { verifyToken, requireAdmin } = require('../middleware/auth')
+const { validateMongoId, validatePagination } = require('../middleware/validation')
 
 // Admin routes - all require admin authentication
 router.use(verifyToken, requireAdmin)
 
 // Dashboard analytics
-router.get('/dashboard', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      totalUsers: 0,
-      totalMarkets: 0,
-      totalApplications: 0,
-      recentActivity: []
-    },
-    message: 'Dashboard data retrieved successfully'
-  })
-})
+router.get('/dashboard', getDashboard)
+router.get('/stats', getAdminStats)
 
 // User management
-router.get('/users', (req, res) => {
-  res.json({
-    success: true,
-    data: { users: [] },
-    message: 'Users retrieved successfully'
-  })
-})
-
-router.patch('/users/:id', (req, res) => {
-  res.json({
-    success: true,
-    data: { user: {} },
-    message: 'User updated successfully'
-  })
-})
+router.get('/users', validatePagination, getUsers)
+router.patch('/users/:id', validateMongoId('id'), updateUser)
 
 // Market management
-router.get('/markets', (req, res) => {
-  res.json({
-    success: true,
-    data: { markets: [] },
-    message: 'Markets retrieved successfully'
-  })
-})
-
-router.patch('/markets/:id', (req, res) => {
-  res.json({
-    success: true,
-    data: { market: {} },
-    message: 'Market updated successfully'
-  })
-})
+router.get('/markets', validatePagination, getMarkets)
+router.patch('/markets/:id', validateMongoId('id'), updateMarket)
 
 // Content moderation
-router.get('/moderation', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      flaggedComments: [],
-      flaggedPhotos: [],
-      pendingApprovals: []
-    },
-    message: 'Moderation queue retrieved successfully'
-  })
-})
-
-router.post('/moderate/:type/:id', (req, res) => {
-  res.json({
-    success: true,
-    data: { moderated: {} },
-    message: 'Content moderated successfully'
-  })
-})
+router.get('/moderation', getModerationQueue)
+router.post('/moderate/:type/:id', validateMongoId('id'), moderateContent)
 
 // System settings
-router.get('/settings', (req, res) => {
-  res.json({
-    success: true,
-    data: { settings: {} },
-    message: 'Settings retrieved successfully'
-  })
-})
-
-router.patch('/settings', (req, res) => {
-  res.json({
-    success: true,
-    data: { settings: {} },
-    message: 'Settings updated successfully'
-  })
-})
+router.get('/settings', getSettings)
+router.patch('/settings', updateSettings)
 
 module.exports = router

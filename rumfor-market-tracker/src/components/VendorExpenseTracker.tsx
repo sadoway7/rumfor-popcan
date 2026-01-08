@@ -13,6 +13,9 @@ import { ExpenseForm } from './ExpenseForm'
 import { ExpenseSummary } from './ExpenseSummary'
 import { ExpenseChart } from './ExpenseChart'
 import { cn } from '@/utils/cn'
+import Papa from 'papaparse'
+import { saveAs } from 'file-saver'
+import { format } from 'date-fns'
 
 interface VendorExpenseTrackerProps {
   marketId: string
@@ -157,8 +160,33 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
   }
 
   const handleExport = () => {
-    // Export functionality not yet implemented
-    alert('Export functionality will be available in a future update.')
+    try {
+      if (filteredAndSortedExpenses.length === 0) {
+        alert('No expenses to export')
+        return
+      }
+
+      // Prepare export data
+      const exportData = filteredAndSortedExpenses.map(expense => ({
+        'Title': expense.title,
+        'Description': expense.description || '',
+        'Category': categoryLabels[expense.category],
+        'Amount': formatCurrency(expense.amount),
+        'Date': format(new Date(expense.date), 'yyyy-MM-dd')
+      }))
+
+      // Generate filename with timestamp
+      const timestamp = format(new Date(), 'yyyy-MM-dd-HHmm')
+      const filename = `expenses-${timestamp}.csv`
+
+      // Convert to CSV and download
+      const csv = Papa.unparse(exportData)
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      saveAs(blob, filename)
+    } catch (error) {
+      console.error('Export failed:', error)
+      alert('Export failed. Please try again.')
+    }
   }
 
   const formatCurrency = (amount: number) => {

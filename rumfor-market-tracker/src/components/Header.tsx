@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useNotificationsStore } from '@/features/notifications/notificationsStore'
 import { useThemeStore } from '@/features/theme/themeStore'
 import { Button } from '@/components/ui'
 import {

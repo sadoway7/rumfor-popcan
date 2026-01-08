@@ -11,7 +11,7 @@ export const ApplicationFormPage: React.FC = () => {
   const { marketId } = useParams<{ marketId: string }>()
   const navigate = useNavigate()
   const { markets, isLoading: marketsLoading } = useMarkets()
-  const { myApplications } = useVendorApplications()
+  const { myApplications, loadMyApplications } = useVendorApplications()
   
   const [market, setMarket] = useState<Market | null>(null)
   const [existingApplication, setExistingApplication] = useState<any>(null)
@@ -28,6 +28,8 @@ export const ApplicationFormPage: React.FC = () => {
   }, [markets, marketId, myApplications])
 
   const handleSuccess = (application: any) => {
+    // Refresh the applications list so the existingApplication check works next time
+    loadMyApplications()
     navigate(`/applications/${application.id}`)
   }
 

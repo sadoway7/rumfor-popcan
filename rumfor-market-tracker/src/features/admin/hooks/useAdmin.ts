@@ -8,6 +8,9 @@ export function useAdmin() {
     stats,
     isLoadingStats,
     fetchAdminStats,
+    recentActivities,
+    isLoadingActivities,
+    fetchRecentActivities,
     users,
     isLoadingUsers,
     fetchUsers,
@@ -31,6 +34,7 @@ export function useAdmin() {
   // Initialize admin data
   useEffect(() => {
     fetchAdminStats()
+    fetchRecentActivities()
     fetchUsers()
     fetchModerationQueue()
     fetchPromoterVerifications()
@@ -40,6 +44,8 @@ export function useAdmin() {
   return {
     stats,
     isLoadingStats,
+    recentActivities,
+    isLoadingActivities,
     users,
     isLoadingUsers,
     moderationItems,
@@ -51,6 +57,7 @@ export function useAdmin() {
     bulkOperations,
     bulkOperationProgress,
     fetchAdminStats,
+    fetchRecentActivities,
     fetchUsers,
     fetchModerationQueue,
     fetchPromoterVerifications,

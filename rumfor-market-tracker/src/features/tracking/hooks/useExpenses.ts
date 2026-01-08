@@ -30,7 +30,7 @@ export const useExpenses = (marketId?: string) => {
     queryKey: ['expenses', user?.id, marketId],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      const response = await trackingApi.getExpenses(user.id, marketId)
+      const response = await trackingApi.getExpenses(marketId)
       return response.data
     },
     enabled: !!user?.id,

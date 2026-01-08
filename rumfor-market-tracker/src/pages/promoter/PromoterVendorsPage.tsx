@@ -27,9 +27,11 @@ import { Badge } from '@/components/ui/Badge'
 import { Table } from '@/components/ui/Table'
 import { Avatar } from '@/components/ui/Avatar'
 import { Textarea } from '@/components/ui/Textarea'
+import { useToast } from '@/components/ui/Toast'
 import { useApplications } from '@/features/applications/hooks/useApplications'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
+import { adminApi } from '@/features/admin/adminApi'
 import { User } from '@/types'
 import { cn } from '@/utils/cn'
 
@@ -37,6 +39,7 @@ export function PromoterVendorsPage() {
   const { user } = useAuthStore()
   const { markets } = useMarkets()
   const { applications } = useApplications()
+  const { addToast } = useToast()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [marketFilter, setMarketFilter] = useState<string>('')
@@ -50,6 +53,7 @@ export function PromoterVendorsPage() {
   } | null>(null)
   const [messageText, setMessageText] = useState('')
   const [blacklistReason, setBlacklistReason] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Filter markets created by current promoter
   const myMarkets = useMemo(() => {
@@ -208,22 +212,52 @@ export function PromoterVendorsPage() {
     )
   }
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!vendorModal?.vendor || !messageText.trim()) return
     
-    // In a real app, this would send a message via API
-    console.log('Send message to:', vendorModal.vendor.id, 'Message:', messageText)
-    setVendorModal(null)
-    setMessageText('')
+    setIsLoading(true)
+    try {
+      await adminApi.sendMessageToVendor(vendorModal.vendor.id, messageText)
+      addToast({
+        title: 'Message Sent',
+        description: `Message sent to ${vendorModal.vendor.firstName} ${vendorModal.vendor.lastName}`,
+        variant: 'success'
+      })
+      setVendorModal(null)
+      setMessageText('')
+    } catch (error) {
+      addToast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleBlacklistVendor = () => {
+  const handleBlacklistVendor = async () => {
     if (!vendorModal?.vendor || !blacklistReason.trim()) return
     
-    // In a real app, this would update vendor status via API
-    console.log('Blacklist vendor:', vendorModal.vendor.id, 'Reason:', blacklistReason)
-    setVendorModal(null)
-    setBlacklistReason('')
+    setIsLoading(true)
+    try {
+      await adminApi.blacklistVendor(vendorModal.vendor.id, blacklistReason)
+      addToast({
+        title: 'Vendor Blacklisted',
+        description: `${vendorModal.vendor.firstName} ${vendorModal.vendor.lastName} has been blacklisted`,
+        variant: 'success'
+      })
+      setVendorModal(null)
+      setBlacklistReason('')
+    } catch (error) {
+      addToast({
+        title: 'Error',
+        description: 'Failed to blacklist vendor. Please try again.',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // Calculate stats
@@ -784,9 +818,9 @@ export function PromoterVendorsPage() {
                     </Button>
                     <Button
                       onClick={handleSendMessage}
-                      disabled={!messageText.trim()}
+                      disabled={!messageText.trim() || isLoading}
                     >
-                      Send Message
+                      {isLoading ? 'Sending...' : 'Send Message'}
                     </Button>
                   </div>
                 </div>
@@ -835,10 +869,10 @@ export function PromoterVendorsPage() {
                     </Button>
                     <Button
                       onClick={handleBlacklistVendor}
-                      disabled={!blacklistReason.trim()}
+                      disabled={!blacklistReason.trim() || isLoading}
                       className="bg-destructive hover:bg-destructive/90"
                     >
-                      Blacklist Vendor
+                      {isLoading ? 'Blacklisting...' : 'Blacklist Vendor'}
                     </Button>
                   </div>
                 </div>

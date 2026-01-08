@@ -4,7 +4,7 @@ import { Button, Badge } from '@/components/ui'
 import { useAuthStore } from '@/features/auth/authStore'
 import { MarketGrid } from '@/components/MarketGrid'
 import { marketsApi } from '@/features/markets/marketsApi'
-import { Search, ArrowRight, MapPin, Users, CheckSquare, FileText, TrendingUp, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Hammer } from 'lucide-react'
+import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift } from 'lucide-react'
 
 // Market categories for browsing with proper icons
 const marketCategories = [

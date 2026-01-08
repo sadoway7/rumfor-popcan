@@ -1,1 +1,7 @@
 export { PromoterDashboardPage } from './PromoterDashboardPage'
+export { PromoterMarketsPage } from './PromoterMarketsPage'
+export { PromoterApplicationsPage } from './PromoterApplicationsPage'
+export { PromoterVendorsPage } from './PromoterVendorsPage'
+export { PromoterAnalyticsPage } from './PromoterAnalyticsPage'
+export { PromoterCalendarPage } from './PromoterCalendarPage'
+export { PromoterCreateMarketPage } from './PromoterCreateMarketPage'

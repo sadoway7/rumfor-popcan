@@ -52,15 +52,16 @@ export const useApplications = () => {
   // Load all applications
   const loadApplications = useCallback(async (newFilters?: ApplicationFilters) => {
     if (isLoading) return
-    
+
     setLoading(true)
     clearError()
-    
+
     try {
       const response = await applicationsApi.getApplications(newFilters || filters)
-      
+
       if (response.success && response.data) {
         setApplications(response.data.data)
+        setHasMore(response.data.pagination.page < response.data.pagination.totalPages)
       } else {
         setError(response.error || 'Failed to load applications')
       }
@@ -69,7 +70,7 @@ export const useApplications = () => {
     } finally {
       setLoading(false)
     }
-  }, [filters, isLoading, setApplications, setLoading, clearError, setError])
+  }, [filters, isLoading, setApplications, setHasMore, setLoading, clearError, setError])
 
   // Load my applications
   const loadMyApplications = useCallback(async () => {
@@ -468,18 +469,19 @@ export const useApplications = () => {
 // Hook for vendor-specific application operations
 export const useVendorApplications = () => {
   const apps = useApplications()
-  
+
   const myApplications = apps.myApplications
   const isLoading = apps.isLoading
   const isSubmitting = apps.isSubmitting
   const error = apps.error
-  
+
   const submitApplication = apps.submitApplication
   const withdrawApplication = apps.withdrawApplication
   const updateApplication = apps.updateApplication
   const createApplication = apps.createApplication
   const getApplication = apps.getApplication
-  
+  const loadMyApplications = apps.loadMyApplications
+
   const hasApplicationForMarket = apps.hasApplicationForMarket
   const getApplicationForMarket = apps.getApplicationForMarket
   const getMyApplicationsByStatus = apps.getMyApplicationsByStatus
@@ -541,6 +543,7 @@ export const useVendorApplications = () => {
     updateApplication,
     createApplication,
     getApplication,
+    loadMyApplications,
     
     // Market application checks
     hasApplicationForMarket,

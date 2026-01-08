@@ -1,5 +1,86 @@
 import { Application, ApplicationStatus, ApplicationFilters, ApiResponse, PaginatedResponse } from '@/types'
 
+// Environment configuration
+const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
+const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:3001/api'
+
+// API simulation delay (reduced for better UX)
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// HTTP client with interceptors
+class HttpClient {
+  private baseURL: string
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`
+
+    // Add auth token if available
+    const token = localStorage.getItem('auth-storage')
+      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
+      : null
+
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 'Request failed'
+        )
+      }
+
+      return await response.json()
+    } catch (error) {
+      throw error
+    }
+  }
+
+  get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' })
+  }
+
+  post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' })
+  }
+}
+
+const httpClient = new HttpClient(API_BASE_URL)
+
 // Mock data for development
 const mockApplications: Application[] = [
   {
@@ -222,32 +303,31 @@ const mockApplications: Application[] = [
 
 export const applicationsApi = {
   // Get all applications (with filters)
-  async getApplications(filters?: ApplicationFilters): Promise<ApiResponse<PaginatedResponse<Application>>> {
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
+  async getApplications(filters?: ApplicationFilters, page = 1, limit = 20): Promise<ApiResponse<PaginatedResponse<Application>>> {
+    if (isDevelopment && isMockMode) {
+      await delay(100) // Reduced delay for better UX
+
       let filteredApplications = [...mockApplications]
-      
+
       // Apply filters
       if (filters?.status && filters.status.length > 0) {
-        filteredApplications = filteredApplications.filter(app => 
+        filteredApplications = filteredApplications.filter(app =>
           filters.status!.includes(app.status)
         )
       }
-      
+
       if (filters?.marketId) {
-        filteredApplications = filteredApplications.filter(app => 
+        filteredApplications = filteredApplications.filter(app =>
           app.marketId === filters.marketId
         )
       }
-      
+
       if (filters?.vendorId) {
-        filteredApplications = filteredApplications.filter(app => 
+        filteredApplications = filteredApplications.filter(app =>
           app.vendorId === filters.vendorId
         )
       }
-      
+
       if (filters?.search) {
         const query = filters.search.toLowerCase()
         filteredApplications = filteredApplications.filter(app =>
@@ -256,7 +336,7 @@ export const applicationsApi = {
           app.vendor.lastName.toLowerCase().includes(query)
         )
       }
-      
+
       // Apply date range filter
       if (filters?.dateRange) {
         const { start, end } = filters.dateRange
@@ -265,43 +345,57 @@ export const applicationsApi = {
           return appDate >= new Date(start) && appDate <= new Date(end)
         })
       }
-      
+
+      // Apply pagination
+      const startIndex = (page - 1) * limit
+      const endIndex = startIndex + limit
+      const paginatedApplications = filteredApplications.slice(startIndex, endIndex)
+
       return {
         success: true,
         data: {
-          data: filteredApplications,
+          data: paginatedApplications,
           pagination: {
-            page: 1,
-            limit: filteredApplications.length,
+            page,
+            limit,
             total: filteredApplications.length,
-            totalPages: 1
+            totalPages: Math.ceil(filteredApplications.length / limit)
           }
         }
       }
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to fetch applications'
+    } else {
+      // Real API
+      const queryParams = new URLSearchParams()
+      if (filters) {
+        if (filters.search) queryParams.append('search', filters.search)
+        if (filters.status?.length) queryParams.append('status', filters.status.join(','))
+        if (filters.marketId) queryParams.append('marketId', filters.marketId)
+        if (filters.vendorId) queryParams.append('vendorId', filters.vendorId)
+        if (filters.dateRange?.start) queryParams.append('startDate', filters.dateRange.start)
+        if (filters.dateRange?.end) queryParams.append('endDate', filters.dateRange.end)
       }
+      queryParams.append('page', page.toString())
+      queryParams.append('limit', limit.toString())
+
+      const response = await httpClient.get<ApiResponse<PaginatedResponse<Application>>>(`/applications?${queryParams}`)
+      return response
     }
   },
 
   // Get applications for a specific vendor
   async getMyApplications(vendorId: string): Promise<ApiResponse<Application[]>> {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
+    if (isDevelopment && isMockMode) {
+      await delay(80)
+
       const myApplications = mockApplications.filter(app => app.vendorId === vendorId)
-      
+
       return {
         success: true,
         data: myApplications
       }
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to fetch your applications'
-      }
+    } else {
+      const response = await httpClient.get<ApiResponse<Application[]>>(`/applications/vendor/${vendorId}`)
+      return response
     }
   },
 

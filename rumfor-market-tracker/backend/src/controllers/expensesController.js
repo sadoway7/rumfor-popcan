@@ -5,7 +5,7 @@ const { validateExpenseCreation, validateMongoId, validatePagination } = require
 
 // Get expenses for vendor and market
 const getExpenses = catchAsync(async (req, res, next) => {
-  const { marketId } = req.params
+  const { marketId } = req.query
   const {
     page = 1,
     limit = 20,

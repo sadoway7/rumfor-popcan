@@ -26,6 +26,8 @@ import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
 import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
 import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
 import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
+import { VendorTrackedMarketsPage } from '@/pages/vendor/VendorTrackedMarketsPage'
+import { VendorTodosPage } from '@/pages/vendor/VendorTodosPage'
 
 // Promoter pages
 import { PromoterDashboardPage } from '@/pages/promoter/PromoterDashboardPage'
@@ -34,6 +36,7 @@ import { PromoterApplicationsPage } from '@/pages/promoter/PromoterApplicationsP
 import { PromoterVendorsPage } from '@/pages/promoter/PromoterVendorsPage'
 import { PromoterAnalyticsPage } from '@/pages/promoter/PromoterAnalyticsPage'
 import { PromoterCalendarPage } from '@/pages/promoter/PromoterCalendarPage'
+import { PromoterCreateMarketPage } from '@/pages/promoter/PromoterCreateMarketPage'
 
 // Admin pages
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
@@ -129,7 +132,7 @@ export function AppRoutes() {
       <Route path="/vendor/todos" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><BusinessPlanningPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><VendorTodosPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -166,6 +169,14 @@ export function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      <Route path="/vendor/tracked-markets" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><VendorTrackedMarketsPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
       {/* Promoter Routes */}
       <Route path="/promoter/dashboard" element={
         <ProtectedRoute>
@@ -179,6 +190,14 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
             <DashboardLayout role="promoter"><PromoterMarketsPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/promoter/markets/create" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['promoter', 'admin']}>
+            <DashboardLayout role="promoter"><PromoterCreateMarketPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />

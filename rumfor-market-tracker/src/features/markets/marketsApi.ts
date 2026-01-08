@@ -1,5 +1,12 @@
 import { Market, MarketFilters, PaginatedResponse, ApiResponse } from '@/types'
 
+// Environment configuration
+const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
+const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:3001/api'
+
 // Mock data for development
 const mockMarkets: Market[] = [
   {
@@ -200,209 +207,346 @@ const mockMarkets: Market[] = [
 // API simulation delay (reduced for better UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+// HTTP client with interceptors
+class HttpClient {
+  private baseURL: string
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`
+
+    // Add auth token if available
+    const token = localStorage.getItem('auth-storage')
+      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
+      : null
+
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    }
+
+    try {
+      const response = await fetch(url, config)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.message || 'Request failed'
+        )
+      }
+
+      return await response.json()
+    } catch (error) {
+      throw error
+    }
+  }
+
+  get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' })
+  }
+
+  post<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' })
+  }
+}
+
+const httpClient = new HttpClient(API_BASE_URL)
+
 export const marketsApi = {
   // Get all markets with optional filtering
   async getMarkets(filters?: MarketFilters, page = 1, limit = 20): Promise<PaginatedResponse<Market>> {
-    await delay(100) // Reduced delay for better UX
+    if (isDevelopment && isMockMode) {
+      await delay(100) // Reduced delay for better UX
 
-    let filteredMarkets = [...mockMarkets]
+      let filteredMarkets = [...mockMarkets]
 
-    // Apply filters (same logic as store)
-    if (filters) {
-      if (filters.category && filters.category.length > 0) {
-        filteredMarkets = filteredMarkets.filter(market =>
-          filters.category!.includes(market.category)
-        )
-      }
-
-      if (filters.location?.city) {
-        filteredMarkets = filteredMarkets.filter(market =>
-          market.location.city.toLowerCase().includes(
-            filters.location!.city!.toLowerCase()
+      // Apply filters (same logic as store)
+      if (filters) {
+        if (filters.category && filters.category.length > 0) {
+          filteredMarkets = filteredMarkets.filter(market =>
+            filters.category!.includes(market.category)
           )
-        )
-      }
+        }
 
-      if (filters.location?.state) {
-        filteredMarkets = filteredMarkets.filter(market =>
-          market.location.state.toLowerCase().includes(
-            filters.location!.state!.toLowerCase()
+        if (filters.location?.city) {
+          filteredMarkets = filteredMarkets.filter(market =>
+            market.location.city.toLowerCase().includes(
+              filters.location!.city!.toLowerCase()
+            )
           )
-        )
+        }
+
+        if (filters.location?.state) {
+          filteredMarkets = filteredMarkets.filter(market =>
+            market.location.state.toLowerCase().includes(
+              filters.location!.state!.toLowerCase()
+            )
+          )
+        }
+
+        if (filters.status && filters.status.length > 0) {
+          filteredMarkets = filteredMarkets.filter(market =>
+            filters.status!.includes(market.status)
+          )
+        }
+
+        if (filters.accessibility?.wheelchairAccessible) {
+          filteredMarkets = filteredMarkets.filter(market =>
+            market.accessibility.wheelchairAccessible
+          )
+        }
+
+        if (filters.search) {
+          const query = filters.search.toLowerCase()
+          filteredMarkets = filteredMarkets.filter(market =>
+            market.name.toLowerCase().includes(query) ||
+            market.description.toLowerCase().includes(query) ||
+            market.location.city.toLowerCase().includes(query) ||
+            market.tags.some(tag => tag.toLowerCase().includes(query))
+          )
+        }
       }
 
-      if (filters.status && filters.status.length > 0) {
-        filteredMarkets = filteredMarkets.filter(market =>
-          filters.status!.includes(market.status)
-        )
-      }
+      // Apply pagination
+      const startIndex = (page - 1) * limit
+      const endIndex = startIndex + limit
+      const paginatedMarkets = filteredMarkets.slice(startIndex, endIndex)
 
-      if (filters.accessibility?.wheelchairAccessible) {
-        filteredMarkets = filteredMarkets.filter(market =>
-          market.accessibility.wheelchairAccessible
-        )
+      return {
+        data: paginatedMarkets,
+        pagination: {
+          page,
+          limit,
+          total: filteredMarkets.length,
+          totalPages: Math.ceil(filteredMarkets.length / limit)
+        }
       }
-
-      if (filters.search) {
-        const query = filters.search.toLowerCase()
-        filteredMarkets = filteredMarkets.filter(market =>
-          market.name.toLowerCase().includes(query) ||
-          market.description.toLowerCase().includes(query) ||
-          market.location.city.toLowerCase().includes(query) ||
-          market.tags.some(tag => tag.toLowerCase().includes(query))
-        )
+    } else {
+      // Real API
+      const queryParams = new URLSearchParams()
+      if (filters) {
+        if (filters.search) queryParams.append('search', filters.search)
+        if (filters.status?.length) queryParams.append('status', filters.status.join(','))
+        if (filters.category?.length) queryParams.append('category', filters.category.join(','))
+        if (filters.location?.city) queryParams.append('city', filters.location.city)
+        if (filters.location?.state) queryParams.append('state', filters.location.state)
       }
-    }
+      queryParams.append('page', page.toString())
+      queryParams.append('limit', limit.toString())
 
-    // Apply pagination
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedMarkets = filteredMarkets.slice(startIndex, endIndex)
-
-    return {
-      data: paginatedMarkets,
-      pagination: {
-        page,
-        limit,
-        total: filteredMarkets.length,
-        totalPages: Math.ceil(filteredMarkets.length / limit)
-      }
+      const response = await httpClient.get<ApiResponse<PaginatedResponse<Market>>>(`/markets?${queryParams}`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch markets')
+      return response.data!
     }
   },
 
   // Get market by ID
   async getMarketById(id: string): Promise<ApiResponse<Market>> {
-    await delay(80)
+    if (isDevelopment && isMockMode) {
+      await delay(80)
 
-    const market = mockMarkets.find(m => m.id === id)
-    
-    if (!market) {
-      return {
-        success: false,
-        error: 'Market not found'
+      const market = mockMarkets.find(m => m.id === id)
+
+      if (!market) {
+        return {
+          success: false,
+          error: 'Market not found'
+        }
       }
-    }
 
-    return {
-      success: true,
-      data: market
+      return {
+        success: true,
+        data: market
+      }
+    } else {
+      const response = await httpClient.get<ApiResponse<Market>>(`/markets/${id}`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch market')
+      return response
     }
   },
 
   // Search markets
   async searchMarkets(query: string): Promise<ApiResponse<Market[]>> {
-    await delay(150)
+    if (isDevelopment && isMockMode) {
+      await delay(150)
 
-    if (!query.trim()) {
+      if (!query.trim()) {
+        return {
+          success: true,
+          data: []
+        }
+      }
+
+      const searchTerm = query.toLowerCase()
+      const results = mockMarkets.filter(market =>
+        market.name.toLowerCase().includes(searchTerm) ||
+        market.description.toLowerCase().includes(searchTerm) ||
+        market.location.city.toLowerCase().includes(searchTerm) ||
+        market.location.state.toLowerCase().includes(searchTerm) ||
+        market.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+      )
+
       return {
         success: true,
-        data: []
+        data: results
       }
-    }
-
-    const searchTerm = query.toLowerCase()
-    const results = mockMarkets.filter(market =>
-      market.name.toLowerCase().includes(searchTerm) ||
-      market.description.toLowerCase().includes(searchTerm) ||
-      market.location.city.toLowerCase().includes(searchTerm) ||
-      market.location.state.toLowerCase().includes(searchTerm) ||
-      market.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-    )
-
-    return {
-      success: true,
-      data: results
+    } else {
+      const response = await httpClient.get<ApiResponse<Market[]>>(`/markets/search?q=${encodeURIComponent(query)}`)
+      if (!response.success) throw new Error(response.error || 'Failed to search markets')
+      return response
     }
   },
 
   // Get popular markets
   async getPopularMarkets(limit = 10): Promise<ApiResponse<Market[]>> {
-    await delay(80)
+    if (isDevelopment && isMockMode) {
+      await delay(80)
 
-    // For now, just return first few markets as "popular"
-    const popular = mockMarkets.slice(0, limit)
+      // For now, just return first few markets as "popular"
+      const popular = mockMarkets.slice(0, limit)
 
-    return {
-      success: true,
-      data: popular
+      return {
+        success: true,
+        data: popular
+      }
+    } else {
+      const response = await httpClient.get<ApiResponse<Market[]>>(`/markets/popular?limit=${limit}`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch popular markets')
+      return response
     }
   },
 
   // Get markets by category
   async getMarketsByCategory(category: string): Promise<ApiResponse<Market[]>> {
-    await delay(80)
+    if (isDevelopment && isMockMode) {
+      await delay(80)
 
-    const results = mockMarkets.filter(market => market.category === category)
+      const results = mockMarkets.filter(market => market.category === category)
 
-    return {
-      success: true,
-      data: results
+      return {
+        success: true,
+        data: results
+      }
+    } else {
+      const response = await httpClient.get<ApiResponse<Market[]>>(`/markets/category/${category}`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch markets by category')
+      return response
     }
   },
 
   // Create new market
   async createMarket(marketData: Omit<Market, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Market>> {
-    await delay(800)
+    if (isDevelopment && isMockMode) {
+      await delay(800)
 
-    const newMarket: Market = {
-      ...marketData,
-      id: `market-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
+      const newMarket: Market = {
+        ...marketData,
+        id: `market-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
 
-    // Simulate market creation with ID generation
-    return {
-      success: true,
-      data: newMarket
+      // Simulate market creation with ID generation
+      return {
+        success: true,
+        data: newMarket
+      }
+    } else {
+      const response = await httpClient.post<ApiResponse<Market>>('/markets', marketData)
+      if (!response.success) throw new Error(response.error || 'Failed to create market')
+      return response
     }
   },
 
   // Track/untrack market (mock implementation)
   async trackMarket(marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
-    await delay(100)
+    if (isDevelopment && isMockMode) {
+      await delay(100)
 
-    console.log('Tracking market:', marketId)
-    // Simulate tracking action
-    return {
-      success: true,
-      data: { tracked: true }
+      console.log('Tracking market:', marketId)
+      // Simulate tracking action
+      return {
+        success: true,
+        data: { tracked: true }
+      }
+    } else {
+      const response = await httpClient.post<ApiResponse<{ tracked: boolean }>>(`/markets/${marketId}/track`, {})
+      if (!response.success) throw new Error(response.error || 'Failed to track market')
+      return response
     }
   },
 
   async untrackMarket(marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
-    await delay(100)
+    if (isDevelopment && isMockMode) {
+      await delay(100)
 
-    console.log('Untracking market:', marketId)
-    return {
-      success: true,
-      data: { tracked: false }
+      console.log('Untracking market:', marketId)
+      return {
+        success: true,
+        data: { tracked: false }
+      }
+    } else {
+      const response = await httpClient.delete<ApiResponse<{ tracked: boolean }>>(`/markets/${marketId}/track`)
+      if (!response.success) throw new Error(response.error || 'Failed to untrack market')
+      return response
     }
   },
 
   // Get user's tracked markets
   async getUserTrackedMarkets(userId: string): Promise<PaginatedResponse<Market>> {
-    await delay(300)
-    
-    // Simulate user-specific tracked markets based on user ID patterns
-    const trackedMarkets = mockMarkets.filter(market => {
-      // Mock: simulate user tracking certain markets based on user ID
-      // Different user IDs will track different markets for demo purposes
-      if (userId === 'current-user-id' || userId === 'user-1') {
-        return market.id === '1' || market.id === '2'
+    if (isDevelopment && isMockMode) {
+      await delay(300)
+
+      // Simulate user-specific tracked markets based on user ID patterns
+      const trackedMarkets = mockMarkets.filter(market => {
+        // Mock: simulate user tracking certain markets based on user ID
+        // Different user IDs will track different markets for demo purposes
+        if (userId === 'current-user-id' || userId === 'user-1') {
+          return market.id === '1' || market.id === '2'
+        }
+        // Default behavior for other users
+        return market.id === '1'
+      })
+
+      return {
+        data: trackedMarkets,
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: trackedMarkets.length,
+          totalPages: 1
+        }
       }
-      // Default behavior for other users
-      return market.id === '1'
-    })
-    
-    return {
-      data: trackedMarkets,
-      pagination: {
-        page: 1,
-        limit: 20,
-        total: trackedMarkets.length,
-        totalPages: 1
-      }
+    } else {
+      const response = await httpClient.get<ApiResponse<PaginatedResponse<Market>>>(`/users/${userId}/tracked-markets`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch tracked markets')
+      return response.data!
     }
   }
 }

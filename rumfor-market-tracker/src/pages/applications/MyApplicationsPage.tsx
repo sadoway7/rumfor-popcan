@@ -108,11 +108,6 @@ export const MyApplicationsPage: React.FC = () => {
     return grouped
   }, [myApplications])
 
-  // const handleStatusChange = (id: string, status: string) => {
-  //   // This would trigger a refresh or update in the store
-  //   console.log('Application status changed:', id, status)
-  // }
-
   const marketOptions = markets.map(market => ({
     id: market.id,
     name: market.name

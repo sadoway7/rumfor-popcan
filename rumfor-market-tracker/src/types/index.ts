@@ -189,7 +189,7 @@ export interface Application {
   updatedAt: string
 }
 
-export type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected' | 'withdrawn'
+export type ApplicationStatus = 'draft' | 'submitted' | 'under-review' | 'approved' | 'rejected' | 'withdrawn' | 'open' | 'accepting-applications' | 'closed'
 
 export interface Document {
   id: string

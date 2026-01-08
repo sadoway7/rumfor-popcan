@@ -14,7 +14,7 @@ interface MarketGridProps {
   onUntrack?: (marketId: string) => void
   trackedMarketIds?: string[]
   isTracking?: boolean
-  variant?: 'grid' | 'list' | 'compact' | 'lego' | 'minimal'
+  variant?: 'grid' | 'list' | 'compact' | 'minimal'
   className?: string
   emptyStateProps?: {
     title?: string
@@ -46,9 +46,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
       return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'
     }
     
-    if (variant === 'lego') {
-      return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2'
-    }
+
     
     // Use fixed classes instead of dynamic ones for Tailwind purging
     return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6'
