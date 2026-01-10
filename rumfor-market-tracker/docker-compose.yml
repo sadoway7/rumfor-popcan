@@ -1,26 +1,46 @@
 version: '3.8'
 
 services:
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=${MONGODB_URI}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # React Application
   rumfor-app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - VITE_API_BASE_URL=
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
-  # Redis for caching (future use)
+  # Redis for caching
   redis:
     image: redis:7-alpine
     ports:
@@ -29,15 +49,6 @@ services:
       - redis_data:/data
     restart: unless-stopped
     command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # MongoDB Atlas - Cloud-hosted database (no local setup required)
-  # Visit https://cloud.mongodb.com/ to set up your MongoDB Atlas cluster
-  # No local PostgreSQL setup needed - using MongoDB Atlas instead
 
 volumes:
   redis_data:

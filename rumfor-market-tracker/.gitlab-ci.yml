@@ -2,29 +2,48 @@ stages:
   - build
   - deploy
 
+variables:
+  DOCKER_DRIVER: overlay2
+
 build:
   stage: build
-  image: node:18
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - npm install
-    - npm run build
+    # Build and save images
+    - docker compose build
+    - docker save rumfor-market-tracker-rumfor-app:latest > frontend.tar
+    - docker save rumfor-market-tracker-backend:latest > backend.tar
   artifacts:
     paths:
-      - dist/
+      - frontend.tar
+      - backend.tar
+      - docker-compose.yml
+      - nginx.conf
     expire_in: 1 hour
 
 deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh-client
+    - apk add --no-cache openssh-client docker-cli
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY_BASE64" | base64 -d | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan -H $UNRAID_IP >> ~/.ssh/known_hosts
   script:
+    # Create deployment directory
     - ssh root@$UNRAID_IP "mkdir -p $DEPLOY_PATH"
-    - scp -r dist/* root@$UNRAID_IP:$DEPLOY_PATH/
+
+    # Copy docker images and compose file
+    - scp frontend.tar backend.tar docker-compose.yml nginx.conf root@$UNRAID_IP:$DEPLOY_PATH/
+
+    # Load images and start containers
+    - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && docker load < frontend.tar && docker load < backend.tar"
+    - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && MONGODB_URI='$MONGODB_URI' docker compose up -d"
   only:
     - main
