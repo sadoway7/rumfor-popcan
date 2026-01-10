@@ -19,10 +19,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.rumfor-app.rule=Host(`localhost`)"
-      - "traefik.http.routers.rumfor-app.entrypoints=web"
 
   # Redis for caching (future use)
   redis:
@@ -43,27 +39,5 @@ services:
   # Visit https://cloud.mongodb.com/ to set up your MongoDB Atlas cluster
   # No local PostgreSQL setup needed - using MongoDB Atlas instead
 
-  # Reverse Proxy (Traefik)
-  traefik:
-    image: traefik:v3.0
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080" # Traefik dashboard
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
-      - traefik_certs:/certificates
-    restart: unless-stopped
-    profiles:
-      - production
-
 volumes:
-  postgres_data:
   redis_data:
-  traefik_certs:
-
-networks:
-  default:
-    driver: bridge
