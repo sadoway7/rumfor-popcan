@@ -4,7 +4,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./backend
+      context: ./rumfor-market-tracker/backend
       dockerfile: Dockerfile
     ports:
       - "3001:3000"
@@ -22,7 +22,7 @@ services:
   # React Application
   rumfor-app:
     build:
-      context: .
+      context: ./rumfor-market-tracker
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
@@ -30,7 +30,7 @@ services:
       - NODE_ENV=production
       - VITE_API_BASE_URL=
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./rumfor-market-tracker/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - backend
     restart: unless-stopped

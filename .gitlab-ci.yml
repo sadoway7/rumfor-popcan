@@ -22,7 +22,7 @@ build:
       - frontend.tar
       - backend.tar
       - docker-compose.yml
-      - nginx.conf
+      - rumfor-market-tracker/nginx.conf
     expire_in: 1 hour
 
 deploy:
