@@ -3,6 +3,7 @@ const router = express.Router()
 
 const {
   getDashboard,
+  getAdminStats,
   getUsers,
   updateUser,
   getMarkets,

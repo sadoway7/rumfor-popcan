@@ -20,12 +20,11 @@ class AuthApiError extends Error {
   }
 }
 
-// Mock data for development
-const mockUsers: (User & { password: string })[] = [
+// Mock data for development (passwords stored separately for security)
+const mockUsers: User[] = [
   {
     id: '1',
     email: 'vendor@example.com',
-    password: 'password123',
     firstName: 'John',
     lastName: 'Vendor',
     role: 'vendor',
@@ -37,7 +36,6 @@ const mockUsers: (User & { password: string })[] = [
   {
     id: '2',
     email: 'promoter@example.com',
-    password: 'password123',
     firstName: 'Jane',
     lastName: 'Promoter',
     role: 'promoter',
@@ -49,7 +47,6 @@ const mockUsers: (User & { password: string })[] = [
   {
     id: '3',
     email: 'admin@example.com',
-    password: 'password123',
     firstName: 'Admin',
     lastName: 'User',
     role: 'admin',
@@ -59,6 +56,13 @@ const mockUsers: (User & { password: string })[] = [
     isActive: true,
   },
 ]
+
+// Mock password storage (development only - use 'password123' for all test accounts)
+const mockPasswords: Record<string, string> = {
+  '1': 'password123',
+  '2': 'password123',
+  '3': 'password123',
+}
 
 // HTTP client with interceptors
 class HttpClient {
@@ -149,32 +153,37 @@ const mockApi = {
   login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const user = mockUsers.find(u => u.email === credentials.email && u.password === credentials.password)
-    
+
+    const user = mockUsers.find(u => u.email === credentials.email)
+
     if (!user) {
       throw new AuthApiError('Invalid email or password', 'INVALID_CREDENTIALS', 401)
     }
-    
-    const { password, ...userWithoutPassword } = user
+
+    // Verify password (all test accounts use 'password123')
+    const storedPassword = mockPasswords[user.id]
+    if (!storedPassword || storedPassword !== credentials.password) {
+      throw new AuthApiError('Invalid email or password', 'INVALID_CREDENTIALS', 401)
+    }
+
     const token = `mock-jwt-token-${user.id}-${Date.now()}`
-    
+
     // Store token in localStorage
     localStorage.setItem('auth-token', token)
-    
-    return { user: userWithoutPassword, token }
+
+    return { user, token }
   },
 
   register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // Check if user already exists
     const existingUser = mockUsers.find(u => u.email === data.email)
     if (existingUser) {
       throw new AuthApiError('User with this email already exists', 'USER_EXISTS', 409)
     }
-    
+
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
       email: data.email,
@@ -186,41 +195,41 @@ const mockApi = {
       isEmailVerified: false,
       isActive: true,
     }
-    
+
     const token = `mock-jwt-token-${newUser.id}-${Date.now()}`
-    
-    // Add to mock users
-    mockUsers.push({ ...newUser, password: data.password })
-    
+
+    // Add to mock users and store password
+    mockUsers.push(newUser)
+    mockPasswords[newUser.id] = data.password
+
     // Store token in localStorage
     localStorage.setItem('auth-token', token)
-    
+
     return { user: newUser, token }
   },
 
   refreshToken: async (token: string): Promise<{ user: User; token: string }> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // Mock token validation
     if (!token || !token.startsWith('mock-jwt-token-')) {
       throw new AuthApiError('Invalid token', 'INVALID_TOKEN', 401)
     }
-    
+
     // Extract user ID from token
     const tokenParts = token.split('-')
     const userId = tokenParts[tokenParts.length - 2]
-    
+
     const user = mockUsers.find(u => u.id === userId)
     if (!user) {
       throw new AuthApiError('User not found', 'USER_NOT_FOUND', 404)
     }
-    
-    const { password, ...userWithoutPassword } = user
+
     const newToken = `mock-jwt-token-${user.id}-${Date.now()}`
-    
+
     localStorage.setItem('auth-token', newToken)
-    
-    return { user: userWithoutPassword, token: newToken }
+
+    return { user, token: newToken }
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
@@ -261,22 +270,21 @@ const mockApi = {
 
   getCurrentUser: async (): Promise<User> => {
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     const token = localStorage.getItem('auth-token')
     if (!token || !token.startsWith('mock-jwt-token-')) {
       throw new AuthApiError('No valid token', 'NO_TOKEN', 401)
     }
-    
+
     const tokenParts = token.split('-')
     const userId = tokenParts[tokenParts.length - 2]
-    
+
     const user = mockUsers.find(u => u.id === userId)
     if (!user) {
       throw new AuthApiError('User not found', 'USER_NOT_FOUND', 404)
     }
-    
-    const { password, ...userWithoutPassword } = user
-    return userWithoutPassword
+
+    return user
   },
 }
 

@@ -16,7 +16,7 @@ import {
 } from '@/types'
 
 // Environment configuration
-const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 // API Configuration
 const API_BASE_URL = 'http://localhost:3001/api'

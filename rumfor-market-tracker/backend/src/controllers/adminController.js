@@ -31,16 +31,57 @@ const getDashboard = catchAsync(async (req, res, next) => {
     Comment.countDocuments({ isFlagged: true, isDeleted: false })
   ])
 
-  // Get applications by status
-  const applicationsByStatus = await UserMarketTracking.aggregate([
-    { $group: { _id: '$status', count: { $sum: 1 } } }
-  ])
+  // Count applications by status for better metrics
+  const pendingApplications = await UserMarketTracking.countDocuments({
+    status: { $in: ['applied', 'under-review'] }
+  })
 
-  // Get markets by category
-  const marketsByCategory = await Market.aggregate([
-    { $match: { isActive: true } },
-    { $group: { _id: '$category', count: { $sum: 1 } } }
-  ])
+  // Get recent users count (last 30 days)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const newUsersThisMonth = await User.countDocuments({
+    createdAt: { $gte: thirtyDaysAgo },
+    isActive: true
+  })
+
+  // Calculate user growth rate (simplified - compare last 30 days to 30-60 days ago)
+  const sixtyDaysAgo = new Date()
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
+  const usersLastPeriod = await User.countDocuments({
+    createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo },
+    isActive: true
+  })
+
+  const userGrowthRate = usersLastPeriod > 0
+    ? ((newUsersThisMonth - usersLastPeriod) / usersLastPeriod) * 100
+    : 0
+
+  // Get marketplace activity (applications this month)
+  const marketplaceActivity = await UserMarketTracking.countDocuments({
+    createdAt: { $gte: thirtyDaysAgo }
+  })
+
+  // Get application success rate
+  const approvedApplications = await UserMarketTracking.countDocuments({ status: 'approved' })
+  const totalApplicationsProcessed = await UserMarketTracking.countDocuments({
+    status: { $in: ['approved', 'rejected'] }
+  })
+
+  const applicationSuccessRate = totalApplicationsProcessed > 0
+    ? (approvedApplications / totalApplicationsProcessed) * 100
+    : 0
+
+  // Get active users (users with activity in last 30 days)
+  const activeUsers = await User.countDocuments({
+    lastLogin: { $gte: thirtyDaysAgo },
+    isActive: true
+  })
+
+  // Get reported content count
+  const reportedContent = flaggedContent
+
+  // Get system health mock data (in production, this would be real system checks)
+  const systemHealth = 95 // Would be calculated from real system metrics
 
   // Recent activity
   const recentActivity = [
@@ -62,19 +103,22 @@ const getDashboard = catchAsync(async (req, res, next) => {
   ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10)
 
   sendSuccess(res, {
-    analytics: {
-      totalUsers,
-      totalMarkets,
-      totalApplications,
-      totalComments,
-      totalPhotos,
-      flaggedContent,
-      applicationsByStatus,
-      marketsByCategory,
-      recentActivity
-    }
+    totalUsers,
+    totalMarkets,
+    totalApplications,
+    activeUsers,
+    pendingApplications,
+    reportedContent,
+    userGrowthRate,
+    marketplaceActivity,
+    applicationSuccessRate,
+    systemHealth,
+    recentActivity
   }, 'Dashboard data retrieved successfully')
 })
+
+// Alias for frontend compatibility
+const getAdminStats = getDashboard
 
 // User management
 const getUsers = catchAsync(async (req, res, next) => {

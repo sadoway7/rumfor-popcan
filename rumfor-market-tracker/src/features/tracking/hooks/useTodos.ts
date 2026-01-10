@@ -1,31 +1,17 @@
-import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trackingApi } from '../trackingApi'
-import { useTrackingStore } from '../trackingStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Todo } from '@/types'
 
 export const useTodos = (marketId?: string) => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
-  const {
-    todos,
-    isLoadingTodos,
-    todosError,
-    setTodos,
-    setLoadingTodos,
-    setTodosError,
-    addTodo,
-    updateTodo,
-    removeTodo,
-    toggleTodo
-  } = useTrackingStore()
 
-  // Query for todos
+  // Query for todos using TanStack Query for server state
   const {
     data,
-    isLoading: isQueryLoading,
-    error: queryError,
+    isLoading,
+    error,
     refetch
   } = useQuery({
     queryKey: ['todos', user?.id, marketId],
@@ -39,38 +25,18 @@ export const useTodos = (marketId?: string) => {
     gcTime: 10 * 60 * 1000, // 10 minutes
   })
 
-  // Update store when query data changes
-  React.useEffect(() => {
-    if (data) {
-      setTodos(data)
-    }
-  }, [data])
-
-  // Sync loading states
-  React.useEffect(() => {
-    setLoadingTodos(isQueryLoading)
-  }, [isQueryLoading])
-
-  // Sync error states
-  React.useEffect(() => {
-    setTodosError(queryError?.message || null)
-  }, [queryError])
-
   // Create todo mutation
   const createTodoMutation = useMutation({
     mutationFn: async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated')
       return trackingApi.createTodo(todo)
     },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        addTodo(response.data)
-        queryClient.invalidateQueries({ queryKey: ['todos'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     },
     onError: (error) => {
       console.error('Failed to create todo:', error)
-      setTodosError('Failed to create todo')
+      throw error
     }
   })
 
@@ -79,15 +45,12 @@ export const useTodos = (marketId?: string) => {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Todo> }) => {
       return trackingApi.updateTodo(id, updates)
     },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        updateTodo(response.data.id, response.data)
-        queryClient.invalidateQueries({ queryKey: ['todos'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     },
     onError: (error) => {
       console.error('Failed to update todo:', error)
-      setTodosError('Failed to update todo')
+      throw error
     }
   })
 
@@ -96,34 +59,28 @@ export const useTodos = (marketId?: string) => {
     mutationFn: async (id: string) => {
       return trackingApi.deleteTodo(id)
     },
-    onSuccess: (response, id) => {
-      if (response.success) {
-        removeTodo(id)
-        queryClient.invalidateQueries({ queryKey: ['todos'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     },
     onError: (error) => {
       console.error('Failed to delete todo:', error)
-      setTodosError('Failed to delete todo')
+      throw error
     }
   })
 
   // Toggle todo mutation
   const toggleTodoMutation = useMutation({
     mutationFn: async (id: string) => {
-      const todo = todos.find(t => t.id === id)
+      const todo = data?.find(t => t.id === id)
       if (!todo) throw new Error('Todo not found')
       return trackingApi.updateTodo(id, { completed: !todo.completed })
     },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        toggleTodo(response.data.id)
-        queryClient.invalidateQueries({ queryKey: ['todos'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     },
     onError: (error) => {
       console.error('Failed to toggle todo:', error)
-      setTodosError('Failed to update todo status')
+      throw error
     }
   })
 
@@ -144,17 +101,15 @@ export const useTodos = (marketId?: string) => {
     toggleTodoMutation.mutate(id)
   }
 
-  const refreshTodos = () => {
-    refetch()
-  }
-
   return {
-    // Data
-    todos,
+    // Data from TanStack Query
+    todos: data || [],
     
-    // States
-    isLoading: isLoadingTodos,
-    error: todosError,
+    // States from TanStack Query
+    isLoading,
+    error: error?.message || null,
+    
+    // Mutation states
     isCreating: createTodoMutation.isPending,
     isUpdating: updateTodoMutation.isPending || toggleTodoMutation.isPending,
     isDeleting: deleteTodoMutation.isPending,
@@ -164,7 +119,7 @@ export const useTodos = (marketId?: string) => {
     updateTodo: updateTodoById,
     deleteTodo: deleteTodoById,
     toggleTodo: toggleTodoById,
-    refresh: refreshTodos,
+    refresh: refetch,
     
     // Mutations
     createTodoMutation,
@@ -174,10 +129,8 @@ export const useTodos = (marketId?: string) => {
   }
 }
 
-// Hook for todo templates
+// Hook for todo templates - server state only
 export const useTodoTemplates = (category?: string) => {
-  const { setTodoTemplates } = useTrackingStore()
-
   const {
     data,
     isLoading,
@@ -192,12 +145,6 @@ export const useTodoTemplates = (category?: string) => {
     staleTime: 30 * 60 * 1000, // 30 minutes
     gcTime: 60 * 60 * 1000, // 1 hour
   })
-
-  React.useEffect(() => {
-    if (data) {
-      setTodoTemplates(data)
-    }
-  }, [data])
 
   return {
     templates: data || [],

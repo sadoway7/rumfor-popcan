@@ -61,11 +61,11 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const store = useMarketsStore()
   const [isTracking, setIsTracking] = useState(false)
 
-  // Load markets function - completely stable to prevent infinite loops
-  const loadMarkets = useCallback(async (loadOptions?: { 
+  // Load markets function - fixed dependencies
+  const loadMarkets = useCallback(async (loadOptions?: {
     filters?: MarketFilters
     page?: number
-    limit?: number 
+    limit?: number
   }) => {
     try {
       store.setLoading(true)
@@ -77,7 +77,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       const actualLimit = loadOptions?.limit || limit
 
       const response = await marketsApi.getMarkets(currentFilters, page, actualLimit)
-      
+
       if (response.pagination) {
         store.setMarkets(response.data)
         store.setCurrentPage(page)
@@ -94,7 +94,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       store.setLoading(false)
     }
-  }, []) // No dependencies - function is completely stable
+  }, [store, limit])
 
   // Search markets function - fixed dependencies
   const searchMarkets = useCallback(async (query: string) => {
@@ -104,7 +104,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       store.setSearchQuery(query)
 
       const response = await marketsApi.searchMarkets(query)
-      
+
       if (response.success && response.data) {
         store.setMarkets(response.data)
         store.setCurrentPage(1)
@@ -118,15 +118,15 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       store.setSearching(false)
     }
-  }, []) // No dependencies needed
+  }, [store])
 
   // Track market function - fixed dependencies
   const trackMarket = useCallback(async (marketId: string) => {
     try {
       setIsTracking(true)
-      
+
       const response = await marketsApi.trackMarket(marketId)
-      
+
       if (response.success) {
         store.trackMarket(marketId)
       } else {
@@ -138,15 +138,15 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       setIsTracking(false)
     }
-  }, []) // No dependencies needed
+  }, [store])
 
   // Untrack market function - fixed dependencies
   const untrackMarket = useCallback(async (marketId: string) => {
     try {
       setIsTracking(true)
-      
+
       const response = await marketsApi.untrackMarket(marketId)
-      
+
       if (response.success) {
         store.untrackMarket(marketId)
       } else {
@@ -158,16 +158,16 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     } finally {
       setIsTracking(false)
     }
-  }, []) // No dependencies needed
+  }, [store])
 
-  // Pagination helpers - made stable to prevent re-renders
+  // Pagination helpers - fixed dependencies
   const nextPage = useCallback(() => {
     const currentPage = store.currentPage
     if (store.hasMore) {
       const nextPageNum = currentPage + 1
       loadMarkets({ page: nextPageNum })
     }
-  }, []) // No dependencies - stable function
+  }, [store.currentPage, store.hasMore, loadMarkets])
 
   const previousPage = useCallback(() => {
     const currentPage = store.currentPage
@@ -175,12 +175,12 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       const prevPageNum = currentPage - 1
       loadMarkets({ page: prevPageNum })
     }
-  }, []) // No dependencies - stable function
+  }, [store.currentPage, loadMarkets])
 
-  // Refresh function - made stable
+  // Refresh function - fixed dependencies
   const refresh = useCallback(async () => {
     loadMarkets()
-  }, []) // No dependencies - stable function
+  }, [loadMarkets])
 
   // Auto-load markets on mount if enabled - only runs once
   useEffect(() => {
@@ -289,48 +289,76 @@ export const useMarket = (id: string) => {
 }
 
 // Hook for tracked markets
-export const useTrackedMarkets = () => {
+interface UseTrackedMarketsReturn {
+  trackedMarkets: Market[]
+  trackedMarketIds: string[]
+  isLoading: boolean
+  error: string | null
+  trackMarket: (marketId: string) => void
+  untrackMarket: (marketId: string) => void
+  isMarketTracked: (marketId: string) => boolean
+  refreshTracked: () => Promise<void>
+}
+
+export const useTrackedMarkets = (): UseTrackedMarketsReturn => {
   const store = useMarketsStore()
   const { user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [trackedMarkets, setTrackedMarkets] = useState<Market[]>([])
 
   const refreshTracked = useCallback(async () => {
     try {
       setIsLoading(true)
-      
+      setError(null)
+
       // Get user ID from auth store
       const userId = user?.id
       if (!userId) {
-        console.warn('No authenticated user found for tracked markets')
         setTrackedMarkets([])
         store.setTrackedMarketIds([])
+        setError('No authenticated user found')
         return
       }
-      
+
       const response = await marketsApi.getUserTrackedMarkets(userId)
-      
+
+      // PaginatedResponse returns data directly
       setTrackedMarkets(response.data)
-      
       // Update trackedMarketIds in store for consistency
       store.setTrackedMarketIds(response.data.map(market => market.id))
-    } catch (error) {
-      console.error('Failed to load tracked markets:', error)
-      store.setError(error instanceof Error ? error.message : 'Failed to load tracked markets')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load tracked markets'
+      console.error('Failed to load tracked markets:', err)
+      setError(errorMessage)
+      store.setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, store])
 
-  // Load tracked markets on mount
+  // Load tracked markets on mount and cleanup on unmount
   useEffect(() => {
-    refreshTracked()
+    let isMounted = true
+
+    const loadData = async () => {
+      if (isMounted) {
+        await refreshTracked()
+      }
+    }
+
+    loadData()
+
+    return () => {
+      isMounted = false
+    }
   }, [refreshTracked])
 
   return {
     trackedMarkets,
     trackedMarketIds: store.trackedMarketIds,
     isLoading,
+    error,
     trackMarket: store.trackMarket,
     untrackMarket: store.untrackMarket,
     isMarketTracked: store.isMarketTracked,

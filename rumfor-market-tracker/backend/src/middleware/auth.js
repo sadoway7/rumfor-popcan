@@ -1,6 +1,70 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
 
+// ============================================
+// Token Blacklist for Logout
+// ============================================
+const accessTokenBlacklist = new Map() // token -> expiration timestamp
+const refreshTokenBlacklist = new Map() // token -> expiration timestamp
+
+// Clean up expired tokens periodically (every 5 minutes)
+const cleanupInterval = setInterval(() => {
+  const now = Date.now()
+  for (const [token, expiration] of accessTokenBlacklist) {
+    if (expiration < now) accessTokenBlacklist.delete(token)
+  }
+  for (const [token, expiration] of refreshTokenBlacklist) {
+    if (expiration < now) refreshTokenBlacklist.delete(token)
+  }
+}, 5 * 60 * 1000)
+
+// Add access token to blacklist
+const addAccessTokenToBlacklist = (token, expiresIn = '24h') => {
+  const expiration = Date.now() + parseExpiresIn(expiresIn)
+  accessTokenBlacklist.set(token, expiration)
+}
+
+// Add refresh token to blacklist
+const addRefreshTokenToBlacklist = (token, expiresIn = '7d') => {
+  const expiration = Date.now() + parseExpiresIn(expiresIn)
+  refreshTokenBlacklist.set(token, expiration)
+}
+
+// Check if access token is blacklisted
+const isAccessTokenBlacklisted = (token) => {
+  if (!accessTokenBlacklist.has(token)) return false
+  if (accessTokenBlacklist.get(token) < Date.now()) {
+    accessTokenBlacklist.delete(token)
+    return false
+  }
+  return true
+}
+
+// Check if refresh token is blacklisted
+const isRefreshTokenBlacklisted = (token) => {
+  if (!refreshTokenBlacklist.has(token)) return false
+  if (refreshTokenBlacklist.get(token) < Date.now()) {
+    refreshTokenBlacklist.delete(token)
+    return false
+  }
+  return true
+}
+
+// Helper to parse expiresIn string to milliseconds
+const parseExpiresIn = (expiresIn) => {
+  const match = /^(\d+)([smhd])$/.exec(expiresIn)
+  if (!match) return 24 * 60 * 60 * 1000 // default 24h
+  const value = parseInt(match[1])
+  const unit = match[2]
+  switch (unit) {
+    case 's': return value * 1000
+    case 'm': return value * 60 * 1000
+    case 'h': return value * 60 * 60 * 1000
+    case 'd': return value * 24 * 60 * 60 * 1000
+    default: return 24 * 60 * 60 * 1000
+  }
+}
+
 // Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
   try {
@@ -27,6 +91,14 @@ const verifyToken = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Access denied. No token provided.'
+      })
+    }
+    
+    // Check if token is blacklisted
+    if (isAccessTokenBlacklisted(token)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been revoked. Please log in again.'
       })
     }
     
@@ -87,6 +159,14 @@ const verifyRefreshToken = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Refresh token is required.'
+      })
+    }
+    
+    // Check if refresh token is blacklisted
+    if (isRefreshTokenBlacklisted(refreshToken)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token has been revoked. Please log in again.'
       })
     }
     
@@ -325,5 +405,9 @@ module.exports = {
   requireEmailVerification,
   generateToken,
   generateRefreshToken,
-  generateTokens
+  generateTokens,
+  addAccessTokenToBlacklist,
+  addRefreshTokenToBlacklist,
+  isAccessTokenBlacklisted,
+  isRefreshTokenBlacklisted
 }

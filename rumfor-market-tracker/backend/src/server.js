@@ -5,6 +5,9 @@ const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const compression = require('compression')
 const morgan = require('morgan')
+const session = require('express-session')
+const MongoStore = require('connect-mongo')
+const csrf = require('csurf')
 const connectDB = require('../config/database')
 
 // Import routes
@@ -24,15 +27,56 @@ const app = express()
 
 // Security middleware
 app.use(helmet())
-app.use(compression())
 
-// Rate limiting
+// Session middleware for CSRF token storage
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/rumfor-market-tracker',
+    ttl: 24 * 60 * 60 // 1 day
+  }),
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
+  }
+}))
+
+// CSRF Protection setup
+const csrfProtection = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  },
+  ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
+})
+
+// Rate limiting - General API
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => req.ip || req.connection.remoteAddress
+})
+
+// Stricter rate limiting for auth endpoints (5 attempts per 15 min)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: {
+    success: false,
+    error: 'Too many authentication attempts, please try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip || req.connection.remoteAddress,
+  skipSuccessfulRequests: true // Don't count successful logins
 })
 
 app.use('/api/', limiter)
@@ -42,7 +86,7 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }))
 
 // Body parsing middleware
@@ -56,7 +100,15 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('combined'))
 }
 
-// Health check endpoint
+// CSRF token endpoint - provide token for GET requests
+app.get('/api/csrf-token', csrfProtection, (req, res) => {
+  res.json({
+    success: true,
+    csrfToken: req.csrfToken()
+  })
+})
+
+// Health check endpoint (no CSRF required)
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -66,18 +118,32 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// API routes
-app.use('/api/auth', authRoutes)
-app.use('/api/markets', marketRoutes)
-app.use('/api/applications', applicationRoutes)
-app.use('/api/users', userRoutes)
-app.use('/api/todos', todoRoutes)
-app.use('/api/expenses', expenseRoutes)
-app.use('/api/comments', commentRoutes)
-app.use('/api/photos', photoRoutes)
-app.use('/api/hashtags', hashtagRoutes)
-app.use('/api/admin', adminRoutes)
-app.use('/api/notifications', notificationRoutes)
+// Apply CSRF protection to state-changing routes
+const csrfErrorHandler = (err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).json({
+      success: false,
+      error: 'Invalid or expired CSRF token. Please refresh the page and try again.'
+    })
+  }
+  next(err)
+}
+
+// API routes with auth rate limiting and CSRF protection
+app.use('/api/auth', authLimiter, csrfProtection, authRoutes)
+app.use('/api/markets', csrfProtection, marketRoutes)
+app.use('/api/applications', csrfProtection, applicationRoutes)
+app.use('/api/users', csrfProtection, userRoutes)
+app.use('/api/todos', csrfProtection, todoRoutes)
+app.use('/api/expenses', csrfProtection, expenseRoutes)
+app.use('/api/comments', csrfProtection, commentRoutes)
+app.use('/api/photos', csrfProtection, photoRoutes)
+app.use('/api/hashtags', csrfProtection, hashtagRoutes)
+app.use('/api/admin', csrfProtection, adminRoutes)
+app.use('/api/notifications', csrfProtection, notificationRoutes)
+
+// CSRF error handler
+app.use(csrfErrorHandler)
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -109,6 +175,8 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`)
       console.log(`📱 Environment: ${process.env.NODE_ENV}`)
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL}`)
+      console.log(`🔒 CSRF protection enabled`)
+      console.log(`⚡ Auth rate limiting: 5 attempts/15min`)
     })
   } catch (error) {
     console.error('❌ Failed to start server:', error)

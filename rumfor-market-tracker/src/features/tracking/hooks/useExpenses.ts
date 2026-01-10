@@ -1,30 +1,17 @@
-import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trackingApi } from '../trackingApi'
-import { useTrackingStore } from '../trackingStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Expense } from '@/types'
 
 export const useExpenses = (marketId?: string) => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
-  const {
-    expenses,
-    isLoadingExpenses,
-    expensesError,
-    setExpenses,
-    setLoadingExpenses,
-    setExpensesError,
-    addExpense,
-    updateExpense,
-    removeExpense
-  } = useTrackingStore()
 
-  // Query for expenses
+  // Query for expenses using TanStack Query for server state
   const {
     data,
-    isLoading: isQueryLoading,
-    error: queryError,
+    isLoading,
+    error,
     refetch
   } = useQuery({
     queryKey: ['expenses', user?.id, marketId],
@@ -38,39 +25,19 @@ export const useExpenses = (marketId?: string) => {
     gcTime: 10 * 60 * 1000, // 10 minutes
   })
 
-  // Update store when query data changes
-  React.useEffect(() => {
-    if (data) {
-      setExpenses(data)
-    }
-  }, [data])
-
-  // Sync loading states
-  React.useEffect(() => {
-    setLoadingExpenses(isQueryLoading)
-  }, [isQueryLoading])
-
-  // Sync error states
-  React.useEffect(() => {
-    setExpensesError(queryError?.message || null)
-  }, [queryError])
-
   // Create expense mutation
   const createExpenseMutation = useMutation({
     mutationFn: async (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated')
       return trackingApi.createExpense(expense)
     },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        addExpense(response.data)
-        queryClient.invalidateQueries({ queryKey: ['expenses'] })
-        queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
     },
     onError: (error) => {
       console.error('Failed to create expense:', error)
-      setExpensesError('Failed to create expense')
+      throw error
     }
   })
 
@@ -79,16 +46,13 @@ export const useExpenses = (marketId?: string) => {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Expense> }) => {
       return trackingApi.updateExpense(id, updates)
     },
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        updateExpense(response.data.id, response.data)
-        queryClient.invalidateQueries({ queryKey: ['expenses'] })
-        queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
     },
     onError: (error) => {
       console.error('Failed to update expense:', error)
-      setExpensesError('Failed to update expense')
+      throw error
     }
   })
 
@@ -97,16 +61,13 @@ export const useExpenses = (marketId?: string) => {
     mutationFn: async (id: string) => {
       return trackingApi.deleteExpense(id)
     },
-    onSuccess: (response, id) => {
-      if (response.success) {
-        removeExpense(id)
-        queryClient.invalidateQueries({ queryKey: ['expenses'] })
-        queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
     },
     onError: (error) => {
       console.error('Failed to delete expense:', error)
-      setExpensesError('Failed to delete expense')
+      throw error
     }
   })
 
@@ -128,12 +89,14 @@ export const useExpenses = (marketId?: string) => {
   }
 
   return {
-    // Data
-    expenses,
+    // Data from TanStack Query
+    expenses: data || [],
     
-    // States
-    isLoading: isLoadingExpenses,
-    error: expensesError,
+    // States from TanStack Query
+    isLoading,
+    error: error?.message || null,
+    
+    // Mutation states
     isCreating: createExpenseMutation.isPending,
     isUpdating: updateExpenseMutation.isPending,
     isDeleting: deleteExpenseMutation.isPending,
@@ -151,10 +114,9 @@ export const useExpenses = (marketId?: string) => {
   }
 }
 
-// Hook for expense summary
+// Hook for expense summary - server state only with cache invalidation
 export const useExpenseSummary = (marketId?: string) => {
   const { user } = useAuthStore()
-  const { setExpenseSummary } = useTrackingStore()
 
   const {
     data,
@@ -165,19 +127,13 @@ export const useExpenseSummary = (marketId?: string) => {
     queryKey: ['expense-summary', user?.id, marketId],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      const response = await trackingApi.getExpenseSummary(user.id, marketId)
+      const response = await trackingApi.getExpenseSummary(marketId)
       return response.data
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes,
   })
-
-  React.useEffect(() => {
-    if (data) {
-      setExpenseSummary(data)
-    }
-  }, [data])
 
   return {
     summary: data,

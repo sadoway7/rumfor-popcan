@@ -1,3 +1,4 @@
+import { useEffect, useRef, useCallback } from 'react'
 import { useAuthStore } from '../authStore'
 import { LoginCredentials, RegisterData, PasswordResetRequest, PasswordResetConfirm, EmailVerificationRequest, ResendVerificationRequest } from '@/types'
 
@@ -118,27 +119,54 @@ export function useAuth() {
     return !needsEmailVerification()
   }
 
+  // Track token refresh interval for cleanup
+  const refreshIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   /**
    * Auto-refresh token before it expires
    */
-  const startTokenRefresh = () => {
+  const startTokenRefresh = useCallback(() => {
     if (!token || !isAuthenticated) return
 
     // Refresh token 5 minutes before expiry (assuming 1 hour expiry)
     const refreshInterval = 55 * 60 * 1000 // 55 minutes
+
+    // Clear any existing interval before setting up a new one
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current)
+    }
 
     const intervalId = setInterval(async () => {
       try {
         await refreshToken()
       } catch (error) {
         console.error('Token refresh failed:', error)
-        clearInterval(intervalId)
+        stopTokenRefresh()
       }
     }, refreshInterval)
 
+    refreshIntervalRef.current = intervalId
+
     // Cleanup function
-    return () => clearInterval(intervalId)
-  }
+    return () => stopTokenRefresh()
+  }, [token, isAuthenticated, refreshToken])
+
+  /**
+   * Stop token refresh interval
+   */
+  const stopTokenRefresh = useCallback(() => {
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current)
+      refreshIntervalRef.current = null
+    }
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopTokenRefresh()
+    }
+  }, [stopTokenRefresh])
 
   /**
    * Handle login with loading state management
@@ -257,6 +285,7 @@ export function useAuth() {
     // Token management
     refreshToken,
     startTokenRefresh,
+    stopTokenRefresh,
 
     // Utility methods
     updateUser,

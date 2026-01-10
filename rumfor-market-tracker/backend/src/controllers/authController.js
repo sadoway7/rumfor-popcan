@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const User = require('../models/User')
-const { generateTokens } = require('../middleware/auth')
+const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
 
 // Register new user
@@ -229,9 +229,7 @@ const forgotPassword = catchAsync(async (req, res, next) => {
   // For now, we'll just return success
   // await sendPasswordResetEmail(user.email, resetToken)
 
-  sendSuccess(res, {
-    resetToken // In production, remove this and only send via email
-  }, 'Password reset link sent to your email')
+  sendSuccess(res, null, 'Password reset link sent to your email')
 })
 
 // Reset password
@@ -314,19 +312,23 @@ const resendVerification = catchAsync(async (req, res, next) => {
   // In a real application, send email here
   // await sendVerificationEmail(user.email, verificationToken)
 
-  sendSuccess(res, {
-    verificationToken // In production, remove this and only send via email
-  }, 'Verification email sent')
+  sendSuccess(res, null, 'Verification email sent')
 })
 
-// Logout (client-side token removal)
+// Logout
 const logout = catchAsync(async (req, res, next) => {
-  // In a stateless JWT implementation, logout is handled client-side
-  // by removing the stored tokens
+  // Get the access token from Authorization header
+  const authHeader = req.header('Authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const accessToken = authHeader.substring(7)
+    addAccessTokenToBlacklist(accessToken, process.env.JWT_EXPIRES_IN || '24h')
+  }
   
-  // If you want to implement token blacklisting, you would:
-  // 1. Add token to a blacklist cache (Redis)
-  // 2. Check blacklist in auth middleware
+  // Get the refresh token from body (client should send it)
+  const { refreshToken } = req.body
+  if (refreshToken) {
+    addRefreshTokenToBlacklist(refreshToken, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
+  }
   
   sendSuccess(res, null, 'Logged out successfully')
 })
