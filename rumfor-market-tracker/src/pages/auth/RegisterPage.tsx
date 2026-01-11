@@ -13,7 +13,7 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
-  role: z.enum(['visitor', 'vendor', 'promoter', 'admin'], {
+  role: z.enum(['vendor', 'promoter'], {
     errorMap: () => ({ message: 'Please select a valid role' }),
   }),
   agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms and conditions'),
@@ -25,10 +25,8 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 const roleOptions = [
-  { value: 'visitor', label: 'Visitor', description: 'Browse markets and events' },
   { value: 'vendor', label: 'Vendor', description: 'Apply to markets and manage applications' },
   { value: 'promoter', label: 'Promoter', description: 'Create and manage markets' },
-  { value: 'admin', label: 'Admin', description: 'Full system access (requires approval)' },
 ]
 
 export function RegisterPage() {
