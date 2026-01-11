@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Backend API
   backend:
-    image: rumfor-market-tracker-backend:latest
+    image: rumfor-vpopcan-backend:latest
     ports:
       - "3001:3000"
     environment:
@@ -19,7 +19,7 @@ services:
 
   # React Application
   rumfor-app:
-    image: rumfor-market-tracker-rumfor-app:latest
+    image: rumfor-vpopcan-rumfor-app:latest
     ports:
       - "3000:3000"
     environment:
