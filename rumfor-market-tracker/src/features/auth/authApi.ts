@@ -24,6 +24,7 @@ class AuthApiError extends Error {
 const mockUsers: User[] = [
   {
     id: '1',
+    username: 'johnvendor',
     email: 'vendor@example.com',
     firstName: 'John',
     lastName: 'Vendor',
@@ -35,6 +36,7 @@ const mockUsers: User[] = [
   },
   {
     id: '2',
+    username: 'janepromoter',
     email: 'promoter@example.com',
     firstName: 'Jane',
     lastName: 'Promoter',
@@ -46,6 +48,7 @@ const mockUsers: User[] = [
   },
   {
     id: '3',
+    username: 'adminuser',
     email: 'admin@example.com',
     firstName: 'Admin',
     lastName: 'User',
@@ -296,7 +299,7 @@ const realApi = {
       password: credentials.password
     }
 
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/login', loginData)
+    const response = await httpClient.post<ApiResponse<{ user: User; tokens: { accessToken: string; refreshToken: string } }>>('/auth/login', loginData)
 
     if (!response.success || !response.data) {
       throw new AuthApiError(
@@ -305,33 +308,33 @@ const realApi = {
       )
     }
 
-    return response.data
+    return { user: { ...response.data.user, firstName: (response.data.user as any).profile?.firstName, lastName: (response.data.user as any).profile?.lastName }, token: response.data.tokens.accessToken }
   },
 
   register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/register', data)
-    
+    const response = await httpClient.post<ApiResponse<{ user: User; tokens: { accessToken: string; refreshToken: string } }>>('/auth/register', data)
+
     if (!response.success || !response.data) {
       throw new AuthApiError(
         response.error || 'Registration failed',
         'REGISTRATION_FAILED'
       )
     }
-    
-    return response.data
+
+    return { user: response.data.user, token: response.data.tokens.accessToken }
   },
 
   refreshToken: async (token: string): Promise<{ user: User; token: string }> => {
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/refresh', { token })
-    
+    const response = await httpClient.post<ApiResponse<{ user: User; tokens: { accessToken: string; refreshToken: string } }>>('/refresh-token', { token })
+
     if (!response.success || !response.data) {
       throw new AuthApiError(
         response.error || 'Token refresh failed',
         'REFRESH_FAILED'
       )
     }
-    
-    return response.data
+
+    return { user: response.data.user, token: response.data.tokens.accessToken }
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
