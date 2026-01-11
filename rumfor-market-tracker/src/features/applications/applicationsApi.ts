@@ -1,8 +1,8 @@
 import { Application, ApplicationStatus, ApplicationFilters, ApiResponse, PaginatedResponse } from '@/types'
 
 // Environment configuration
-const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
-const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+const isDevelopment = import.meta.env.DEV
+const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 // API Configuration
 const API_BASE_URL = 'http://localhost:3001/api'

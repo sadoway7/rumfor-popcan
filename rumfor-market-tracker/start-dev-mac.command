@@ -22,25 +22,8 @@ echo -e "${NC}"
 cd "$SCRIPT_DIR"
 echo -e "${YELLOW}Working directory:${NC} $(pwd)"
 
-echo -e "${YELLOW}[1/5]${NC} Checking if MongoDB container exists..."
-
-# Check if MongoDB container is running
-if docker ps | grep -q "rumfor-mongodb"; then
-    echo -e "${GREEN}✓${NC} MongoDB container already running"
-else
-    echo -e "${YELLOW}Starting MongoDB container...${NC}"
-    
-    # Start MongoDB container
-    if docker run -d --name rumfor-mongodb -p 27017:27017 mongo:latest > /dev/null 2>&1; then
-        echo -e "${GREEN}✓${NC} MongoDB container started"
-        sleep 2  # Give MongoDB a moment to fully start
-    else
-        echo -e "${RED}✗${NC} Failed to start MongoDB container"
-        echo -e "${YELLOW}Please ensure Docker is running and try again${NC}"
-        read -p "Press Enter to continue..."
-        exit 1
-    fi
-fi
+echo -e "${YELLOW}[1/5]${NC} Checking MongoDB Atlas connection..."
+echo -e "${BLUE}Using MongoDB Atlas - ensure your .env has the correct connection string${NC}"
 
 echo -e "${YELLOW}[2/5]${NC} Installing backend dependencies (if needed)..."
 cd backend

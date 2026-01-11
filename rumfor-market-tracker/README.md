@@ -1,10 +1,9 @@
 # Rumfor Market Tracker
 
-[![Pipeline Status](https://gitlab.com/your-username/rumfor-market-tracker/badges/main/pipeline.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/commits/main)
-[![Pages Deployment](https://gitlab.com/your-username/rumfor-market-tracker/badges/main/pages.svg)](https://your-username.gitlab.io/rumfor-market-tracker/)
-[![Security](https://img.shields.io/badge/Security-Scan%20Passed-green.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/security/dast)
-[![Code Quality](https://img.shields.io/badge/Code%20Quality-A+-green.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/quality_reports)
-[![Test Coverage](https://img.shields.io/badge/Tests-Coverage%20%3E%2080%25-brightgreen.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/quality_reports)
+[![Pipeline Status](https://git.sadoway.ca/sadoway/rumfor-vpopcan/badges/main/pipeline.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/commits/main)
+[![Security](https://img.shields.io/badge/Security-Scan%20Passed-green.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/security/dast)
+[![Code Quality](https://img.shields.io/badge/Code%20Quality-A+-green.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/quality_reports)
+[![Test Coverage](https://img.shields.io/badge/Tests-Coverage%20%3E%2080%25-brightgreen.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/quality_reports)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive platform for market discovery, vendor applications, and community engagement built with modern web technologies with full GitLab CI/CD integration.
@@ -138,20 +137,39 @@ git clone <repository-url>
 cd rumfor-market-tracker
 ```
 
-2. Install dependencies
+2. Install dependencies (frontend)
 ```bash
 npm install
 ```
 
-3. Copy environment variables
+3. Install backend dependencies
 ```bash
-cp .env.example .env
+cd backend
+npm install
+cd ..
 ```
 
-4. Start development server
+4. Copy and configure environment variables
 ```bash
+cp .env.example .env                    # Frontend environment
+cp backend/.env.example backend/.env    # Backend environment
+# Edit both .env files with your MongoDB Atlas connection
+```
+
+5. Start development servers
+```bash
+# Option 1: Use the automated startup script (macOS)
+./start-dev-mac.command
+
+# Option 2: Manual startup
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend (new terminal window)
 npm run dev
 ```
+
+**Note**: Both frontend and backend servers must be running for full functionality. The frontend runs on port 5173, backend on port 3001.
 
 ### Available Scripts
 
@@ -197,9 +215,20 @@ npm run dev
 Copy `.env.example` to `.env` and configure:
 
 ```env
-VITE_API_URL=http://localhost:3001/api
-VITE_APP_ENV=development
+# Frontend Configuration
+VITE_API_BASE_URL=http://localhost:3001/api
+VITE_USE_MOCK_AUTH=false
+
+# Database Configuration (MongoDB Atlas)
+MONGODB_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/rumfor_market_tracker?retryWrites=true&w=majority
+
+# Backend Configuration
+JWT_SECRET=your-secret-key
+JWT_EXPIRE=7d
+PORT=3001
 ```
+
+**Important**: Make sure both frontend and backend `.env` files are properly configured with your MongoDB Atlas connection string.
 
 ### API Integration
 The project is configured to work with a REST API. Update the API endpoints in:
@@ -222,21 +251,34 @@ Built with mobile-first approach ensuring excellent experience across:
 - Tablet (768px - 1023px)  
 - Mobile (320px - 767px)
 
-## 🔐 Authentication
+## 🔐 Authentication & Registration
 
+### User Roles
 Role-based access control with four user types:
-- **Visitor**: Browse markets, leave comments
-- **Vendor**: Apply to markets, manage applications
-- **Promoter**: Create and manage markets
-- **Admin**: Full system administration
+- **Visitor**: Browse markets, leave comments *(not available for registration)*
+- **Vendor**: Apply to markets, manage applications *(registration available)*
+- **Promoter**: Create and manage markets *(registration available)*
+- **Admin**: Full system administration *(created via database seeding)*
+
+### Registration Restrictions
+New user registration is limited to **Vendor** and **Promoter** roles only. Admin accounts are created automatically on server startup with predefined credentials.
+
+### Admin Access
+Default admin account is created automatically:
+- **Email**: Configured in backend environment
+- **Password**: Set in backend initialization
+- **Login**: Available after backend server starts
+
+### Database Integration
+All user accounts and data persist in **MongoDB Atlas** cloud database.
 
 ## 🚀 Deployment
 
 ### Automated Deployment
 The project uses GitLab CI/CD for automated deployment:
 
-- **Main Branch**: Automatically deployed to GitLab Pages production
-- **Develop Branch**: Automatically deployed to GitLab Pages staging
+- **Main Branch**: Automatically deployed to production
+- **Develop Branch**: Automatically deployed to staging (if configured)
 - **Feature Branches**: Full CI/CD pipeline runs for testing
 
 ## 🗄️ Database
@@ -254,9 +296,10 @@ The project uses GitLab CI/CD for automated deployment:
 npm run build
 ```
 
-#### Deploy to GitLab Pages
+#### Deploy to Production
 ```bash
-npm run deploy:pages
+npm run build
+# Deploy dist/ folder to your hosting provider
 ```
 
 #### Docker Deployment
@@ -364,6 +407,28 @@ This project is licensed under the MIT License.
 
 ## 🔧 Troubleshooting
 
+### Authentication & Database Issues
+
+1. **Admin Login Not Working**
+   - Ensure backend server is running on port 3001
+   - Check MongoDB Atlas connection in backend `.env`
+   - Admin user is created automatically when backend starts
+
+2. **Registration Fails**
+   - Only "Vendor" and "Promoter" roles are allowed for registration
+   - Ensure MongoDB connection is working
+   - Check frontend and backend `.env` files match
+
+3. **Mock Mode Still Active**
+   - Set `VITE_USE_MOCK_AUTH=false` in frontend `.env`
+   - Check that `VITE_API_BASE_URL` is properly configured
+   - Restart both frontend and backend servers
+
+4. **Database Connection Issues**
+   - Verify MongoDB Atlas connection string
+   - Ensure IP whitelist includes your IP (0.0.0.0/0 for development)
+   - Check database user has read/write permissions
+
 ### Common CI/CD Issues
 
 1. **Build Failures**
@@ -400,7 +465,8 @@ This project is licensed under the MIT License.
 
 ## 📚 Additional Documentation
 
-- [GitLab Environment Variables](./GITLAB_ENVIRONMENT_VARIABLES.md)
-- [GitLab Pages Setup](./GITLAB_PAGES_SETUP.md)
+- [Environment Variables Setup](./GITLAB_ENVIRONMENT_VARIABLES.md)
+- [Deployment Configuration](./GITLAB_PAGES_SETUP.md)
 - [Security Configuration](./.security-scan.yml)
 - [Docker Deployment](./docker-compose.yml)
+- [Repository](https://git.sadoway.ca/sadoway/rumfor-vpopcan/)
