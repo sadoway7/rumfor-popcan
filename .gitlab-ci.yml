@@ -13,7 +13,6 @@ build:
   services:
     - name: docker:24-dind
       command: ["--tls=false"]
-  memory: 2GB
   timeout: 1h
   script:
     - cd rumfor-market-tracker
