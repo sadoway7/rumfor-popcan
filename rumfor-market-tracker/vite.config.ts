@@ -36,9 +36,6 @@ export default defineConfig({
       '@/lib': resolve(__dirname, './src/lib'),
       '@/layouts': resolve(__dirname, './src/layouts'),
       '@/assets': resolve(__dirname, './src/assets'),
-      // Fix recharts lodash imports
-      'lodash': 'lodash-es',
-      'lodash/first': 'lodash-es/first',
     },
   },
   server: {

@@ -13,7 +13,7 @@ const registerSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
-  role: z.enum(['vendor', 'promoter'], {
+  role: z.enum(['visitor', 'vendor', 'promoter', 'admin'], {
     errorMap: () => ({ message: 'Please select a valid role' }),
   }),
   agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms and conditions'),

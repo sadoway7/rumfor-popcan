@@ -10,7 +10,6 @@ const session = require('express-session')
 const MongoStore = require('connect-mongo')
 const csrf = require('csurf')
 const connectDB = require('../config/database')
-const User = require('./models/User')
 
 // Import routes
 const authRoutes = require('./routes/auth')
@@ -134,8 +133,8 @@ const csrfErrorHandler = (err, req, res, next) => {
   next(err)
 }
 
-// API routes with auth rate limiting (CSRF disabled for auth - handle via CORS)
-app.use('/api/auth', authLimiter, authRoutes)
+// API routes with auth rate limiting and CSRF protection
+app.use('/api/auth', authLimiter, csrfProtection, authRoutes)
 app.use('/api/markets', csrfProtection, marketRoutes)
 app.use('/api/applications', csrfProtection, applicationRoutes)
 app.use('/api/users', csrfProtection, userRoutes)
@@ -172,46 +171,10 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3001
 
 // Connect to MongoDB and start server
-// Ensure admin user exists
-const ensureAdminUser = async () => {
-  try {
-    const adminEmail = 'sadoway@gmail.com'
-    const existingAdmin = await User.findOne({ email: adminEmail })
-
-    if (!existingAdmin) {
-      const adminUser = new User({
-        username: 'jsadoway',
-        email: adminEmail,
-        password: 'Oswald1986!',
-        role: 'admin',
-        isEmailVerified: true,
-        profile: {
-          firstName: 'James',
-          lastName: 'Sadoway',
-          bio: 'System administrator'
-        },
-        preferences: {
-          emailNotifications: true,
-          pushNotifications: true,
-          publicProfile: true
-        }
-      })
-
-      await adminUser.save()
-      console.log('👑 Admin user created:', adminEmail)
-    } else {
-      console.log('👑 Admin user exists:', adminEmail)
-    }
-  } catch (error) {
-    console.error('❌ Error ensuring admin user exists:', error)
-  }
-}
-
 const startServer = async () => {
   try {
     await connectDB()
-    await ensureAdminUser()
-
+    
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`)
       console.log(`📱 Environment: ${process.env.NODE_ENV}`)

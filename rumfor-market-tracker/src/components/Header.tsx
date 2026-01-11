@@ -33,7 +33,7 @@ export function Header() {
     <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Sidebar Toggle - Left side */}
+          {/* Logo and Sidebar Toggle Group - Left side */}
           <div className="flex items-center">
             {/* Sidebar Toggle - On Homepage and Markets Page */}
             {showSidebarToggle && (

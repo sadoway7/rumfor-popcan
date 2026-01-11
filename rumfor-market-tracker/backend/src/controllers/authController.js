@@ -7,29 +7,25 @@ const { validateUserRegistration, validateUserLogin, validateUserUpdate } = requ
 // Register new user
 const register = catchAsync(async (req, res, next) => {
   const {
-    firstName,
-    lastName,
+    username,
     email,
     password,
-    role
+    profile = {},
+    preferences = {}
   } = req.body
 
   // Check if user already exists
-  const existingUser = await User.findOne({ email })
+  const existingUser = await User.findOne({
+    $or: [{ email }, { username }]
+  })
 
   if (existingUser) {
-    return next(new AppError('Email already registered', 400))
-  }
-
-  // Generate username from firstName and lastName
-  const baseUsername = `${firstName}${lastName}`.toLowerCase().replace(/[^a-z0-9]/g, '')
-  let username = baseUsername
-  let counter = 1
-
-  // Ensure username is unique
-  while (await User.findOne({ username })) {
-    username = `${baseUsername}${counter}`
-    counter++
+    if (existingUser.email === email) {
+      return next(new AppError('Email already registered', 400))
+    }
+    if (existingUser.username === username) {
+      return next(new AppError('Username already taken', 400))
+    }
   }
 
   // Create user
@@ -37,11 +33,8 @@ const register = catchAsync(async (req, res, next) => {
     username,
     email,
     password,
-    role,
-    profile: {
-      firstName,
-      lastName
-    }
+    profile,
+    preferences
   })
 
   // Generate tokens
@@ -83,6 +76,11 @@ const login = catchAsync(async (req, res, next) => {
     // Increment login attempts
     await user.incLoginAttempts()
     return next(new AppError('Invalid email or password', 401))
+  }
+
+  // Reset login attempts on successful login
+  if (user.loginAttempts > 0) {
+    await user.resetLoginAttempts()
   }
 
   // Update last login

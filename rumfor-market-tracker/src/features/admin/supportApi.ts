@@ -1,7 +1,7 @@
 import { ApiResponse, PaginatedResponse } from '@/types'
 
 // Environment configuration
-const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
+const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
 
 // API Configuration
 const API_BASE_URL = 'http://localhost:3001/api'
