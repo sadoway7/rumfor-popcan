@@ -17,8 +17,8 @@ build:
   script:
     - cd rumfor-market-tracker
     - docker compose build
-    - docker save rumfor-market-tracker-rumfor-app:latest > ../frontend.tar
-    - docker save rumfor-market-tracker-backend:latest > ../backend.tar
+    - docker save rumfor-vpopcan-rumfor-app:latest > ../frontend.tar
+    - docker save rumfor-vpopcan-backend:latest > ../backend.tar
   artifacts:
     paths:
       - frontend.tar
