@@ -1,10 +1,9 @@
 # Rumfor Market Tracker
 
-[![Pipeline Status](https://gitlab.com/your-username/rumfor-market-tracker/badges/main/pipeline.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/commits/main)
-[![Pages Deployment](https://gitlab.com/your-username/rumfor-market-tracker/badges/main/pages.svg)](https://your-username.gitlab.io/rumfor-market-tracker/)
-[![Security](https://img.shields.io/badge/Security-Scan%20Passed-green.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/security/dast)
-[![Code Quality](https://img.shields.io/badge/Code%20Quality-A+-green.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/quality_reports)
-[![Test Coverage](https://img.shields.io/badge/Tests-Coverage%20%3E%2080%25-brightgreen.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/quality_reports)
+[![Pipeline Status](https://git.sadoway.ca/sadoway/rumfor-vpopcan/badges/main/pipeline.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/commits/main)
+[![Security](https://img.shields.io/badge/Security-Scan%20Passed-green.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/security/dast)
+[![Code Quality](https://img.shields.io/badge/Code%20Quality-A+-green.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/quality_reports)
+[![Test Coverage](https://img.shields.io/badge/Tests-Coverage%20%3E%2080%25-brightgreen.svg)](https://git.sadoway.ca/sadoway/rumfor-vpopcan/-/quality_reports)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive platform for market discovery, vendor applications, and community engagement built with modern web technologies with full GitLab CI/CD integration.
@@ -278,8 +277,8 @@ All user accounts and data persist in **MongoDB Atlas** cloud database.
 ### Automated Deployment
 The project uses GitLab CI/CD for automated deployment:
 
-- **Main Branch**: Automatically deployed to GitLab Pages production
-- **Develop Branch**: Automatically deployed to GitLab Pages staging
+- **Main Branch**: Automatically deployed to production
+- **Develop Branch**: Automatically deployed to staging (if configured)
 - **Feature Branches**: Full CI/CD pipeline runs for testing
 
 ## 🗄️ Database
@@ -297,9 +296,10 @@ The project uses GitLab CI/CD for automated deployment:
 npm run build
 ```
 
-#### Deploy to GitLab Pages
+#### Deploy to Production
 ```bash
-npm run deploy:pages
+npm run build
+# Deploy dist/ folder to your hosting provider
 ```
 
 #### Docker Deployment
@@ -465,7 +465,8 @@ This project is licensed under the MIT License.
 
 ## 📚 Additional Documentation
 
-- [GitLab Environment Variables](./GITLAB_ENVIRONMENT_VARIABLES.md)
-- [GitLab Pages Setup](./GITLAB_PAGES_SETUP.md)
+- [Environment Variables Setup](./GITLAB_ENVIRONMENT_VARIABLES.md)
+- [Deployment Configuration](./GITLAB_PAGES_SETUP.md)
 - [Security Configuration](./.security-scan.yml)
 - [Docker Deployment](./docker-compose.yml)
+- [Repository](https://git.sadoway.ca/sadoway/rumfor-vpopcan/)
