@@ -1,19 +1,13 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const { v2: cloudinary } = require('cloudinary')
+const fs = require('fs').promises
+const path = require('path')
 const mongoose = require('mongoose')
 
 const { verifyToken } = require('../middleware/auth')
 const Photo = require('../models/Photo')
 const Market = require('../models/Market')
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-})
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
@@ -31,27 +25,23 @@ const upload = multer({
   }
 })
 
-// Helper function to upload to Cloudinary
-const uploadToCloudinary = async (fileBuffer, options = {}) => {
-  return new Promise((resolve, reject) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'rumfor-market-photos',
-        resource_type: 'image',
-        ...options
-      },
-      (error, result) => {
-        if (error) reject(error)
-        else resolve(result)
-      }
-    )
-    uploadStream.end(fileBuffer)
-  })
+// Helper function to save file locally
+const saveFileLocally = async (fileBuffer, filename) => {
+  const uploadsDir = path.join(__dirname, '../../uploads')
+  await fs.mkdir(uploadsDir, { recursive: true })
+  const filePath = path.join(uploadsDir, filename)
+  await fs.writeFile(filePath, fileBuffer)
+  return `/uploads/${filename}`
 }
 
-// Helper function to delete from Cloudinary
-const deleteFromCloudinary = async (publicId) => {
-  return cloudinary.uploader.destroy(publicId)
+// Helper function to delete local file
+const deleteLocalFile = async (filename) => {
+  const filePath = path.join(__dirname, '../../uploads', filename)
+  try {
+    await fs.unlink(filePath)
+  } catch (error) {
+    console.error('Error deleting local file:', error)
+  }
 }
 
 // Controller functions
@@ -156,28 +146,23 @@ const photoController = {
         })
       }
 
-      // Upload to Cloudinary
-      const uploadResult = await uploadToCloudinary(req.file.buffer, {
-        public_id: `photo_${Date.now()}`,
-        transformation: [
-          { quality: 'auto:best' },
-          { fetch_format: 'auto' }
-        ]
-      })
+      // Generate unique filename
+      const filename = `photo_${Date.now()}_${Math.random().toString(36).substring(2)}.${req.file.mimetype.split('/')[1]}`
+
+      // Save file locally
+      const imageUrl = await saveFileLocally(req.file.buffer, filename)
 
       // Create photo document
       const photo = new Photo({
         title: title || '',
         caption: caption || '',
-        imageUrl: uploadResult.secure_url,
-        imagePublicId: uploadResult.public_id,
+        imageUrl: imageUrl,
+        imageFilename: filename,
         uploadedBy: userId,
         market: marketId,
         metadata: {
           size: req.file.size,
           format: req.file.mimetype.split('/')[1],
-          width: uploadResult.width,
-          height: uploadResult.height,
           originalName: req.file.originalname
         },
         tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(t => t.trim())) : []
@@ -290,12 +275,12 @@ const photoController = {
         })
       }
 
-      // Delete from Cloudinary
+      // Delete local file
       try {
-        await deleteFromCloudinary(photo.imagePublicId)
-      } catch (cloudinaryError) {
-        console.error('Error deleting from Cloudinary:', cloudinaryError)
-        // Continue with soft delete even if Cloudinary deletion fails
+        await deleteLocalFile(photo.imageFilename)
+      } catch (fileError) {
+        console.error('Error deleting local file:', fileError)
+        // Continue with soft delete even if file deletion fails
       }
 
       // Soft delete

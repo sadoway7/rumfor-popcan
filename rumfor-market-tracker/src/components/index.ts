@@ -35,6 +35,7 @@ export * from './MarketGrid'
 export * from './BottomNav'
 export * from './Footer'
 export * from './Header'
+export * from './LocationModal'
 export * from './Sidebar'
 
 // Notification Components

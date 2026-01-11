@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const path = require('path')
 const cors = require('cors')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
@@ -99,6 +100,9 @@ if (process.env.NODE_ENV !== 'production') {
 } else {
   app.use(morgan('combined'))
 }
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
 // CSRF token endpoint - provide token for GET requests
 app.get('/api/csrf-token', csrfProtection, (req, res) => {

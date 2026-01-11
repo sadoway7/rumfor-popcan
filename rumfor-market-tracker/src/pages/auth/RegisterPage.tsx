@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Alert, Spinner, Select } from '@/components/ui'
-import { Eye, EyeOff, UserPlus, Mail, Lock, User, Building } from 'lucide-react'
+import { Eye, EyeOff, UserPlus, Mail, Lock, User, Store, Calendar } from 'lucide-react'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -25,10 +25,18 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 const roleOptions = [
-  { value: 'visitor', label: 'Visitor', description: 'Browse markets and events' },
-  { value: 'vendor', label: 'Vendor', description: 'Apply to markets and manage applications' },
-  { value: 'promoter', label: 'Promoter', description: 'Create and manage markets' },
-  { value: 'admin', label: 'Admin', description: 'Full system access (requires approval)' },
+  {
+    value: 'vendor',
+    label: 'Vendor',
+    description: 'Apply to markets and manage applications',
+    icon: Store
+  },
+  {
+    value: 'promoter',
+    label: 'Promoter',
+    description: 'Create and manage markets',
+    icon: Calendar
+  },
 ]
 
 export function RegisterPage() {
@@ -42,6 +50,7 @@ export function RegisterPage() {
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
@@ -60,17 +69,12 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-start justify-center p-4 pt-8">
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
-              <UserPlus className="h-6 w-6 text-accent" />
-            </div>
             <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
-            <CardDescription>
-              Join the Rumfor community and start managing your markets
-            </CardDescription>
+
           </CardHeader>
           
           <CardContent>
@@ -83,39 +87,58 @@ export function RegisterPage() {
               />
             )}
 
+            <div className="mb-6">
+              <label className="text-sm font-medium text-foreground mb-3 block">
+                Account Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {roleOptions.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = selectedRole === option.value
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setValue('role', option.value as any)}
+                      className={`p-4 border rounded-lg text-center transition-all ${
+                        isSelected
+                          ? 'border-accent bg-accent/5 ring-2 ring-accent/20'
+                          : 'border-border'
+                      }`}
+                    >
+                      <Icon className={`h-6 w-6 mx-auto mb-2 ${isSelected ? 'text-accent' : 'text-muted-foreground'}`} />
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              {errors.role && (
+                <p className="text-sm text-red-500 mt-2">{errors.role.message}</p>
+              )}
+            </div>
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium text-foreground">
-                    First Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="firstName"
-                      placeholder="First name"
-                      className={`pl-10 ${errors.firstName ? 'border-red-500 focus:border-red-500' : ''}`}
-                      {...register('firstName')}
-                    />
-                  </div>
+                  <Input
+                    id="firstName"
+                    placeholder="First name"
+                    className={errors.firstName ? 'border-red-500 focus:border-red-500' : ''}
+                    {...register('firstName')}
+                  />
                   {errors.firstName && (
                     <p className="text-sm text-red-500">{errors.firstName.message}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium text-foreground">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="lastName"
-                      placeholder="Last name"
-                      className={`pl-10 ${errors.lastName ? 'border-red-500 focus:border-red-500' : ''}`}
-                      {...register('lastName')}
-                    />
-                  </div>
+                  <Input
+                    id="lastName"
+                    placeholder="Last name"
+                    className={errors.lastName ? 'border-red-500 focus:border-red-500' : ''}
+                    {...register('lastName')}
+                  />
                   {errors.lastName && (
                     <p className="text-sm text-red-500">{errors.lastName.message}</p>
                   )}
@@ -123,59 +146,27 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
-                    {...register('email')}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  className={errors.email ? 'border-red-500 focus:border-red-500' : ''}
+                  {...register('email')}
+                />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="role" className="text-sm font-medium text-foreground">
-                  Account Type
-                </label>
-                <div className="relative">
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Select
-                    id="role"
-                    placeholder="Select your role"
-                    options={roleOptions.map(option => ({ value: option.value, label: option.label }))}
-                    className={`pl-10 ${errors.role ? 'border-red-500 focus:border-red-500' : ''}`}
-                    {...register('role')}
-                  />
-                </div>
-                {errors.role && (
-                  <p className="text-sm text-red-500">{errors.role.message}</p>
-                )}
-                {selectedRole && (
-                  <p className="text-xs text-muted-foreground">
-                    {roleOptions.find(opt => opt.value === selectedRole)?.description}
-                  </p>
-                )}
-              </div>
+
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-foreground">
-                  Password
-                </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Create a password"
-                    className={`pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
                     {...register('password')}
                   />
                   <button
@@ -192,16 +183,12 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                  Confirm Password
-                </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm your password"
-                    className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`pr-10 ${errors.confirmPassword ? 'border-red-500 focus:border-red-500' : ''}`}
                     {...register('confirmPassword')}
                   />
                   <button

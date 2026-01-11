@@ -10,6 +10,10 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - MONGODB_URI=${MONGODB_URI}
+      # TODO: Replace with secure environment variables
+      - JWT_SECRET=rumfor-production-jwt-secret-2024-change-this-immediately
+      - JWT_REFRESH_SECRET=rumfor-production-refresh-secret-2024-change-this-immediately
+      - SESSION_SECRET=rumfor-production-session-secret-2024-change-this-immediately
       - FRONTEND_URL=https://rumfor.sadoway.ca
     restart: unless-stopped
     healthcheck:
@@ -36,15 +40,3 @@ services:
       timeout: 10s
       retries: 3
 
-  # Redis for caching
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-
-volumes:
-  redis_data:

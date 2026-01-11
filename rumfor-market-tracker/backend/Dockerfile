@@ -11,6 +11,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy source code
 COPY . .
 
+# Create uploads directory
+RUN mkdir -p uploads
+
 # Expose port
 EXPOSE 3000
 

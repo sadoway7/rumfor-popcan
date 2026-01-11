@@ -1,7 +1,7 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useThemeStore } from '@/features/theme/themeStore'
+import { useThemeStore, useSidebarStore, useLocationStore } from '@/features/theme/themeStore'
 import { Button } from '@/components/ui'
 import {
   DropdownMenu,
@@ -11,12 +11,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, X, LogOut, Search, User, MapPin, Plus, Settings, FileText, Sun, Moon } from 'lucide-react'
+import { Menu, X, LogOut, Search, User, MapPin, Plus, Settings, FileText, Sun, Moon, Navigation, Wrench, MoreHorizontal } from 'lucide-react'
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
+  const { toggleSidebar } = useSidebarStore()
+  const { setLocationModalOpen } = useLocationStore()
+  const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+
+  const isHomePage = location.pathname === '/'
+  const isMarketsPage = location.pathname === '/markets'
+  const showSidebarToggle = isHomePage || isMarketsPage
 
   const handleMenuItemClick = () => {
     setIsMenuOpen(false)
@@ -24,32 +31,53 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo - Always Present with subtle glow */}
+          {/* Sidebar Toggle - Left side */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-accent to-accent-light rounded-2xl flex items-center justify-center shadow-lg group-hover:glow-accent-sm transition-all duration-300">
-                <span className="text-white font-bold text-lg">R</span>
-              </div>
-              <span className="font-bold text-xl text-foreground hidden sm:block group-hover:text-accent transition-colors">Rumfor</span>
-            </Link>
+            {/* Sidebar Toggle - On Homepage and Markets Page */}
+            {showSidebarToggle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleSidebar}
+                className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            )}
+
+
+
           </div>
 
           {/* Search Bar - Narrower */}
           <div className="hidden md:flex flex-1 max-w-lg mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="Search markets..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface/80 rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:bg-surface backdrop-blur-sm transition-all duration-300"
+                className={`w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:bg-surface-2 transition-all duration-300 ${
+                  theme === 'light' ? 'shadow' : 'shadow-lg shadow-black/30'
+                }`}
               />
             </div>
           </div>
 
           {/* Right Side Actions - Context-Aware & Purposeful */}
           <div className="hidden md:flex items-center space-x-3">
+            {/* Location Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocationModalOpen(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              title="Set location"
+            >
+              <Navigation className="h-4 w-4" />
+            </Button>
+
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -180,36 +208,66 @@ export function Header() {
                 </Link>
               </>
             )}
+
+            {/* Logo */}
+            <Link to="/" className="ml-3">
+              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">R</span>
+              </div>
+            </Link>
           </div>
 
           {/* Mobile Actions - Streamlined */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Mobile Search */}
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              <Search className="h-4 w-4" />
+            {/* Location Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocationModalOpen(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              title="Set location"
+            >
+              <Navigation className="h-4 w-4" />
             </Button>
-            
+
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Button>
+
             {/* Mobile menu */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-muted-foreground hover:text-foreground p-2"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <MoreHorizontal className="h-5 w-5" />
             </button>
+
+            {/* Logo */}
+            <Link to="/" className="ml-2">
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">R</span>
+              </div>
+            </Link>
           </div>
         </div>
 
-        {/* Mobile Navigation - Purpose-Driven */}
+        {/* Mobile Navigation - Full Width on Mobile */}
         {isMenuOpen && (
-          <div className="md:hidden bg-background">
-            <div className="px-4 py-4 space-y-1">
+          <div className="md:hidden bg-background w-full">
+            <div className="py-4 space-y-1">
               {/* Search Bar for Mobile */}
-              <div className="mb-4">
+              <div className="mb-4 px-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Search markets..."
                     className="w-full pl-10 pr-4 py-3 text-sm bg-surface/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent backdrop-blur-sm transition-all duration-300"
                   />
@@ -222,7 +280,7 @@ export function Header() {
                   {/* Dashboard - Always First */}
                   <Link
                     to={`/${user?.role}/dashboard`}
-                    className="flex items-center px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors font-medium"
+                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors font-medium"
                     onClick={handleMenuItemClick}
                   >
                     <MapPin className="h-5 w-5 mr-3 text-accent" />
@@ -232,56 +290,56 @@ export function Header() {
                   {user?.role === 'promoter' && (
                     <Link
                       to="/promoter/markets/create"
-                      className="flex items-center px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                      className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       <Plus className="h-5 w-5 mr-3 text-accent" />
                       List New Market
                     </Link>
                   )}
-                  
+
                   {user?.role === 'vendor' && (
                     <Link
                       to="/vendor/applications"
-                      className="flex items-center px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                      className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
                       onClick={handleMenuItemClick}
                     >
                       <FileText className="h-5 w-5 mr-3 text-accent" />
                       My Applications
                     </Link>
                   )}
-                  
-                  <div className="border-t border-muted my-3"></div>
-                  
+
+                  <div className="border-t border-muted my-3 mx-4"></div>
+
                   {/* User section */}
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                  <div className="px-4 py-2 text-sm text-muted-foreground">
                     {user?.firstName} {user?.lastName} • {user?.role}
                   </div>
-                  
+
                   <Link
                     to="/profile"
-                    className="flex items-center px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
                     onClick={handleMenuItemClick}
                   >
                     <User className="h-5 w-5 mr-3 text-muted-foreground" />
                     Profile
                   </Link>
-                  
+
                   <Link
                     to="/settings"
-                    className="flex items-center px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
                     onClick={handleMenuItemClick}
                   >
                     <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
                     Settings
                   </Link>
-                  
+
                   <button
                     onClick={() => {
                       logout()
                       handleMenuItemClick()
                     }}
-                    className="flex items-center w-full px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                    className="flex items-center w-full px-4 py-3 text-foreground hover:bg-surface/50 transition-colors text-left"
                   >
                     <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
                     Sign Out
@@ -291,14 +349,14 @@ export function Header() {
                 <>
                   <Link
                     to="/auth/login"
-                    className="block px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors"
+                    className="block px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
                     onClick={handleMenuItemClick}
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/auth/register"
-                    className="block px-3 py-3 text-foreground hover:bg-surface/50 rounded-lg transition-colors font-medium"
+                    className="block px-4 py-3 text-foreground hover:bg-surface/50 transition-colors font-medium"
                     onClick={handleMenuItemClick}
                   >
                     Sign Up

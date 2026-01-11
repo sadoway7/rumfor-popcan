@@ -13,8 +13,8 @@ const photoSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Image URL is required']
   },
-  imagePublicId: {
-    type: String, // For Cloudinary
+  imageFilename: {
+    type: String, // For local storage
     required: true
   },
   uploadedBy: {

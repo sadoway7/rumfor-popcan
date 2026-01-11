@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
 import { MarketFilters } from '@/components/MarketFilters'
-import { Button } from '@/components/ui/Button'
+import { Button, Input } from '@/components/ui'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
+import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
 import type { MarketFilters as MarketFilterType } from '@/types'
 import { cn } from '@/utils/cn'
+import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar, DollarSign } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
+  const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const { isSidebarOpen, toggleSidebar } = useSidebarStore()
+  const { theme } = useThemeStore()
   
   const {
     markets,
@@ -124,131 +130,290 @@ export const MarketSearchPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Discover Markets</h1>
-              <p className="text-muted-foreground mt-1">
-                Find local markets, festivals, and community events near you
-              </p>
+      <>
+        <div className="flex">
+          {/* Sidebar */}
+          <aside className={`${isSidebarOpen ? 'w-full md:w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-surface`}>
+            <div className="p-6 w-full md:w-72">
+
+              {/* Search */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Search Markets</h2>
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
+                    <Input
+                      placeholder="Search markets..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="pl-10 border-0 bg-surface/50 focus:bg-surface/80"
+                    />
+                  </div>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
+                    <Input
+                      placeholder="Location (city, state)"
+                      value={filters.location?.city || ''}
+                      onChange={(e) => handleFiltersChange({
+                        ...filters,
+                        location: { ...filters.location, city: e.target.value }
+                      })}
+                      className="pl-10 border-0 bg-surface/50 focus:bg-surface/80"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sort Options */}
+              <div className="mb-6">
+                <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4" />
+                  Sort By
+                </h3>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setSortBy('date')}
+                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
+                      sortBy === 'date' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    }`}
+                  >
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Date</span>
+                  </button>
+                  <button
+                    onClick={() => setSortBy('name')}
+                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
+                      sortBy === 'name' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    }`}
+                  >
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Name</span>
+                  </button>
+                  <button
+                    onClick={() => setSortBy('distance')}
+                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
+                      sortBy === 'distance' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    }`}
+                  >
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Distance</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Filters */}
+              <div className="mb-6">
+                <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filters
+                </h3>
+
+                {/* Status Filters */}
+                <div className="mb-4">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Market Status</div>
+                  <div className="flex flex-wrap gap-2">
+                    {['upcoming', 'active', 'completed'].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          const currentStatuses = filters.status || []
+                          const newStatuses = currentStatuses.includes(status as any)
+                            ? currentStatuses.filter(s => s !== status)
+                            : [...currentStatuses, status as any]
+                          handleFiltersChange({ ...filters, status: newStatuses })
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          filters.status?.includes(status as any)
+                            ? 'bg-accent text-accent-foreground'
+                            : 'bg-surface-2 hover:bg-surface text-foreground'
+                        }`}
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Accessibility Filters */}
+                <div className="mb-4">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Accessibility</div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.accessibility?.wheelchairAccessible || false}
+                        onChange={(e) => handleFiltersChange({
+                          ...filters,
+                          accessibility: { ...filters.accessibility, wheelchairAccessible: e.target.checked }
+                        })}
+                        className="rounded border-border"
+                      />
+                      <span className="text-sm">Wheelchair Accessible</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.accessibility?.parkingAvailable || false}
+                        onChange={(e) => handleFiltersChange({
+                          ...filters,
+                          accessibility: { ...filters.accessibility, parkingAvailable: e.target.checked }
+                        })}
+                        className="rounded border-border"
+                      />
+                      <span className="text-sm">Parking Available</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Advanced Filters Toggle */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="w-full flex items-center justify-between p-2 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
+                  >
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      Advanced Filters
+                    </span>
+                    <span className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </button>
+
+                  {showFilters && (
+                    <div className="mt-3 space-y-4">
+                      {/* Category Filter */}
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            'Farmers Markets', 'Arts & Crafts', 'Flea Markets', 'Food Festivals',
+                            'Antique Shows', 'Craft Fairs', 'Street Fairs', 'Holiday Markets', 'Community Events'
+                          ].map((category) => (
+                            <button
+                              key={category}
+                              onClick={() => {
+                                const currentCategories = filters.category || []
+                                const newCategories = currentCategories.includes(category as any)
+                                  ? currentCategories.filter(c => c !== category)
+                                  : [...currentCategories, category as any]
+                                handleFiltersChange({ ...filters, category: newCategories })
+                              }}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                filters.category?.includes(category as any)
+                                  ? 'bg-accent text-accent-foreground'
+                                  : 'bg-surface-2 hover:bg-surface text-foreground'
+                              }`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Date Range */}
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">Date Range</div>
+                        <div className="space-y-2">
+                          <input
+                            type="date"
+                            placeholder="From date"
+                            className="w-full px-3 py-2 text-sm border-0 bg-surface/50 rounded-md focus:bg-surface/80"
+                            onChange={(e) => {
+                              // Handle date range - this would need backend support
+                              console.log('Date from:', e.target.value)
+                            }}
+                          />
+                          <input
+                            type="date"
+                            placeholder="To date"
+                            className="w-full px-3 py-2 text-sm border-0 bg-surface/50 rounded-md focus:bg-surface/80"
+                            onChange={(e) => {
+                              // Handle date range - this would need backend support
+                              console.log('Date to:', e.target.value)
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Additional Status Options */}
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">More Status Options</div>
+                        <div className="flex flex-wrap gap-2">
+                          {['cancelled', 'postponed'].map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => {
+                                const currentStatuses = filters.status || []
+                                const newStatuses = currentStatuses.includes(status as any)
+                                  ? currentStatuses.filter(s => s !== status)
+                                  : [...currentStatuses, status as any]
+                                handleFiltersChange({ ...filters, status: newStatuses })
+                              }}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                filters.status?.includes(status as any)
+                                  ? 'bg-accent text-accent-foreground'
+                                  : 'bg-surface-2 hover:bg-surface text-foreground'
+                              }`}
+                            >
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {getActiveFilterCount() > 0 && (
+                        <Button
+                          onClick={handleClearFilters}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          Clear All Filters ({getActiveFilterCount()})
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+
+
             </div>
-            
-            <div className="flex items-center gap-2">
+          </aside>
+
+          {/* Main Content */}
+          <main className="flex-1 p-6">
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">Search Markets</h1>
+                <p className="text-muted-foreground">
+                  {isSearching ? 'Searching...' : `${markets.length} markets found`}
+                </p>
+              </div>
               {/* View Mode Toggle */}
-              <div className="flex border rounded-lg">
+              <div className="flex rounded-lg bg-surface/50">
                 <Button
                   variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="rounded-r-none"
+                  className="rounded-r-none px-3"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  Grid
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="rounded-l-none"
+                  className="rounded-l-none px-3"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
+                  List
                 </Button>
               </div>
-              
-              {/* Refresh Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refresh}
-                disabled={isLoading}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
-          <div className={cn(
-            "lg:col-span-1",
-            !showFilters && "hidden lg:block"
-          )}>
-            <div className="sticky top-4">
-              <div className="flex items-center justify-between mb-4 lg:hidden">
-                <h2 className="text-lg font-semibold">Filters</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilters(false)}
-                >
-                  Close
-                </Button>
-              </div>
-              
-              <MarketFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onSearch={handleSearch}
-                onClear={handleClearFilters}
-                showAdvanced={true}
-              />
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                  </svg>
-                  Filters
-                  {getActiveFilterCount() > 0 && (
-                    <span className="ml-2 bg-accent text-accent-foreground text-xs px-2 py-1 rounded-full">
-                      {getActiveFilterCount()}
-                    </span>
-                  )}
-                </Button>
-                
-                <div className="text-sm text-muted-foreground">
-                  {isSearching ? (
-                    'Searching...'
-                  ) : (
-                    <>
-                      {markets.length} {markets.length === 1 ? 'market' : 'markets'} found
-                      {searchQuery && ` for "${searchQuery}"`}
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Pagination Info */}
-              {markets.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  Page {currentPage}
-                </div>
-              )}
             </div>
 
-            {/* Results */}
+            {/* Market Grid */}
             <MarketGrid
               markets={markets}
               isLoading={isLoading}
@@ -295,9 +460,9 @@ export const MarketSearchPage: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
+          </main>
         </div>
-      </div>
+      </>
     </div>
   )
 }
