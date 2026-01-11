@@ -91,6 +91,7 @@ export function LoginPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
+                    autoComplete="current-password"
                     className={`pl-10 pr-10 ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
                     {...register('password')}
                   />
