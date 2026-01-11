@@ -5,6 +5,7 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_BUILDKIT: 1
 
 build:
   stage: build
@@ -12,6 +13,8 @@ build:
   services:
     - name: docker:24-dind
       command: ["--tls=false"]
+  memory: 2GB
+  timeout: 1h
   script:
     - cd rumfor-market-tracker
     - docker compose build
