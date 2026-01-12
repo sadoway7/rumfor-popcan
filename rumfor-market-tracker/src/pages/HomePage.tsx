@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Badge } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
 import { MarketGrid } from '@/components/MarketGrid'
 import { marketsApi } from '@/features/markets/marketsApi'
-import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Sidebar, ChevronLeft, ChevronRight, Search, MapPin, Store, Hammer, Truck, Apple, Clock, Wrench, Zap, Heart, Sparkles, X } from 'lucide-react'
+import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Hammer, Clock, Zap, X } from 'lucide-react'
 
 // Market categories for browsing - matching example layout
 const marketCategories = [
@@ -21,7 +21,7 @@ const marketCategories = [
 ]
 
 export function HomePage() {
-  const { user, isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
   const { theme } = useThemeStore()
   const { isSidebarOpen } = useSidebarStore()
 

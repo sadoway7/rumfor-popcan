@@ -83,7 +83,7 @@ interface LocationStore {
 
 export const useLocationStore = create<LocationStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       location: null,
       isLocationModalOpen: false,
       setLocation: (location) => set({ location }),

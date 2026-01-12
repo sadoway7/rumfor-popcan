@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
-import { MarketFilters } from '@/components/MarketFilters'
+
 import { Button, Input } from '@/components/ui'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
-import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
+import { useSidebarStore } from '@/features/theme/themeStore'
 import type { MarketFilters as MarketFilterType } from '@/types'
-import { cn } from '@/utils/cn'
-import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar, DollarSign } from 'lucide-react'
+
+import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const { isSidebarOpen, toggleSidebar } = useSidebarStore()
-  const { theme } = useThemeStore()
+  const { isSidebarOpen } = useSidebarStore()
   
   const {
     markets,

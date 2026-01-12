@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, X, LogOut, Search, User, MapPin, Plus, Settings, FileText, Sun, Moon, Navigation, Wrench, MoreHorizontal } from 'lucide-react'
+import { Menu, LogOut, Search, User, MapPin, Plus, Settings, FileText, Sun, Moon, Navigation, MoreHorizontal } from 'lucide-react'
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore()

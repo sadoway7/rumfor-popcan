@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, Alert, Spinner, Select } from '@/components/ui'
-import { Eye, EyeOff, UserPlus, Mail, Lock, User, Store, Calendar } from 'lucide-react'
+import { Button, Input, Card, CardHeader, CardTitle, CardContent, Alert, Spinner } from '@/components/ui'
+import { Eye, EyeOff, Store, Calendar } from 'lucide-react'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),

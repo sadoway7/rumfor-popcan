@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useLocationStore } from '@/features/theme/themeStore'
 import { Button } from '@/components/ui'
 import { MapPin, Navigation, X, Loader2, Map } from 'lucide-react'
@@ -19,26 +19,6 @@ export function LocationModal() {
     } finally {
       setIsDetecting(false)
     }
-  }
-
-  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    // Simple coordinate calculation based on click position
-    // This is a basic approximation - in a real implementation you'd use a proper map library
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
-
-    // Approximate US coordinates based on click position
-    // This is very basic - longitude roughly -125 to -67, latitude 25 to 49
-    const lng = -125 + (x / rect.width) * (67 - 125) * -1
-    const lat = 49 - (y / rect.height) * (49 - 25)
-
-    setLocation({
-      city: `Location at ${lat.toFixed(2)}, ${lng.toFixed(2)}`,
-      state: '',
-      coordinates: { lat, lng }
-    })
-    setLocationModalOpen(false)
   }
 
   const handleClearLocation = () => {
