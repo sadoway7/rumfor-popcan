@@ -424,6 +424,20 @@
             margin-bottom: 4px;
         }
 
+        /* User Workflow Section Headers */
+        .tree-section-header-user {
+            padding: 12px 8px;
+            margin: 20px 0 12px 0;
+            font-size: 12px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .container {
@@ -568,219 +582,251 @@
             // Clear existing content
             tree.innerHTML = '';
 
-            // Comprehensive feature list from Rumfor Market Tracker concept
+            // User-Centric Feature Organization - Organized by Personas and Workflows
             const features = [
-                // Core Authentication & User Management
+                // 🎯 MARKET DISCOVERY WORKFLOW (All Users - Entry Point)
                 {
-                    name: 'User Registration & Login',
-                    icon: '🔐',
-                    description: 'JWT authentication, progressive onboarding, account management, password security',
-                    category: 'auth'
-                },
-                {
-                    name: 'User Roles & Permissions',
-                    icon: '👥',
-                    description: 'Visitor/Vendor/Promoter/Admin roles, RBAC, access control, permission management',
-                    category: 'auth'
-                },
-
-                // Market Discovery & Search
-                {
-                    name: 'Advanced Market Search',
-                    icon: '🔍',
-                    description: 'Text search, location-based search, debounced input, relevance ranking, search suggestions',
-                    category: 'markets'
-                },
-                {
-                    name: 'Market Filtering & Sorting',
-                    icon: '⚡',
-                    description: 'Category filters, date filters, accessibility filters, pricing filters, vendor type filters',
-                    category: 'markets'
-                },
-                {
-                    name: 'Market Display & Grid',
-                    icon: '📱',
-                    description: 'Responsive grid layout, market cards, hero images, loading states, pagination, empty states',
-                    category: 'markets'
-                },
-                {
-                    name: 'Personalization & Recommendations',
-                    icon: '🎯',
-                    description: 'Location-aware discovery, user preferences, trending markets, smart recommendations',
-                    category: 'markets'
-                },
-                {
-                    name: 'Market Tracking System',
-                    icon: '⭐',
-                    description: 'Save favorite markets, track interest, status management, personal market lists, notifications',
-                    category: 'markets'
-                },
-
-                // Vendor Applications & Workflow
-                {
-                    name: 'Application Form Builder',
-                    icon: '📝',
-                    description: 'Multi-step forms, file uploads (business licenses, photos), validation, draft saving, auto-submit',
-                    category: 'applications'
-                },
-                {
-                    name: 'Application Status Management',
-                    icon: '📊',
-                    description: 'Status workflow: interested→applied→booked→completed, notifications, timeline tracking',
-                    category: 'applications'
-                },
-                {
-                    name: 'Application Review Dashboard',
-                    icon: '🔍',
-                    description: 'Promoter dashboard, bulk operations, approval workflow, communication tools, analytics',
-                    category: 'applications'
-                },
-                {
-                    name: 'Application Progress Tracking',
-                    icon: '📈',
-                    description: 'Todo lists, expense tracking, market preparation checklists, completion analytics',
-                    category: 'applications'
-                },
-
-                // Community & Social Features
-                {
-                    name: 'Threaded Comment System',
-                    icon: '💬',
-                    description: 'Nested discussions, emoji reactions, moderation, real-time updates, user mentions',
-                    category: 'community'
-                },
-                {
-                    name: 'Photo Sharing & Gallery',
-                    icon: '📸',
-                    description: 'Image uploads, community voting, moderation queue, hero images, galleries, optimization',
-                    category: 'community'
-                },
-                {
-                    name: 'Hashtag Voting System',
-                    icon: '🏷️',
-                    description: 'Community tagging, voting mechanics, trending topics, market categorization, content discovery',
-                    category: 'community'
-                },
-                {
-                    name: 'Community Moderation',
-                    icon: '🛡️',
-                    description: 'Automated filtering, user reports, content guidelines, moderator tools, appeal process',
-                    category: 'community'
-                },
-
-                // Business & Productivity Tools
-                {
-                    name: 'Todo List Management',
-                    icon: '✅',
-                    description: 'Task templates, dependency tracking, time estimates, progress visualization, completion analytics',
-                    category: 'business'
-                },
-                {
-                    name: 'Expense Tracking',
-                    icon: '💰',
-                    description: 'Category organization, receipt uploads, tax reporting, profit/loss calculations, budget management',
-                    category: 'business'
-                },
-                {
-                    name: 'Business Analytics Dashboard',
-                    icon: '📈',
-                    description: 'Revenue tracking, market performance, profitability analysis, growth metrics, ROI calculations',
-                    category: 'business'
-                },
-                {
-                    name: 'Workflow Optimization',
-                    icon: '⚡',
-                    description: 'Bulk operations, automation, customizable templates, shortcuts, efficiency tools',
-                    category: 'business'
-                },
-
-                // Admin & System Management
-                {
-                    name: 'User Administration',
-                    icon: '👤',
-                    description: 'Role management, account suspension, bulk operations, user verification, permission controls',
-                    category: 'admin'
-                },
-                {
-                    name: 'Content Moderation Tools',
-                    icon: '🚫',
-                    description: 'Photo approval, comment moderation, hashtag management, reported content handling',
-                    category: 'admin'
-                },
-                {
-                    name: 'Platform Analytics',
-                    icon: '📊',
-                    description: 'User growth metrics, engagement statistics, market performance, revenue analytics, health monitoring',
-                    category: 'admin'
-                },
-                {
-                    name: 'Promoter Management',
+                    name: '🏠 Market Discovery Hub',
                     icon: '🏪',
-                    description: 'Market claiming, vendor management, event planning, promoter community features, verification',
-                    category: 'admin'
+                    description: 'Homepage, market grid, search landing, user onboarding, first impressions',
+                    category: 'discovery',
+                    persona: 'all',
+                    workflow: 'entry'
+                },
+                {
+                    name: '🔍 Advanced Search & Filters',
+                    icon: '🔍',
+                    description: 'Text search, location-aware filtering, category selection, date-based discovery',
+                    category: 'discovery',
+                    persona: 'all',
+                    workflow: 'search'
+                },
+                {
+                    name: '📱 Market Display & Navigation',
+                    icon: '📱',
+                    description: 'Responsive grid, market cards, hero images, pagination, loading states',
+                    category: 'discovery',
+                    persona: 'all',
+                    workflow: 'browse'
+                },
+                {
+                    name: '⭐ Market Tracking & Favorites',
+                    icon: '⭐',
+                    description: 'Save markets, interest tracking, notifications, personal market lists',
+                    category: 'discovery',
+                    persona: 'vendor',
+                    workflow: 'personalize'
                 },
 
-                // Technical Infrastructure
+                // 🛒 VENDOR APPLICATION JOURNEY (Vendor Persona - Core Workflow)
                 {
-                    name: 'REST API Architecture',
-                    icon: '🔗',
-                    description: 'API design, authentication, data modeling, validation, error handling, documentation',
-                    category: 'api'
-                },
-                {
-                    name: 'Backend Services',
-                    icon: '🗄️',
-                    description: 'Express.js routes, MongoDB integration, middleware, caching, performance optimization',
-                    category: 'api'
-                },
-                {
-                    name: 'Frontend Architecture',
-                    icon: '⚛️',
-                    description: 'React 18 components, TypeScript implementation, Vite build system, state management',
-                    category: 'frontend'
-                },
-                {
-                    name: 'UI/UX & Responsive Design',
-                    icon: '🎨',
-                    description: 'Tailwind CSS, UnoCSS, mobile-first design, accessibility compliance, design system',
-                    category: 'frontend'
-                },
-                {
-                    name: 'Testing Infrastructure',
-                    icon: '🧪',
-                    description: 'E2E tests with Playwright, unit tests, accessibility testing, CI/CD integration',
-                    category: 'testing'
-                },
-                {
-                    name: 'Security & Compliance',
-                    icon: '🔒',
-                    description: 'Vulnerability scanning, authentication security, dependency audits, data protection',
-                    category: 'security'
-                },
-                {
-                    name: 'Documentation System',
+                    name: '📋 Application Form Builder',
                     icon: '📝',
-                    description: 'API documentation, user guides, technical documentation, onboarding materials',
-                    category: 'docs'
+                    description: 'Multi-step forms, file uploads, business info, product details, validation',
+                    category: 'applications',
+                    persona: 'vendor',
+                    workflow: 'apply'
                 },
                 {
-                    name: 'DevOps & Deployment',
+                    name: '📊 Application Status Tracking',
+                    icon: '📊',
+                    description: 'Status workflow, progress indicators, notifications, review timeline',
+                    category: 'applications',
+                    persona: 'vendor',
+                    workflow: 'track'
+                },
+                {
+                    name: '✅ Market Preparation Tools',
+                    icon: '✅',
+                    description: 'Todo lists, checklists, task templates, preparation planning, deadlines',
+                    category: 'business',
+                    persona: 'vendor',
+                    workflow: 'prepare'
+                },
+                {
+                    name: '💰 Expense & Financial Tracking',
+                    icon: '💰',
+                    description: 'Cost management, receipt uploads, profit calculations, tax reporting',
+                    category: 'business',
+                    persona: 'vendor',
+                    workflow: 'manage'
+                },
+
+                // 🏪 PROMOTER MANAGEMENT WORKFLOW (Promoter Persona - Management)
+                {
+                    name: '🏪 Market Claiming & Setup',
+                    icon: '🏪',
+                    description: 'Promoter verification, market ownership, custom settings, event planning',
+                    category: 'promoter',
+                    persona: 'promoter',
+                    workflow: 'setup'
+                },
+                {
+                    name: '🔍 Application Review Dashboard',
+                    icon: '🔍',
+                    description: 'Bulk operations, approval workflow, vendor communication, status updates',
+                    category: 'promoter',
+                    persona: 'promoter',
+                    workflow: 'review'
+                },
+                {
+                    name: '📈 Promoter Analytics & Insights',
+                    icon: '📈',
+                    description: 'Vendor demographics, application trends, market performance, revenue tracking',
+                    category: 'promoter',
+                    persona: 'promoter',
+                    workflow: 'analyze'
+                },
+
+                // 👥 COMMUNITY ENGAGEMENT FLOW (All Users - Social)
+                {
+                    name: '💬 Market Discussions & Comments',
+                    icon: '💬',
+                    description: 'Threaded conversations, emoji reactions, real-time updates, user engagement',
+                    category: 'community',
+                    persona: 'all',
+                    workflow: 'discuss'
+                },
+                {
+                    name: '📸 Photo Sharing & Gallery',
+                    icon: '📸',
+                    description: 'Image uploads, community voting, hero images, galleries, sharing features',
+                    category: 'community',
+                    persona: 'all',
+                    workflow: 'share'
+                },
+                {
+                    name: '🏷️ Hashtag & Tagging System',
+                    icon: '🏷️',
+                    description: 'Community voting, trend discovery, market categorization, content discovery',
+                    category: 'community',
+                    persona: 'all',
+                    workflow: 'tag'
+                },
+
+                // 🔐 AUTHENTICATION & USER MANAGEMENT (Foundation)
+                {
+                    name: '🔐 Authentication & Onboarding',
+                    icon: '🔐',
+                    description: 'Login/register, JWT tokens, progressive signup, role assignment, security',
+                    category: 'auth',
+                    persona: 'all',
+                    workflow: 'foundation'
+                },
+                {
+                    name: '👥 User Roles & Permissions',
+                    icon: '👥',
+                    description: 'RBAC system, access control, visitor/vendor/promoter/admin hierarchies',
+                    category: 'auth',
+                    persona: 'system',
+                    workflow: 'foundation'
+                },
+
+                // ⚙️ ADMIN & MODERATION TOOLS (Admin Persona - Oversight)
+                {
+                    name: '👤 User Administration',
+                    icon: '👤',
+                    description: 'Role management, account controls, bulk operations, user verification',
+                    category: 'admin',
+                    persona: 'admin',
+                    workflow: 'admin'
+                },
+                {
+                    name: '🚫 Content Moderation System',
+                    icon: '🚫',
+                    description: 'Photo approval, comment moderation, automated filtering, report handling',
+                    category: 'admin',
+                    persona: 'admin',
+                    workflow: 'moderate'
+                },
+                {
+                    name: '📊 Platform Analytics & Health',
+                    icon: '📊',
+                    description: 'System monitoring, user growth, engagement metrics, performance tracking',
+                    category: 'admin',
+                    persona: 'admin',
+                    workflow: 'monitor'
+                },
+
+                // 🔧 TECHNICAL INFRASTRUCTURE (Development Team)
+                {
+                    name: '🔗 API Architecture & Backend',
+                    icon: '🔗',
+                    description: 'REST APIs, Express routes, MongoDB integration, authentication, validation',
+                    category: 'technical',
+                    persona: 'developers',
+                    workflow: 'infrastructure'
+                },
+                {
+                    name: '⚛️ Frontend & UI Development',
+                    icon: '⚛️',
+                    description: 'React components, TypeScript, Vite, Zustand, mobile-first responsive design',
+                    category: 'technical',
+                    persona: 'developers',
+                    workflow: 'frontend'
+                },
+                {
+                    name: '🧪 Testing & Quality Assurance',
+                    icon: '🧪',
+                    description: 'E2E tests, Playwright, accessibility testing, CI/CD integration, security',
+                    category: 'technical',
+                    persona: 'developers',
+                    workflow: 'quality'
+                },
+                {
+                    name: '🚀 Deployment & Production',
                     icon: '🚀',
-                    description: 'CI/CD pipelines, performance monitoring, production deployment, environment management',
-                    category: 'deployment'
+                    description: 'CI/CD pipelines, performance optimization, monitoring, production deployment',
+                    category: 'technical',
+                    persona: 'developers',
+                    workflow: 'deployment'
+                },
+
+                // 📝 DOCUMENTATION & SUPPORT
+                {
+                    name: '📝 Documentation & User Guides',
+                    icon: '📝',
+                    description: 'API docs, user tutorials, technical documentation, onboarding materials',
+                    category: 'support',
+                    persona: 'users',
+                    workflow: 'support'
                 }
             ];
 
-            features.forEach(feature => {
-                const node = document.createElement('div');
-                node.className = 'tree-node';
-                node.innerHTML = `
-                    <span class="tree-icon">${feature.icon}</span>
-                    <span>${feature.name}</span>
-                `;
-                node.title = feature.description; // Tooltip on hover
-                node.addEventListener('click', () => selectCard(feature.name, feature.description));
-                tree.appendChild(node);
+            // Group features by user workflow
+            const workflowGroups = {
+                '🎯 MARKET DISCOVERY': ['🏠 Market Discovery Hub', '🔍 Advanced Search & Filters', '📱 Market Display & Navigation', '⭐ Market Tracking & Favorites'],
+                '🛒 VENDOR JOURNEY': ['📋 Application Form Builder', '📊 Application Status Tracking', '✅ Market Preparation Tools', '💰 Expense & Financial Tracking'],
+                '🏪 PROMOTER WORKFLOW': ['🏪 Market Claiming & Setup', '🔍 Application Review Dashboard', '📈 Promoter Analytics & Insights'],
+                '👥 COMMUNITY ENGAGEMENT': ['💬 Market Discussions & Comments', '📸 Photo Sharing & Gallery', '🏷️ Hashtag & Tagging System'],
+                '🔐 AUTHENTICATION': ['🔐 Authentication & Onboarding', '👥 User Roles & Permissions'],
+                '⚙️ ADMIN & MODERATION': ['👤 User Administration', '🚫 Content Moderation System', '📊 Platform Analytics & Health'],
+                '🔧 TECHNICAL INFRASTRUCTURE': ['🔗 API Architecture & Backend', '⚛️ Frontend & UI Development', '🧪 Testing & Quality Assurance', '🚀 Deployment & Production'],
+                '📝 SUPPORT & DOCUMENTATION': ['📝 Documentation & User Guides']
+            };
+
+            Object.entries(workflowGroups).forEach(([sectionTitle, sectionFeatures]) => {
+                // Add section header
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionTitle}</strong>`;
+                tree.appendChild(header);
+
+                // Add features for this section
+                sectionFeatures.forEach(featureName => {
+                    const feature = features.find(f => f.name === featureName);
+                    if (feature) {
+                        const node = document.createElement('div');
+                        node.className = 'tree-node';
+                        node.innerHTML = `
+                            <span class="tree-icon">${feature.icon}</span>
+                            <span>${feature.name}</span>
+                        `;
+                        node.title = feature.description; // Tooltip on hover
+                        node.addEventListener('click', () => selectCard(feature.name, feature.description));
+                        tree.appendChild(node);
+                    }
+                });
             });
 
             // Initialize center visualization
