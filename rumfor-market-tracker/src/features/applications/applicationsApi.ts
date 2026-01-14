@@ -4,8 +4,8 @@ import { Application, ApplicationStatus, ApplicationFilters, ApiResponse, Pagina
 const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
 const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:3001/api'
+// API Configuration - Versioned API
+const API_BASE_URL = 'http://localhost:3001/api/v1'
 
 // API simulation delay (reduced for better UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))

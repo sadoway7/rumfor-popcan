@@ -88,10 +88,18 @@ userSchema.virtual('isLocked').get(function() {
   return !!(this.lockUntil && this.lockUntil > Date.now())
 })
 
-// Index for performance
+// Indexes for performance
 userSchema.index({ email: 1 })
 userSchema.index({ username: 1 })
 userSchema.index({ role: 1 })
+userSchema.index({ twoFactorEnabled: 1 })
+userSchema.index({ isEmailVerified: 1 })
+userSchema.index({ lastLogin: -1 })
+userSchema.index({ createdAt: -1 })
+
+// Compound indexes for common queries
+userSchema.index({ role: 1, isEmailVerified: 1 })
+userSchema.index({ role: 1, lastLogin: -1 })
 
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {

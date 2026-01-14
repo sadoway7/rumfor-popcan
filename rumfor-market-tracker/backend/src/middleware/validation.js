@@ -1,61 +1,106 @@
 const { body, param, query, validationResult } = require('express-validator')
+const validator = require('validator')
 
-// Middleware to handle validation results
+// Enhanced sanitization functions
+const sanitizeHtml = (value) => {
+  if (typeof value !== 'string') return value
+  return validator.escape(value)
+}
+
+const sanitizeEmail = (value) => {
+  if (typeof value !== 'string') return value
+  return validator.normalizeEmail(value, {
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+    outlookdotcom_remove_subaddress: false,
+    yahoo_remove_subaddress: false,
+    icloud_remove_subaddress: false
+  }) || value
+}
+
+const sanitizeString = (value) => {
+  if (typeof value !== 'string') return value
+  // Remove null bytes, control characters, and normalize whitespace
+  return value
+    .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim()
+}
+
+const sanitizeUrl = (value) => {
+  if (typeof value !== 'string') return value
+  return validator.isURL(value) ? value : ''
+}
+
+const sanitizeAlphanumeric = (value) => {
+  if (typeof value !== 'string') return value
+  return value.replace(/[^a-zA-Z0-9]/g, '')
+}
+
+// Enhanced validation result handler
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req)
-  
+
   if (!errors.isEmpty()) {
+    // Log validation errors for security monitoring
+    console.warn('Validation errors:', {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      endpoint: req.originalUrl,
+      method: req.method,
+      errors: errors.array()
+    })
+
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
       errors: errors.array().map(error => ({
         field: error.param,
         message: error.msg,
-        value: error.value
+        value: error.value ? '[REDACTED]' : undefined // Don't expose user input in responses
       }))
     })
   }
-  
+
   next()
 }
 
 // Validation chains for different entities
 
-// User validation
+// Enhanced user validation with improved sanitization
 const validateUserRegistration = [
   body('username')
     .isLength({ min: 3, max: 50 })
     .withMessage('Username must be between 3 and 50 characters')
     .matches(/^[a-zA-Z0-9_]+$/)
     .withMessage('Username can only contain letters, numbers, and underscores')
-    .trim()
-    .escape(),
-  
+    .customSanitizer(sanitizeAlphanumeric),
+
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email address')
-    .normalizeEmail(),
-  
+    .isLength({ max: 254 }) // RFC 5321 limit
+    .withMessage('Email address is too long')
+    .customSanitizer(sanitizeEmail),
+
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .isLength({ min: 8, max: 128 }) // Reasonable max length
+    .withMessage('Password must be between 8 and 128 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  
+
   body('profile.firstName')
     .optional()
-    .isLength({ max: 50 })
-    .withMessage('First name must be less than 50 characters')
-    .trim()
-    .escape(),
-  
+    .isLength({ min: 1, max: 50 })
+    .withMessage('First name must be between 1 and 50 characters')
+    .customSanitizer(sanitizeString),
+
   body('profile.lastName')
     .optional()
-    .isLength({ max: 50 })
-    .withMessage('Last name must be less than 50 characters')
-    .trim()
-    .escape(),
-  
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Last name must be between 1 and 50 characters')
+    .customSanitizer(sanitizeString),
+
   handleValidationErrors
 ]
 
@@ -248,23 +293,40 @@ const validateMarketUpdate = [
   handleValidationErrors
 ]
 
-// Comment validation
+// Enhanced comment validation with XSS prevention
 const validateCommentCreation = [
   body('content')
     .isLength({ min: 1, max: 2000 })
     .withMessage('Comment must be between 1 and 2000 characters')
-    .trim()
-    .escape(),
-  
+    .customSanitizer(sanitizeString)
+    .custom((value) => {
+      // Check for suspicious patterns that might indicate XSS attempts
+      const suspiciousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,
+        /<iframe/i,
+        /<object/i,
+        /<embed/i
+      ]
+
+      for (const pattern of suspiciousPatterns) {
+        if (pattern.test(value)) {
+          throw new Error('Comment contains potentially malicious content')
+        }
+      }
+      return true
+    }),
+
   body('market')
     .isMongoId()
     .withMessage('Invalid market ID'),
-  
+
   body('parent')
     .optional()
     .isMongoId()
     .withMessage('Invalid parent comment ID'),
-  
+
   handleValidationErrors
 ]
 

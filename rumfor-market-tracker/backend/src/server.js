@@ -11,6 +11,9 @@ const MongoStore = require('connect-mongo')
 const csrf = require('csurf')
 const connectDB = require('../config/database')
 
+// Import middleware
+const { extractVersionFromPath, addVersionHeaders, handleDeprecation } = require('./middleware/versioning')
+
 // Import routes
 const authRoutes = require('./routes/auth')
 const marketRoutes = require('./routes/markets')
@@ -26,8 +29,27 @@ const notificationRoutes = require('./routes/notifications')
 
 const app = express()
 
-// Security middleware
-app.use(helmet())
+// Import enhanced rate limiting middleware
+const { userRateLimiter, authRateLimiter, passwordResetLimiter, uploadRateLimiter } = require('./middleware/rateLimiter')
+
+// Security middleware - Enhanced helmet configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.unsplash.com"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}))
 
 // Session middleware for CSRF token storage
 app.use(session({
@@ -56,31 +78,8 @@ const csrfProtection = csrf({
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 })
 
-// Rate limiting - General API
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.connection.remoteAddress
-})
-
-// Stricter rate limiting for auth endpoints (5 attempts per 15 min)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  message: {
-    success: false,
-    error: 'Too many authentication attempts, please try again after 15 minutes.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.ip || req.connection.remoteAddress,
-  skipSuccessfulRequests: true // Don't count successful logins
-})
-
-app.use('/api/', limiter)
+// Enhanced Rate Limiting - User-based limits
+app.use('/api/', userRateLimiter('general'))
 
 // CORS configuration
 app.use(cors({
@@ -89,6 +88,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }))
+
+// Version extraction and headers middleware
+app.use('/api', extractVersionFromPath)
+app.use('/api', addVersionHeaders)
+app.use('/api', handleDeprecation)
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }))
@@ -104,6 +108,15 @@ if (process.env.NODE_ENV !== 'production') {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 
+// API version info endpoint
+app.get('/api', (req, res) => {
+  const { getVersionInfo } = require('./middleware/versioning')
+  res.json({
+    message: 'Rumfor Market Tracker API',
+    ...getVersionInfo()
+  })
+})
+
 // CSRF token endpoint - provide token for GET requests
 app.get('/api/csrf-token', csrfProtection, (req, res) => {
   res.json({
@@ -112,13 +125,14 @@ app.get('/api/csrf-token', csrfProtection, (req, res) => {
   })
 })
 
-// Health check endpoint (no CSRF required)
+// Health check endpoint with version info
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    version: req.apiVersion || 'v1'
   })
 })
 
@@ -133,18 +147,42 @@ const csrfErrorHandler = (err, req, res, next) => {
   next(err)
 }
 
-// API routes with auth rate limiting and CSRF protection
-app.use('/api/auth', authLimiter, csrfProtection, authRoutes)
+// API routes with enhanced rate limiting and CSRF protection
+// Legacy routes without versioning (for backward compatibility)
+app.use('/api/auth/login', authRateLimiter)
+app.use('/api/auth/register', authRateLimiter)
+app.use('/api/auth/forgot-password', passwordResetLimiter)
+app.use('/api/auth/reset-password', passwordResetLimiter)
+
+app.use('/api/auth', csrfProtection, authRoutes)
 app.use('/api/markets', csrfProtection, marketRoutes)
 app.use('/api/applications', csrfProtection, applicationRoutes)
 app.use('/api/users', csrfProtection, userRoutes)
 app.use('/api/todos', csrfProtection, todoRoutes)
 app.use('/api/expenses', csrfProtection, expenseRoutes)
 app.use('/api/comments', csrfProtection, commentRoutes)
-app.use('/api/photos', csrfProtection, photoRoutes)
+app.use('/api/photos', uploadRateLimiter, csrfProtection, photoRoutes)
 app.use('/api/hashtags', csrfProtection, hashtagRoutes)
 app.use('/api/admin', csrfProtection, adminRoutes)
 app.use('/api/notifications', csrfProtection, notificationRoutes)
+
+// Versioned routes (v1)
+app.use('/api/v1/auth/login', authRateLimiter)
+app.use('/api/v1/auth/register', authRateLimiter)
+app.use('/api/v1/auth/forgot-password', passwordResetLimiter)
+app.use('/api/v1/auth/reset-password', passwordResetLimiter)
+
+app.use('/api/v1/auth', csrfProtection, authRoutes)
+app.use('/api/v1/markets', csrfProtection, marketRoutes)
+app.use('/api/v1/applications', csrfProtection, applicationRoutes)
+app.use('/api/v1/users', csrfProtection, userRoutes)
+app.use('/api/v1/todos', csrfProtection, todoRoutes)
+app.use('/api/v1/expenses', csrfProtection, expenseRoutes)
+app.use('/api/v1/comments', csrfProtection, commentRoutes)
+app.use('/api/v1/photos', uploadRateLimiter, csrfProtection, photoRoutes)
+app.use('/api/v1/hashtags', csrfProtection, hashtagRoutes)
+app.use('/api/v1/admin', csrfProtection, adminRoutes)
+app.use('/api/v1/notifications', csrfProtection, notificationRoutes)
 
 // CSRF error handler
 app.use(csrfErrorHandler)
@@ -180,7 +218,8 @@ const startServer = async () => {
       console.log(`📱 Environment: ${process.env.NODE_ENV}`)
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL}`)
       console.log(`🔒 CSRF protection enabled`)
-      console.log(`⚡ Auth rate limiting: 5 attempts/15min`)
+      console.log(`⚡ Enhanced user-based rate limiting enabled`)
+      console.log(`🛡️ Security headers (HSTS, CSP, etc.) configured`)
     })
   } catch (error) {
     console.error('❌ Failed to start server:', error)

@@ -257,8 +257,21 @@ marketSchema.index({ category: 1 })
 marketSchema.index({ 'dates.type': 1 })
 marketSchema.index({ promoter: 1 })
 marketSchema.index({ isActive: 1 })
+marketSchema.index({ isVerified: 1 })
 marketSchema.index({ createdAt: -1 })
+marketSchema.index({ updatedAt: -1 })
 marketSchema.index({ 'statistics.totalTrackers': -1 })
+marketSchema.index({ 'statistics.totalApplications': -1 })
+
+// Compound indexes for common queries
+marketSchema.index({ isActive: 1, category: 1 })
+marketSchema.index({ isActive: 1, createdAt: -1 })
+marketSchema.index({ promoter: 1, isActive: 1 })
+marketSchema.index({ category: 1, 'location.state': 1 })
+marketSchema.index({ category: 1, 'location.city': 1 })
+
+// Index for location-based searches
+marketSchema.index({ 'location.state': 1, 'location.city': 1 })
 
 // Text search index
 marketSchema.index({

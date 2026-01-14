@@ -3,6 +3,7 @@ const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/
 const User = require('../models/User')
 const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
+const twoFactorService = require('../services/twoFactorService')
 
 // Register new user
 const register = catchAsync(async (req, res, next) => {
@@ -361,6 +362,191 @@ const deleteAccount = catchAsync(async (req, res, next) => {
   sendSuccess(res, null, 'Account deleted successfully')
 })
 
+// Two-Factor Authentication
+
+// Setup 2FA - Generate secret and QR code
+const setupTwoFactor = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id)
+
+  if (!user) {
+    return next(new AppError('User not found', 404))
+  }
+
+  // Generate secret
+  const secret = twoFactorService.generateSecret()
+
+  // Generate QR code
+  const qrCode = await twoFactorService.generateQRCode(secret, user.username)
+
+  // Store temporary secret (not persisted)
+  user.twoFactorTempSecret = secret.base32
+  await user.save()
+
+  sendSuccess(res, {
+    secret: secret.base32,
+    qrCode,
+    message: 'Scan the QR code with your authenticator app'
+  }, 'Two-factor authentication setup initiated')
+})
+
+// Verify 2FA setup token and enable 2FA
+const verifyTwoFactorSetup = catchAsync(async (req, res, next) => {
+  const { token } = req.body
+
+  if (!token) {
+    return next(new AppError('Verification token is required', 400))
+  }
+
+  const user = await User.findById(req.user.id)
+
+  if (!user || !user.twoFactorTempSecret) {
+    return next(new AppError('Two-factor setup not initiated', 400))
+  }
+
+  // Verify the token
+  const isValid = twoFactorService.verifyToken(user.twoFactorTempSecret, token)
+
+  if (!isValid) {
+    return next(new AppError('Invalid verification token', 400))
+  }
+
+  // Generate backup codes
+  const backupCodes = twoFactorService.generateBackupCodes()
+
+  // Enable 2FA
+  user.twoFactorEnabled = true
+  user.twoFactorSecret = twoFactorService.encryptSecret(user.twoFactorTempSecret)
+  user.twoFactorBackupCodes = twoFactorService.encryptBackupCodes(backupCodes)
+  user.twoFactorTempSecret = undefined // Clear temporary secret
+
+  await user.save()
+
+  sendSuccess(res, {
+    backupCodes,
+    message: 'Two-factor authentication enabled. Save your backup codes securely.'
+  }, 'Two-factor authentication enabled successfully')
+})
+
+// Verify 2FA token during login
+const verifyTwoFactorLogin = catchAsync(async (req, res, next) => {
+  const { token, backupCode } = req.body
+
+  // Either token or backup code is required
+  if (!token && !backupCode) {
+    return next(new AppError('Two-factor token or backup code is required', 400))
+  }
+
+  const user = req.user
+
+  if (!user.twoFactorEnabled || !user.twoFactorSecret) {
+    return next(new AppError('Two-factor authentication not enabled', 400))
+  }
+
+  let isValid = false
+
+  if (token) {
+    // Decrypt secret and verify token
+    const decryptedSecret = twoFactorService.decryptSecret(user.twoFactorSecret)
+    isValid = twoFactorService.verifyToken(decryptedSecret, token)
+  } else if (backupCode) {
+    // Verify backup code (consumes it)
+    isValid = twoFactorService.verifyAndConsumeBackupCode(user, backupCode)
+    if (isValid) {
+      await user.save() // Save to persist backup code consumption
+    }
+  }
+
+  if (!isValid) {
+    return next(new AppError('Invalid two-factor token or backup code', 401))
+  }
+
+  // Generate tokens and complete login
+  const tokens = generateTokens(user._id)
+
+  // Update last login
+  user.lastLogin = new Date()
+  await user.save()
+
+  // Remove password from response
+  user.password = undefined
+
+  sendSuccess(res, {
+    user,
+    tokens
+  }, 'Login successful')
+})
+
+// Disable 2FA
+const disableTwoFactor = catchAsync(async (req, res, next) => {
+  const { password } = req.body
+
+  if (!password) {
+    return next(new AppError('Password is required to disable 2FA', 400))
+  }
+
+  const user = await User.findById(req.user.id).select('+password')
+
+  // Verify current password
+  const isPasswordValid = await user.comparePassword(password)
+
+  if (!isPasswordValid) {
+    return next(new AppError('Invalid password', 400))
+  }
+
+  // Disable 2FA
+  user.twoFactorEnabled = false
+  user.twoFactorSecret = undefined
+  user.twoFactorBackupCodes = undefined
+  user.twoFactorTempSecret = undefined
+
+  await user.save()
+
+  sendSuccess(res, null, 'Two-factor authentication disabled successfully')
+})
+
+// Get 2FA status
+const getTwoFactorStatus = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id)
+
+  sendSuccess(res, {
+    enabled: user.twoFactorEnabled || false,
+    hasBackupCodes: twoFactorService.hasBackupCodes(user)
+  }, 'Two-factor authentication status retrieved')
+})
+
+// Regenerate backup codes
+const regenerateBackupCodes = catchAsync(async (req, res, next) => {
+  const { password } = req.body
+
+  if (!password) {
+    return next(new AppError('Password is required to regenerate backup codes', 400))
+  }
+
+  const user = await User.findById(req.user.id).select('+password')
+
+  if (!user.twoFactorEnabled) {
+    return next(new AppError('Two-factor authentication is not enabled', 400))
+  }
+
+  // Verify password
+  const isPasswordValid = await user.comparePassword(password)
+
+  if (!isPasswordValid) {
+    return next(new AppError('Invalid password', 400))
+  }
+
+  // Generate new backup codes
+  const backupCodes = twoFactorService.generateBackupCodes()
+  user.twoFactorBackupCodes = twoFactorService.encryptBackupCodes(backupCodes)
+
+  await user.save()
+
+  sendSuccess(res, {
+    backupCodes,
+    message: 'Backup codes regenerated. Previous codes are no longer valid.'
+  }, 'Backup codes regenerated successfully')
+})
+
 module.exports = {
   register,
   login,
@@ -373,5 +559,12 @@ module.exports = {
   verifyEmail,
   resendVerification,
   logout,
-  deleteAccount
+  deleteAccount,
+  // Two-factor authentication
+  setupTwoFactor,
+  verifyTwoFactorSetup,
+  verifyTwoFactorLogin,
+  disableTwoFactor,
+  getTwoFactorStatus,
+  regenerateBackupCodes
 }

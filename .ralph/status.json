@@ -2,9 +2,9 @@
   "orchestrator": {
     "status": "running",
     "current_cycle": 1,
-    "current_agent": "styling",
+    "current_agent": "api",
     "start_time": 1736822328.406,
-    "last_update": 1736825989.039
+    "last_update": 1736827000.0
   },
   "agents": {
     "frontend": {
@@ -20,6 +20,13 @@
       "message": "Missing controllers implemented, API infrastructure complete",
       "last_run": 1736825898.077,
       "last_result": "Implemented comments, photos, and notifications controllers with full CRUD operations, modernized routes, and verified server functionality"
+    },
+    "api": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
     },
     "styling": {
       "status": "completed",

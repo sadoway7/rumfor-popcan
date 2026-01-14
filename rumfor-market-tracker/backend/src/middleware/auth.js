@@ -281,34 +281,76 @@ const requireOwnershipOrAdmin = (resourceField = 'user') => {
         message: 'Authentication required.'
       })
     }
-    
+
     // Admin can access anything
     if (req.user.role === 'admin') {
       return next()
     }
-    
+
     // Check ownership
     const resourceUserId = req[resourceField] || req.body[resourceField] || req.params[resourceField]
-    
+
     if (!resourceUserId) {
       return res.status(400).json({
         success: false,
         message: `Cannot determine ownership of resource. Field: ${resourceField}`
       })
     }
-    
+
     // Convert to string for comparison
     const resourceOwnerId = resourceUserId.toString()
     const currentUserId = req.user._id.toString()
-    
+
     if (resourceOwnerId !== currentUserId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only access your own resources.'
       })
     }
-    
+
     next()
+  }
+}
+
+// Middleware to verify 2FA token for 2FA-enabled login
+const verifyTwoFactorToken = async (req, res, next) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required for 2FA verification.'
+      })
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email }).select('+twoFactorEnabled +twoFactorSecret +twoFactorBackupCodes')
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials.'
+      })
+    }
+
+    if (!user.twoFactorEnabled) {
+      return res.status(400).json({
+        success: false,
+        message: 'Two-factor authentication is not enabled for this account.'
+      })
+    }
+
+    // Attach user to request for the controller
+    req.user = user
+    next()
+
+  } catch (error) {
+    console.error('2FA token verification middleware error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Server error during 2FA verification.'
+    })
   }
 }
 
@@ -403,6 +445,7 @@ module.exports = {
   requireOwnershipOrAdmin,
   optionalAuth,
   requireEmailVerification,
+  verifyTwoFactorToken,
   generateToken,
   generateRefreshToken,
   generateTokens,

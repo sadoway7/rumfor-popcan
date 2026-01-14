@@ -34,11 +34,35 @@ POST /api/auth/refresh-token
 
 ## Base URL
 
+For versioned API endpoints:
+```
+https://api.rumfor-market.com/api/v1
+```
+
+For legacy endpoints (deprecated, will be removed in future versions):
 ```
 https://api.rumfor-market.com/api
 ```
 
-For local development: `http://localhost:3001/api`
+For local development:
+- Versioned: `http://localhost:3001/api/v1`
+- Legacy: `http://localhost:3001/api`
+
+## API Versioning
+
+The API uses URL path versioning. The current stable version is **v1**.
+
+### Version Headers
+
+All API responses include version information in headers:
+- `API-Version`: The version used for the request
+- `API-Supported-Versions`: Comma-separated list of supported versions
+- `API-Current-Version`: The current stable version
+
+### Supported Versions
+
+- **v1** (current): Full feature set with enhanced security and performance
+- Legacy (deprecated): Original endpoints, maintained for backward compatibility
 
 ## Response Format
 

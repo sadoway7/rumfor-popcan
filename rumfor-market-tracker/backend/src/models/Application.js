@@ -321,7 +321,19 @@ applicationSchema.index({ market: 1, status: 1 })
 applicationSchema.index({ status: 1, submittedAt: -1 })
 applicationSchema.index({ 'review.assignedReviewer': 1 })
 applicationSchema.index({ createdAt: -1 })
+applicationSchema.index({ updatedAt: -1 })
 applicationSchema.index({ isDeleted: 1 })
+applicationSchema.index({ submittedAt: -1 })
+
+// Date range indexes for better query performance
+applicationSchema.index({ submittedAt: 1, status: 1 })
+applicationSchema.index({ createdAt: 1, status: 1 })
+
+// Compound indexes for common filtering patterns
+applicationSchema.index({ status: 1, 'review.assignedReviewer': 1 })
+applicationSchema.index({ vendor: 1, isDeleted: 1 })
+applicationSchema.index({ market: 1, isDeleted: 1 })
+applicationSchema.index({ status: 1, 'statusHistory.changedAt': -1 })
 
 // Method to submit application
 applicationSchema.methods.submit = function() {
