@@ -613,17 +613,174 @@
             // Clear existing content
             tree.innerHTML = '';
 
-            // User-Centric Feature Organization - Organized by the 3 Main User Types
+            // COMPREHENSIVE USER-TYPE ORGANIZATION WITH MICRO-FEATURES
             const features = [
-                // 🛒 VENDOR USER EXPERIENCE - Apply to markets, track applications, prepare for events
+                // 🛒 VENDOR USER EXPERIENCE - Deep feature breakdown by component
                 {
-                    name: '🏠 Market Discovery & Browsing',
-                    icon: '🏪',
-                    description: 'Browse markets, search events, filter by location/category, view market details and photos',
+                    name: '🏪 Market Discovery Hub',
+                    icon: '🏠',
+                    description: 'Homepage with featured markets, search landing, onboarding flow, hero images',
                     category: 'vendor-discovery',
                     persona: 'vendor',
                     workflow: 'discover',
-                    pages: ['HomePage.tsx', 'MarketSearchPage.tsx', 'MarketDetailPage.tsx']
+                    components: ['HomePage.tsx', 'MarketGrid.tsx', 'MarketCard.tsx'],
+                    microFeatures: ['Featured markets carousel', 'Quick search bar', 'Location-based suggestions', 'Hero image galleries']
+                },
+                {
+                    name: '🔍 Advanced Market Search',
+                    icon: '🔍',
+                    description: 'Full-text search, filters by location/dates/category/accessibility, debounced search',
+                    category: 'vendor-discovery',
+                    persona: 'vendor',
+                    workflow: 'search',
+                    components: ['MarketSearchPage.tsx', 'MarketFilters.tsx', 'ApplicationFilters.tsx'],
+                    microFeatures: ['Real-time search', 'Advanced filters panel', 'Location radius search', 'Date range filtering']
+                },
+                {
+                    name: '📱 Market Detail Views',
+                    icon: '📱',
+                    description: 'Detailed market pages with photos, schedules, vendor lists, application buttons',
+                    category: 'vendor-discovery',
+                    persona: 'vendor',
+                    workflow: 'details',
+                    components: ['MarketDetailPage.tsx', 'PhotoGallery.tsx', 'LocationModal.tsx'],
+                    microFeatures: ['Image gallery', 'Interactive map', 'Schedule display', 'Apply now buttons']
+                },
+                {
+                    name: '⭐ Favorites & Saved Markets',
+                    icon: '⭐',
+                    description: 'Save markets, interest tracking, notifications, personal market library',
+                    category: 'vendor-personal',
+                    persona: 'vendor',
+                    workflow: 'favorites',
+                    components: ['MyMarketsPage.tsx', 'NotificationBell.tsx'],
+                    microFeatures: ['Save/bookmark markets', 'Interest notifications', 'Personal lists', 'Market alerts']
+                },
+
+                // 📋 VENDOR APPLICATION SYSTEM - Complex multi-step workflow
+                {
+                    name: '📝 Multi-Step Application Builder',
+                    icon: '📋',
+                    description: 'Business info → Products → Documents → Review → Submit workflow',
+                    category: 'vendor-applications',
+                    persona: 'vendor',
+                    workflow: 'apply',
+                    components: ['ApplicationForm.tsx', 'ApplicationFormPage.tsx'],
+                    microFeatures: ['Step-by-step wizard', 'Form validation', 'File uploads', 'Auto-save progress', 'Business info forms']
+                },
+                {
+                    name: '📄 Application Documents',
+                    icon: '📎',
+                    description: 'Insurance docs, business licenses, certificates, photo uploads',
+                    category: 'vendor-applications',
+                    persona: 'vendor',
+                    workflow: 'documents',
+                    components: ['PhotoUploader.tsx', 'FileUploader.tsx'],
+                    microFeatures: ['Multi-file upload', 'Document verification', 'Photo requirements', 'File type validation']
+                },
+                {
+                    name: '📊 Application Status Dashboard',
+                    icon: '📊',
+                    description: 'Real-time status tracking, progress bars, notifications, timeline',
+                    category: 'vendor-applications',
+                    persona: 'vendor',
+                    workflow: 'track',
+                    components: ['MyApplicationsPage.tsx', 'ApplicationCard.tsx', 'ApplicationStatus.tsx'],
+                    microFeatures: ['Status indicators', 'Progress tracking', 'Email notifications', 'Review timelines']
+                },
+                {
+                    name: '💬 Application Communications',
+                    icon: '💬',
+                    description: 'Messages with promoters, questions, responses, follow-ups',
+                    category: 'vendor-applications',
+                    persona: 'vendor',
+                    workflow: 'communicate',
+                    components: ['ApplicationActions.tsx', 'CommentForm.tsx'],
+                    microFeatures: ['Direct messaging', 'Communication history', 'Question threads', 'Response tracking']
+                },
+
+                // ✅ VENDOR MARKET PLANNING - Per-market planning workspaces
+                {
+                    name: '🏪 Market Planning Workspaces',
+                    icon: '🏪',
+                    description: 'Dedicated planning space for each market with tools, budget, todos, timeline',
+                    category: 'vendor-planning',
+                    persona: 'vendor',
+                    workflow: 'plan-market',
+                    components: ['MarketPlanningWorkspace.tsx', 'MarketPlanCard.tsx'],
+                    microFeatures: ['Market-specific planning', 'Workspace organization', 'Planning templates', 'Progress overview']
+                },
+                {
+                    name: '📋 Market-Specific Todo Lists',
+                    icon: '📋',
+                    description: 'Setup tasks, inventory prep, logistics, booth setup, cleanup - per market',
+                    category: 'vendor-planning',
+                    persona: 'vendor',
+                    workflow: 'market-todos',
+                    components: ['MarketTodoList.tsx', 'TodoTemplates.tsx', 'TodoItem.tsx', 'TodoProgress.tsx'],
+                    microFeatures: ['Market-specific tasks', 'Setup checklists', 'Logistics planning', 'Progress tracking']
+                },
+                {
+                    name: '💰 Per-Market Budget Tracking',
+                    icon: '💰',
+                    description: 'Budget planning per market, expense tracking, cost categories, profit projection',
+                    category: 'vendor-planning',
+                    persona: 'vendor',
+                    workflow: 'market-budget',
+                    components: ['MarketBudgetTracker.tsx', 'BudgetForm.tsx', 'BudgetChart.tsx'],
+                    microFeatures: ['Per-market budgeting', 'Cost projections', 'Expense categories', 'Profit tracking']
+                },
+                {
+                    name: '📅 Market Timeline & Deadlines',
+                    icon: '📅',
+                    description: 'Market schedule, preparation milestones, event timeline, reminders',
+                    category: 'vendor-planning',
+                    persona: 'vendor',
+                    workflow: 'market-timeline',
+                    components: ['MarketTimeline.tsx', 'DeadlineTracker.tsx'],
+                    microFeatures: ['Event timeline', 'Preparation milestones', 'Deadline reminders', 'Schedule sync']
+                },
+                {
+                    name: '📦 Inventory & Product Planning',
+                    icon: '📦',
+                    description: 'Product planning, inventory management, pricing strategy, quantity planning',
+                    category: 'vendor-planning',
+                    persona: 'vendor',
+                    workflow: 'inventory',
+                    components: ['ProductPlanner.tsx', 'InventoryTracker.tsx'],
+                    microFeatures: ['Product selection', 'Quantity planning', 'Pricing strategy', 'Inventory tracking']
+                },
+
+                // ✅ VENDOR PREPARATION & MANAGEMENT TOOLS - General tools
+                {
+                    name: '📋 General Preparation Templates',
+                    icon: '✅',
+                    description: 'Template checklists, preparation guides, best practices, quick setup',
+                    category: 'vendor-prep',
+                    persona: 'vendor',
+                    workflow: 'general-prep',
+                    components: ['PreparationTemplates.tsx', 'QuickSetupGuide.tsx'],
+                    microFeatures: ['Template library', 'Best practices', 'Quick setup', 'Preparation guides']
+                },
+                {
+                    name: '💰 Overall Business Expense Tracking',
+                    icon: '💰',
+                    description: 'Cross-market financial tracking, tax preparation, profit analysis, reports',
+                    category: 'vendor-business',
+                    persona: 'vendor',
+                    workflow: 'business-analytics',
+                    components: ['BusinessExpenseTracker.tsx', 'TaxReport.tsx', 'ProfitAnalysis.tsx'],
+                    microFeatures: ['Cross-market tracking', 'Tax preparation', 'Profit analysis', 'Financial reports']
+                },
+                {
+                    name: '📊 Vendor Performance Analytics',
+                    icon: '📈',
+                    description: 'Market success rates, earnings trends, customer feedback, improvement insights',
+                    category: 'vendor-analytics',
+                    persona: 'vendor',
+                    workflow: 'performance',
+                    components: ['VendorAnalytics.tsx', 'PerformanceDashboard.tsx'],
+                    microFeatures: ['Success metrics', 'Earnings analysis', 'Customer feedback', 'Improvement insights']
                 },
                 {
                     name: '📝 Application Form System',
@@ -671,211 +828,278 @@
                     pages: ['MyMarketsPage.tsx']
                 },
 
-                // 🏪 PROMOTER USER EXPERIENCE - Create/manage markets, review applications
+                // 🏪 PROMOTER MARKET MANAGEMENT - Complex promoter workflow
                 {
-                    name: '🏪 Market Creation & Management',
+                    name: '🏪 Market Creation Wizard',
                     icon: '🏪',
-                    description: 'Create markets, claim ownership, custom settings, event planning, market details',
+                    description: 'Multi-step market setup, location selection, dates, requirements, settings',
                     category: 'promoter-setup',
                     persona: 'promoter',
                     workflow: 'create',
-                    pages: ['PromoterCreateMarketPage.tsx', 'PromoterMarketsPage.tsx']
+                    components: ['PromoterCreateMarketPage.tsx', 'LocationModal.tsx'],
+                    microFeatures: ['Market setup wizard', 'Location mapping', 'Date scheduling', 'Requirement settings']
                 },
                 {
-                    name: '🔍 Application Review Dashboard',
-                    icon: '🔍',
-                    description: 'Bulk operations, approval workflow, vendor communication, status updates',
+                    name: '🏪 Market Management Console',
+                    icon: '⚙️',
+                    description: 'Edit markets, application settings, vendor requirements, market configuration',
+                    category: 'promoter-setup',
+                    persona: 'promoter',
+                    workflow: 'manage',
+                    components: ['PromoterMarketsPage.tsx', 'MarketDetailPage.tsx'],
+                    microFeatures: ['Market editing', 'Settings panels', 'Requirement customization', 'Status management']
+                },
+                {
+                    name: '📅 Market Calendar System',
+                    icon: '📅',
+                    description: 'Calendar views, event scheduling, deadline management, timeline planning',
+                    category: 'promoter-calendar',
+                    persona: 'promoter',
+                    workflow: 'schedule',
+                    components: ['PromoterCalendarPage.tsx', 'MarketCalendar.tsx'],
+                    microFeatures: ['Calendar views', 'Event scheduling', 'Deadline tracking', 'Timeline visualization']
+                },
+
+                // 🔍 PROMOTER APPLICATION REVIEW - Advanced review system
+                {
+                    name: '🔍 Application Review Queue',
+                    icon: '📋',
+                    description: 'Pending applications list, bulk operations, filtering, sorting',
                     category: 'promoter-review',
                     persona: 'promoter',
-                    workflow: 'review',
-                    pages: ['PromoterApplicationsPage.tsx']
+                    workflow: 'review-queue',
+                    components: ['PromoterApplicationsPage.tsx', 'ApplicationFilters.tsx'],
+                    microFeatures: ['Application queue', 'Bulk actions', 'Advanced filtering', 'Priority sorting']
                 },
                 {
-                    name: '📈 Promoter Analytics & Insights',
-                    icon: '📈',
-                    description: 'Vendor demographics, application trends, market performance, revenue tracking',
+                    name: '📝 Detailed Application Review',
+                    icon: '🔍',
+                    description: 'Full application details, document review, vendor info, decision making',
+                    category: 'promoter-review',
+                    persona: 'promoter',
+                    workflow: 'review-detail',
+                    components: ['ApplicationDetailPage.tsx', 'PhotoThumbnail.tsx'],
+                    microFeatures: ['Document viewing', 'Vendor profiles', 'Approval/rejection', 'Feedback forms']
+                },
+                {
+                    name: '💬 Promoter-Vendor Communication',
+                    icon: '💬',
+                    description: 'Messaging system, questions, responses, follow-up communication',
+                    category: 'promoter-communication',
+                    persona: 'promoter',
+                    workflow: 'communicate',
+                    components: ['CommentForm.tsx', 'CommentList.tsx', 'CommentItem.tsx'],
+                    microFeatures: ['Threaded discussions', 'Communication history', 'Question routing', 'Response templates']
+                },
+
+                // 👥 PROMOTER VENDOR MANAGEMENT
+                {
+                    name: '👥 Approved Vendor Directory',
+                    icon: '👥',
+                    description: 'Accepted vendors list, contact info, performance tracking, management tools',
+                    category: 'promoter-vendors',
+                    persona: 'promoter',
+                    workflow: 'vendor-directory',
+                    components: ['PromoterVendorsPage.tsx', 'VendorMarketRow.tsx', 'VendorMarketCard.tsx'],
+                    microFeatures: ['Vendor directory', 'Contact management', 'Performance metrics', 'Vendor profiles']
+                },
+                {
+                    name: '📈 Promoter Analytics Suite',
+                    icon: '📊',
+                    description: 'Application trends, vendor demographics, market performance, revenue analysis',
                     category: 'promoter-analytics',
                     persona: 'promoter',
                     workflow: 'analyze',
-                    pages: ['PromoterAnalyticsPage.tsx']
+                    components: ['PromoterAnalyticsPage.tsx', 'AdminAnalyticsDashboard.tsx'],
+                    microFeatures: ['Trend analysis', 'Demographic data', 'Performance KPIs', 'Revenue tracking']
                 },
                 {
-                    name: '📅 Promoter Calendar & Events',
-                    icon: '📅',
-                    description: 'Event scheduling, market calendar, deadline management, timeline planning',
-                    category: 'promoter-tools',
-                    persona: 'promoter',
-                    workflow: 'schedule',
-                    pages: ['PromoterCalendarPage.tsx']
-                },
-                {
-                    name: '👥 Vendor Management',
-                    icon: '👥',
-                    description: 'Approved vendor lists, communication tools, vendor contacts, management',
-                    category: 'promoter-vendors',
-                    persona: 'promoter',
-                    workflow: 'manage-vendors',
-                    pages: ['PromoterVendorsPage.tsx']
-                },
-                {
-                    name: '🏠 Promoter Dashboard',
+                    name: '🏠 Promoter Command Center',
                     icon: '🏠',
-                    description: 'Overview of markets, applications, analytics, notifications, key metrics',
+                    description: 'Unified dashboard, market overview, application stats, quick actions, alerts',
                     category: 'promoter-dashboard',
                     persona: 'promoter',
                     workflow: 'dashboard',
-                    pages: ['PromoterDashboardPage.tsx']
+                    components: ['PromoterDashboardPage.tsx', 'BottomNav.tsx', 'Sidebar.tsx'],
+                    microFeatures: ['Unified overview', 'Quick actions', 'Alert system', 'Status summaries']
                 },
 
-                // 👑 ADMIN USER EXPERIENCE - Platform oversight, moderation, user management
+                // 👑 ADMIN PLATFORM MANAGEMENT
                 {
-                    name: '👤 User Administration',
+                    name: '👤 User Administration Hub',
                     icon: '👤',
-                    description: 'Role management, account controls, bulk operations, user verification, access control',
+                    description: 'User management, role assignments, account controls, bulk operations',
                     category: 'admin-users',
                     persona: 'admin',
-                    workflow: 'user-management',
-                    pages: ['AdminUsersPage.tsx', 'AdminDashboardPage.tsx']
+                    workflow: 'user-mgmt',
+                    components: ['AdminUsersPage.tsx', 'AdminUserTable.tsx'],
+                    microFeatures: ['User search/filter', 'Role management', 'Bulk operations', 'Account controls']
                 },
                 {
-                    name: '🔍 Platform Moderation',
-                    icon: '🔍',
-                    description: 'Application review, promoter verification, content approval, spam detection',
+                    name: '🛡️ Content Moderation System',
+                    icon: '🛡️',
+                    description: 'Photo approval queue, comment moderation, report handling, content guidelines',
                     category: 'admin-moderation',
                     persona: 'admin',
                     workflow: 'moderate',
-                    pages: ['AdminModerationPage.tsx', 'AdminApplicationsPage.tsx']
+                    components: ['AdminModerationPage.tsx', 'AdminModerationQueue.tsx'],
+                    microFeatures: ['Moderation queue', 'Content approval', 'Report management', 'Guideline enforcement']
                 },
                 {
-                    name: '📊 System Analytics & Monitoring',
+                    name: '📊 System Analytics Platform',
                     icon: '📊',
-                    description: 'Platform metrics, user growth, engagement tracking, system health, performance',
+                    description: 'Platform metrics, user growth, engagement tracking, performance monitoring',
                     category: 'admin-analytics',
                     persona: 'admin',
                     workflow: 'monitor',
-                    pages: ['AdminAnalyticsPage.tsx', 'AdminDashboardPage.tsx']
-                },
-                {
-                    name: '🛠️ Admin Tools & Support',
-                    icon: '🛠️',
-                    description: 'Bulk operations, system settings, support tickets, emergency controls',
-                    category: 'admin-tools',
-                    persona: 'admin',
-                    workflow: 'admin-tools',
-                    pages: ['AdminSettingsPage.tsx', 'AdminSupportPage.tsx', 'AdminMarketsPage.tsx']
+                    components: ['AdminAnalyticsPage.tsx', 'AdminAnalyticsDashboard.tsx'],
+                    microFeatures: ['Growth metrics', 'Engagement stats', 'Performance monitoring', 'System health']
                 },
 
-                // 👥 SHARED USER EXPERIENCE - Common across all user types
+                // 🔐 SHARED AUTHENTICATION & PROFILES
                 {
-                    name: '🔐 Authentication System',
+                    name: '🔐 Unified Authentication',
                     icon: '🔐',
-                    description: 'Login/register, JWT tokens, password recovery, email verification, security',
+                    description: 'Login/register, JWT auth, verification, password recovery, security',
                     category: 'shared-auth',
                     persona: 'all',
                     workflow: 'auth',
-                    pages: ['LoginPage.tsx', 'RegisterPage.tsx', 'EmailVerificationPage.tsx', 'PasswordRecoveryPage.tsx']
+                    components: ['LoginPage.tsx', 'RegisterPage.tsx', 'EmailVerificationPage.tsx'],
+                    microFeatures: ['Multi-step registration', 'Email verification', 'Password recovery', 'Security logins']
                 },
                 {
-                    name: '👤 Profile & Settings',
+                    name: '👤 User Profile Management',
                     icon: '👤',
-                    description: 'Profile management, account settings, preferences, notifications, privacy',
+                    description: 'Profile editing, preferences, settings, notifications, privacy controls',
                     category: 'shared-profile',
                     persona: 'all',
                     workflow: 'profile',
-                    pages: ['ProfilePage.tsx', 'SettingsPage.tsx', 'NotificationsPage.tsx']
-                },
-                {
-                    name: '💬 Community & Discussions',
-                    icon: '💬',
-                    description: 'Market discussions, threaded comments, emoji reactions, user engagement',
-                    category: 'shared-community',
-                    persona: 'all',
-                    workflow: 'community',
-                    pages: ['market comments', 'CommentForm.tsx', 'CommentItem.tsx']
-                },
-                {
-                    name: '📸 Photo Gallery System',
-                    icon: '📸',
-                    description: 'Image uploads, community voting, hero images, galleries, moderation',
-                    category: 'shared-media',
-                    persona: 'all',
-                    workflow: 'media',
-                    pages: ['PhotoGallery.tsx', 'PhotoUploader.tsx', 'PhotoThumbnail.tsx']
+                    components: ['ProfilePage.tsx', 'SettingsPage.tsx', 'EmailAlertsSettings.tsx'],
+                    microFeatures: ['Profile editing', 'Notification settings', 'Privacy controls', 'Account preferences']
                 },
 
-                // 🔧 TECHNICAL INFRASTRUCTURE - Development and operations
+                // 💬 COMMUNITY & MEDIA FEATURES
                 {
-                    name: '🔗 API & Backend Systems',
+                    name: '💬 Market Discussion Forums',
+                    icon: '💬',
+                    description: 'Threaded comments, emoji reactions, user discussions, community engagement',
+                    category: 'shared-community',
+                    persona: 'all',
+                    workflow: 'discuss',
+                    components: ['CommentList.tsx', 'CommentForm.tsx', 'CommentItem.tsx', 'CommentReactions.tsx'],
+                    microFeatures: ['Threaded discussions', 'Emoji reactions', 'Comment moderation', 'User engagement']
+                },
+                {
+                    name: '📸 Photo Sharing & Gallery',
+                    icon: '📸',
+                    description: 'Image uploads, galleries, voting system, hero images, moderation',
+                    category: 'shared-media',
+                    persona: 'all',
+                    workflow: 'photos',
+                    components: ['PhotoGallery.tsx', 'PhotoUploader.tsx', 'PhotoThumbnail.tsx'],
+                    microFeatures: ['Multi-upload system', 'Gallery views', 'Community voting', 'Content moderation']
+                },
+                {
+                    name: '🏷️ Hashtag & Discovery System',
+                    icon: '🏷️',
+                    description: 'Hashtag voting, trending topics, content discovery, categorization',
+                    category: 'shared-discovery',
+                    persona: 'all',
+                    workflow: 'hashtags',
+                    components: ['HashtagVoting.tsx'],
+                    microFeatures: ['Hashtag system', 'Trend discovery', 'Content tagging', 'Community voting']
+                },
+
+                // 🔗 TECHNICAL INFRASTRUCTURE
+                {
+                    name: '🔗 API Architecture',
                     icon: '🔗',
-                    description: 'REST APIs, Express routes, MongoDB, authentication, validation, middleware',
+                    description: 'REST APIs, authentication, data validation, rate limiting, error handling',
                     category: 'technical-backend',
                     persona: 'developers',
-                    workflow: 'infrastructure',
-                    pages: ['backend routes', 'models', 'controllers']
+                    workflow: 'apis',
+                    components: ['authApi.ts', 'marketsApi.ts', 'applicationsApi.ts', 'adminApi.ts'],
+                    microFeatures: ['JWT authentication', 'API versioning', 'Rate limiting', 'Error handling']
                 },
                 {
-                    name: '⚛️ Frontend Development',
+                    name: '⚛️ Frontend Component Library',
                     icon: '⚛️',
-                    description: 'React components, TypeScript, Vite, Zustand, responsive design, UI/UX',
+                    description: 'React components, TypeScript, Tailwind CSS, responsive design, accessibility',
                     category: 'technical-frontend',
                     persona: 'developers',
-                    workflow: 'frontend',
-                    pages: ['components', 'pages', 'utils', 'hooks']
+                    workflow: 'ui',
+                    components: ['ui/*.tsx', 'Header.tsx', 'Footer.tsx', 'BottomNav.tsx'],
+                    microFeatures: ['Component library', 'Responsive design', 'Accessibility', 'TypeScript integration']
                 },
                 {
-                    name: '🧪 Testing & Quality',
+                    name: '🧪 Testing & Quality Assurance',
                     icon: '🧪',
-                    description: 'E2E tests, Playwright, accessibility, security, CI/CD integration',
+                    description: 'E2E tests, Playwright, component testing, accessibility checks, CI/CD',
                     category: 'technical-testing',
                     persona: 'developers',
                     workflow: 'quality',
-                    pages: ['e2e-tests/', 'security reports', 'lint reports']
+                    components: ['e2e-tests/', 'security-reports/'],
+                    microFeatures: ['E2E test suites', 'Component testing', 'Accessibility testing', 'Security scanning']
                 },
                 {
                     name: '🚀 Deployment & Production',
                     icon: '🚀',
-                    description: 'CI/CD pipelines, GitLab Pages, Docker, performance, monitoring',
+                    description: 'GitLab CI/CD, Docker, performance monitoring, production deployment',
                     category: 'technical-deploy',
                     persona: 'developers',
                     workflow: 'deployment',
-                    pages: ['GitLab CI', 'docker-compose', 'nginx']
+                    components: ['GitLab CI', 'docker-compose.yml', 'nginx.conf'],
+                    microFeatures: ['Automated CI/CD', 'Container deployment', 'Performance monitoring', 'Production scaling']
                 }
             ];
 
-            // Group features by user type (the 3 main personas)
+            // Group features by user type (detailed breakdown by workflow and components)
             const userTypeGroups = {
                 '🛒 VENDOR USER EXPERIENCE': [
-                    '🏠 Market Discovery & Browsing',
-                    '📝 Application Form System',
-                    '📊 My Applications Dashboard',
-                    '✅ Pre-Market Preparation Tools',
-                    '💰 Expense & Vendor Tools',
-                    '⭐ My Markets & Interests'
+                    '🏪 Market Discovery Hub',
+                    '🔍 Advanced Market Search',
+                    '📱 Market Detail Views',
+                    '⭐ Favorites & Saved Markets',
+                    '📝 Multi-Step Application Builder',
+                    '📄 Application Documents',
+                    '📊 Application Status Dashboard',
+                    '💬 Application Communications',
+                    '🏪 Market Planning Workspaces',
+                    '📋 Market-Specific Todo Lists',
+                    '💰 Per-Market Budget Tracking',
+                    '📅 Market Timeline & Deadlines',
+                    '📦 Inventory & Product Planning',
+                    '📋 General Preparation Templates',
+                    '💰 Overall Business Expense Tracking',
+                    '📊 Vendor Performance Analytics'
                 ],
                 '🏪 PROMOTER USER EXPERIENCE': [
-                    '🏪 Market Creation & Management',
-                    '🔍 Application Review Dashboard',
-                    '📈 Promoter Analytics & Insights',
-                    '📅 Promoter Calendar & Events',
-                    '👥 Vendor Management',
-                    '🏠 Promoter Dashboard'
+                    '🏪 Market Creation Wizard',
+                    '🏪 Market Management Console',
+                    '📅 Market Calendar System',
+                    '🔍 Application Review Queue',
+                    '📝 Detailed Application Review',
+                    '💬 Promoter-Vendor Communication',
+                    '👥 Approved Vendor Directory',
+                    '📈 Promoter Analytics Suite',
+                    '🏠 Promoter Command Center'
                 ],
                 '👑 ADMIN USER EXPERIENCE': [
-                    '👤 User Administration',
-                    '🔍 Platform Moderation',
-                    '📊 System Analytics & Monitoring',
-                    '🛠️ Admin Tools & Support'
+                    '👤 User Administration Hub',
+                    '🛡️ Content Moderation System',
+                    '📊 System Analytics Platform'
                 ],
                 '👥 SHARED FEATURES (All Users)': [
-                    '🔐 Authentication System',
-                    '👤 Profile & Settings',
-                    '💬 Community & Discussions',
-                    '📸 Photo Gallery System'
+                    '🔐 Unified Authentication',
+                    '👤 User Profile Management',
+                    '💬 Market Discussion Forums',
+                    '📸 Photo Sharing & Gallery',
+                    '🏷️ Hashtag & Discovery System'
                 ],
                 '🔧 TECHNICAL INFRASTRUCTURE': [
-                    '🔗 API & Backend Systems',
-                    '⚛️ Frontend Development',
-                    '🧪 Testing & Quality',
+                    '🔗 API Architecture',
+                    '⚛️ Frontend Component Library',
+                    '🧪 Testing & Quality Assurance',
                     '🚀 Deployment & Production'
                 ]
             };
