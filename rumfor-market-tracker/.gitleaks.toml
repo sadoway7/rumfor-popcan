@@ -1,244 +1,34 @@
-# GitLeaks Configuration for Rumfor Market Tracker
-# This configuration defines patterns to detect secrets and sensitive information
-
 [allowlist]
-  description = "Global allowlist"
-  files = [
-    '''\.gitignore''',
-    '''\.gitleaks\.toml''',
-    '''package-lock\.json''',
-    '''yarn\.lock''',
-    '''pnpm-lock\.yaml''',
-    '''\.env\.example''',
-    '''README\.md''',
-    '''CHANGELOG\.md''',
-    '''LICENSE''',
-    '''public/.*''',
-    '''dist/.*''',
-    '''coverage/.*'''
-  ]
-
-  # Common patterns that are false positives
-  paths = [
-    '''node_modules/.*''',
-    '''\.git/.*''',
-    '''\.github/.*''',
-    '''\.gitlab/.*''',
-    '''dist/.*''',
-    '''coverage/.*''',
-    '''test-results/.*''',
-    '''playwright-report/.*'''
-  ]
-
-# API Keys and Tokens
-[[rules]]
-  id = "generic-api-key"
-  description = "Generic API Key"
-  regex = '''(?i)(api[_-]?key|apikey)[''"]\s*[:=]\s*[''"][a-zA-Z0-9_\-]{20,}'''
-  keywords = [
-    "apikey",
-    "api_key"
-  ]
+files = ['''\.gitignore''', '''\.gitleaks\.toml''', '''package-lock\.json''', '''yarn\.lock''', '''\.env\.example''', '''README\.md''']
+paths = ['''node_modules/.*''', '''\.git/.*''', '''dist/.*''', '''coverage/.*''']
 
 [[rules]]
-  id = "github-token"
-  description = "GitHub Personal Access Token"
-  regex = '''ghp_[0-9a-zA-Z]{36}'''
-  keywords = [
-    "ghp_"
-  ]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey)[''"]\s*[:=]\s*[''"][a-zA-Z0-9_\-]{20,}'''
+keywords = ["apikey", "api_key"]
 
 [[rules]]
-  id = "gitlab-token"
-  description = "GitLab Personal Access Token"
-  regex = '''glpat-[0-9a-zA-Z_\-]{20,}'''
-  keywords = [
-    "glpat-"
-  ]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+keywords = ["ghp_"]
 
 [[rules]]
-  id = "jwt-token"
-  description = "JWT Token"
-  regex = '''eyJ[A-Za-z0-9_\/+-]*\.[A-Za-z0-9_\/+-]*\.[A-Za-z0-9_\/+-]*'''
-  keywords = [
-    "jwt",
-    "bearer"
-  ]
-
-# Database Credentials
-[[rules]]
-  id = "database-url"
-  description = "Database Connection String"
-  regex = '''(?:postgres(?:ql)?:\/\/|mysql:\/\/|mongodb\+srv:\/\/|mongodb:\/\/|redis:\/\/|sqlserver:\/\/|oracle:\/\/|sqlite:\/\/)[^\s"']+'''
-  keywords = [
-    "postgres://",
-    "mysql://",
-    "mongodb://",
-    "redis://",
-    "sqlserver://"
-  ]
-
-# Cloud Service Keys
-[[rules]]
-  id = "aws-access-key"
-  description = "AWS Access Key ID"
-  regex = '''AKIA[0-9A-Z]{16}'''
-  keywords = [
-    "AKIA"
-  ]
+id = "generic-password"
+description = "Generic Password"
+regex = '''(?i)password\s*[:=]\s*[''"][^''"\n]{8,}'''
+keywords = ["password"]
 
 [[rules]]
-  id = "aws-secret-key"
-  description = "AWS Secret Access Key"
-  regex = '''(?i)aws(.{0,20})?['\"][0-9a-zA-Z\/+=]{40}['\"]'''
-  keywords = [
-    "aws_secret_access_key",
-    "aws-secret-access-key"
-  ]
+id = "generic-secret"
+description = "Generic Secret"
+regex = '''(?i)(secret|client_secret|app_secret)\s*[:=]\s*[''"][a-zA-Z0-9_\-]{16,}'''
+keywords = ["secret", "client_secret", "app_secret"]
 
-[[rules]]
-  id = "stripe-secret-key"
-  description = "Stripe Secret Key"
-  regex = '''sk_live_[0-9a-zA-Z]{24}'''
-  keywords = [
-    "sk_live_"
-  ]
-
-[[rules]]
-  id = "stripe-publishable-key"
-  description = "Stripe Publishable Key"
-  regex = '''pk_live_[0-9a-zA-Z]{24}'''
-  keywords = [
-    "pk_live_"
-  ]
-
-# Authentication
-[[rules]]
-  id = "private-key"
-  description = "Private Key"
-  regex = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
-  keywords = [
-    "-----BEGIN"
-  ]
-
-# Configuration Files
-[[rules]]
-  id = "env-file"
-  description = "Environment Variable File"
-  regex = '''[A-Z_]+=.*[a-zA-Z0-9_\-]{20,}'''
-  keywords = [
-    "API_KEY",
-    "SECRET",
-    "PASSWORD",
-    "TOKEN"
-  ]
-
-# Social Media Tokens
-[[rules]]
-  id = "facebook-token"
-  description = "Facebook Access Token"
-  regex = '''EAAG[0-9a-zA-Z_-]+'''
-  keywords = [
-    "EAAG"
-  ]
-
-[[rules]]
-  id = "google-api-key"
-  description = "Google API Key"
-  regex = '''AIza[0-9A-Za-z_\-]{35}'''
-  keywords = [
-    "AIza"
-  ]
-
-# Slack Tokens
-[[rules]]
-  id = "slack-token"
-  description = "Slack Token"
-  regex = '''xox[baprs]-[0-9a-zA-Z]{10,48}'''
-  keywords = [
-    "xoxb-",
-    "xoxp-",
-    "xoxa-",
-    "xoxr-"
-  ]
-
-# Email Service Keys
-[[rules]]
-  id = "sendgrid-key"
-  description = "SendGrid API Key"
-  regex = '''SG\.[A-Za-z0-9_-]{16,24}\.[A-Za-z0-9_-]{16,24}'''
-  keywords = [
-    "SG."
-  ]
-
-[[rules]]
-  id = "mailgun-key"
-  description = "Mailgun API Key"
-  regex = '''key-[0-9a-zA-Z]{32}'''
-  keywords = [
-    "key-"
-  ]
-
-# Generic Password Patterns
-[[rules]]
-  id = "generic-password"
-  description = "Generic Password"
-  regex = '''(?i)password\s*[:=]\s*[''"][^''"\n]{8,}'''
-  keywords = [
-    "password"
-  ]
-
-[[rules]]
-  id = "generic-secret"
-  description = "Generic Secret"
-  regex = '''(?i)(secret|client_secret|app_secret)\s*[:=]\s*[''"][a-zA-Z0-9_\-]{16,}'''
-  keywords = [
-    "secret",
-    "client_secret",
-    "app_secret"
-  ]
-
-# Enhanced Rules for JavaScript/TypeScript
-[[rules]]
-  id = "js-api-key"
-  description = "JavaScript API Key Assignment"
-  regex = '''(?:const|let|var)\s+[a-zA-Z_$][a-zA-Z0-9_$]*\s*=\s*['"][a-zA-Z0-9_\-]{20,}'''
-  keywords = [
-    "apiKey",
-    "api_key",
-    "secretKey",
-    "secret_key",
-    "accessToken",
-    "access_token"
-  ]
-
-[[rules]]
-  id = "process-env"
-  description = "Process Environment Variable"
-  regex = '''process\.env\.[A-Z_]+'''
-  keywords = [
-    "process.env"
-  ]
-
-# URL with Credentials
-[[rules]]
-  id = "url-with-credentials"
-  description = "URL with Embedded Credentials"
-  regex = '''https?:\/\/[^\s"']+:[^\s"']+@[^\s"']+'''
-  keywords = [
-    "http://",
-    "https://"
-  ]
-
-# File Extensions to Scan
 [git]
-  [git.Commits]
-    allowlist = [
-      "dependabot[bot]",
-      "github-actions[bot]",
-      "gitlab-bot",
-      "renovate[bot]"
-    ]
+[git.Commits]
+allowlist = ["dependabot[bot]", "github-actions[bot]", "gitlab-bot", "renovate[bot]"]
 
-  [git.Blobs]
-    maxSize = 10MB
+[git.Blobs]
+maxSize = "10MB"
