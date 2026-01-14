@@ -1,9 +1,19 @@
 const express = require('express')
 const router = express.Router()
-const mongoose = require('mongoose')
+
+const {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+  deleteReadNotifications,
+  updatePreferences,
+  getPreferences,
+  getStats
+} = require('../controllers/notificationsController')
 
 const { verifyToken } = require('../middleware/auth')
-const Notification = require('../models/Notification')
+const { validateMongoId } = require('../middleware/validation')
 
 // User notification preferences schema (for embedding in User model)
 const notificationPreferencesSchema = {
@@ -557,40 +567,28 @@ const notificationController = {
 // Protected routes
 router.use(verifyToken)
 
-// Get user notifications (paginated)
-router.get('/', notificationController.getUserNotifications)
+// Get user notifications
+router.get('/', getNotifications)
 
-// Get single notification
-router.get('/:id', notificationController.getNotification)
-
-// Mark single notification as read
-router.patch('/:id/read', notificationController.markAsRead)
+// Mark notification as read
+router.patch('/:notificationId/read', validateMongoId('notificationId'), markAsRead)
 
 // Mark all notifications as read
-router.patch('/read-all', notificationController.markAllAsRead)
-
-// Mark multiple notifications as read
-router.patch('/read-multiple', notificationController.markMultipleAsRead)
+router.patch('/read-all', markAllAsRead)
 
 // Delete notification
-router.delete('/:id', notificationController.deleteNotification)
+router.delete('/:notificationId', validateMongoId('notificationId'), deleteNotification)
 
-// Archive notification
-router.patch('/:id/archive', notificationController.archiveNotification)
-
-// Archive all read notifications
-router.patch('/archive-all', notificationController.archiveAllRead)
-
-// Get unread count
-router.get('/unread-count', notificationController.getUnreadCount)
-
-// Get notification statistics
-router.get('/stats', notificationController.getStats)
+// Delete all read notifications
+router.delete('/read', deleteReadNotifications)
 
 // Update notification preferences
-router.patch('/preferences', notificationController.updatePreferences)
+router.patch('/preferences', updatePreferences)
 
 // Get notification preferences
-router.get('/preferences', notificationController.getPreferences)
+router.get('/preferences', getPreferences)
+
+// Get notification statistics
+router.get('/stats', getStats)
 
 module.exports = router

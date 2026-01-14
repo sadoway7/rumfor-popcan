@@ -1,22 +1,28 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const fs = require('fs').promises
-const path = require('path')
-const mongoose = require('mongoose')
+
+const {
+  getPhotos,
+  uploadPhotos,
+  votePhoto,
+  deletePhoto,
+  reportPhoto,
+  getHeroPhoto
+} = require('../controllers/photosController')
 
 const { verifyToken } = require('../middleware/auth')
-const Photo = require('../models/Photo')
-const Market = require('../models/Market')
+const { validateMongoId } = require('../middleware/validation')
 
-// Configure multer for file uploads (memory storage)
+// Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit per photo
+    files: 10 // Max 10 photos at once
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true)
     } else {
@@ -429,24 +435,21 @@ const photoController = {
 router.use(verifyToken)
 
 // Get photos for a market
-router.get('/market/:marketId', photoController.getMarketPhotos)
+router.get('/market/:marketId', validateMongoId('marketId'), getPhotos)
 
-// Get featured photos for a market
-router.get('/market/:marketId/featured', photoController.getFeaturedPhotos)
+// Get hero photo for a market
+router.get('/market/:marketId/hero', validateMongoId('marketId'), getHeroPhoto)
 
-// Get photo statistics for a market
-router.get('/market/:marketId/stats', photoController.getPhotoStats)
-
-// Upload photo (with file upload)
-router.post('/', upload.single('image'), photoController.uploadPhoto)
-
-// Update photo
-router.patch('/:id', photoController.updatePhoto)
-
-// Delete photo
-router.delete('/:id', photoController.deletePhoto)
+// Upload photos (with file upload)
+router.post('/market/:marketId', validateMongoId('marketId'), upload.array('photos', 10), uploadPhotos)
 
 // Vote on photo
-router.post('/:id/vote', photoController.votePhoto)
+router.post('/:photoId/vote', validateMongoId('photoId'), votePhoto)
+
+// Delete photo
+router.delete('/:photoId', validateMongoId('photoId'), deletePhoto)
+
+// Report photo
+router.post('/:photoId/report', validateMongoId('photoId'), reportPhoto)
 
 module.exports = router

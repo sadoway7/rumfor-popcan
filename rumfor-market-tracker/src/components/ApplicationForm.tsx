@@ -278,7 +278,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           </div>
         )
 
-      case 'checkbox':
+      case 'checkbox': {
         const checkboxValues = Array.isArray(value) ? value : []
         return (
           <div key={field.id} className="space-y-2">
@@ -306,6 +306,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         )
+      }
 
       case 'radio':
         return (

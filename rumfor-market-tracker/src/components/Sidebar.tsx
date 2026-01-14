@@ -176,7 +176,7 @@ export function Sidebar({ role, onNavigate }: SidebarProps) {
   const navigationSections = navigationConfig[role] || []
 
   return (
-    <div className="flex flex-col w-64 bg-surface border-r border-border">
+    <div className="flex flex-col w-full max-w-xs sm:max-w-sm md:w-64 bg-surface border-r border-border">
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-6">
         {navigationSections.map((section) => (

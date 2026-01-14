@@ -19,7 +19,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex lg:flex-shrink-0">
-          <div className="flex flex-col w-64">
+          <div className="flex flex-col min-w-0">
             <Sidebar role={role} />
           </div>
         </aside>

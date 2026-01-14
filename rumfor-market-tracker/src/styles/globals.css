@@ -146,13 +146,89 @@
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
   
-  /* Smooth animations */
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  /* Smooth animations - respecting user's motion preferences */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .animate-glow {
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .animate-slide-up {
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .animate-scale-in {
+      animation: scaleIn 0.2s ease-out;
+    }
+
+    /* Smooth transitions for interactive elements */
+    .transition-smooth {
+      transition: all 0.2s ease-out;
+    }
+
+    .transition-colors {
+      transition: color 0.15s ease-out, background-color 0.15s ease-out, border-color 0.15s ease-out;
+    }
+
+    .transition-transform {
+      transition: transform 0.2s ease-out;
+    }
   }
-  
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+
+  /* Page transitions */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  }
+
+  .page-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .page-exit-active {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+  }
+
+  /* Reduced motion - minimal or disabled animations */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float,
+    .animate-glow,
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-scale-in {
+      animation: none;
+    }
+
+    .page-enter,
+    .page-enter-active,
+    .page-exit,
+    .page-exit-active {
+      animation: none;
+      transition: none;
+    }
+
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
   
   @keyframes float {

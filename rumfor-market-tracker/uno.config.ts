@@ -155,13 +155,16 @@ export default defineConfig({
       24: '6rem',
     },
     
-    // Minimal, functional animations
+    // Enhanced animations with accessibility support
     animation: {
       'fade-in': 'fadeIn 0.2s ease-out',
       'slide-up': 'slideUp 0.3s ease-out',
       'scale-in': 'scaleIn 0.2s ease-out',
+      'bounce-in': 'bounceIn 0.5s ease-out',
+      'pulse-subtle': 'pulseSubtle 2s ease-in-out infinite',
+      'shimmer': 'shimmer 1.5s linear infinite',
     },
-    
+
     keyframes: {
       fadeIn: {
         '0%': { opacity: '0' },
@@ -174,6 +177,20 @@ export default defineConfig({
       scaleIn: {
         '0%': { transform: 'scale(0.95)', opacity: '0' },
         '100%': { transform: 'scale(1)', opacity: '1' },
+      },
+      bounceIn: {
+        '0%': { transform: 'scale(0.3)', opacity: '0' },
+        '50%': { transform: 'scale(1.05)' },
+        '70%': { transform: 'scale(0.9)' },
+        '100%': { transform: 'scale(1)', opacity: '1' },
+      },
+      pulseSubtle: {
+        '0%, 100%': { opacity: '1' },
+        '50%': { opacity: '0.8' },
+      },
+      shimmer: {
+        '0%': { transform: 'translateX(-100%)' },
+        '100%': { transform: 'translateX(100%)' },
       },
     },
     

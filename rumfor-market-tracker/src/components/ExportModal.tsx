@@ -151,7 +151,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       const headers = Object.keys(data[0])
       const rows = data.map(row => headers.map(header => row[header] || ''))
       
-      // @ts-ignore - jsPDF-autotable types
+      // @ts-expect-error - jsPDF-autotable types
       pdf.autoTable({
         head: [headers],
         body: rows,
