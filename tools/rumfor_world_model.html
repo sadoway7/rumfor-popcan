@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rumfor Infinity Rule List - World Model</title>
+    <style>
+        /* Dark theme optimized for development */
+        :root {
+            --bg-deep: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --bg-hover: #2a2a2a;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --gold: #fbbf24;
+            --text-primary: #f8f8f2;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Layout */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Sidebar - World Model */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .tree-node {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .tree-node:hover {
+            background: var(--bg-hover);
+        }
+
+        .tree-node.selected {
+            background: var(--accent);
+            color: white;
+        }
+
+        .tree-icon {
+            font-size: 12px;
+            width: 16px;
+        }
+
+        .tree-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: var(--text-muted);
+        }
+
+        .tree-children {
+            margin-left: 16px;
+        }
+
+        .tree-children.collapsed {
+            display: none;
+        }
+
+        /* Center - Graph Visualization */
+        .center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+        }
+
+        .center-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .graph-placeholder h3 {
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        /* Right Sidebar - Rumfor Panel */
+        .panel {
+            width: 350px;
+            border-left: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 18px;
+        }
+
+        .panel.collapsed {
+            width: 0;
+            border: none;
+        }
+
+        .panel.collapsed .panel-toggle {
+            right: -20px;
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .status-summary {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-deep);
+            margin: 16px;
+            border-radius: 8px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .cycle-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .agent-grid {
+            padding: 16px;
+        }
+
+        .agent-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .agent-card:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .agent-icon {
+            font-size: 18px;
+            width: 24px;
+        }
+
+        .agent-info {
+            flex: 1;
+        }
+
+        .agent-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .agent-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .agent-progress {
+            width: 60px;
+            height: 4px;
+            background: var(--bg-hover);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .agent-card.idle .progress-bar { background: var(--text-muted); }
+        .agent-card.running .progress-bar { background: var(--warning); }
+        .agent-card.complete .progress-bar { background: var(--success); }
+        .agent-card.error .progress-bar { background: var(--error); }
+
+        .panel-actions {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .action-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .action-button.secondary {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            margin-top: 8px;
+        }
+
+        .action-button.secondary:hover {
+            background: var(--bg-card);
+        }
+
+        /* Status colors */
+        .status-idle { color: var(--text-muted); }
+        .status-running { color: var(--warning); }
+        .status-complete { color: var(--success); }
+        .status-error { color: var(--error); }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transform: translateX(420px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            border-color: var(--success);
+        }
+
+        .toast-error {
+            border-color: var(--error);
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .panel {
+                width: 100%;
+                height: 300px;
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar - World Model -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                🌍 World Model
+            </div>
+            <div class="tree" id="world-tree">
+                <div class="tree-node" data-type="root">
+                    <span class="tree-icon">📁</span>
+                    <span>Rumfor Market Tracker</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center - Graph Visualization -->
+        <div class="center">
+            <div class="center-header">
+                <h2>Rumfor Infinity Rule List</h2>
+                <div class="panel-toggle" id="panel-toggle" title="Toggle Rumfor Panel">🤖</div>
+            </div>
+            <div class="graph-container">
+                <div class="graph-placeholder">
+                    <h3>Graph Visualization</h3>
+                    <p>Interactive world model visualization will appear here.<br>
+                    Click cards in the left sidebar to explore features.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Rumfor Panel -->
+        <div class="panel" id="rumfor-panel">
+            <div class="panel-header">
+                🤖 Rumfor Orchestrator
+                <button class="action-button secondary" onclick="refreshStatus()">↻</button>
+            </div>
+            <div class="panel-content">
+                <div class="status-summary">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span>📊</span>
+                            <span id="orchestrator-status">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🔄</span>
+                            <span id="cycle-number">Cycle: 0</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🎯</span>
+                            <span id="current-agent">Current: None</span>
+                        </div>
+                        <div class="status-item">
+                            <span>⚡</span>
+                            <span id="agents-summary">Agents: 0/8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="agent-grid" id="agent-grid">
+                    <!-- Agent cards will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="panel-actions">
+                <button class="action-button" onclick="runFullCycle()">
+                    🚀 Run All Agents
+                </button>
+                <button class="action-button secondary" onclick="resetAllAgents()">
+                    🔄 Reset All Agents
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status JavaScript will be loaded here -->
+    <script src="rumfor_status.js"></script>
+
+    <script>
+        // Global state
+        let selectedCard = null;
+        let panelCollapsed = false;
+
+        // Agent definitions
+        const rumforAgents = [
+            { id: 'frontend', name: 'Frontend', icon: '⚛️', mode: 'rumfor-frontend' },
+            { id: 'backend', name: 'Backend', icon: '🗄️', mode: 'rumfor-backend' },
+            { id: 'api', name: 'API', icon: '🔗', mode: 'rumfor-api' },
+            { id: 'styling', name: 'Styling', icon: '🎨', mode: 'rumfor-styling' },
+            { id: 'testing', name: 'Testing', icon: '🧪', mode: 'rumfor-testing' },
+            { id: 'security', name: 'Security', icon: '🔒', mode: 'rumfor-security' },
+            { id: 'documentation', name: 'Docs', icon: '📝', mode: 'rumfor-docs' },
+            { id: 'deployment', name: 'Deploy', icon: '🚀', mode: 'rumfor-deploy' }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWorldModel();
+            initializePanel();
+            refreshStatus();
+
+            // Auto-refresh status every 5 seconds
+            setInterval(refreshStatus, 5000);
+        });
+
+        // World Model functions
+        function initializeWorldModel() {
+            // Build initial tree structure
+            const tree = document.getElementById('world-tree');
+
+            // Add sample cards - in a real implementation, this would load from cards/*.dot files
+            const sampleCards = [
+                { type: 'category', name: 'Frontend', icon: '💻' },
+                { type: 'category', name: 'Backend', icon: '⚙️' },
+                { type: 'category', name: 'Authentication', icon: '🔐' },
+                { type: 'category', name: 'Markets', icon: '🏪' },
+                { type: 'category', name: 'Applications', icon: '📋' },
+                { type: 'category', name: 'Community', icon: '👥' },
+                { type: 'category', name: 'Admin', icon: '⚡' }
+            ];
+
+            sampleCards.forEach(card => {
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.setAttribute('data-type', card.type);
+                node.innerHTML = `
+                    <span class="tree-icon">${card.icon}</span>
+                    <span>${card.name}</span>
+                `;
+                node.addEventListener('click', () => selectCard(card.name));
+                tree.appendChild(node);
+            });
+        }
+
+        function selectCard(cardName) {
+            // Remove previous selection
+            document.querySelectorAll('.tree-node.selected').forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            // Add selection to clicked node
+            event.target.closest('.tree-node').classList.add('selected');
+
+            selectedCard = cardName;
+            showToast(`Selected: ${cardName}`, 'info');
+        }
+
+        // Panel functions
+        function initializePanel() {
+            // Panel toggle functionality
+            const panel = document.getElementById('rumfor-panel');
+            const toggle = document.getElementById('panel-toggle');
+
+            toggle.addEventListener('click', function() {
+                panelCollapsed = !panelCollapsed;
+                panel.classList.toggle('collapsed', panelCollapsed);
+                toggle.textContent = panelCollapsed ? '🤖' : '🤖';
+            });
+
+            // Render initial agent cards
+            renderAgentCards();
+        }
+
+        function renderAgentCards() {
+            const grid = document.getElementById('agent-grid');
+            grid.innerHTML = '';
+
+            if (typeof rumforStatus === 'undefined') {
+                grid.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">Loading status...</div>';
+                return;
+            }
+
+            rumforAgents.forEach(agent => {
+                const agentStatus = rumforStatus.agents[agent.id] || {
+                    status: 'idle',
+                    progress: 0,
+                    message: 'Ready'
+                };
+
+                const card = document.createElement('div');
+                card.className = `agent-card ${agentStatus.status}`;
+                card.onclick = () => runAgent(agent);
+
+                card.innerHTML = `
+                    <div class="agent-icon">${agent.icon}</div>
+                    <div class="agent-info">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-status status-${agentStatus.status}">
+                            ${agentStatus.message || agentStatus.status}
+                        </div>
+                    </div>
+                    <div class="agent-progress">
+                        <div class="progress-bar" style="width: ${agentStatus.progress || 0}%"></div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function refreshStatus() {
+            // Reload the status script (in a real implementation, this might fetch via AJAX)
+            const script = document.querySelector('script[src="rumfor_status.js"]');
+            if (script) {
+                const newScript = document.createElement('script');
+                newScript.src = script.src + '?t=' + Date.now();
+                newScript.onload = function() {
+                    updateStatusDisplay();
+                    renderAgentCards();
+                };
+                script.parentNode.replaceChild(newScript, script);
+            } else {
+                updateStatusDisplay();
+                renderAgentCards();
+            }
+        }
+
+        function updateStatusDisplay() {
+            if (typeof rumforStatus === 'undefined') return;
+
+            const orchestrator = rumforStatus.orchestrator;
+
+            document.getElementById('orchestrator-status').textContent =
+                `Status: ${orchestrator.status.toUpperCase()}`;
+            document.getElementById('cycle-number').textContent =
+                `Cycle: ${orchestrator.current_cycle}`;
+            document.getElementById('current-agent').textContent =
+                `Current: ${orchestrator.current_agent || 'None'}`;
+
+            const agents = Object.values(rumforStatus.agents);
+            const running = agents.filter(a => a.status === 'running').length;
+            const complete = agents.filter(a => a.status === 'complete').length;
+
+            document.getElementById('agents-summary').textContent =
+                `Agents: ${running}/${agents.length}`;
+        }
+
+        // Agent functions
+        function runAgent(agent) {
+            const prompt = generateAgentPrompt(agent.id);
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast(`🔨 ${agent.name} prompt copied!`, 'success');
+                showToast('Paste into Roo Code to run agent', 'info');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = prompt;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                showToast(`🔨 ${agent.name} prompt copied!`, 'success');
+                showToast('Paste into Roo Code to run agent', 'info');
+            });
+        }
+
+        function generateAgentPrompt(agentId) {
+            const agent = rumforAgents.find(a => a.id === agentId);
+            if (!agent) return '';
+
+            let prompt = `I want to run the ${agent.name} Agent for Rumfor Market Tracker.\n\n`;
+
+            // Include World Model context if a card is selected
+            if (selectedCard) {
+                prompt += `Context from World Model card "${selectedCard}":\n`;
+                prompt += `Focus on ${selectedCard.toLowerCase()} related development and improvements.\n\n`;
+            }
+
+            prompt += `Please switch to the ${agent.mode} mode and complete the ${agent.name} Agent's responsibilities.`;
+
+            return prompt;
+        }
+
+        function runFullCycle() {
+            const prompt = `I want to run the Rumfor Orchestrator for Rumfor Market Tracker.
+
+Please run a complete development cycle with all 8 specialist agents:
+1. Frontend Agent (rumfor-frontend) - React/TypeScript/Vite development
+2. Backend Agent (rumfor-backend) - Node.js/Express API development
+3. API Agent (rumfor-api) - Authentication and data modeling
+4. Styling Agent (rumfor-styling) - Responsive design and accessibility
+5. Testing Agent (rumfor-testing) - E2E testing and code quality
+6. Security Agent (rumfor-security) - Vulnerability scanning and security
+7. Documentation Agent (rumfor-docs) - Technical documentation
+8. Deployment Agent (rumfor-deploy) - CI/CD and performance optimization
+
+Switch to the rumfor-orchestrator mode and run a full cycle with all agents.`;
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast('🚀 Full cycle prompt copied!', 'success');
+                showToast('Paste into Roo Code to start orchestrator', 'info');
+            });
+        }
+
+        function resetAllAgents() {
+            if (confirm('Reset all agents to idle status? This will clear current progress.')) {
+                showToast('🔄 Reset functionality would be implemented here', 'info');
+                // In a real implementation, this would call a reset API
+            }
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} show`;
+
+            toast.innerHTML = `<div class="toast-title">${message}</div>`;
+
+            document.body.appendChild(toast);
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
