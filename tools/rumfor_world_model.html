@@ -568,91 +568,206 @@
             // Clear existing content
             tree.innerHTML = '';
 
-            // Key features that users can select for agent work
+            // Comprehensive feature list from Rumfor Market Tracker concept
             const features = [
+                // Core Authentication & User Management
                 {
-                    name: 'Authentication & Users',
+                    name: 'User Registration & Login',
                     icon: '🔐',
-                    description: 'JWT tokens, user roles, progressive onboarding, account management',
+                    description: 'JWT authentication, progressive onboarding, account management, password security',
                     category: 'auth'
                 },
                 {
-                    name: 'Market Discovery',
+                    name: 'User Roles & Permissions',
+                    icon: '👥',
+                    description: 'Visitor/Vendor/Promoter/Admin roles, RBAC, access control, permission management',
+                    category: 'auth'
+                },
+
+                // Market Discovery & Search
+                {
+                    name: 'Advanced Market Search',
                     icon: '🔍',
-                    description: 'Advanced search, filtering, grid display, personalization, tracking',
+                    description: 'Text search, location-based search, debounced input, relevance ranking, search suggestions',
                     category: 'markets'
                 },
                 {
-                    name: 'Vendor Applications',
-                    icon: '📋',
-                    description: 'Application workflow, status management, forms, progress tracking',
+                    name: 'Market Filtering & Sorting',
+                    icon: '⚡',
+                    description: 'Category filters, date filters, accessibility filters, pricing filters, vendor type filters',
+                    category: 'markets'
+                },
+                {
+                    name: 'Market Display & Grid',
+                    icon: '📱',
+                    description: 'Responsive grid layout, market cards, hero images, loading states, pagination, empty states',
+                    category: 'markets'
+                },
+                {
+                    name: 'Personalization & Recommendations',
+                    icon: '🎯',
+                    description: 'Location-aware discovery, user preferences, trending markets, smart recommendations',
+                    category: 'markets'
+                },
+                {
+                    name: 'Market Tracking System',
+                    icon: '⭐',
+                    description: 'Save favorite markets, track interest, status management, personal market lists, notifications',
+                    category: 'markets'
+                },
+
+                // Vendor Applications & Workflow
+                {
+                    name: 'Application Form Builder',
+                    icon: '📝',
+                    description: 'Multi-step forms, file uploads (business licenses, photos), validation, draft saving, auto-submit',
                     category: 'applications'
                 },
                 {
-                    name: 'Community Features',
-                    icon: '👥',
-                    description: 'Comments, photos, hashtags, voting, social engagement',
+                    name: 'Application Status Management',
+                    icon: '📊',
+                    description: 'Status workflow: interested→applied→booked→completed, notifications, timeline tracking',
+                    category: 'applications'
+                },
+                {
+                    name: 'Application Review Dashboard',
+                    icon: '🔍',
+                    description: 'Promoter dashboard, bulk operations, approval workflow, communication tools, analytics',
+                    category: 'applications'
+                },
+                {
+                    name: 'Application Progress Tracking',
+                    icon: '📈',
+                    description: 'Todo lists, expense tracking, market preparation checklists, completion analytics',
+                    category: 'applications'
+                },
+
+                // Community & Social Features
+                {
+                    name: 'Threaded Comment System',
+                    icon: '💬',
+                    description: 'Nested discussions, emoji reactions, moderation, real-time updates, user mentions',
                     category: 'community'
                 },
                 {
-                    name: 'Admin Dashboard',
-                    icon: '⚙️',
-                    description: 'User management, analytics, moderation, system controls',
-                    category: 'admin'
+                    name: 'Photo Sharing & Gallery',
+                    icon: '📸',
+                    description: 'Image uploads, community voting, moderation queue, hero images, galleries, optimization',
+                    category: 'community'
                 },
                 {
-                    name: 'Business Tools',
-                    icon: '💼',
-                    description: 'Todo lists, expense tracking, analytics, productivity features',
+                    name: 'Hashtag Voting System',
+                    icon: '🏷️',
+                    description: 'Community tagging, voting mechanics, trending topics, market categorization, content discovery',
+                    category: 'community'
+                },
+                {
+                    name: 'Community Moderation',
+                    icon: '🛡️',
+                    description: 'Automated filtering, user reports, content guidelines, moderator tools, appeal process',
+                    category: 'community'
+                },
+
+                // Business & Productivity Tools
+                {
+                    name: 'Todo List Management',
+                    icon: '✅',
+                    description: 'Task templates, dependency tracking, time estimates, progress visualization, completion analytics',
                     category: 'business'
                 },
                 {
-                    name: 'API & Backend',
+                    name: 'Expense Tracking',
+                    icon: '💰',
+                    description: 'Category organization, receipt uploads, tax reporting, profit/loss calculations, budget management',
+                    category: 'business'
+                },
+                {
+                    name: 'Business Analytics Dashboard',
+                    icon: '📈',
+                    description: 'Revenue tracking, market performance, profitability analysis, growth metrics, ROI calculations',
+                    category: 'business'
+                },
+                {
+                    name: 'Workflow Optimization',
+                    icon: '⚡',
+                    description: 'Bulk operations, automation, customizable templates, shortcuts, efficiency tools',
+                    category: 'business'
+                },
+
+                // Admin & System Management
+                {
+                    name: 'User Administration',
+                    icon: '👤',
+                    description: 'Role management, account suspension, bulk operations, user verification, permission controls',
+                    category: 'admin'
+                },
+                {
+                    name: 'Content Moderation Tools',
+                    icon: '🚫',
+                    description: 'Photo approval, comment moderation, hashtag management, reported content handling',
+                    category: 'admin'
+                },
+                {
+                    name: 'Platform Analytics',
+                    icon: '📊',
+                    description: 'User growth metrics, engagement statistics, market performance, revenue analytics, health monitoring',
+                    category: 'admin'
+                },
+                {
+                    name: 'Promoter Management',
+                    icon: '🏪',
+                    description: 'Market claiming, vendor management, event planning, promoter community features, verification',
+                    category: 'admin'
+                },
+
+                // Technical Infrastructure
+                {
+                    name: 'REST API Architecture',
                     icon: '🔗',
-                    description: 'REST APIs, authentication, data modeling, validation',
+                    description: 'API design, authentication, data modeling, validation, error handling, documentation',
                     category: 'api'
                 },
                 {
-                    name: 'Frontend & UI',
+                    name: 'Backend Services',
+                    icon: '🗄️',
+                    description: 'Express.js routes, MongoDB integration, middleware, caching, performance optimization',
+                    category: 'api'
+                },
+                {
+                    name: 'Frontend Architecture',
                     icon: '⚛️',
-                    description: 'React components, TypeScript, Vite, styling, responsive design',
+                    description: 'React 18 components, TypeScript implementation, Vite build system, state management',
                     category: 'frontend'
                 },
                 {
-                    name: 'Styling & Design',
+                    name: 'UI/UX & Responsive Design',
                     icon: '🎨',
-                    description: 'Tailwind CSS, UnoCSS, mobile-first, accessibility, theming',
-                    category: 'styling'
+                    description: 'Tailwind CSS, UnoCSS, mobile-first design, accessibility compliance, design system',
+                    category: 'frontend'
                 },
                 {
-                    name: 'Testing & Quality',
+                    name: 'Testing Infrastructure',
                     icon: '🧪',
-                    description: 'E2E tests, Playwright, code quality, CI/CD, performance',
+                    description: 'E2E tests with Playwright, unit tests, accessibility testing, CI/CD integration',
                     category: 'testing'
                 },
                 {
-                    name: 'Security & Audit',
+                    name: 'Security & Compliance',
                     icon: '🔒',
-                    description: 'Vulnerability scanning, auth security, dependency audits',
+                    description: 'Vulnerability scanning, authentication security, dependency audits, data protection',
                     category: 'security'
                 },
                 {
-                    name: 'Documentation',
+                    name: 'Documentation System',
                     icon: '📝',
-                    description: 'API docs, user guides, technical documentation',
+                    description: 'API documentation, user guides, technical documentation, onboarding materials',
                     category: 'docs'
                 },
                 {
-                    name: 'Deployment & Production',
+                    name: 'DevOps & Deployment',
                     icon: '🚀',
-                    description: 'CI/CD, performance, monitoring, production deployment',
+                    description: 'CI/CD pipelines, performance monitoring, production deployment, environment management',
                     category: 'deployment'
-                },
-                {
-                    name: 'Database & Models',
-                    icon: '🗄️',
-                    description: 'MongoDB schemas, User/Market/Application models, indexing',
-                    category: 'database'
                 }
             ];
 
