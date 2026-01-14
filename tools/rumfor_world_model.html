@@ -424,7 +424,7 @@
             margin-bottom: 4px;
         }
 
-        /* User Workflow Section Headers */
+        /* User Type Section Headers */
         .tree-section-header-user {
             padding: 12px 8px;
             margin: 20px 0 12px 0;
@@ -436,6 +436,37 @@
             font-weight: 700;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* User Type Colors for better distinction */
+        .tree-node.vendor-persona {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            border-left: 3px solid #10b981;
+        }
+
+        .tree-node.promoter-persona {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+            border-left: 3px solid #f59e0b;
+        }
+
+        .tree-node.admin-persona {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+            border-left: 3px solid #ef4444;
+        }
+
+        .tree-node.shared-persona {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05));
+            border-left: 3px solid #8b5cf6;
+        }
+
+        .tree-node.developer-persona {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-left: 3px solid #3b82f6;
+        }
+
+        .tree-node:hover {
+            background: var(--bg-hover);
+            border-left-color: var(--accent);
         }
 
         /* Responsive */
@@ -582,230 +613,274 @@
             // Clear existing content
             tree.innerHTML = '';
 
-            // User-Centric Feature Organization - Organized by Personas and Workflows
+            // User-Centric Feature Organization - Organized by the 3 Main User Types
             const features = [
-                // 🎯 MARKET DISCOVERY WORKFLOW (All Users - Entry Point)
+                // 🛒 VENDOR USER EXPERIENCE - Apply to markets, track applications, prepare for events
                 {
-                    name: '🏠 Market Discovery Hub',
+                    name: '🏠 Market Discovery & Browsing',
                     icon: '🏪',
-                    description: 'Homepage, market grid, search landing, user onboarding, first impressions',
-                    category: 'discovery',
-                    persona: 'all',
-                    workflow: 'entry'
-                },
-                {
-                    name: '🔍 Advanced Search & Filters',
-                    icon: '🔍',
-                    description: 'Text search, location-aware filtering, category selection, date-based discovery',
-                    category: 'discovery',
-                    persona: 'all',
-                    workflow: 'search'
-                },
-                {
-                    name: '📱 Market Display & Navigation',
-                    icon: '📱',
-                    description: 'Responsive grid, market cards, hero images, pagination, loading states',
-                    category: 'discovery',
-                    persona: 'all',
-                    workflow: 'browse'
-                },
-                {
-                    name: '⭐ Market Tracking & Favorites',
-                    icon: '⭐',
-                    description: 'Save markets, interest tracking, notifications, personal market lists',
-                    category: 'discovery',
+                    description: 'Browse markets, search events, filter by location/category, view market details and photos',
+                    category: 'vendor-discovery',
                     persona: 'vendor',
-                    workflow: 'personalize'
+                    workflow: 'discover',
+                    pages: ['HomePage.tsx', 'MarketSearchPage.tsx', 'MarketDetailPage.tsx']
                 },
-
-                // 🛒 VENDOR APPLICATION JOURNEY (Vendor Persona - Core Workflow)
                 {
-                    name: '📋 Application Form Builder',
-                    icon: '📝',
-                    description: 'Multi-step forms, file uploads, business info, product details, validation',
-                    category: 'applications',
+                    name: '📝 Application Form System',
+                    icon: '📋',
+                    description: 'Multi-step application forms, file uploads, business info submission, market selection',
+                    category: 'vendor-applications',
                     persona: 'vendor',
-                    workflow: 'apply'
+                    workflow: 'apply',
+                    pages: ['ApplicationFormPage.tsx']
                 },
                 {
-                    name: '📊 Application Status Tracking',
+                    name: '📊 My Applications Dashboard',
                     icon: '📊',
-                    description: 'Status workflow, progress indicators, notifications, review timeline',
-                    category: 'applications',
+                    description: 'Application status tracking, progress indicators, notifications, review timeline',
+                    category: 'vendor-applications',
                     persona: 'vendor',
-                    workflow: 'track'
+                    workflow: 'track',
+                    pages: ['MyApplicationsPage.tsx', 'ApplicationDetailPage.tsx']
                 },
                 {
-                    name: '✅ Market Preparation Tools',
+                    name: '✅ Pre-Market Preparation Tools',
                     icon: '✅',
-                    description: 'Todo lists, checklists, task templates, preparation planning, deadlines',
-                    category: 'business',
+                    description: 'Todo lists, checklists, task templates, prep planning, deadlines, reminders',
+                    category: 'vendor-prep',
                     persona: 'vendor',
-                    workflow: 'prepare'
+                    workflow: 'prepare',
+                    pages: ['vendor todos', 'expense tracking']
                 },
                 {
-                    name: '💰 Expense & Financial Tracking',
+                    name: '💰 Expense & Vendor Tools',
                     icon: '💰',
-                    description: 'Cost management, receipt uploads, profit calculations, tax reporting',
-                    category: 'business',
+                    description: 'Cost management, receipts, profit calculations, vendor expense tracking',
+                    category: 'vendor-business',
                     persona: 'vendor',
-                    workflow: 'manage'
+                    workflow: 'manage',
+                    pages: ['VendorExpenseTracker.tsx', 'ExpenseForm.tsx']
+                },
+                {
+                    name: '⭐ My Markets & Interests',
+                    icon: '⭐',
+                    description: 'Saved markets, favorite events, personal lists, notifications, interest tracking',
+                    category: 'vendor-personal',
+                    persona: 'vendor',
+                    workflow: 'personal',
+                    pages: ['MyMarketsPage.tsx']
                 },
 
-                // 🏪 PROMOTER MANAGEMENT WORKFLOW (Promoter Persona - Management)
+                // 🏪 PROMOTER USER EXPERIENCE - Create/manage markets, review applications
                 {
-                    name: '🏪 Market Claiming & Setup',
+                    name: '🏪 Market Creation & Management',
                     icon: '🏪',
-                    description: 'Promoter verification, market ownership, custom settings, event planning',
-                    category: 'promoter',
+                    description: 'Create markets, claim ownership, custom settings, event planning, market details',
+                    category: 'promoter-setup',
                     persona: 'promoter',
-                    workflow: 'setup'
+                    workflow: 'create',
+                    pages: ['PromoterCreateMarketPage.tsx', 'PromoterMarketsPage.tsx']
                 },
                 {
                     name: '🔍 Application Review Dashboard',
                     icon: '🔍',
                     description: 'Bulk operations, approval workflow, vendor communication, status updates',
-                    category: 'promoter',
+                    category: 'promoter-review',
                     persona: 'promoter',
-                    workflow: 'review'
+                    workflow: 'review',
+                    pages: ['PromoterApplicationsPage.tsx']
                 },
                 {
                     name: '📈 Promoter Analytics & Insights',
                     icon: '📈',
                     description: 'Vendor demographics, application trends, market performance, revenue tracking',
-                    category: 'promoter',
+                    category: 'promoter-analytics',
                     persona: 'promoter',
-                    workflow: 'analyze'
-                },
-
-                // 👥 COMMUNITY ENGAGEMENT FLOW (All Users - Social)
-                {
-                    name: '💬 Market Discussions & Comments',
-                    icon: '💬',
-                    description: 'Threaded conversations, emoji reactions, real-time updates, user engagement',
-                    category: 'community',
-                    persona: 'all',
-                    workflow: 'discuss'
+                    workflow: 'analyze',
+                    pages: ['PromoterAnalyticsPage.tsx']
                 },
                 {
-                    name: '📸 Photo Sharing & Gallery',
-                    icon: '📸',
-                    description: 'Image uploads, community voting, hero images, galleries, sharing features',
-                    category: 'community',
-                    persona: 'all',
-                    workflow: 'share'
+                    name: '📅 Promoter Calendar & Events',
+                    icon: '📅',
+                    description: 'Event scheduling, market calendar, deadline management, timeline planning',
+                    category: 'promoter-tools',
+                    persona: 'promoter',
+                    workflow: 'schedule',
+                    pages: ['PromoterCalendarPage.tsx']
                 },
                 {
-                    name: '🏷️ Hashtag & Tagging System',
-                    icon: '🏷️',
-                    description: 'Community voting, trend discovery, market categorization, content discovery',
-                    category: 'community',
-                    persona: 'all',
-                    workflow: 'tag'
-                },
-
-                // 🔐 AUTHENTICATION & USER MANAGEMENT (Foundation)
-                {
-                    name: '🔐 Authentication & Onboarding',
-                    icon: '🔐',
-                    description: 'Login/register, JWT tokens, progressive signup, role assignment, security',
-                    category: 'auth',
-                    persona: 'all',
-                    workflow: 'foundation'
-                },
-                {
-                    name: '👥 User Roles & Permissions',
+                    name: '👥 Vendor Management',
                     icon: '👥',
-                    description: 'RBAC system, access control, visitor/vendor/promoter/admin hierarchies',
-                    category: 'auth',
-                    persona: 'system',
-                    workflow: 'foundation'
+                    description: 'Approved vendor lists, communication tools, vendor contacts, management',
+                    category: 'promoter-vendors',
+                    persona: 'promoter',
+                    workflow: 'manage-vendors',
+                    pages: ['PromoterVendorsPage.tsx']
+                },
+                {
+                    name: '🏠 Promoter Dashboard',
+                    icon: '🏠',
+                    description: 'Overview of markets, applications, analytics, notifications, key metrics',
+                    category: 'promoter-dashboard',
+                    persona: 'promoter',
+                    workflow: 'dashboard',
+                    pages: ['PromoterDashboardPage.tsx']
                 },
 
-                // ⚙️ ADMIN & MODERATION TOOLS (Admin Persona - Oversight)
+                // 👑 ADMIN USER EXPERIENCE - Platform oversight, moderation, user management
                 {
                     name: '👤 User Administration',
                     icon: '👤',
-                    description: 'Role management, account controls, bulk operations, user verification',
-                    category: 'admin',
+                    description: 'Role management, account controls, bulk operations, user verification, access control',
+                    category: 'admin-users',
                     persona: 'admin',
-                    workflow: 'admin'
+                    workflow: 'user-management',
+                    pages: ['AdminUsersPage.tsx', 'AdminDashboardPage.tsx']
                 },
                 {
-                    name: '🚫 Content Moderation System',
-                    icon: '🚫',
-                    description: 'Photo approval, comment moderation, automated filtering, report handling',
-                    category: 'admin',
+                    name: '🔍 Platform Moderation',
+                    icon: '🔍',
+                    description: 'Application review, promoter verification, content approval, spam detection',
+                    category: 'admin-moderation',
                     persona: 'admin',
-                    workflow: 'moderate'
+                    workflow: 'moderate',
+                    pages: ['AdminModerationPage.tsx', 'AdminApplicationsPage.tsx']
                 },
                 {
-                    name: '📊 Platform Analytics & Health',
+                    name: '📊 System Analytics & Monitoring',
                     icon: '📊',
-                    description: 'System monitoring, user growth, engagement metrics, performance tracking',
-                    category: 'admin',
+                    description: 'Platform metrics, user growth, engagement tracking, system health, performance',
+                    category: 'admin-analytics',
                     persona: 'admin',
-                    workflow: 'monitor'
+                    workflow: 'monitor',
+                    pages: ['AdminAnalyticsPage.tsx', 'AdminDashboardPage.tsx']
+                },
+                {
+                    name: '🛠️ Admin Tools & Support',
+                    icon: '🛠️',
+                    description: 'Bulk operations, system settings, support tickets, emergency controls',
+                    category: 'admin-tools',
+                    persona: 'admin',
+                    workflow: 'admin-tools',
+                    pages: ['AdminSettingsPage.tsx', 'AdminSupportPage.tsx', 'AdminMarketsPage.tsx']
                 },
 
-                // 🔧 TECHNICAL INFRASTRUCTURE (Development Team)
+                // 👥 SHARED USER EXPERIENCE - Common across all user types
                 {
-                    name: '🔗 API Architecture & Backend',
+                    name: '🔐 Authentication System',
+                    icon: '🔐',
+                    description: 'Login/register, JWT tokens, password recovery, email verification, security',
+                    category: 'shared-auth',
+                    persona: 'all',
+                    workflow: 'auth',
+                    pages: ['LoginPage.tsx', 'RegisterPage.tsx', 'EmailVerificationPage.tsx', 'PasswordRecoveryPage.tsx']
+                },
+                {
+                    name: '👤 Profile & Settings',
+                    icon: '👤',
+                    description: 'Profile management, account settings, preferences, notifications, privacy',
+                    category: 'shared-profile',
+                    persona: 'all',
+                    workflow: 'profile',
+                    pages: ['ProfilePage.tsx', 'SettingsPage.tsx', 'NotificationsPage.tsx']
+                },
+                {
+                    name: '💬 Community & Discussions',
+                    icon: '💬',
+                    description: 'Market discussions, threaded comments, emoji reactions, user engagement',
+                    category: 'shared-community',
+                    persona: 'all',
+                    workflow: 'community',
+                    pages: ['market comments', 'CommentForm.tsx', 'CommentItem.tsx']
+                },
+                {
+                    name: '📸 Photo Gallery System',
+                    icon: '📸',
+                    description: 'Image uploads, community voting, hero images, galleries, moderation',
+                    category: 'shared-media',
+                    persona: 'all',
+                    workflow: 'media',
+                    pages: ['PhotoGallery.tsx', 'PhotoUploader.tsx', 'PhotoThumbnail.tsx']
+                },
+
+                // 🔧 TECHNICAL INFRASTRUCTURE - Development and operations
+                {
+                    name: '🔗 API & Backend Systems',
                     icon: '🔗',
-                    description: 'REST APIs, Express routes, MongoDB integration, authentication, validation',
-                    category: 'technical',
+                    description: 'REST APIs, Express routes, MongoDB, authentication, validation, middleware',
+                    category: 'technical-backend',
                     persona: 'developers',
-                    workflow: 'infrastructure'
+                    workflow: 'infrastructure',
+                    pages: ['backend routes', 'models', 'controllers']
                 },
                 {
-                    name: '⚛️ Frontend & UI Development',
+                    name: '⚛️ Frontend Development',
                     icon: '⚛️',
-                    description: 'React components, TypeScript, Vite, Zustand, mobile-first responsive design',
-                    category: 'technical',
+                    description: 'React components, TypeScript, Vite, Zustand, responsive design, UI/UX',
+                    category: 'technical-frontend',
                     persona: 'developers',
-                    workflow: 'frontend'
+                    workflow: 'frontend',
+                    pages: ['components', 'pages', 'utils', 'hooks']
                 },
                 {
-                    name: '🧪 Testing & Quality Assurance',
+                    name: '🧪 Testing & Quality',
                     icon: '🧪',
-                    description: 'E2E tests, Playwright, accessibility testing, CI/CD integration, security',
-                    category: 'technical',
+                    description: 'E2E tests, Playwright, accessibility, security, CI/CD integration',
+                    category: 'technical-testing',
                     persona: 'developers',
-                    workflow: 'quality'
+                    workflow: 'quality',
+                    pages: ['e2e-tests/', 'security reports', 'lint reports']
                 },
                 {
                     name: '🚀 Deployment & Production',
                     icon: '🚀',
-                    description: 'CI/CD pipelines, performance optimization, monitoring, production deployment',
-                    category: 'technical',
+                    description: 'CI/CD pipelines, GitLab Pages, Docker, performance, monitoring',
+                    category: 'technical-deploy',
                     persona: 'developers',
-                    workflow: 'deployment'
-                },
-
-                // 📝 DOCUMENTATION & SUPPORT
-                {
-                    name: '📝 Documentation & User Guides',
-                    icon: '📝',
-                    description: 'API docs, user tutorials, technical documentation, onboarding materials',
-                    category: 'support',
-                    persona: 'users',
-                    workflow: 'support'
+                    workflow: 'deployment',
+                    pages: ['GitLab CI', 'docker-compose', 'nginx']
                 }
             ];
 
-            // Group features by user workflow
-            const workflowGroups = {
-                '🎯 MARKET DISCOVERY': ['🏠 Market Discovery Hub', '🔍 Advanced Search & Filters', '📱 Market Display & Navigation', '⭐ Market Tracking & Favorites'],
-                '🛒 VENDOR JOURNEY': ['📋 Application Form Builder', '📊 Application Status Tracking', '✅ Market Preparation Tools', '💰 Expense & Financial Tracking'],
-                '🏪 PROMOTER WORKFLOW': ['🏪 Market Claiming & Setup', '🔍 Application Review Dashboard', '📈 Promoter Analytics & Insights'],
-                '👥 COMMUNITY ENGAGEMENT': ['💬 Market Discussions & Comments', '📸 Photo Sharing & Gallery', '🏷️ Hashtag & Tagging System'],
-                '🔐 AUTHENTICATION': ['🔐 Authentication & Onboarding', '👥 User Roles & Permissions'],
-                '⚙️ ADMIN & MODERATION': ['👤 User Administration', '🚫 Content Moderation System', '📊 Platform Analytics & Health'],
-                '🔧 TECHNICAL INFRASTRUCTURE': ['🔗 API Architecture & Backend', '⚛️ Frontend & UI Development', '🧪 Testing & Quality Assurance', '🚀 Deployment & Production'],
-                '📝 SUPPORT & DOCUMENTATION': ['📝 Documentation & User Guides']
+            // Group features by user type (the 3 main personas)
+            const userTypeGroups = {
+                '🛒 VENDOR USER EXPERIENCE': [
+                    '🏠 Market Discovery & Browsing',
+                    '📝 Application Form System',
+                    '📊 My Applications Dashboard',
+                    '✅ Pre-Market Preparation Tools',
+                    '💰 Expense & Vendor Tools',
+                    '⭐ My Markets & Interests'
+                ],
+                '🏪 PROMOTER USER EXPERIENCE': [
+                    '🏪 Market Creation & Management',
+                    '🔍 Application Review Dashboard',
+                    '📈 Promoter Analytics & Insights',
+                    '📅 Promoter Calendar & Events',
+                    '👥 Vendor Management',
+                    '🏠 Promoter Dashboard'
+                ],
+                '👑 ADMIN USER EXPERIENCE': [
+                    '👤 User Administration',
+                    '🔍 Platform Moderation',
+                    '📊 System Analytics & Monitoring',
+                    '🛠️ Admin Tools & Support'
+                ],
+                '👥 SHARED FEATURES (All Users)': [
+                    '🔐 Authentication System',
+                    '👤 Profile & Settings',
+                    '💬 Community & Discussions',
+                    '📸 Photo Gallery System'
+                ],
+                '🔧 TECHNICAL INFRASTRUCTURE': [
+                    '🔗 API & Backend Systems',
+                    '⚛️ Frontend Development',
+                    '🧪 Testing & Quality',
+                    '🚀 Deployment & Production'
+                ]
             };
 
-            Object.entries(workflowGroups).forEach(([sectionTitle, sectionFeatures]) => {
+            Object.entries(userTypeGroups).forEach(([sectionTitle, sectionFeatures]) => {
                 // Add section header
                 const header = document.createElement('div');
                 header.className = 'tree-section-header-user';
@@ -817,12 +892,27 @@
                     const feature = features.find(f => f.name === featureName);
                     if (feature) {
                         const node = document.createElement('div');
-                        node.className = 'tree-node';
+                        // Add persona-based CSS classes
+                        let personaClass = '';
+                        if (feature.persona === 'vendor') personaClass = 'vendor-persona';
+                        else if (feature.persona === 'promoter') personaClass = 'promoter-persona';
+                        else if (feature.persona === 'admin') personaClass = 'admin-persona';
+                        else if (feature.persona === 'all') personaClass = 'shared-persona';
+                        else if (feature.persona === 'developers') personaClass = 'developer-persona';
+
+                        node.className = `tree-node ${personaClass}`;
+
+                        // Add pages info to tooltip if available
+                        let tooltip = feature.description;
+                        if (feature.pages && feature.pages.length > 0) {
+                            tooltip += `\n\n📄 Pages: ${feature.pages.join(', ')}`;
+                        }
+
                         node.innerHTML = `
                             <span class="tree-icon">${feature.icon}</span>
                             <span>${feature.name}</span>
                         `;
-                        node.title = feature.description; // Tooltip on hover
+                        node.title = tooltip;
                         node.addEventListener('click', () => selectCard(feature.name, feature.description));
                         tree.appendChild(node);
                     }
