@@ -26,7 +26,7 @@ services:
   rumfor-app:
     image: rumfor-vpopcan-rumfor-app:latest
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
       - NODE_ENV=production
     volumes:
@@ -35,7 +35,7 @@ services:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
