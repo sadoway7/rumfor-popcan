@@ -1,0 +1,208 @@
+digraph RumforMarketTracker {
+    // Root application
+    "ROOT" [label="Rumfor Market Tracker\nFarmers Market SaaS Platform", type="root"];
+
+    // Core Infrastructure (MVP Foundation)
+    "ROOT" -> "Infrastructure";
+    "ROOT" -> "Authentication";
+    "ROOT" -> "Database";
+    "ROOT" -> "BackendAPI";
+
+    // Sprint 1 Features (Current Focus)
+    "ROOT" -> "Markets";
+    "ROOT" -> "Applications";
+    "ROOT" -> "AdminDashboard";
+
+    // Future Sprint Features (Roadmap)
+    "ROOT" -> "Community";
+    "ROOT" -> "AdvancedMarkets";
+    "ROOT" -> "BusinessFeatures";
+    "ROOT" -> "VendorTools";
+
+    // Infrastructure Foundation
+    "Infrastructure" [
+        label="Infrastructure\nGitLab CI/CD",
+        type="category",
+        prompt="Set up GitLab repository, CI/CD pipeline, deployment automation, and development tooling."
+    ];
+
+    "Infrastructure" -> "GitLabSetup";
+    "Infrastructure" -> "CIDeployment";
+    "Infrastructure" -> "QualityGates";
+
+    "GitLabSetup" [label="GitLab Repository", type="card", prompt="Initialize Git repository, configure GitLab Pages, set up project structure and documentation."];
+    "CIDeployment" [label="CI/CD Pipeline", type="card", prompt="Configure automated testing, building, deployment, and quality gates for staging and production."];
+    "QualityGates" [label="Code Quality", type="card", prompt="Implement ESLint, TypeScript checks, security scanning, and automated testing gates."];
+
+    // Authentication System
+    "Authentication" [
+        label="Authentication System\nJWT + Role-Based Access",
+        type="category",
+        prompt="Implement complete user authentication with JWT tokens, role-based access control, and security features."
+    ];
+
+    "Authentication" -> "UserRegistration";
+    "Authentication" -> "LoginLogout";
+    "Authentication" -> "PasswordReset";
+    "Authentication" -> "EmailVerification";
+    "Authentication" -> "RoleManagement";
+    "Authentication" -> "ProtectedRoutes";
+
+    "UserRegistration" [label="User Registration", type="card", prompt="Build registration form with validation, password strength, terms acceptance, and initial role selection."];
+    "LoginLogout" [label="Login/Logout System", type="card", prompt="Create secure login with remember me, session management, and automatic logout on inactivity."];
+    "PasswordReset" [label="Password Recovery", type="card", prompt="Implement secure password reset with email tokens, expiration, and rate limiting."];
+    "EmailVerification" [label="Email Verification", type="card", prompt="Build email verification system for account activation with resend functionality."];
+    "RoleManagement" [label="Role-Based Access", type="card", prompt="Implement RBAC for visitor/vendor/promoter/admin roles with appropriate permissions."];
+    "ProtectedRoutes" [label="Route Protection", type="card", prompt="Create React Router guards for authentication and role-based access control."];
+
+    // Database Layer
+    "Database" [
+        label="Database Models\nMongoDB Atlas",
+        type="category",
+        prompt="Design and implement MongoDB schemas for users, markets, applications, and all data entities."
+    ];
+
+    "Database" -> "UserModel";
+    "Database" -> "MarketModel";
+    "Database" -> "ApplicationModel";
+    "Database" -> "BusinessModels";
+
+    "UserModel" [label="User Schema", type="card", prompt="Design User model with authentication fields, profile data, roles, and relationships."];
+    "MarketModel" [label="Market Schema", type="card", prompt="Create Market model for event details, locations, categories, and vendor relationships."];
+    "ApplicationModel" [label="Application Schema", type="card", prompt="Build Application model for vendor submissions, status tracking, and review workflow."];
+    "BusinessModels" [label="Business Data Models", type="card", prompt="Implement Todo, Expense, Comment, Photo, Notification, and other business domain models."];
+
+    // Backend API Layer
+    "BackendAPI" [
+        label="Backend API\nExpress + MongoDB",
+        type="category",
+        prompt="Build complete Express.js API with routes, controllers, middleware, and database integration."
+    ];
+
+    "BackendAPI" -> "APIRoutes";
+    "BackendAPI" -> "Controllers";
+    "BackendAPI" -> "Middleware";
+    "BackendAPI" -> "Validation";
+
+    "APIRoutes" [label="API Route Structure", type="card", prompt="Create all route files (auth, markets, applications, users, admin, etc.) with RESTful endpoints."];
+    "Controllers" [label="Business Logic", type="card", prompt="Implement controllers for authentication, CRUD operations, business logic, and data processing."];
+    "Middleware" [label="API Middleware", type="card", prompt="Build authentication, validation, error handling, CORS, rate limiting, and security middleware."];
+    "Validation" [label="Data Validation", type="card", prompt="Implement input validation, sanitization, and error handling for all API endpoints."];
+
+    // Sprint 1: Core Markets Feature
+    "Markets" [
+        label="Market Discovery\nSearch & Browse",
+        type="category",
+        prompt="Build the core market discovery and search functionality that is the heart of the platform."
+    ];
+
+    "Markets" -> "MarketSearch";
+    "Markets" -> "MarketListing";
+    "Markets" -> "BasicFilters";
+    "Markets" -> "MarketTracking";
+
+    "MarketSearch" [label="Market Search", type="card", prompt="Implement text search with debouncing, result highlighting, and relevance scoring."];
+    "MarketListing" [label="Market Grid/List", type="card", prompt="Create responsive market display with pagination, sorting, and loading states."];
+    "BasicFilters" [label="Category & Status Filters", type="card", prompt="Build filtering by market category, status, and basic location criteria."];
+    "MarketTracking" [label="Favorite Markets", type="card", prompt="Allow users to save favorite markets and track upcoming events."];
+
+    // Sprint 1: Vendor Applications
+    "Applications" [
+        label="Vendor Applications\nSubmission System",
+        type="category",
+        prompt="Create the vendor application system with forms, file uploads, status tracking, and admin review."
+    ];
+
+    "Applications" -> "ApplicationForm";
+    "Applications" -> "ApplicationStatus";
+    "Applications" -> "FileUploads";
+    "Applications" -> "AdminReview";
+
+    "ApplicationForm" [label="Application Form", type="card", prompt="Build multi-step form with business info, product details, requirements, and validation."];
+    "ApplicationStatus" [label="Status Tracking", type="card", prompt="Create status dashboard with timeline, notifications, and clear next steps."];
+    "FileUploads" [label="Document Upload", type="card", prompt="Implement secure file upload for business licenses, photos, and supporting documents."];
+    "AdminReview" [label="Review Workflow", type="card", prompt="Build admin interface for application review, approval, rejection, and communication."];
+
+    // Sprint 1: Admin Dashboard
+    "AdminDashboard" [
+        label="Admin Dashboard\nUser & System Management",
+        type="category",
+        prompt="Build basic admin functionality for user management, system monitoring, and content moderation."
+    ];
+
+    "AdminDashboard" -> "UserManagement";
+    "AdminDashboard" -> "SystemMonitoring";
+    "AdminDashboard" -> "PromoterVerification";
+
+    "UserManagement" [label="User Administration", type="card", prompt="Create user list with search, filtering, role management, and account controls."];
+    "SystemMonitoring" [label="Basic Analytics", type="card", prompt="Build simple dashboard with user counts, application statistics, and system health."];
+    "PromoterVerification" [label="Promoter Verification", type="card", prompt="Implement promoter account verification and approval workflow."];
+
+    // Sprint 2: Enhanced Markets
+    "AdvancedMarkets" [
+        label="Advanced Market Features\nDetail Pages & Calendar",
+        type="category",
+        prompt="Add detailed market pages, calendar integration, advanced filtering, and promoter management tools."
+    ];
+
+    "AdvancedMarkets" -> "MarketDetail";
+    "AdvancedMarkets" -> "MarketCalendar";
+    "AdvancedMarkets" -> "AdvancedFilters";
+    "AdvancedMarkets" -> "PromoterTools";
+
+    "MarketDetail" [label="Market Detail Pages", type="card", prompt="Create rich market detail with photos, vendor list, schedule, directions, and community content."];
+    "MarketCalendar" [label="Market Calendar", type="card", prompt="Build calendar view showing upcoming markets, recurring events, and seasonal planning."];
+    "AdvancedFilters" [label="Advanced Filtering", type="card", prompt="Add accessibility, parking, pricing, vendor type filtering with map integration."];
+    "PromoterTools" [label="Promoter Management", type="card", prompt="Create promoter interface for market creation, editing, vendor communication, and analytics."];
+
+    // Sprint 3: Community Features
+    "Community" [
+        label="Community Features\nSocial Engagement",
+        type="category",
+        prompt="Build social features for user engagement, content sharing, and community building."
+    ];
+
+    "Community" -> "Comments";
+    "Community" -> "PhotoSharing";
+    "Community" -> "HashtagSystem";
+    "Community" -> "UserProfiles";
+
+    "Comments" [label="Comment System", type="card", prompt="Implement threaded comments on markets with moderation and real-time notifications."];
+    "PhotoSharing" [label="Photo Gallery", type="card", prompt="Create photo upload, gallery display, and social sharing for market experiences."];
+    "HashtagSystem" [label="Hashtags & Trends", type="card", prompt="Build hashtag voting, trending topics, and content discovery system."];
+    "UserProfiles" [label="User Profiles", type="card", prompt="Create public profiles with activity history, favorite markets, and community stats."];
+
+    // Sprint 4: Business Features
+    "BusinessFeatures" [
+        label="Business Features\nPayments & Analytics",
+        type="category",
+        prompt="Add payment processing, advanced analytics, notifications, and business intelligence."
+    ];
+
+    "BusinessFeatures" -> "Notifications";
+    "BusinessFeatures" -> "AdvancedAnalytics";
+    "BusinessFeatures" -> "PaymentIntegration";
+    "BusinessFeatures" -> "BulkOperations";
+
+    "Notifications" [label="Notification System", type="card", prompt="Build email, push, and in-app notifications for applications, markets, and community activity."];
+    "AdvancedAnalytics" [label="Business Intelligence", type="card", prompt="Create detailed analytics for promoters, vendors, and platform administrators."];
+    "PaymentIntegration" [label="Payment Processing", type="card", prompt="Implement payment processing for application fees, marketplace commissions, and subscriptions."];
+    "BulkOperations" [label="Bulk Management", type="card", prompt="Build admin tools for bulk user operations, market management, and system maintenance."];
+
+    // Ongoing Vendor Tools
+    "VendorTools" [
+        label="Vendor Tools\nDashboard & Productivity",
+        type="category",
+        prompt="Create comprehensive vendor dashboard with todo management, expense tracking, and business analytics."
+    ];
+
+    "VendorTools" -> "VendorDashboard";
+    "VendorTools" -> "TodoManagement";
+    "VendorTools" -> "ExpenseTracking";
+    "VendorTools" -> "BusinessAnalytics";
+
+    "VendorDashboard" [label="Vendor Portal", type="card", prompt="Build comprehensive vendor dashboard with application status, market calendar, and business metrics."];
+    "TodoManagement" [label="Task Management", type="card", prompt="Create todo system for market preparation, vendor tasks, and operational checklists."];
+    "ExpenseTracking" [label="Expense Management", type="card", prompt="Implement expense tracking with categories, reporting, and profit/loss analysis."];
+    "BusinessAnalytics" [label="Vendor Analytics", type="card", prompt="Build vendor-specific analytics showing sales, attendance, and market performance trends."];
+}

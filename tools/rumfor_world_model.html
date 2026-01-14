@@ -108,6 +108,17 @@
             display: none;
         }
 
+        .tree-section-header {
+            padding: 8px 4px;
+            margin: 12px 0 4px 0;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
         /* Center - Graph Visualization */
         .center {
             flex: 1;
@@ -143,6 +154,40 @@
             margin-bottom: 16px;
             color: var(--text-primary);
         }
+
+        .quick-start {
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .quick-start h4 {
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        .quick-start ol {
+            margin: 8px 0;
+        }
+
+        .quick-start li {
+            margin: 8px 0;
+            padding-left: 8px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active { background: var(--success); }
+        .status-inactive { background: var(--text-muted); }
 
         /* Right Sidebar - Rumfor Panel */
         .panel {
@@ -413,7 +458,7 @@
         <!-- Right Sidebar - Rumfor Panel -->
         <div class="panel" id="rumfor-panel">
             <div class="panel-header">
-                🤖 Rumfor Orchestrator
+                🤖 Rumfor Infinity Rule List - ACTIVE
                 <button class="action-button secondary" onclick="refreshStatus()">↻</button>
             </div>
             <div class="panel-content">
@@ -486,34 +531,128 @@
 
         // World Model functions
         function initializeWorldModel() {
-            // Build initial tree structure
+            // Build actual card structure from your app
             const tree = document.getElementById('world-tree');
 
-            // Add sample cards - in a real implementation, this would load from cards/*.dot files
-            const sampleCards = [
-                { type: 'category', name: 'Frontend', icon: '💻' },
-                { type: 'category', name: 'Backend', icon: '⚙️' },
-                { type: 'category', name: 'Authentication', icon: '🔐' },
-                { type: 'category', name: 'Markets', icon: '🏪' },
-                { type: 'category', name: 'Applications', icon: '📋' },
-                { type: 'category', name: 'Community', icon: '👥' },
-                { type: 'category', name: 'Admin', icon: '⚡' }
+            // Clear existing content
+            tree.innerHTML = '';
+
+            // Add section headers and cards
+            const sections = [
+                {
+                    title: '🎯 CORE FEATURES',
+                    cards: [
+                        { type: 'root', name: 'Rumfor Market Tracker', icon: '🏪', description: 'Main SaaS platform for farmers markets and vendors' },
+                        { type: 'category', name: 'Authentication', icon: '🔐', description: 'User login, registration, JWT tokens, roles' },
+                        { type: 'category', name: 'Markets', icon: '🏪', description: 'Market discovery, listings, search, filtering' },
+                        { type: 'category', name: 'Applications', icon: '📋', description: 'Vendor applications, status tracking, review' }
+                    ]
+                },
+                {
+                    title: '👥 SOCIAL FEATURES',
+                    cards: [
+                        { type: 'category', name: 'Community', icon: '👥', description: 'Comments, photos, hashtags, reactions, engagement' }
+                    ]
+                },
+                {
+                    title: '⚙️ ADMIN & SYSTEM',
+                    cards: [
+                        { type: 'category', name: 'Admin', icon: '⚡', description: 'User management, analytics, moderation, settings' },
+                        { type: 'category', name: 'API System', icon: '🔗', description: 'REST endpoints, data models, validation, authentication' },
+                        { type: 'category', name: 'Deployment', icon: '🚀', description: 'CI/CD, performance, monitoring, production' }
+                    ]
+                }
             ];
 
-            sampleCards.forEach(card => {
-                const node = document.createElement('div');
-                node.className = 'tree-node';
-                node.setAttribute('data-type', card.type);
-                node.innerHTML = `
-                    <span class="tree-icon">${card.icon}</span>
-                    <span>${card.name}</span>
-                `;
-                node.addEventListener('click', () => selectCard(card.name));
-                tree.appendChild(node);
+            sections.forEach(section => {
+                // Add section header
+                const header = document.createElement('div');
+                header.className = 'tree-section-header';
+                header.innerHTML = `<strong>${section.title}</strong>`;
+                tree.appendChild(header);
+
+                // Add section cards
+                section.cards.forEach(card => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+                    node.setAttribute('data-type', card.type);
+                    node.innerHTML = `
+                        <span class="tree-icon">${card.icon}</span>
+                        <span>${card.name}</span>
+                    `;
+                    node.title = card.description; // Tooltip on hover
+                    node.addEventListener('click', () => selectCard(card.name, card.description));
+                    tree.appendChild(node);
+                });
             });
+
+            // Initialize center visualization
+            updateCenterVisualization();
         }
 
-        function selectCard(cardName) {
+        function updateCenterVisualization() {
+            const center = document.querySelector('.graph-placeholder');
+            const selected = document.querySelector('.tree-node.selected');
+
+            if (selected) {
+                const cardName = selected.textContent.trim();
+                center.innerHTML = `
+                    <h3>🎯 Selected: ${cardName}</h3>
+                    <p>This card represents a key feature area of your Rumfor Market Tracker application.</p>
+                    <p><strong>Click any agent button on the right</strong> to run AI analysis focused on this feature area.</p>
+                    <div style="background: var(--bg-card); padding: 16px; border-radius: 8px; margin: 16px 0;">
+                        <h4>💡 Try This:</h4>
+                        <ol style="text-align: left; margin: 8px 0;">
+                            <li>Select a feature card (like "Markets" or "Authentication")</li>
+                            <li>Click an agent button (⚛️ Frontend, 🗄️ Backend, etc.)</li>
+                            <li>Paste the prompt into Roo Code</li>
+                            <li>Watch the AI improve that specific feature!</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                center.innerHTML = `
+                    <h3>🤖 Rumfor Infinity Rule List - ACTIVE</h3>
+                    <p><strong>What is this?</strong> An autonomous AI development system for your Rumfor Market Tracker.</p>
+
+                    <div class="quick-start">
+                        <h4>🎯 QUICK START (2 minutes):</h4>
+                        <ol>
+                            <li><strong>Step 1:</strong> Click a feature card on the left (like "Markets" or "Authentication")</li>
+                            <li><strong>Step 2:</strong> Click an agent button on the right (⚛️ Frontend, 🗄️ Backend, etc.)</li>
+                            <li><strong>Step 3:</strong> Paste the copied prompt into Roo Code</li>
+                            <li><strong>Step 4:</strong> Watch AI autonomously improve your code!</li>
+                        </ol>
+                        <p><strong>💡 Try it now:</strong> Click "Markets" → Click "⚛️ Frontend" → Paste in Roo Code</p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 16px; margin: 16px 0;">
+                        <div>
+                            <strong>System Status:</strong>
+                            <span id="cycle-display" style="margin-left: 8px;">Loading...</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <span class="status-indicator status-active"></span>
+                            <strong>AI Agents Ready</strong> - Click buttons to activate
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-deep); padding: 16px; border-radius: 8px;">
+                        <h4>🚀 What Happens Next:</h4>
+                        <p>When you click an agent button:</p>
+                        <ul style="text-align: left; margin: 8px 0;">
+                            <li>• AI analyzes your selected feature area</li>
+                            <li>• Suggests specific code improvements</li>
+                            <li>• May implement fixes automatically</li>
+                            <li>• Updates progress in real-time</li>
+                            <li>• Saves work to git automatically</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+
+        function selectCard(cardName, description) {
             // Remove previous selection
             document.querySelectorAll('.tree-node.selected').forEach(node => {
                 node.classList.remove('selected');
@@ -523,7 +662,8 @@
             event.target.closest('.tree-node').classList.add('selected');
 
             selectedCard = cardName;
-            showToast(`Selected: ${cardName}`, 'info');
+            updateCenterVisualization();
+            showToast(`🎯 Focused on: ${cardName}`, 'info');
         }
 
         // Panel functions
@@ -614,6 +754,16 @@
 
             document.getElementById('agents-summary').textContent =
                 `Agents: ${running}/${agents.length}`;
+
+            // Update center visualization with cycle info
+            const cycleDisplay = document.getElementById('cycle-display');
+            if (cycleDisplay) {
+                cycleDisplay.innerHTML = `
+                    <strong>Cycle ${orchestrator.current_cycle}</strong> |
+                    Status: ${orchestrator.status.toUpperCase()} |
+                    ${complete}/8 Agents Complete ✅
+                `;
+            }
         }
 
         // Agent functions

@@ -1,0 +1,125 @@
+digraph UserJourneys {
+    // User types and their journeys
+    "ROOT" [label="User Journeys\nRole-Based Flows", type="root"];
+
+    // User types
+    "ROOT" -> "Visitor";
+    "ROOT" -> "Vendor";
+    "ROOT" -> "Promoter";
+    "ROOT" -> "Admin";
+
+    // Visitor journey
+    "Visitor" [
+        label="Visitor Journey\nAnonymous Users",
+        type="category",
+        prompt="Optimize visitor experience for market discovery, information gathering, and conversion to registered users."
+    ];
+
+    "Visitor" -> "Discover";
+    "Visitor" -> "Explore";
+    "Visitor" -> "Register";
+    "Visitor" -> "Convert";
+
+    "Discover" [label="Market Discovery", type="card", prompt="Ensure compelling first impression with attractive market listings, clear filtering, and engaging previews."];
+    "Explore" [label="Detailed Exploration", type="card", prompt="Provide comprehensive market information with photos, schedules, vendor lists, and community content."];
+    "Register" [label="User Registration", type="card", prompt="Streamline registration process with clear benefits, social proof, and minimal friction."];
+    "Convert" [label="Account Creation", type="card", prompt="Guide visitors through email verification and role selection to become active platform users."];
+
+    // Vendor journey
+    "Vendor" [
+        label="Vendor Journey\nMarket Applicants",
+        type="category",
+        prompt="Create seamless vendor experience from application to market participation, focusing on ease of use and clear communication."
+    ];
+
+    "Vendor" -> "Apply";
+    "Vendor" -> "Track";
+    "Vendor" -> "Participate";
+    "Vendor" -> "Manage";
+
+    "Apply" [label="Market Application", type="card", prompt="Build intuitive application form with clear requirements, file uploads, and progress indicators."];
+    "Track" [label="Application Tracking", type="card", prompt="Provide real-time status updates, communication channels, and clear next steps for applicants."];
+    "Participate" [label="Market Participation", type="card", prompt="Enable approved vendors to manage their presence, upload photos, and engage with customers."];
+    "Manage" [label="Business Management", type="card", prompt="Provide tools for expense tracking, analytics, todo management, and performance insights."];
+
+    // Promoter journey
+    "Promoter" [
+        label="Promoter Journey\nMarket Organizers",
+        type="category",
+        prompt="Empower market organizers with comprehensive tools for market creation, vendor management, and community building."
+    ];
+
+    "Promoter" -> "Create";
+    "Promoter" -> "Manage";
+    "Promoter" -> "Communicate";
+    "Promoter" -> "Analyze";
+
+    "Create" [label="Market Creation", type="card", prompt="Build intuitive market creation interface with comprehensive settings and customization options."];
+    "Manage" [label="Vendor Management", type="card", prompt="Provide efficient applicant review, approval workflow, and vendor relationship management."];
+    "Communicate" [label="Community Building", type="card", prompt="Enable promoters to communicate with applicants, share updates, and build community engagement."];
+    "Analyze" [label="Performance Analytics", type="card", prompt="Deliver comprehensive market analytics, attendance tracking, and vendor performance metrics."];
+
+    // Admin journey
+    "Admin" [
+        label="Admin Journey\nPlatform Management",
+        type="category",
+        prompt="Provide administrators with complete platform oversight and management capabilities for sustainable growth."
+    ];
+
+    "Admin" -> "Moderate";
+    "Admin" -> "Configure";
+    "Admin" -> "Monitor";
+    "Admin" -> "Scale";
+
+    "Moderate" [label="Content Moderation", type="card", prompt="Build comprehensive moderation tools for user content, reported issues, and community standards enforcement."];
+    "Configure" [label="System Configuration", type="card", prompt="Provide interface for platform settings, feature toggles, and policy management."];
+    "Monitor" [label="Platform Monitoring", type="card", prompt="Deliver real-time analytics, error tracking, performance metrics, and user engagement data."];
+    "Scale" [label="Growth Management", type="card", prompt="Implement user acquisition tools, promoter verification, and scalability planning features."];
+
+    // Cross-cutting concerns
+    "ROOT" -> "Authentication";
+    "ROOT" -> "Onboarding";
+    "ROOT" -> "Support";
+
+    "Authentication" [
+        label="Authentication Flow\nUniversal Access",
+        type="category",
+        prompt="Ensure seamless authentication experience across all user types with proper security and user experience."
+    ];
+
+    "Authentication" -> "Login";
+    "Authentication" -> "Recovery";
+    "Authentication" -> "Security";
+
+    "Login" [label="Secure Login", type="card", prompt="Provide role-appropriate login flows with proper security measures and user-friendly error handling."];
+    "Recovery" [label="Account Recovery", type="card", prompt="Implement secure password reset and account recovery processes for all user types."];
+    "Security" [label="Account Security", type="card", prompt="Enable two-factor authentication, session management, and security preferences for users."];
+
+    "Onboarding" [
+        label="User Onboarding\nFirst Experience",
+        type="category",
+        prompt="Create engaging onboarding experiences that help users understand platform value and get started quickly."
+    ];
+
+    "Onboarding" -> "Welcome";
+    "Onboarding" -> "Tutorial";
+    "Onboarding" -> "Guidance";
+
+    "Welcome" [label="Welcome Experience", type="card", prompt="Design compelling welcome flows that showcase platform benefits and guide initial interactions."];
+    "Tutorial" [label="Interactive Tutorials", type="card", prompt="Provide contextual help, tooltips, and guided tours for key features and workflows."];
+    "Guidance" [label="Progressive Disclosure", type="card", prompt="Implement progressive feature introduction and contextual help throughout the user experience."];
+
+    "Support" [
+        label="Support System\nHelp & Assistance",
+        type="category",
+        prompt="Build comprehensive support infrastructure for user assistance, issue resolution, and platform improvement."
+    ];
+
+    "Support" -> "Help";
+    "Support" -> "Feedback";
+    "Support" -> "Resolution";
+
+    "Help" [label="Help Resources", type="card", prompt="Create comprehensive documentation, FAQs, and self-service resources for user assistance."];
+    "Feedback" [label="User Feedback", type="card", prompt="Implement feedback collection, suggestion systems, and user research capabilities."];
+    "Resolution" [label="Issue Resolution", type="card", prompt="Provide ticket system, live chat, and escalation paths for complex user issues."];
+}
