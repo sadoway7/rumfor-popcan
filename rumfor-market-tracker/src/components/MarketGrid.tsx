@@ -5,6 +5,9 @@ import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/utils/cn'
 
+/**
+ * Props for the MarketGrid component
+ */
 interface MarketGridProps {
   markets: Market[]
   isLoading?: boolean
@@ -23,6 +26,41 @@ interface MarketGridProps {
   }
 }
 
+/**
+ * MarketGrid component for displaying a collection of markets in various layouts
+ *
+ * Features:
+ * - Responsive grid/list layouts with different variants
+ * - Loading states with spinner
+ * - Error handling with user-friendly messages
+ * - Empty state with customizable content
+ * - Market tracking functionality
+ * - Multiple grid variants (grid, list, compact, minimal)
+ *
+ * @param markets - Array of market objects to display
+ * @param isLoading - Whether data is currently loading
+ * @param isSearching - Whether a search operation is in progress (shows different loading text)
+ * @param error - Error message to display if loading failed
+ * @param onTrack - Callback function when user tracks a market
+ * @param onUntrack - Callback function when user untracks a market
+ * @param trackedMarketIds - Array of market IDs that the user has tracked
+ * @param isTracking - Whether a tracking operation is in progress
+ * @param variant - Layout variant: 'grid' (default), 'list', 'compact', or 'minimal'
+ * @param className - Additional CSS classes for styling
+ * @param emptyStateProps - Customization options for empty state display
+ * @returns JSX.Element
+ *
+ * @example
+ * ```tsx
+ * <MarketGrid
+ *   markets={markets}
+ *   isLoading={false}
+ *   onTrack={(marketId) => console.log('Track', marketId)}
+ *   trackedMarketIds={['market1', 'market2']}
+ *   variant="grid"
+ * />
+ * ```
+ */
 export const MarketGrid: React.FC<MarketGridProps> = ({
   markets,
   isLoading = false,
@@ -122,12 +160,20 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   )
 }
 
-// Compact grid variant for sidebar or mobile
+/**
+ * Compact grid variant for sidebar or mobile views
+ * Displays markets in a tighter grid with smaller gaps
+ * @param props - All MarketGrid props except variant (automatically set to 'compact')
+ */
 export const CompactMarketGrid: React.FC<Omit<MarketGridProps, 'variant'>> = (props) => {
   return <MarketGrid {...props} variant="compact" />
 }
 
-// List view variant for detailed browsing
+/**
+ * List view variant for detailed market browsing
+ * Shows markets in a vertical list format with featured card style
+ * @param props - All MarketGrid props except variant (automatically set to 'list')
+ */
 export const MarketList: React.FC<Omit<MarketGridProps, 'variant'>> = (props) => {
   return <MarketGrid {...props} variant="list" />
 }

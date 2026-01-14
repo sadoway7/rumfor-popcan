@@ -104,13 +104,17 @@ src/
 
 | Backend Route | Frontend API Module | Purpose |
 |---------------|---------------------|---------|
-| `/api/auth/*` | `features/auth/authApi.ts` | Authentication |
-| `/api/markets/*` | `features/markets/marketsApi.ts` | Markets CRUD |
-| `/api/admin/*` | `features/admin/adminApi.ts` | Admin operations |
-| `/api/applications/*` | `features/applications/applicationsApi.ts` | Applications |
-| `/api/users/*` | `features/users/usersApi.ts` | User management |
-| `/api/expenses/*` | `features/tracking/trackingApi.ts` | Expense tracking |
-| `/api/notifications/*` | `features/notifications/notificationsApi.ts` | Notifications |
+| `/api/auth/*` | `features/auth/authApi.ts` | Authentication, JWT tokens, user management |
+| `/api/markets/*` | `features/markets/marketsApi.ts` | Markets CRUD, search, tracking |
+| `/api/admin/*` | `features/admin/adminApi.ts` | Admin operations, user moderation, statistics |
+| `/api/applications/*` | `features/applications/applicationsApi.ts` | Vendor applications, status updates |
+| `/api/comments/*` | `features/community/commentsApi.ts` | Market comments and reactions |
+| `/api/photos/*` | `features/community/photosApi.ts` | Photo uploads and management |
+| `/api/hashtags/*` | `features/community/hashtagsApi.ts` | Community hashtags and voting |
+| `/api/todos/*` | `features/tracking/todosApi.ts` | Vendor task management |
+| `/api/expenses/*` | `features/tracking/expensesApi.ts` | Expense tracking and reporting |
+| `/api/notifications/*` | `features/notifications/notificationsApi.ts` | Push notifications and preferences |
+| `/api/users/*` | `features/users/usersApi.ts` | User profiles and relationships |
 
 ### Component Parent-Child Relationships
 
@@ -243,6 +247,56 @@ App.tsx
 | `getPromoterVerifications()` | `/api/admin/verifications` | GET |
 | `reviewVerification(id, status, notes)` | `/api/admin/verifications/:id` | PUT |
 
+#### commentsApi.ts
+| Function | Endpoint | Method |
+|----------|----------|--------|
+| `getComments(marketId, options)` | `/api/comments/market/:marketId` | GET |
+| `createComment(data)` | `/api/comments` | POST |
+| `updateComment(id, content)` | `/api/comments/:id` | PATCH |
+| `deleteComment(id)` | `/api/comments/:id` | DELETE |
+| `addReaction(id, reactionType, action)` | `/api/comments/:id/reaction` | POST |
+| `reportComment(id, reason)` | `/api/comments/:id/report` | POST |
+
+#### photosApi.ts
+| Function | Endpoint | Method |
+|----------|----------|--------|
+| `getPhotos(marketId, options)` | `/api/photos/market/:marketId` | GET |
+| `uploadPhoto(marketId, file, caption)` | `/api/photos/market/:marketId` | POST |
+| `voteOnPhoto(id, vote)` | `/api/photos/:id/vote` | POST |
+| `deletePhoto(id)` | `/api/photos/:id` | DELETE |
+| `reportPhoto(id, reason)` | `/api/photos/:id/report` | POST |
+| `getHeroPhoto(marketId)` | `/api/photos/market/:marketId/hero` | GET |
+
+#### todosApi.ts
+| Function | Endpoint | Method |
+|----------|----------|--------|
+| `getTodos(filters, pagination)` | `/api/todos` | GET |
+| `createTodo(todoData)` | `/api/todos` | POST |
+| `updateTodo(id, updates)` | `/api/todos/:id` | PATCH |
+| `deleteTodo(id)` | `/api/todos/:id` | DELETE |
+| `markComplete(id, completed)` | `/api/todos/:id/complete` | PATCH |
+| `getTemplates(marketType)` | `/api/todos/templates/:marketType` | GET |
+
+#### expensesApi.ts
+| Function | Endpoint | Method |
+|----------|----------|--------|
+| `getExpenses(filters, pagination)` | `/api/expenses` | GET |
+| `createExpense(expenseData)` | `/api/expenses` | POST |
+| `updateExpense(id, updates)` | `/api/expenses/:id` | PATCH |
+| `deleteExpense(id)` | `/api/expenses/:id` | DELETE |
+| `getCategories()` | `/api/expenses/categories` | GET |
+
+#### notificationsApi.ts
+| Function | Endpoint | Method |
+|----------|----------|--------|
+| `getNotifications(options)` | `/api/notifications` | GET |
+| `markAsRead(notificationIds)` | `/api/notifications/read` | PATCH |
+| `markAllAsRead()` | `/api/notifications/read-all` | PATCH |
+| `deleteNotification(id)` | `/api/notifications/:id` | DELETE |
+| `deleteNotifications(notificationIds)` | `/api/notifications` | DELETE |
+| `updatePreferences(preferences)` | `/api/notifications/preferences` | PATCH |
+| `getCount(options)` | `/api/notifications/count` | GET |
+
 ### Stores with State Management
 
 | Store | Location | Purpose | Persistence |
@@ -336,13 +390,17 @@ App.tsx
 
 | Endpoint | Mock Data | Real API | Notes |
 |----------|-----------|----------|-------|
-| `/api/auth/*` | ✅ Yes | ⚠️ Partial | JWT implementation exists |
-| `/api/markets/*` | ✅ Yes | ⚠️ Partial | CRUD operations exist |
-| `/api/admin/*` | ✅ Yes | ⚠️ Partial | Admin functions exist |
-| `/api/applications/*` | ✅ Yes | ⚠️ Partial | Application flow exists |
-| `/api/expenses/*` | ✅ Yes | ⚠️ Partial | Tracking functions exist |
-| `/api/users/*` | ✅ Yes | ⚠️ Partial | User management exists |
-| `/api/notifications/*` | ✅ Yes | ⚠️ Partial | Notification system exists |
+| `/api/auth/*` | ✅ Yes | ✅ Complete | JWT auth, registration, password reset, 2FA ready |
+| `/api/markets/*` | ✅ Yes | ✅ Complete | Full CRUD with geospatial search and tracking |
+| `/api/admin/*` | ✅ Yes | ✅ Complete | User management, moderation, statistics, bulk operations |
+| `/api/applications/*` | ✅ Yes | ✅ Complete | Application workflow with status history and reviews |
+| `/api/comments/*` | ✅ Yes | ✅ Complete | Threaded comments with reactions and moderation |
+| `/api/photos/*` | ✅ Yes | ✅ Complete | Upload, voting, moderation, hero images |
+| `/api/hashtags/*` | ✅ Yes | ✅ Complete | Community hashtags with voting system |
+| `/api/todos/*` | ✅ Yes | ✅ Complete | Task management with templates and priorities |
+| `/api/expenses/*` | ✅ Yes | ✅ Complete | Expense tracking with categories and receipts |
+| `/api/notifications/*` | ✅ Yes | ✅ Complete | Real-time notifications with preferences |
+| `/api/users/*` | ✅ Yes | ✅ Complete | Profile management and relationships |
 
 ### Frontend Features
 

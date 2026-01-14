@@ -7,7 +7,7 @@
 [![Test Coverage](https://img.shields.io/badge/Tests-Coverage%20%3E%2080%25-brightgreen.svg)](https://gitlab.com/your-username/rumfor-market-tracker/-/quality_reports)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A comprehensive platform for market discovery, vendor applications, and community engagement built with modern web technologies with full GitLab CI/CD integration.
+A comprehensive platform for market discovery, vendor applications, and community engagement built with modern web technologies. Features complete vendor application workflows, market management, expense tracking, community features, and a full CI/CD pipeline with comprehensive documentation.
 
 ## 🚀 Tech Stack
 
@@ -400,7 +400,20 @@ This project is licensed under the MIT License.
 
 ## 📚 Additional Documentation
 
+### Core Documentation
+- [API Documentation](./API_DOCUMENTATION.md) - Complete REST API reference
+- [Database Schema](./DATABASE_SCHEMA.md) - MongoDB collections and relationships
+- [Component Props Guide](./COMPONENTS_PROPS.md) - React components documentation
+- [System Architecture](./SYSTEM_ARCHITECTURE_MAP.md) - Technical architecture overview
+
+### Development & Deployment
+- [Development Guide](./DEVELOPMENT_GUIDE.md) - Setup and development workflow
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment strategies
 - [GitLab Environment Variables](./GITLAB_ENVIRONMENT_VARIABLES.md)
 - [GitLab Pages Setup](./GITLAB_PAGES_SETUP.md)
-- [Security Configuration](./.security-scan.yml)
-- [Docker Deployment](./docker-compose.yml)
+
+### Project Analysis
+- [Frontend Analysis Report](./FRONTEND_ANALYSIS_REPORT.md)
+- [Backend Analysis Report](./BACKEND_ANALYSIS_REPORT.md)
+- [Architecture Audit](./AUDIT_REPORT.md)
+- [File Structure Reference](./FILE_STRUCTURE_REFERENCE.md)

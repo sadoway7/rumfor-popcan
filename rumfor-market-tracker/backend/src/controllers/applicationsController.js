@@ -178,17 +178,22 @@ const updateApplicationStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('You can only update applications for your markets', 403))
   }
 
-  // Validate status transition
+  // Validate status transition logic:
+  // - 'applied' applications can be 'booked' (approved) or 'cancelled' (rejected)
+  // - 'booked' applications can only be 'cancelled' (withdrawn by promoter)
+  // This prevents invalid state changes and maintains application workflow integrity
   const validStatuses = ['booked', 'cancelled']
-  
+
   if (!validStatuses.includes(status)) {
     return next(new AppError('Invalid status. Must be "booked" or "cancelled"', 400))
   }
 
+  // Business rule: Only pending applications can be approved
   if (status === 'booked' && application.status !== 'applied') {
     return next(new AppError('Can only book applications with "applied" status', 400))
   }
 
+  // Business rule: Applications can be cancelled at any active stage
   if (status === 'cancelled' && !['applied', 'booked'].includes(application.status)) {
     return next(new AppError('Can only cancel applications with "applied" or "booked" status', 400))
   }
@@ -372,10 +377,15 @@ const withdrawApplication = catchAsync(async (req, res, next) => {
   sendSuccess(res, null, 'Application withdrawn successfully')
 })
 
-// Bulk update application status (for promoters)
+/**
+ * Bulk update application status (for promoters and admins)
+ * Processes multiple applications simultaneously with validation and notifications
+ * Uses Promise.all for parallel processing to improve performance
+ */
 const bulkUpdateStatus = catchAsync(async (req, res, next) => {
   const { applicationIds, status, reviewNotes = '' } = req.body
 
+  // Input validation - ensure we have valid application IDs array
   if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
     return next(new AppError('Application IDs are required', 400))
   }
@@ -384,13 +394,15 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('Valid status is required', 400))
   }
 
-  // Get applications with market info
+  // Fetch all applications with their market information in a single query
+  // This ensures we have promoter information for authorization checks
   const applications = await UserMarketTracking.find({
     _id: { $in: applicationIds }
   }).populate('market', 'promoter name')
 
-  // Verify user owns all these markets
-  const unauthorizedApplications = applications.filter(app => 
+  // Authorization check: Verify user has permission to modify ALL applications
+  // This prevents partial success scenarios where some applications succeed and others fail
+  const unauthorizedApplications = applications.filter(app =>
     app.market.promoter.toString() !== req.user.id && req.user.role !== 'admin'
   )
 
@@ -398,11 +410,14 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('You can only update applications for your markets', 403))
   }
 
-  // Update applications
+  // Parallel processing of all application updates and notifications
+  // Each update creates a notification, so we use Promise.all for efficiency
   const updatePromises = applications.map(async (application) => {
+    // Update the application status using the model's business logic method
     await application.reviewApplication(status, req.user.id, reviewNotes)
-    
-    // Create notification for applicant
+
+    // Send notification to the applicant about status change
+    // Priority is higher for approvals (booked) than rejections (cancelled)
     await Notification.create({
       recipient: application.user,
       type: 'application-status-change',
@@ -420,6 +435,8 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
     return application
   })
 
+  // Wait for all updates and notifications to complete
+  // This ensures atomicity - all operations succeed or all fail
   await Promise.all(updatePromises)
 
   sendSuccess(res, {

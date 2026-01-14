@@ -324,6 +324,49 @@ GET /api/promoter/applications
 GET /api/comments/market/:marketId
 ```
 
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 20, max: 50)
+- `sort` (string): Sort by "newest", "oldest", "popular" (default: "newest")
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "comments": [{
+      "_id": "507f1f77bcf86cd799439011",
+      "market": "507f1f77bcf86cd799439012",
+      "user": {
+        "_id": "507f1f77bcf86cd799439013",
+        "username": "johndoe",
+        "profile": {
+          "firstName": "John",
+          "lastName": "Doe"
+        }
+      },
+      "content": "This market has the best local produce!",
+      "parent": null,
+      "replies": [],
+      "reactions": {
+        "like": 5,
+        "dislike": 0,
+        "love": 2
+      },
+      "isApproved": true,
+      "createdAt": "2024-01-01T10:00:00.000Z",
+      "updatedAt": "2024-01-01T10:00:00.000Z"
+    }],
+    "pagination": {
+      "current": 1,
+      "total": 5,
+      "count": 20,
+      "hasMore": false
+    }
+  }
+}
+```
+
 #### Create Comment
 ```
 POST /api/comments
@@ -343,12 +386,20 @@ POST /api/comments
 PATCH /api/comments/:id
 ```
 
+**Request Body:**
+```json
+{
+  "content": "Updated comment content"
+}
+```
+
 #### Delete Comment
 ```
 DELETE /api/comments/:id
 ```
+**Role Required:** comment author or admin
 
-#### Add Reaction to Comment
+#### Add/Remove Reaction to Comment
 ```
 POST /api/comments/:id/reaction
 ```
@@ -356,8 +407,21 @@ POST /api/comments/:id/reaction
 **Request Body:**
 ```json
 {
-  "reactionType": "thumbsUp",
-  "action": "add" // or "remove"
+  "reactionType": "like",
+  "action": "add" // "add" or "remove"
+}
+```
+
+#### Report Comment
+```
+POST /api/comments/:id/report
+```
+
+**Request Body:**
+```json
+{
+  "reason": "spam",
+  "description": "Optional additional details"
 }
 ```
 
@@ -399,11 +463,74 @@ POST /api/photos/:id/vote
 ```
 DELETE /api/photos/:id
 ```
+**Role Required:** photo uploader or admin
 
 #### Get Hero Photo
 ```
 GET /api/photos/market/:marketId/hero
 ```
+
+#### Vote on Photo
+```
+POST /api/photos/:id/vote
+```
+
+**Request Body:**
+```json
+{
+  "vote": 1  // 1=upvote, -1=downvote, 0=remove vote
+}
+```
+
+#### Report Photo
+```
+POST /api/photos/:id/report
+```
+
+**Request Body:**
+```json
+{
+  "reason": "inappropriate",
+  "description": "Optional additional details"
+}
+```
+
+### Hashtags
+
+#### Get Hashtags for Market
+```
+GET /api/hashtags/market/:marketId
+```
+
+#### Suggest Hashtag
+```
+POST /api/hashtags/market/:marketId
+```
+
+**Request Body:**
+```json
+{
+  "text": "#localproduce"
+}
+```
+
+#### Vote on Hashtag
+```
+POST /api/hashtags/:id/vote
+```
+
+**Request Body:**
+```json
+{
+  "vote": 1  // 1=upvote, -1=downvote, 0=remove vote
+}
+```
+
+#### Delete Hashtag
+```
+DELETE /api/hashtags/:id
+```
+**Role Required:** admin or moderator
 
 ### Notifications
 
@@ -413,13 +540,64 @@ GET /api/notifications
 ```
 
 **Query Parameters:**
-- `unreadOnly` (boolean)
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 20)
+- `unreadOnly` (boolean): Show only unread notifications
 - `type` (string): Filter by notification type
-- `page`, `limit`
+- `startDate` (string): Filter from date
+- `endDate` (string): Filter to date
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "notifications": [{
+      "_id": "507f1f77bcf86cd799439011",
+      "userId": "507f1f77bcf86cd799439012",
+      "type": "application-approved",
+      "title": "Application Approved",
+      "message": "Your application to Downtown Market has been approved!",
+      "data": {
+        "applicationId": "507f1f77bcf86cd799439013",
+        "marketId": "507f1f77bcf86cd799439014"
+      },
+      "read": false,
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    }],
+    "pagination": {
+      "current": 1,
+      "total": 5,
+      "count": 20,
+      "hasMore": false
+    }
+  }
+}
+```
+
+#### Get Notification Count
+```
+GET /api/notifications/count
+```
+
+**Query Parameters:**
+- `unreadOnly` (boolean): Count only unread notifications
 
 #### Mark as Read
 ```
 PATCH /api/notifications/:id/read
+```
+
+#### Mark Multiple as Read
+```
+PATCH /api/notifications/read
+```
+
+**Request Body:**
+```json
+{
+  "notificationIds": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+}
 ```
 
 #### Mark All as Read
@@ -432,6 +610,18 @@ PATCH /api/notifications/read-all
 DELETE /api/notifications/:id
 ```
 
+#### Delete Multiple Notifications
+```
+DELETE /api/notifications
+```
+
+**Request Body:**
+```json
+{
+  "notificationIds": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+}
+```
+
 #### Update Preferences
 ```
 PATCH /api/notifications/preferences
@@ -442,11 +632,49 @@ PATCH /api/notifications/preferences
 {
   "emailNotifications": {
     "applicationStatus": true,
-    "marketUpdates": false
+    "marketUpdates": false,
+    "comments": true,
+    "photos": false
   },
   "pushNotifications": {
-    "applicationStatus": true
+    "applicationStatus": true,
+    "reminders": true,
+    "announcements": false
+  },
+  "smsNotifications": {
+    "emergency": true,
+    "importantReminders": false
   }
+}
+```
+
+### User Market Tracking
+
+#### Get User Tracked Markets
+```
+GET /api/users/tracked-markets
+```
+
+#### Track Market
+```
+POST /api/markets/:id/track
+```
+
+#### Untrack Market
+```
+DELETE /api/markets/:id/track
+```
+
+#### Update Tracking Status
+```
+PATCH /api/markets/:id/tracking
+```
+
+**Request Body:**
+```json
+{
+  "status": "interested",
+  "notes": "Planning to apply for spring season"
 }
 ```
 
@@ -537,6 +765,78 @@ PATCH /api/expenses/:id
 ```
 DELETE /api/expenses/:id
 ```
+
+### Todos
+
+#### Get Todos
+```
+GET /api/todos
+```
+
+**Query Parameters:**
+- `market` (string): Filter by market ID
+- `completed` (boolean): Filter by completion status
+- `priority` (string): Filter by priority ("low", "medium", "high", "urgent")
+- `dueDateFrom` (string): Filter todos due after this date
+- `dueDateTo` (string): Filter todos due before this date
+- `sortBy` (string): Sort field ("createdAt", "dueDate", "priority")
+- `sortOrder` (string): Sort order ("asc", "desc")
+
+#### Create Todo
+```
+POST /api/todos
+```
+
+**Request Body:**
+```json
+{
+  "title": "Set up booth at Downtown Market",
+  "description": "Complete booth setup 30 minutes before opening",
+  "category": "setup",
+  "priority": "high",
+  "market": "507f1f77bcf86cd799439011",
+  "dueDate": "2024-01-06T08:30:00Z",
+  "estimatedHours": 2,
+  "cost": 0
+}
+```
+
+#### Update Todo
+```
+PATCH /api/todos/:id
+```
+
+**Request Body:**
+```json
+{
+  "title": "Updated title",
+  "completed": true
+}
+```
+
+#### Delete Todo
+```
+DELETE /api/todos/:id
+```
+
+#### Mark Todo Complete
+```
+PATCH /api/todos/:id/complete
+```
+
+**Request Body:**
+```json
+{
+  "completed": true
+}
+```
+
+#### Get Todo Templates
+```
+GET /api/todos/templates/:marketType
+```
+
+Returns predefined todo templates for different market types.
 
 ### Admin (Admin Only)
 
@@ -676,24 +976,196 @@ interface Market {
     address: string
     city: string
     state: string
-    coordinates: [number, number] // [longitude, latitude]
+    country: string
+    zipCode?: string
+    coordinates?: {
+      latitude: number
+      longitude: number
+    }
   }
   dates: {
     type: 'recurring' | 'one-time' | 'seasonal'
-    schedule?: string
-    startDate: string
-    endDate: string
+    recurring?: {
+      frequency: 'weekly' | 'monthly' | 'bi-weekly' | 'quarterly'
+      daysOfWeek: number[]
+      timeOfDay: {
+        start: string
+        end: string
+      }
+    }
+    events?: Array<{
+      startDate: string
+      endDate: string
+      time: {
+        start: string
+        end: string
+      }
+    }>
   }
   vendorInfo: {
     capacity: number
-    applicationFee?: {
-      amount: number
-      currency: string
+    boothSizes?: Array<{
+      size: string
+      price: number
+      description: string
+    }>
+    requirements: string[]
+    amenities: string[]
+  }
+  promoter: string // User ID reference
+  isActive: boolean
+  isVerified: boolean
+  images: Array<{
+    url: string
+    caption: string
+    isHero: boolean
+    uploadedBy: string
+    votes: {
+      up: number
+      down: number
+    }
+  }>
+  hashtags: Array<{
+    text: string
+    votes: {
+      up: number
+      down: number
+    }
+    suggestedBy: string
+  }>
+  statistics: {
+    totalTrackers: number
+    totalApplications: number
+    totalPhotos: number
+    totalComments: number
+  }
+  contact: {
+    email?: string
+    phone?: string
+    website?: string
+    socialMedia?: {
+      facebook?: string
+      instagram?: string
+      twitter?: string
     }
   }
-  promoter?: User
-  photoCount: number
-  commentCount: number
+  accessibility: {
+    wheelchairAccessible: boolean
+    parkingAvailable: boolean
+    publicTransport: boolean
+    restrooms: boolean
+  }
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Comment
+```typescript
+interface Comment {
+  _id: string
+  market: string // Market ID reference
+  user: string // User ID reference
+  content: string
+  parent?: string // Parent comment ID for replies
+  isApproved: boolean
+  isDeleted: boolean
+  deletedAt?: Date
+  editedAt?: Date
+  editHistory?: Array<{
+    oldContent: string
+    editedAt: Date
+    editedBy: string
+  }>
+  reactions: Array<{
+    user: string
+    reactionType: 'like' | 'dislike' | 'love' | 'laugh' | 'angry' | 'sad'
+    createdAt: Date
+  }>
+  reports?: Array<{
+    reportedBy: string
+    reason: 'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other'
+    description?: string
+    status: 'pending' | 'resolved' | 'dismissed'
+    resolvedAt?: Date
+    resolvedBy?: string
+    createdAt: Date
+  }>
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Photo
+```typescript
+interface Photo {
+  _id: string
+  market: string // Market ID reference
+  user: string // User ID reference
+  url: string
+  thumbnailUrl: string
+  caption?: string
+  tags: string[]
+  isApproved: boolean
+  votes: {
+    up: number
+    down: number
+  }
+  takenAt?: Date
+  isDeleted: boolean
+  deletedAt?: Date
+  createdAt: Date
+}
+```
+
+### Todo
+```typescript
+interface Todo {
+  _id: string
+  vendor: string // User ID reference
+  market: string // Market ID reference
+  title: string
+  description?: string
+  completed: boolean
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  category: string
+  dueDate?: Date
+  estimatedHours?: number
+  cost?: number
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Expense
+```typescript
+interface Expense {
+  _id: string
+  vendor: string // User ID reference
+  market: string // Market ID reference
+  title: string
+  description?: string
+  amount: number
+  category: 'booth-fee' | 'transportation' | 'accommodation' | 'supplies' | 'equipment' | 'marketing' | 'food' | 'fuel' | 'insurance' | 'other'
+  date: Date
+  paymentMethod?: string
+  receipt?: string
+  isTaxDeductible: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Notification
+```typescript
+interface Notification {
+  _id: string
+  userId: string // User ID reference
+  type: 'application-approved' | 'application-rejected' | 'market-updated' | 'new-comment' | 'new-photo' | 'reminder' | 'announcement'
+  title: string
+  message: string
+  data?: Record<string, any>
+  read: boolean
   createdAt: Date
 }
 ```
