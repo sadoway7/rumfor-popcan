@@ -110,13 +110,30 @@
 
         .tree-section-header {
             padding: 8px 4px;
-            margin: 12px 0 4px 0;
+            margin: 16px 0 8px 0;
             font-size: 11px;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border-bottom: 1px solid var(--border);
             font-weight: 600;
+            background: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .feature-node {
+            padding-left: 20px !important;
+            border-left: 1px solid var(--border);
+            margin-left: 4px !important;
+            font-size: 12px !important;
+            opacity: 0.8;
+        }
+
+        .feature-node:hover {
+            opacity: 1;
+            border-left-color: var(--accent);
         }
 
         /* Center - Graph Visualization */
@@ -277,58 +294,88 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-radius: 10px;
             background: var(--bg-deep);
             border: 1px solid var(--border);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .agent-card:hover {
             background: var(--bg-hover);
             border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .agent-icon {
-            font-size: 18px;
-            width: 24px;
+            font-size: 20px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
         }
 
         .agent-info {
             flex: 1;
+            min-width: 0;
         }
 
         .agent-name {
-            font-weight: 500;
+            font-weight: 600;
             font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
         }
 
         .agent-status {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-secondary);
+            line-height: 1.3;
         }
 
         .agent-progress {
-            width: 60px;
-            height: 4px;
+            width: 70px;
+            height: 6px;
             background: var(--bg-hover);
-            border-radius: 2px;
+            border-radius: 3px;
             overflow: hidden;
+            position: relative;
         }
 
         .progress-bar {
             height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.3s ease;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            position: relative;
         }
 
-        .agent-card.idle .progress-bar { background: var(--text-muted); }
-        .agent-card.running .progress-bar { background: var(--warning); }
-        .agent-card.complete .progress-bar { background: var(--success); }
-        .agent-card.error .progress-bar { background: var(--error); }
+        .agent-card.idle .progress-bar {
+            background: var(--text-muted);
+            width: 0% !important;
+        }
+        .agent-card.running .progress-bar {
+            background: linear-gradient(90deg, var(--warning), var(--accent));
+            animation: pulse 2s infinite;
+        }
+        .agent-card.complete .progress-bar {
+            background: linear-gradient(90deg, var(--success), var(--success));
+        }
+        .agent-card.error .progress-bar {
+            background: linear-gradient(90deg, var(--error), var(--error));
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
 
         .panel-actions {
             padding: 16px;
@@ -490,10 +537,20 @@
 
             <div class="panel-actions">
                 <button class="action-button" onclick="runFullCycle()">
-                    🚀 Run All Agents
+                    🚀 Run Full Development Cycle
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">Execute all 8 agents in sequence</div>
                 </button>
-                <button class="action-button secondary" onclick="resetAllAgents()">
+                <button class="action-button secondary" onclick="runSingleAgent()" id="single-agent-btn">
+                    🎯 Run Focused Agent
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">Agent on selected feature card</div>
+                </button>
+                <button class="action-button secondary" onclick="resetAllAgents()" style="margin-top: 8px;">
                     🔄 Reset All Agents
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">Clear status and start fresh</div>
+                </button>
+                <button class="action-button secondary" onclick="showSystemStatus()" style="margin-top: 4px;">
+                    📊 System Health
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">View detailed status</div>
                 </button>
             </div>
         </div>
@@ -531,35 +588,97 @@
 
         // World Model functions
         function initializeWorldModel() {
-            // Build actual card structure from your app
+            // Build comprehensive market tracker application structure
             const tree = document.getElementById('world-tree');
 
             // Clear existing content
             tree.innerHTML = '';
 
-            // Add section headers and cards
+            // Comprehensive market tracker application structure
             const sections = [
                 {
-                    title: '🎯 CORE FEATURES',
+                    title: '🏪 MARKET TRACKER ROOT',
                     cards: [
-                        { type: 'root', name: 'Rumfor Market Tracker', icon: '🏪', description: 'Main SaaS platform for farmers markets and vendors' },
-                        { type: 'category', name: 'Authentication', icon: '🔐', description: 'User login, registration, JWT tokens, roles' },
-                        { type: 'category', name: 'Markets', icon: '🏪', description: 'Market discovery, listings, search, filtering' },
-                        { type: 'category', name: 'Applications', icon: '📋', description: 'Vendor applications, status tracking, review' }
+                        { type: 'root', name: 'Rumfor Market Tracker', icon: '🏪', description: 'Complete SaaS platform for farmers market discovery, vendor applications, and community engagement' }
                     ]
                 },
                 {
-                    title: '👥 SOCIAL FEATURES',
+                    title: '🔐 AUTHENTICATION & USERS',
                     cards: [
-                        { type: 'category', name: 'Community', icon: '👥', description: 'Comments, photos, hashtags, reactions, engagement' }
+                        { type: 'category', name: 'Authentication', icon: '🔐', description: 'JWT tokens, role-based access (visitor/vendor/promoter/admin), progressive onboarding' },
+                        { type: 'feature', name: 'Progressive Onboarding', icon: '📝', description: 'Smart registration flow: anonymous browsing → email signup → profile completion → role selection' },
+                        { type: 'feature', name: 'User Roles', icon: '👥', description: '4-tier permission system: Visitor, Vendor, Promoter, Administrator' },
+                        { type: 'feature', name: 'Account Management', icon: '⚙️', description: 'Profile editing, password reset, notification preferences, account security' }
                     ]
                 },
                 {
-                    title: '⚙️ ADMIN & SYSTEM',
+                    title: '🏪 MARKET DISCOVERY',
                     cards: [
-                        { type: 'category', name: 'Admin', icon: '⚡', description: 'User management, analytics, moderation, settings' },
-                        { type: 'category', name: 'API System', icon: '🔗', description: 'REST endpoints, data models, validation, authentication' },
-                        { type: 'category', name: 'Deployment', icon: '🚀', description: 'CI/CD, performance, monitoring, production' }
+                        { type: 'category', name: 'Market Search', icon: '🔍', description: 'Advanced search: text, location, categories, filters, debounced results, relevance ranking' },
+                        { type: 'feature', name: 'Smart Filtering', icon: '⚡', description: 'Progressive filters: location, category, date, accessibility, pricing, vendor type' },
+                        { type: 'feature', name: 'Market Grid Display', icon: '📱', description: 'Responsive grid: hero images, key info, loading states, pagination, empty states' },
+                        { type: 'feature', name: 'Personalization', icon: '🎯', description: 'Location-based discovery, user preferences, trending markets, recommendation engine' },
+                        { type: 'feature', name: 'Market Tracking', icon: '⭐', description: 'Save favorites, track interest, receive notifications, personal market lists' }
+                    ]
+                },
+                {
+                    title: '📋 VENDOR APPLICATIONS',
+                    cards: [
+                        { type: 'category', name: 'Application Workflow', icon: '📋', description: 'Complete vendor application system: submission → review → approval → participation tracking' },
+                        { type: 'feature', name: 'Status Management', icon: '📊', description: 'Status progression: interested → applied → booked → completed with notifications and timeline' },
+                        { type: 'feature', name: 'Application Forms', icon: '📝', description: 'Custom fields by promoter, file uploads, validation, draft saving, auto-submit' },
+                        { type: 'feature', name: 'Progress Tracking', icon: '📈', description: 'Todo lists, expense tracking, market preparation, completion analytics' },
+                        { type: 'feature', name: 'Application Review', icon: '🔍', description: 'Promoter dashboard: review applications, bulk operations, status updates, communication' }
+                    ]
+                },
+                {
+                    title: '👥 COMMUNITY ENGAGEMENT',
+                    cards: [
+                        { type: 'category', name: 'Social Features', icon: '👥', description: 'Community building: comments, photos, hashtags, reactions, user engagement' },
+                        { type: 'feature', name: 'Threaded Comments', icon: '💬', description: 'Nested discussions, emoji reactions, moderation, real-time updates' },
+                        { type: 'feature', name: 'Photo Gallery', icon: '📸', description: 'Upload, voting, moderation, hero images, community content, image optimization' },
+                        { type: 'feature', name: 'Hashtag System', icon: '🏷️', description: 'Community tagging, voting, trending topics, market categorization, content discovery' },
+                        { type: 'feature', name: 'Social Moderation', icon: '🛡️', description: 'Automated filtering, user reports, content approval, community guidelines enforcement' }
+                    ]
+                },
+                {
+                    title: '⚙️ ADMIN & PROMOTER',
+                    cards: [
+                        { type: 'category', name: 'Admin Dashboard', icon: '⚡', description: 'System management: user controls, analytics, moderation, platform health monitoring' },
+                        { type: 'feature', name: 'User Administration', icon: '👥', description: 'Role management, account suspension, bulk operations, user verification, permissions' },
+                        { type: 'feature', name: 'Content Moderation', icon: '🚫', description: 'Photo approval, comment moderation, hashtag management, reported content handling' },
+                        { type: 'feature', name: 'System Analytics', icon: '📊', description: 'User growth, engagement metrics, market statistics, revenue analytics, health monitoring' },
+                        { type: 'feature', name: 'Promoter Tools', icon: '🏪', description: 'Market claiming, vendor management, event planning, promoter community features' }
+                    ]
+                },
+                {
+                    title: '💼 BUSINESS OPERATIONS',
+                    cards: [
+                        { type: 'category', name: 'Business Tools', icon: '💼', description: 'Productivity features: todo management, expense tracking, analytics, workflow optimization' },
+                        { type: 'feature', name: 'Todo Management', icon: '✅', description: 'Task templates, dependency tracking, time estimates, progress visualization, completion analytics' },
+                        { type: 'feature', name: 'Expense Tracking', icon: '💰', description: 'Category organization, receipt uploads, tax reporting, profit/loss calculations, budget management' },
+                        { type: 'feature', name: 'Business Analytics', icon: '📈', description: 'Revenue tracking, market performance, profitability analysis, growth metrics, ROI calculations' },
+                        { type: 'feature', name: 'Workflow Optimization', icon: '⚡', description: 'Bulk operations, automation, customizable templates, shortcuts, efficiency tools' }
+                    ]
+                },
+                {
+                    title: '🔧 TECHNICAL INFRASTRUCTURE',
+                    cards: [
+                        { type: 'category', name: 'API Architecture', icon: '🔗', description: 'REST API design, authentication, data modeling, validation, performance optimization' },
+                        { type: 'feature', name: 'Backend APIs', icon: '🗄️', description: 'Express.js routes, MongoDB integration, authentication, middleware, error handling' },
+                        { type: 'feature', name: 'Frontend Architecture', icon: '⚛️', description: 'React 18, TypeScript, Vite, Zustand, TanStack Query, component optimization' },
+                        { type: 'feature', name: 'UI/UX Design', icon: '🎨', description: 'Mobile-first design, Tailwind CSS, UnoCSS, Radix UI, accessibility compliance' },
+                        { type: 'feature', name: 'Testing Infrastructure', icon: '🧪', description: 'E2E tests, Playwright, accessibility testing, performance monitoring, CI/CD integration' }
+                    ]
+                },
+                {
+                    title: '🚀 DEPLOYMENT & PRODUCTION',
+                    cards: [
+                        { type: 'category', name: 'Production Systems', icon: '🚀', description: 'CI/CD pipelines, performance optimization, monitoring, production deployment' },
+                        { type: 'feature', name: 'CI/CD Pipeline', icon: '🔄', description: 'GitLab Pages, automated testing, staging deployment, production releases' },
+                        { type: 'feature', name: 'Performance Optimization', icon: '⚡', description: 'Bundle optimization, lazy loading, CDN, caching, Core Web Vitals' },
+                        { type: 'feature', name: 'Monitoring & Analytics', icon: '📊', description: 'Error tracking, performance monitoring, user analytics, system health' },
+                        { type: 'feature', name: 'Security & Compliance', icon: '🔒', description: 'Vulnerability scanning, dependency audits, security headers, compliance monitoring' }
                     ]
                 }
             ];
@@ -576,10 +695,17 @@
                     const node = document.createElement('div');
                     node.className = 'tree-node';
                     node.setAttribute('data-type', card.type);
+
+                    // Add indentation for feature cards
+                    const indentClass = card.type === 'feature' ? 'feature-node' : '';
+                    const indentStyle = card.type === 'feature' ? 'margin-left: 12px; font-size: 12px;' : '';
+
                     node.innerHTML = `
                         <span class="tree-icon">${card.icon}</span>
                         <span>${card.name}</span>
                     `;
+                    node.style.cssText += indentStyle;
+                    node.classList.add(indentClass);
                     node.title = card.description; // Tooltip on hover
                     node.addEventListener('click', () => selectCard(card.name, card.description));
                     tree.appendChild(node);
@@ -687,36 +813,79 @@
             grid.innerHTML = '';
 
             if (typeof rumforStatus === 'undefined') {
-                grid.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary);">Loading status...</div>';
+                grid.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Loading Rumfor agents...</div>';
                 return;
             }
 
             rumforAgents.forEach(agent => {
-                const agentStatus = rumforStatus.agents[agent.id] || {
+                const agentData = rumforStatus.agents[agent.id] || {
                     status: 'idle',
                     progress: 0,
-                    message: 'Ready'
+                    message: 'Ready for work',
+                    last_run: null
                 };
 
+                // Determine status display
+                let statusText = agentData.message || formatStatus(agentData.status);
+                let statusClass = agentData.status;
+                let lastRunText = '';
+
+                if (agentData.last_run) {
+                    const lastRun = new Date(agentData.last_run * 1000);
+                    const now = new Date();
+                    const hoursAgo = Math.floor((now - lastRun) / (1000 * 60 * 60));
+
+                    if (hoursAgo < 1) {
+                        lastRunText = 'Just now';
+                    } else if (hoursAgo < 24) {
+                        lastRunText = `${hoursAgo}h ago`;
+                    } else {
+                        const daysAgo = Math.floor(hoursAgo / 24);
+                        lastRunText = `${daysAgo}d ago`;
+                    }
+                }
+
+                // Create status icon and color logic
+                let statusIcon = agent.icon;
+                if (agentData.status === 'running') {
+                    statusIcon = '⚡';
+                } else if (agentData.status === 'complete') {
+                    statusIcon = '✅';
+                } else if (agentData.status === 'error') {
+                    statusIcon = '❌';
+                }
+
                 const card = document.createElement('div');
-                card.className = `agent-card ${agentStatus.status}`;
+                card.className = `agent-card ${statusClass}`;
                 card.onclick = () => runAgent(agent);
+                card.title = `Click to run ${agent.name} Agent on selected feature`;
 
                 card.innerHTML = `
-                    <div class="agent-icon">${agent.icon}</div>
+                    <div class="agent-icon">${statusIcon}</div>
                     <div class="agent-info">
                         <div class="agent-name">${agent.name}</div>
-                        <div class="agent-status status-${agentStatus.status}">
-                            ${agentStatus.message || agentStatus.status}
+                        <div class="agent-status status-${statusClass}">
+                            ${statusText}
+                            ${lastRunText ? `<br><small style="opacity: 0.7; font-size: 10px;">${lastRunText}</small>` : ''}
                         </div>
                     </div>
                     <div class="agent-progress">
-                        <div class="progress-bar" style="width: ${agentStatus.progress || 0}%"></div>
+                        <div class="progress-bar" style="width: ${agentData.progress || 0}%"></div>
                     </div>
                 `;
 
                 grid.appendChild(card);
             });
+        }
+
+        function formatStatus(status) {
+            switch (status) {
+                case 'idle': return 'Ready for work';
+                case 'running': return 'Active development';
+                case 'complete': return 'Cycle complete';
+                case 'error': return 'Error occurred';
+                default: return status;
+            }
         }
 
         function refreshStatus() {
@@ -828,8 +997,106 @@ Switch to the rumfor-orchestrator mode and run a full cycle with all agents.`;
 
         function resetAllAgents() {
             if (confirm('Reset all agents to idle status? This will clear current progress.')) {
-                showToast('🔄 Reset functionality would be implemented here', 'info');
-                // In a real implementation, this would call a reset API
+                showToast('🔄 Reset functionality implemented - clearing agent states', 'info');
+                // Reset all agents to idle state
+                if (typeof rumforStatus !== 'undefined' && rumforStatus.agents) {
+                    Object.keys(rumforStatus.agents).forEach(agentId => {
+                        rumforStatus.agents[agentId].status = 'idle';
+                        rumforStatus.agents[agentId].progress = 0;
+                        rumforStatus.agents[agentId].message = 'Reset and ready';
+                    });
+                    rumforStatus.orchestrator.current_agent = null;
+                    rumforStatus.orchestrator.status = 'idle';
+
+                    // Re-render the interface
+                    updateStatusDisplay();
+                    renderAgentCards();
+                }
+            }
+        }
+
+        function runSingleAgent() {
+            if (!selectedCard) {
+                showToast('Please select a feature card first', 'error');
+                return;
+            }
+
+            // Determine which agent would be best for the selected feature
+            let recommendedAgent = 'frontend'; // default
+
+            // Logic to recommend the right agent based on selected feature
+            const cardName = selectedCard.toLowerCase();
+
+            if (cardName.includes('api') ||
+                cardName.includes('authentication') ||
+                cardName.includes('backend')) {
+                recommendedAgent = 'api';
+            } else if (cardName.includes('styling') ||
+                       cardName.includes('design') ||
+                       cardName.includes('ui') ||
+                       cardName.includes('mobile')) {
+                recommendedAgent = 'styling';
+            } else if (cardName.includes('test') ||
+                       cardName.includes('e2e') ||
+                       cardName.includes('quality') ||
+                       cardName.includes('testing')) {
+                recommendedAgent = 'testing';
+            } else if (cardName.includes('security') ||
+                       cardName.includes('audit') ||
+                       cardName.includes('vulnerability')) {
+                recommendedAgent = 'security';
+            } else if (cardName.includes('deployment') ||
+                       cardName.includes('ci/cd') ||
+                       cardName.includes('production') ||
+                       cardName.includes('performance')) {
+                recommendedAgent = 'deployment';
+            } else if (cardName.includes('documentation') ||
+                       cardName.includes('docs') ||
+                       cardName.includes('api docs')) {
+                recommendedAgent = 'documentation';
+            }
+
+            const agent = rumforAgents.find(a => a.id === recommendedAgent);
+            if (agent) {
+                runAgent(agent);
+                showToast(`🎯 Running ${agent.name} Agent on "${selectedCard}"`, 'info');
+            }
+        }
+
+        function showSystemStatus() {
+            if (typeof rumforStatus === 'undefined') {
+                showToast('Status not available yet', 'error');
+                return;
+            }
+
+            const orchestrator = rumforStatus.orchestrator;
+            const agents = Object.values(rumforStatus.agents);
+            const running = agents.filter(a => a.status === 'running').length;
+            const complete = agents.filter(a => a.status === 'complete').length;
+            const errors = agents.filter(a => a.status === 'error').length;
+
+            let statusMessage = `Cycle ${orchestrator.current_cycle}: ${running} running, ${complete} complete`;
+            if (errors > 0) statusMessage += `, ${errors} errors`;
+
+            if (orchestrator.current_agent) {
+                statusMessage += ` | Active: ${orchestrator.current_agent}`;
+            }
+
+            showToast(`📊 ${statusMessage}`, 'info');
+
+            // Also show backend server status if running
+            fetch('http://localhost:3001/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    showToast(`🗄️ Backend: ${data.status} (${data.environment})`, 'success');
+                })
+                .catch(() => {
+                    showToast('🗄️ Backend server not reachable', 'warning');
+                });
+
+            // Show frontend status too
+            if (window.location.port === '5173') {
+                showToast('⚛️ Frontend: Vite dev server running', 'success');
             }
         }
 

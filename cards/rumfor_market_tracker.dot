@@ -1,6 +1,6 @@
 digraph RumforMarketTracker {
     // Root application
-    "ROOT" [label="Rumfor Market Tracker\nFarmers Market SaaS Platform", type="root"];
+    "ROOT" [label="Rumfor Market Tracker\nFarmers Market SaaS Platform\nMobile-First PWA", type="root"];
 
     // Core Infrastructure (MVP Foundation)
     "ROOT" -> "Infrastructure";
@@ -8,16 +8,20 @@ digraph RumforMarketTracker {
     "ROOT" -> "Database";
     "ROOT" -> "BackendAPI";
 
-    // Sprint 1 Features (Current Focus)
-    "ROOT" -> "Markets";
-    "ROOT" -> "Applications";
+    // MVP Core Features (Sprint 1)
+    "ROOT" -> "MarketDiscovery";
+    "ROOT" -> "VendorParticipation";
+    "ROOT" -> "PromoterManagement";
     "ROOT" -> "AdminDashboard";
 
-    // Future Sprint Features (Roadmap)
-    "ROOT" -> "Community";
-    "ROOT" -> "AdvancedMarkets";
-    "ROOT" -> "BusinessFeatures";
-    "ROOT" -> "VendorTools";
+    // Community Features (Sprint 2)
+    "ROOT" -> "CommunityEngagement";
+    "ROOT" -> "SocialFeatures";
+
+    // Advanced Features (Sprint 3+)
+    "ROOT" -> "BusinessTools";
+    "ROOT" -> "Analytics";
+    "ROOT" -> "AdvancedModeration";
 
     // Infrastructure Foundation
     "Infrastructure" [
