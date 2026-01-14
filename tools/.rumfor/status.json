@@ -4,7 +4,7 @@
     "current_cycle": 0,
     "current_agent": null,
     "start_time": null,
-    "last_update": 1768354066.826014
+    "last_update": 1768359146.000268
   },
   "agents": {
     "frontend": {
@@ -12,7 +12,36 @@
       "progress": 90,
       "message": "Frontend audit complete: 0 issues, 6 suggestions",
       "last_run": null,
-      "last_result": null
+      "last_result": null,
+      "last_status_change": 1768359146.000268,
+      "progress_history": [
+        {
+          "progress": 10,
+          "timestamp": 1768359145.98437,
+          "message": "Auditing frontend codebase..."
+        },
+        {
+          "progress": 30,
+          "timestamp": 1768359145.9890099,
+          "message": "Checking for issues..."
+        },
+        {
+          "progress": 50,
+          "timestamp": 1768359145.9933062,
+          "message": "Optimizing bundle..."
+        },
+        {
+          "progress": 70,
+          "timestamp": 1768359145.993715,
+          "message": "Checking TypeScript..."
+        },
+        {
+          "progress": 90,
+          "timestamp": 1768359145.9981802,
+          "message": "Analyzing improvements..."
+        }
+      ],
+      "last_success": 1768359146.000268
     },
     "backend": {
       "status": "idle",

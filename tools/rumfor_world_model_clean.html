@@ -940,20 +940,56 @@
                 const feature = features.find(f => f.name === cardName);
                 let detailsHtml = '';
 
-                if (feature && feature.microFeatures) {
+                if (feature) {
                     detailsHtml = `
                         <div style="background: var(--bg-card); padding: 16px; border-radius: 8px; margin-top: 16px; border: 1px solid var(--accent);">
-                            <h4 style="color: var(--gold); margin-bottom: 12px;">⚡ Micro-Features (${feature.microFeatures.length}):</h4>
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 12px;">
-                                ${feature.microFeatures.map(mf => `<div style="background: var(--bg-deep); padding: 8px; border-radius: 4px;">• ${mf}</div>`).join('')}
+                            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                <div style="flex: 1;">
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">🎯 User Type</div>
+                                    <div style="font-weight: 600; color: var(--accent);">${feature.persona.charAt(0).toUpperCase() + feature.persona.slice(1)}</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">⚡ Workflow</div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${feature.workflow.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">📂 Category</div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">${feature.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                                </div>
                             </div>
+
+                            ${(feature.components && feature.components.length > 0) ? `
+                            <div style="margin-bottom: 16px;">
+                                <h4 style="color: var(--gold); margin-bottom: 8px;">🔧 Implementation Files (${feature.components.length}):</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px;">
+                                    ${feature.components.map(comp => `<div style="background: var(--bg-deep); padding: 6px 8px; border-radius: 4px; font-family: 'Monaco', 'Menlo', monospace; font-size: 11px; border: 1px solid var(--border);">${comp}</div>`).join('')}
+                                </div>
+                            </div>` : ''}
+
+                            ${(feature.microFeatures && feature.microFeatures.length > 0) ? `
+                            <div>
+                                <h4 style="color: var(--gold); margin-bottom: 8px;">⚡ Micro-Features (${feature.microFeatures.length}):</h4>
+                                <div style="display: grid; grid-template-columns: 1fr; gap: 4px;">
+                                    ${feature.microFeatures.map(mf => `<div style="background: var(--bg-deep); padding: 6px 8px; border-radius: 4px; font-size: 12px; border-left: 3px solid var(--accent);">• ${mf}</div>`).join('')}
+                                </div>
+                            </div>` : ''}
                         </div>
-                        ${feature.components ? `
-                        <div style="background: var(--bg-card); padding: 16px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--border);">
-                            <h4 style="color: var(--text-secondary); margin-bottom: 8px;">🔧 Components:</h4>
-                            <div style="font-size: 12px; color: var(--text-muted);">${feature.components.join(', ')}</div>
-                        </div>` : ''}
                     `;
+
+                    // Add special callouts for market-related features
+                    if (feature.workflow.includes('planning') || feature.workflow.includes('creation') || feature.workflow.includes('claiming')) {
+                        detailsHtml += `
+                            <div style="background: var(--warning); color: var(--bg-deep); padding: 12px; border-radius: 8px; margin-top: 12px; border: 1px solid var(--gold);">
+                                <h4 style="color: var(--bg-deep); margin-bottom: 8px;">🎯 Market Lifecycle Context:</h4>
+                                <p style="font-size: 12px; margin: 0;">
+                                    ${feature.workflow.includes('creation') ? 'Vendor-created markets start unowned with honor system attendance. Promoters can claim them later for formal management.' :
+                                      feature.workflow.includes('claiming') ? 'Market claiming transfers ownership from honor system to formal application/approval process.' :
+                                      feature.workflow.includes('planning') ? 'Each tracked market gets one comprehensive planning page with integrated todos, budget, and timeline tools.' :
+                                      'This feature operates within the dual market ownership system (honor vs formal applications).'}
+                                </p>
+                            </div>
+                        `;
+                    }
                 }
 
                 center.innerHTML = `

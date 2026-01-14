@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ralph's Infinity Rule List - World Model</title>
+    <style>
+        /* Dark theme optimized for development */
+        :root {
+            --bg-deep: #0a0a0a;
+            --bg-card: #1a1a1a;
+            --bg-hover: #2a2a2a;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --gold: #fbbf24;
+            --text-primary: #f8f8f2;
+            --text-secondary: #888888;
+            --text-muted: #555555;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Sidebar - World Model */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .tree-node {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .tree-node:hover {
+            background: var(--bg-hover);
+        }
+
+        .tree-node.selected {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Center - Graph Visualization */
+        .center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+        }
+
+        .center-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .graph-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .graph-visualization {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-deep);
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--border);
+            background: white;
+            position: relative;
+        }
+
+        .graph-node {
+            position: absolute;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: grab;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .graph-node:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .graph-node.selected {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .graph-node.root {
+            background: var(--gold);
+            color: var(--bg-deep);
+            font-weight: 700;
+            border-color: var(--gold);
+            font-size: 14px;
+            padding: 12px 16px;
+        }
+
+        .graph-edge {
+            position: absolute;
+            pointer-events: none;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .graph-control-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .graph-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-width: 300px;
+        }
+
+        /* Right Sidebar - Ralph Panel */
+        .panel {
+            width: 350px;
+            border-left: 1px solid var(--border);
+            background: var(--bg-card);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 18px;
+        }
+
+        .panel.collapsed {
+            width: 0;
+            border: none;
+        }
+
+        .panel.collapsed .panel-toggle {
+            right: -20px;
+        }
+
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .status-summary {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-deep);
+            margin: 16px;
+            border-radius: 8px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .agent-grid {
+            padding: 16px;
+        }
+
+        .agent-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .agent-card:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .agent-icon {
+            font-size: 20px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+        }
+
+        .agent-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .agent-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .agent-progress {
+            width: 70px;
+            height: 6px;
+            background: var(--bg-hover);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .panel-actions {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .action-button:hover {
+            background: var(--accent-hover);
+        }
+
+        .status-idle { color: var(--text-muted); }
+        .status-running { color: var(--warning); }
+        .status-complete { color: var(--success); }
+        .status-error { color: var(--error); }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 400px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transform: translateX(420px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar - World Model -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                🌍 World Model
+            </div>
+            <div class="tree" id="world-tree">
+                <!-- Tree will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Center - Graph Visualization -->
+        <div class="center">
+            <div class="center-header">
+                <h2>🌐 World Model Graph</h2>
+                <div class="panel-toggle" id="panel-toggle" title="Toggle Ralph Panel">🤖</div>
+            </div>
+            <div class="graph-container">
+                <div class="graph-placeholder">
+                    <h3>Ralph's Infinity Rule List</h3>
+                    <p>World Model visualization will appear here.<br>
+                    Click cards in the left sidebar to explore features.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar - Ralph Panel -->
+        <div class="panel" id="ralph-panel">
+            <div class="panel-header">
+                🤖 Ralph Orchestrator - ACTIVE
+                <button class="action-button" style="width: auto; padding: 4px 8px; font-size: 12px;" onclick="refreshStatus()">↻</button>
+            </div>
+            <div class="panel-content">
+                <div class="status-summary">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span>📊</span>
+                            <span id="orchestrator-status">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🔄</span>
+                            <span id="cycle-number">Cycle: 0</span>
+                        </div>
+                        <div class="status-item">
+                            <span>🎯</span>
+                            <span id="current-agent">Current: None</span>
+                        </div>
+                        <div class="status-item">
+                            <span>⚡</span>
+                            <span id="agents-summary">Agents: 0/8</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="agent-grid" id="agent-grid">
+                    <!-- Agent cards will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="panel-actions">
+                <button class="action-button" onclick="runFullCycle()">
+                    🚀 Run Full Development Cycle
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">Execute all agents in sequence</div>
+                </button>
+                <button class="action-button" style="background: var(--bg-hover); color: var(--text-primary);" onclick="runSingleAgent()" id="single-agent-btn">
+                    🎯 Run Focused Agent
+                    <div style="font-size: 11px; font-weight: 300; opacity: 0.8; margin-top: 2px;">Agent on selected card</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status JavaScript will be loaded here -->
+    <script src="ralph_status.js"></script>
+
+    <script>
+        // Global state
+        let selectedCard = null;
+        let panelCollapsed = false;
+        let graphData = null;
+        let graphScale = 1;
+        let graphOffset = { x: 0, y: 0 };
+        let draggedNode = null;
+
+        // Ralph agents
+        const ralphAgents = [
+            { id: 'frontend', name: 'Frontend Agent', icon: '⚛️', mode: 'frontend-agent' },
+            { id: 'backend', name: 'Backend Agent', icon: '🗄️', mode: 'backend-agent' },
+            { id: 'api', name: 'API Agent', icon: '🔗', mode: 'api-agent' },
+            { id: 'styling', name: 'Styling Agent', icon: '🎨', mode: 'styling-agent' },
+            { id: 'testing', name: 'Testing Agent', icon: '🧪', mode: 'testing-agent' },
+            { id: 'security', name: 'Security Agent', icon: '🔒', mode: 'security-agent' },
+            { id: 'documentation', name: 'Documentation Agent', icon: '📝', mode: 'documentation-agent' },
+            { id: 'deployment', name: 'Deployment Agent', icon: '🚀', mode: 'deployment-agent' }
+        ];
+
+        // Comprehensive project structure
+        const projectStructure = {
+            pages: [
+                { name: '🏠 HomePage.tsx', path: 'src/pages/HomePage.tsx', category: 'pages', description: 'Main landing page with featured markets' },
+                { name: '🔐 LoginPage.tsx', path: 'src/pages/auth/LoginPage.tsx', category: 'auth', description: 'User authentication page' },
+                { name: '📝 RegisterPage.tsx', path: 'src/pages/auth/RegisterPage.tsx', category: 'auth', description: 'New user registration' },
+                { name: '👤 ProfilePage.tsx', path: 'src/pages/ProfilePage.tsx', category: 'user', description: 'User profile management' },
+                { name: '⚙️ SettingsPage.tsx', path: 'src/pages/SettingsPage.tsx', category: 'user', description: 'Application preferences' },
+                { name: '🏪 PromoterDashboard', path: 'src/pages/promoter/PromoterDashboardPage.tsx', category: 'promoter', description: 'Promoter control center' },
+                { name: '📊 PromoterAnalytics', path: 'src/pages/promoter/PromoterAnalyticsPage.tsx', category: 'promoter', description: 'Market performance analytics' },
+                { name: '📋 PromoterApps', path: 'src/pages/promoter/PromoterApplicationsPage.tsx', category: 'promoter', description: 'Review vendor applications' },
+                { name: '🗓️ PromoterCalendar', path: 'src/pages/promoter/PromoterCalendarPage.tsx', category: 'promoter', description: 'Event scheduling' },
+                { name: '🏪 PromoterMarkets', path: 'src/pages/promoter/PromoterMarketsPage.tsx', category: 'promoter', description: 'Market management' },
+                { name: '👥 PromoterVendors', path: 'src/pages/promoter/PromoterVendorsPage.tsx', category: 'promoter', description: 'Vendor directory' }
+            ],
+            components: [
+                { name: '🎯 ApplicationCard.tsx', path: 'src/components/ApplicationCard.tsx', category: 'vendor', description: 'Individual application display' },
+                { name: '📋 ApplicationForm.tsx', path: 'src/components/ApplicationForm.tsx', category: 'vendor', description: 'Multi-step application form' },
+                { name: '📊 ApplicationStatus.tsx', path: 'src/components/ApplicationStatus.tsx', category: 'vendor', description: 'Application progress indicator' },
+                { name: '🎨 ApplicationFilters.tsx', path: 'src/components/ApplicationFilters.tsx', category: 'promoter', description: 'Application filtering controls' },
+                { name: '📈 ExpenseChart.tsx', path: 'src/components/ExpenseChart.tsx', category: 'vendor', description: 'Financial data visualization' },
+                { name: '💰 ExpenseForm.tsx', path: 'src/components/ExpenseForm.tsx', category: 'vendor', description: 'Cost tracking form' },
+                { name: '🏠 Header.tsx', path: 'src/components/Header.tsx', category: 'shared', description: 'Main navigation header' },
+                { name: '🏪 MarketCard.tsx', path: 'src/components/MarketCard.tsx', category: 'shared', description: 'Market listing card' },
+                { name: '🏷️ MarketFilters.tsx', path: 'src/components/MarketFilters.tsx', category: 'vendor', description: 'Market search filters' },
+                { name: '🏗️ MarketGrid.tsx', path: 'src/components/MarketGrid.tsx', category: 'vendor', description: 'Market listings grid' },
+                { name: '👑 AdminUserTable.tsx', path: 'src/components/AdminUserTable.tsx', category: 'admin', description: 'User management table' },
+                { name: '📊 AdminAnalyticsDashboard.tsx', path: 'src/components/AdminAnalyticsDashboard.tsx', category: 'admin', description: 'System analytics' },
+                { name: '👥 VendorMarketCard.tsx', path: 'src/components/VendorMarketCard.tsx', category: 'vendor', description: 'Market for vendors' },
+                { name: '📋 VendorTodoList.tsx', path: 'src/components/VendorTodoList.tsx', category: 'vendor', description: 'Task management' },
+                { name: '📸 PhotoUploader.tsx', path: 'src/components/PhotoUploader.tsx', category: 'shared', description: 'Image upload component' },
+                { name: '📱 Sidebar.tsx', path: 'src/components/Sidebar.tsx', category: 'shared', description: 'Navigation sidebar' },
+                { name: '🌟 TodoTemplates.tsx', path: 'src/components/TodoTemplates.tsx', category: 'vendor', description: 'Pre-built task templates' }
+            ],
+            ui: [
+                { name: '🔲 Button.tsx', path: 'src/components/ui/Button.tsx', category: 'ui', description: 'Primary button component' },
+                { name: '📋 Card.tsx', path: 'src/components/ui/Card.tsx', category: 'ui', description: 'Content container' },
+                { name: '✅ Checkbox.tsx', path: 'src/components/ui/Checkbox.tsx', category: 'ui', description: 'Form checkbox' },
+                { name: '📅 Dropdown.tsx', path: 'src/components/ui/dropdown-menu.tsx', category: 'ui', description: 'Dropdown menu' },
+                { name: '🎯 EmptyState.tsx', path: 'src/components/ui/EmptyState.tsx', category: 'ui', description: 'Empty content message' },
+                { name: '📝 Input.tsx', path: 'src/components/ui/Input.tsx', category: 'ui', description: 'Text input field' },
+                { name: '📖 Modal.tsx', path: 'src/components/ui/Modal.tsx', category: 'ui', description: 'Modal dialog' },
+                { name: '⚫ Radio.tsx', path: 'src/components/ui/Radio.tsx', category: 'ui', description: 'Radio button group' },
+                { name: '📋 Select.tsx', path: 'src/components/ui/Select.tsx', category: 'ui', description: 'Dropdown select' },
+                { name: '🔄 Spinner.tsx', path: 'src/components/ui/Spinner.tsx', category: 'ui', description: 'Loading indicator' },
+                { name: '📊 Table.tsx', path: 'src/components/ui/Table.tsx', category: 'ui', description: 'Data table' },
+                { name: '📝 Textarea.tsx', path: 'src/components/ui/Textarea.tsx', category: 'ui', description: 'Multi-line text input' },
+                { name: '💬 Toast.tsx', path: 'src/components/ui/Toast.tsx', category: 'ui', description: 'Notification toast' }
+            ],
+            hooks: [
+                { name: '🔐 useAuth.ts', path: 'src/features/auth/hooks/useAuth.ts', category: 'auth', description: 'Authentication state' },
+                { name: '📧 useEmailVerification.ts', path: 'src/features/auth/hooks/useEmailVerification.ts', category: 'auth', description: 'Email verification flow' },
+                { name: '🔑 usePasswordReset.ts', path: 'src/features/auth/hooks/usePasswordReset.ts', category: 'auth', description: 'Password recovery' }
+            ]
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWorldModel();
+            initializePanel();
+            refreshStatus();
+
+            // Auto-refresh status every 5 seconds
+            setInterval(refreshStatus, 5000);
+        });
+
+        function initializeWorldModel() {
+            const tree = document.getElementById('world-tree');
+            tree.innerHTML = '';
+
+            // File System Management Section
+            Object.entries(projectStructure).forEach(([sectionName, items]) => {
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} (${items.length})</strong>`;
+                tree.appendChild(header);
+
+                // Group by subcategory if needed
+                const subCategories = {};
+                items.forEach(item => {
+                    const subCat = item.category || 'general';
+                    if (!subCategories[subCat]) subCategories[subCat] = [];
+                    subCategories[subCat].push(item);
+                });
+
+                Object.entries(subCategories).forEach(([subCat, subItems]) => {
+                    if (Object.keys(subCategories).length > 1) {
+                        const subHeader = document.createElement('div');
+                        subHeader.className = 'tree-node';
+                        subHeader.style.paddingLeft = '16px';
+                        subHeader.style.fontSize = '11px';
+                        subHeader.style.color = 'var(--text-secondary)';
+                        subHeader.innerHTML = `<span>📂</span> <span>${subCat}</span>`;
+                        tree.appendChild(subHeader);
+
+                        subItems.forEach(item => {
+                            addFileNode(item, '24px');
+                        });
+                    } else {
+                        subItems.forEach(item => {
+                            addFileNode(item, '8px');
+                        });
+                    }
+                });
+            });
+
+            function addFileNode(item, indent = '8px') {
+                const node = document.createElement('div');
+                node.className = 'tree-node';
+                node.style.paddingLeft = indent;
+                node.innerHTML = `
+                    <span class="tree-icon">${item.name.split('.')[0]}</span>
+                    <span style="font-size: 11px; opacity: 0.9;">${item.name.split('.')[1] || 'tsx'}</span>
+                `;
+                node.title = `${item.path}\n${item.description}`;
+                node.setAttribute('data-node-id', item.name);
+                node.addEventListener('click', () => selectCard(item.name, `${item.description}\nPath: ${item.path}`));
+                tree.appendChild(node);
+            }
+
+            // Initialize graph when cards directory is available
+            updateCenterVisualization();
+        }
+
+        function updateCenterVisualization() {
+            const graphContainer = document.querySelector('.graph-container');
+
+            if (!selectedCard) {
+                // Show overview
+                graphContainer.innerHTML = `
+                    <div class="graph-placeholder">
+                        <h3>Ralph's Infinity Rule List</h3>
+                        <p>Autonomous development system for any tech stack.<br>
+                        Click features in the left sidebar to view details.</p>
+                        <div style="margin-top: 20px; padding: 15px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--accent);">
+                            <h4 style="color: var(--gold); margin-bottom: 10px;">🎯 System Status</h4>
+                            <p>• 8 Specialist AI Agents</p>
+                            <p>• File-based State Management</p>
+                            <p>• Persistent Knowledge</p>
+                            <p>• Git Checkpoints</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Show selected feature
+                const feature = features.find(f => f.name === selectedCard);
+                graphContainer.innerHTML = `
+                    <div class="graph-placeholder">
+                        <h3 style="color: var(--accent);">${selectedCard}</h3>
+                        <p style="max-width: 600px; margin: 0 auto;">${feature ? feature.description : 'Feature selected for AI analysis'}</p>
+                        <div style="background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--accent); margin: 20px 0;">
+                            <h4 style="color: var(--gold);">🎯 NEXT: Choose Ralph Agent</h4>
+                            <p>Click any agent button on the right panel to run AI analysis on this feature.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function selectCard(cardName, description) {
+            document.querySelectorAll('.tree-node.selected').forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            const treeNode = document.querySelector(`[data-node-id="${cardName}"]`);
+            if (treeNode) {
+                treeNode.classList.add('selected');
+            }
+
+            selectedCard = cardName;
+            updateCenterVisualization();
+            showToast(`🎯 Focused on: ${cardName}`, 'info');
+        }
+
+        function initializePanel() {
+            const panel = document.getElementById('ralph-panel');
+            const toggle = document.getElementById('panel-toggle');
+
+            toggle.addEventListener('click', function() {
+                panelCollapsed = !panelCollapsed;
+                panel.classList.toggle('collapsed', panelCollapsed);
+                toggle.textContent = panelCollapsed ? '🤖' : '🤖';
+            });
+
+            renderAgentCards();
+        }
+
+        function renderAgentCards() {
+            const grid = document.getElementById('agent-grid');
+            grid.innerHTML = '';
+
+            if (typeof ralphStatus === 'undefined') {
+                grid.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-secondary); font-style: italic;">Loading Ralph agents...</div>';
+                return;
+            }
+
+            ralphAgents.forEach(agent => {
+                const agentData = ralphStatus.agents[agent.id] || {
+                    status: 'idle',
+                    progress: 0,
+                    message: 'Ready for work',
+                    last_run: null
+                };
+
+                let statusText = agentData.message || 'Ready';
+                let statusClass = agentData.status;
+                let statusIcon = agent.icon;
+
+                if (agentData.status === 'running') {
+                    statusIcon = '⚡';
+                } else if (agentData.status === 'complete') {
+                    statusIcon = '✅';
+                } else if (agentData.status === 'error') {
+                    statusIcon = '❌';
+                }
+
+                const card = document.createElement('div');
+                card.className = `agent-card ${statusClass}`;
+                card.onclick = () => runAgent(agent);
+                card.title = `Click to run ${agent.name} on selected feature`;
+
+                card.innerHTML = `
+                    <div class="agent-icon">${statusIcon}</div>
+                    <div class="agent-info">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-status status-${statusClass}">
+                            ${statusText}
+                        </div>
+                    </div>
+                    <div class="agent-progress">
+                        <div class="progress-bar" style="width: ${agentData.progress || 0}%"></div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function refreshStatus() {
+            const script = document.querySelector('script[src="ralph_status.js"]');
+            if (script) {
+                const newScript = document.createElement('script');
+                newScript.src = script.src + '?t=' + Date.now();
+                newScript.onload = function() {
+                    updateStatusDisplay();
+                    renderAgentCards();
+                };
+                script.parentNode.replaceChild(newScript, script);
+            } else {
+                updateStatusDisplay();
+                renderAgentCards();
+            }
+        }
+
+        function updateStatusDisplay() {
+            if (typeof ralphStatus === 'undefined') return;
+
+            const orchestrator = ralphStatus.orchestrator;
+
+            document.getElementById('orchestrator-status').textContent =
+                `Status: ${orchestrator.status?.toUpperCase() || 'IDLE'}`;
+            document.getElementById('cycle-number').textContent =
+                `Cycle: ${orchestrator.current_cycle || 0}`;
+            document.getElementById('current-agent').textContent =
+                `Current: ${orchestrator.current_agent || 'None'}`;
+
+            const agents = Object.values(ralphStatus.agents || {});
+            const running = agents.filter(a => a.status === 'running').length;
+            const complete = agents.filter(a => a.status === 'complete').length;
+
+            document.getElementById('agents-summary').textContent =
+                `Agents: ${running}/${agents.length}`;
+        }
+
+        function runAgent(agent) {
+            const prompt = generateAgentPrompt(agent.id);
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast(`🔨 ${agent.name} prompt copied!`, 'success');
+                showToast('Paste into Roo Code to run agent', 'info');
+            }).catch(() => {
+                showToast('Copy prompt manually', 'info');
+                console.log('Prompt:', prompt);
+            });
+        }
+
+        function generateAgentPrompt(agentId) {
+            const agent = ralphAgents.find(a => a.id === agentId);
+            if (!agent) return '';
+
+            let prompt = `I want to run the ${agent.name} for this project.\n\n`;
+
+            if (selectedCard) {
+                prompt += `Context from selected feature "${selectedCard}":\n`;
+                prompt += `Focus on ${selectedCard.toLowerCase()} development and improvements.\n\n`;
+            }
+
+            prompt += `Please use the ${agent.mode} mode and complete the ${agent.name} responsibilities.`;
+
+            return prompt;
+        }
+
+        function runFullCycle() {
+            const prompt = `I want to run Ralph's Infinity Rule List for this project.
+
+Please run a complete development cycle with all 8 specialist agents:
+1. Frontend Agent - UI/UX development
+2. Backend Agent - Server-side development
+3. API Agent - API design and security
+4. Styling Agent - Visual design and consistency
+5. Testing Agent - Quality assurance and testing
+6. Security Agent - Security auditing and fixes
+7. Documentation Agent - Technical documentation
+8. Deployment Agent - Production deployment
+
+Use the ralph-orchestrator mode to run all agents in sequence.`;
+
+            navigator.clipboard.writeText(prompt).then(() => {
+                showToast('🚀 Full cycle prompt copied!', 'success');
+            });
+        }
+
+        function runSingleAgent() {
+            if (!selectedCard) {
+                showToast('Select a feature first', 'error');
+                return;
+            }
+
+            // Auto-select appropriate agent based on feature
+            let recommendedAgent = 'frontend';
+
+            const cardName = selectedCard.toLowerCase();
+            if (cardName.includes('backend') || cardName.includes('data') || cardName.includes('server')) {
+                recommendedAgent = 'backend';
+            } else if (cardName.includes('api') || cardName.includes('endpoint')) {
+                recommendedAgent = 'api';
+            } else if (cardName.includes('style') || cardName.includes('ui') || cardName.includes('design')) {
+                recommendedAgent = 'styling';
+            } else if (cardName.includes('test') || cardName.includes('quality')) {
+                recommendedAgent = 'testing';
+            } else if (cardName.includes('security') || cardName.includes('auth')) {
+                recommendedAgent = 'security';
+            } else if (cardName.includes('docs') || cardName.includes('documentation')) {
+                recommendedAgent = 'documentation';
+            } else if (cardName.includes('deploy') || cardName.includes('production')) {
+                recommendedAgent = 'deployment';
+            }
+
+            const agent = ralphAgents.find(a => a.id === recommendedAgent);
+            if (agent) {
+                runAgent(agent);
+                showToast(`🎯 Running ${agent.name} on "${selectedCard}"`, 'info');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            document.querySelectorAll('.toast').forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type} show`;
+
+            toast.innerHTML = `<div style="font-weight: 600; margin-bottom: 4px;">${message}</div>`;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

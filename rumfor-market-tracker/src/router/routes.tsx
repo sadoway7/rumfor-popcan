@@ -21,7 +21,6 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 
 // Vendor pages
 import { VendorDashboardPage } from '@/pages/vendor/VendorDashboardPage'
-import { BusinessPlanningPage } from '@/pages/vendor/BusinessPlanningPage'
 import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
 import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
 import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
@@ -37,6 +36,7 @@ import { PromoterVendorsPage } from '@/pages/promoter/PromoterVendorsPage'
 import { PromoterAnalyticsPage } from '@/pages/promoter/PromoterAnalyticsPage'
 import { PromoterCalendarPage } from '@/pages/promoter/PromoterCalendarPage'
 import { PromoterCreateMarketPage } from '@/pages/promoter/PromoterCreateMarketPage'
+import { BusinessPlanningPage } from '@/pages/promoter/BusinessPlanningPage'
 
 // Admin pages
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'

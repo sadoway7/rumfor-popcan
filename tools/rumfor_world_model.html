@@ -42,6 +42,7 @@
         .container {
             display: flex;
             height: 100vh;
+            position: relative;
         }
 
         /* Left Sidebar - World Model */
@@ -51,6 +52,7 @@
             display: flex;
             flex-direction: column;
             background: var(--bg-card);
+            z-index: 10;
         }
 
         .sidebar-header {
@@ -146,6 +148,130 @@
             color: var(--text-primary);
         }
 
+        /* Graph Visualization Area */
+        .graph-visualization {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-deep);
+        }
+
+        .graph-canvas {
+            width: 100%;
+            height: 100%;
+            border: 1px solid var(--border);
+            background: white;
+            position: relative;
+        }
+
+        .graph-node {
+            position: absolute;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: grab;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .graph-node.dragging {
+            cursor: grabbing;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .graph-node:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .graph-node.selected {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .graph-node.root {
+            background: var(--gold);
+            color: var(--bg-deep);
+            font-weight: 700;
+            border-color: var(--gold);
+            font-size: 14px;
+            padding: 12px 16px;
+        }
+
+        .graph-node.category {
+            background: var(--bg-card);
+            border-color: var(--text-secondary);
+        }
+
+        .graph-node.card {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .graph-edge {
+            position: absolute;
+            pointer-events: none;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .graph-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .graph-control-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .graph-control-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .graph-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-width: 300px;
+        }
+
         .quick-start {
             background: var(--bg-card);
             border: 1px solid var(--accent);
@@ -187,6 +313,8 @@
             background: var(--bg-card);
             display: flex;
             flex-direction: column;
+            z-index: 20;
+            position: relative;
         }
 
         .panel-toggle {
@@ -509,7 +637,7 @@
         <!-- Center - Graph Visualization -->
         <div class="center">
             <div class="center-header">
-                <h2>Rumfor Infinity Rule List</h2>
+                <h2>🌐 World Model Graph</h2>
                 <div class="panel-toggle" id="panel-toggle" title="Toggle Rumfor Panel">🤖</div>
             </div>
             <div class="graph-container">
@@ -582,6 +710,14 @@
         // Global state
         let selectedCard = null;
         let panelCollapsed = false;
+        let graphData = null;
+        let graphScale = 1;
+        let graphOffset = { x: 0, y: 0 };
+        let isDragging = false;
+        let isNodeDragging = false;
+        let draggedNode = null;
+        let lastMousePos = { x: 0, y: 0 };
+        let features = []; // Global features array
 
         // Agent definitions
         const rumforAgents = [
@@ -597,6 +733,8 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
+            // Build comprehensive features array first
+            buildFeaturesArray();
             initializeWorldModel();
             initializePanel();
             refreshStatus();
@@ -605,16 +743,9 @@
             setInterval(refreshStatus, 5000);
         });
 
-        // World Model functions
-        function initializeWorldModel() {
-            // Build simplified but comprehensive feature list
-            const tree = document.getElementById('world-tree');
-
-            // Clear existing content
-            tree.innerHTML = '';
-
-            // COMPREHENSIVE USER-TYPE ORGANIZATION WITH MICRO-FEATURES
-            const features = [
+        // Build comprehensive feature set
+        function buildFeaturesArray() {
+            features = [
                 // 🛒 VENDOR USER EXPERIENCE - Deep feature breakdown by component
                 {
                     name: '🏪 Market Discovery Hub',
@@ -1052,6 +1183,17 @@
                     microFeatures: ['Automated CI/CD', 'Container deployment', 'Performance monitoring', 'Production scaling']
                 }
             ];
+        }
+
+        // World Model functions
+        function initializeWorldModel() {
+            // Build simplified but comprehensive feature list
+            const tree = document.getElementById('world-tree');
+
+            // Clear existing content
+            tree.innerHTML = '';
+
+            // Use global features array for tree building
 
             // Group features by user type (detailed breakdown by workflow and components)
             const userTypeGroups = {
@@ -1137,6 +1279,7 @@
                             <span>${feature.name}</span>
                         `;
                         node.title = tooltip;
+                        node.setAttribute('data-node-id', feature.name);
                         node.addEventListener('click', () => selectCard(feature.name, feature.description));
                         tree.appendChild(node);
                     }
@@ -1148,95 +1291,454 @@
         }
 
         function updateCenterVisualization() {
-            const center = document.querySelector('.graph-placeholder');
+            const graphContainer = document.querySelector('.graph-container');
             const selected = document.querySelector('.tree-node.selected');
 
+            // Clear existing content
+            graphContainer.innerHTML = '';
+
+            // If a feature is selected, show focused view
             if (selected) {
                 const cardName = selected.textContent.trim();
                 const selectedElement = document.querySelector('.tree-node.selected .tree-icon');
                 const icon = selectedElement ? selectedElement.textContent : '🎯';
 
-                center.innerHTML = `
-                    <div style="text-align: center; padding: 20px;">
-                        <div style="font-size: 48px; margin-bottom: 16px;">${icon}</div>
-                        <h3 style="color: var(--accent); margin-bottom: 16px;">${cardName}</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
-                            This feature area is now selected for AI analysis.
-                        </p>
+                graphContainer.innerHTML = `
+                    <div class="graph-placeholder">
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">${icon}</div>
+                            <h3 style="color: var(--accent); margin-bottom: 16px;">${cardName}</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                                This feature area is now selected for AI analysis.
+                            </p>
 
-                        <div style="background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--accent); margin: 20px 0;">
-                            <h4 style="color: var(--gold); margin-bottom: 16px;">🎯 NEXT: Choose an Agent</h4>
-                            <p style="margin-bottom: 16px;">Click any agent button on the right panel to run AI analysis specifically for this feature:</p>
+                            <div style="background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid var(--accent); margin: 20px 0;">
+                                <h4 style="color: var(--gold); margin-bottom: 16px;">🎯 NEXT: Choose an Agent</h4>
+                                <p style="margin-bottom: 16px;">Click any agent button on the right panel to run AI analysis specifically for this feature:</p>
 
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px;">
-                                <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">⚛️ Frontend Agent</div>
-                                <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🗄️ Backend Agent</div>
-                                <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🔗 API Agent</div>
-                                <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🎨 Styling Agent</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 16px;">
+                                    <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">⚛️ Frontend Agent</div>
+                                    <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🗄️ Backend Agent</div>
+                                    <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🔗 API Agent</div>
+                                    <div style="background: var(--bg-deep); padding: 8px; border-radius: 6px; font-size: 12px;">🎨 Styling Agent</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             } else {
-                center.innerHTML = `
-                    <div style="text-align: center; padding: 30px;">
-                        <div style="font-size: 64px; margin-bottom: 20px;">🤖</div>
-                        <h3 style="color: var(--accent); margin-bottom: 16px; font-size: 24px;">Rumfor Infinity Rule List</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
-                            An autonomous AI development system for your Rumfor Market Tracker. Select a feature area and run specialized AI agents to improve your code automatically.
-                        </p>
-
-                        <div class="quick-start">
-                            <h4 style="color: var(--gold); margin-bottom: 16px;">🚀 HOW TO USE (3 steps):</h4>
-                            <div style="text-align: left; max-width: 500px; margin: 0 auto;">
-                                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-                                    <div style="background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
-                                    <div>
-                                        <strong style="color: var(--text-primary);">Select Feature Area</strong><br>
-                                        <span style="color: var(--text-secondary);">Click any feature card on the left (like "Market Discovery" or "Authentication")</span>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;">
-                                    <div style="background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
-                                    <div>
-                                        <strong style="color: var(--text-primary);">Choose AI Agent</strong><br>
-                                        <span style="color: var(--text-secondary);">Click an agent button on the right (⚛️ Frontend, 🗄️ Backend, etc.)</span>
-                                    </div>
-                                </div>
-                                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px;">
-                                    <div style="background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
-                                    <div>
-                                        <strong style="color: var(--text-primary);">Paste in Roo Code</strong><br>
-                                        <span style="color: var(--text-secondary);">The prompt is copied - paste it into Roo Code to start AI development</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="background: var(--bg-deep); padding: 16px; border-radius: 8px; margin-top: 20px;">
-                                <strong style="color: var(--text-primary);">💡 Try it now:</strong>
-                                <button onclick="document.querySelector('.tree-node').click()" style="background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; margin-left: 12px; cursor: pointer;">
-                                    Select First Feature
-                                </button>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin: 24px 0;">
-                            <div style="text-align: center;">
-                                <strong style="color: var(--text-primary);">System Status:</strong>
-                                <div id="cycle-display" style="margin-top: 4px;">Loading...</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <strong style="color: var(--text-primary);">AI Agents:</strong>
-                                <div style="margin-top: 4px;">
-                                    <span class="status-indicator status-active"></span>
-                                    <span style="color: var(--success); font-weight: 500;">8 Ready</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                // Show the full interactive graph visualization
+                showGraphVisualization(graphContainer);
             }
         }
+
+        function showGraphVisualization(container) {
+            // Create graph visualization structure
+            const graphDiv = document.createElement('div');
+            graphDiv.className = 'graph-visualization';
+
+            // Add controls
+            const controlsDiv = document.createElement('div');
+            controlsDiv.className = 'graph-controls';
+            controlsDiv.innerHTML = `
+                <div class="graph-control-btn" onclick="zoomGraph(1.2)" title="Zoom In">🔍+</div>
+                <div class="graph-control-btn" onclick="zoomGraph(0.8)" title="Zoom Out">🔍-</div>
+                <div class="graph-control-btn" onclick="resetGraphView()" title="Reset View">🎯</div>
+                <div class="graph-control-btn" onclick="toggleGraphDetails()" title="Toggle Details">ℹ️</div>
+            `;
+
+            // Add info panel
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'graph-info';
+            infoDiv.innerHTML = `
+                <strong>Rumfor Market Tracker World Model</strong><br>
+                Drag nodes to reposition • Click to select features<br>
+                Click 🤖 to toggle Ralph panel • Zoom with scroll<br>
+                <span id="graph-stats">Building graph...</span>
+            `;
+
+            // Add canvas for the graph
+            const canvasDiv = document.createElement('div');
+            canvasDiv.className = 'graph-canvas';
+            canvasDiv.id = 'graph-canvas';
+
+            graphDiv.appendChild(controlsDiv);
+            graphDiv.appendChild(infoDiv);
+            graphDiv.appendChild(canvasDiv);
+            container.appendChild(graphDiv);
+
+            // Build and render the graph
+            buildAndRenderGraph();
+        }
+
+        function buildAndRenderGraph() {
+            // Build graph data from features
+            graphData = buildGraphData();
+            renderGraph();
+
+            // Update stats
+            const statsEl = document.getElementById('graph-stats');
+            if (statsEl) {
+                statsEl.textContent = `${graphData.nodes.length} nodes • ${graphData.edges.length} connections`;
+            }
+        }
+
+        function buildGraphData() {
+            const nodes = [];
+            const edges = [];
+            const processedNodes = new Set();
+
+            // Define user type groups and their positions
+            const userGroups = {
+                'vendor': { x: 200, y: 100, color: '#10b981' },
+                'promoter': { x: 600, y: 100, color: '#f59e0b' },
+                'admin': { x: 400, y: 400, color: '#ef4444' },
+                'shared': { x: 400, y: 250, color: '#8b5cf6' },
+                'developers': { x: 400, y: 50, color: '#3b82f6' }
+            };
+
+            // Root node
+            nodes.push({
+                id: 'root',
+                label: 'Rumfor Market Tracker',
+                type: 'root',
+                x: 400,
+                y: 50,
+                width: 180,
+                height: 50
+            });
+            processedNodes.add('root');
+
+            // Create category nodes first
+            const categories = [...new Set(features.map(f => f.category))];
+            categories.forEach(category => {
+                if (!processedNodes.has(category)) {
+                    // Determine category position based on persona
+                    const categoryFeatures = features.filter(f => f.category === category);
+                    const mainPersona = categoryFeatures[0]?.persona || 'shared';
+                    const groupPos = userGroups[mainPersona] || userGroups.shared;
+
+                    nodes.push({
+                        id: category,
+                        label: category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        type: 'category',
+                        persona: mainPersona,
+                        x: groupPos.x,
+                        y: groupPos.y,
+                        width: 150,
+                        height: 45,
+                        data: { isCategory: true }
+                    });
+
+                    processedNodes.add(category);
+
+                    // Connect category to root
+                    edges.push({
+                        from: 'root',
+                        to: category,
+                        type: 'hierarchy'
+                    });
+                }
+            });
+
+            // Create feature nodes and connect to categories with better positioning
+            const categoryPositions = {};
+            Object.keys(userGroups).forEach((persona, index) => {
+                const groupPos = userGroups[persona];
+                const categoriesForPersona = [...new Set(features.filter(f => f.persona === persona).map(f => f.category))];
+                categoriesForPersona.forEach((category, catIndex) => {
+                    if (categoryPositions[category]) return; // Already positioned
+                    categoryPositions[category] = {
+                        x: groupPos.x + (catIndex * 250) - ((categoriesForPersona.length - 1) * 125),
+                        y: groupPos.y
+                    };
+                });
+            });
+
+            // Position feature nodes in a grid layout around their categories
+            features.forEach((feature, index) => {
+                const featureName = feature.name;
+                const persona = feature.persona || 'shared';
+
+                if (!processedNodes.has(featureName)) {
+                    const categoryNode = nodes.find(n => n.id === feature.category);
+                    if (categoryNode) {
+                        // Grid layout around category: calculate row/column
+                        const categoryFeatures = features.filter(f => f.category === feature.category);
+                        const featureIndex = categoryFeatures.indexOf(feature);
+                        const gridSize = Math.ceil(Math.sqrt(categoryFeatures.length));
+                        const row = Math.floor(featureIndex / gridSize);
+                        const col = featureIndex % gridSize;
+
+                        const spacing = 180; // Distance between nodes
+                        const offsetX = (col - (gridSize - 1) / 2) * spacing;
+                        const offsetY = (row + 1) * spacing; // Start below category
+
+                        const baseX = categoryNode.x + offsetX;
+                        const baseY = categoryNode.y + offsetY;
+
+                        nodes.push({
+                            id: featureName,
+                            label: featureName,
+                            type: 'card',
+                            persona: persona,
+                            x: Math.max(10, Math.min(780, baseX)),
+                            y: Math.max(80, Math.min(580, baseY)),
+                            width: Math.max(120, Math.min(200, featureName.length * 6)),
+                            height: 40,
+                            data: feature
+                        });
+                    } else {
+                        // Fallback positioning
+                        const groupPos = userGroups[persona] || userGroups.shared;
+                        const baseX = groupPos.x + (Math.random() - 0.5) * 400;
+                        const baseY = groupPos.y + Math.random() * 300;
+
+                        nodes.push({
+                            id: featureName,
+                            label: featureName,
+                            type: 'card',
+                            persona: persona,
+                            x: Math.max(10, Math.min(780, baseX)),
+                            y: Math.max(80, Math.min(580, baseY)),
+                            width: Math.max(120, Math.min(200, featureName.length * 6)),
+                            height: 40,
+                            data: feature
+                        });
+                    }
+
+                    processedNodes.add(featureName);
+
+                    // Connect to category
+                    edges.push({
+                        from: feature.category,
+                        to: featureName,
+                        type: 'hierarchy'
+                    });
+                }
+            });
+
+            return { nodes, edges };
+        }
+
+        function renderGraph() {
+            if (!graphData) return;
+
+            const canvas = document.getElementById('graph-canvas');
+            if (!canvas) return;
+
+            // Clear existing content
+            canvas.innerHTML = '';
+
+            // Create SVG container
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.style.overflow = 'visible';
+
+            // Apply scaling transform only (panning handled by position offsets)
+            svg.style.transform = `scale(${graphScale})`;
+            svg.style.transformOrigin = '0 0';
+
+            // Draw edges first (behind nodes) with offset applied
+            graphData.edges.forEach(edge => {
+                const fromNode = graphData.nodes.find(n => n.id === edge.from);
+                const toNode = graphData.nodes.find(n => n.id === edge.to);
+
+                if (fromNode && toNode) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', fromNode.x + fromNode.width / 2 + graphOffset.x);
+                    line.setAttribute('y1', fromNode.y + fromNode.height / 2 + graphOffset.y);
+                    line.setAttribute('x2', toNode.x + toNode.width / 2 + graphOffset.x);
+                    line.setAttribute('y2', toNode.y + toNode.height / 2 + graphOffset.y);
+                    line.setAttribute('stroke', 'var(--text-muted)');
+                    line.setAttribute('stroke-width', '2');
+                    line.classList.add('graph-edge');
+                    svg.appendChild(line);
+                }
+            });
+
+            // Draw nodes with offset applied
+            graphData.nodes.forEach(node => {
+                const nodeDiv = document.createElement('div');
+                nodeDiv.className = `graph-node ${node.type} ${node.persona || ''} ${selectedCard === node.id ? 'selected' : ''}`;
+                nodeDiv.style.left = `${node.x + graphOffset.x}px`;
+                nodeDiv.style.top = `${node.y + graphOffset.y}px`;
+                nodeDiv.style.width = `${node.width}px`;
+                nodeDiv.style.minHeight = `${node.height}px`;
+
+                // Add icon based on type
+                let icon = '📄';
+                if (node.type === 'root') icon = '🏠';
+                else if (node.data && node.data.icon) icon = node.data.icon;
+
+                nodeDiv.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 6px; justify-content: center;">
+                        <span>${icon}</span>
+                        <span style="flex: 1; text-align: center; line-height: 1.2;">${node.label}</span>
+                    </div>
+                `;
+
+                // Add click handler
+                nodeDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    selectGraphNode(node.id);
+                };
+
+                // Add individual node dragging with proper event handling
+                nodeDiv.onmousedown = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    draggedNode = node;
+                    const dragStartX = e.clientX - node.x;
+                    const dragStartY = e.clientY - node.y;
+
+                    nodeDiv.style.zIndex = '1000';
+                    nodeDiv.style.cursor = 'grabbing';
+                    nodeDiv.classList.add('dragging');
+                    document.body.style.userSelect = 'none';
+                    console.log('Individual node drag started for:', node.label);
+
+                    const handleMouseMove = (e) => {
+                        if (draggedNode === node) {
+                            const newX = e.clientX - dragStartX;
+                            const newY = e.clientY - dragStartY;
+                            node.x = Math.max(0, Math.min(800, newX));
+                            node.y = Math.max(0, Math.min(600, newY));
+                            nodeDiv.style.left = `${node.x}px`;
+                            nodeDiv.style.top = `${node.y}px`;
+                            renderGraph(); // Update edges
+                        }
+                    };
+
+                    const handleMouseUp = (e) => {
+                        if (draggedNode === node) {
+                            draggedNode = null;
+                            nodeDiv.style.zIndex = '';
+                            nodeDiv.style.cursor = 'grab';
+                            nodeDiv.classList.remove('dragging');
+                            document.body.style.userSelect = '';
+                            console.log('Individual node drag ended for:', node.label);
+                            document.removeEventListener('mousemove', handleMouseMove);
+                            document.removeEventListener('mouseup', handleMouseUp);
+                        }
+                    };
+
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                };
+
+                canvas.appendChild(nodeDiv);
+            });
+
+            canvas.appendChild(svg);
+        }
+
+        function selectGraphNode(nodeId) {
+            // Find the corresponding tree node and click it
+            const treeNode = document.querySelector(`.tree-node[data-node-id="${nodeId}"]`) ||
+                           Array.from(document.querySelectorAll('.tree-node')).find(node =>
+                               node.textContent.trim().includes(nodeId.split(' ').pop())
+                           );
+
+            if (treeNode) {
+                treeNode.click();
+            }
+
+            // Update graph selection
+            document.querySelectorAll('.graph-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            const graphNode = document.querySelector(`.graph-node:has-text("${nodeId}")`) ||
+                            Array.from(document.querySelectorAll('.graph-node')).find(node =>
+                                node.textContent.includes(nodeId.split(' ').pop())
+                            );
+
+            if (graphNode) {
+                graphNode.classList.add('selected');
+            }
+
+            selectedCard = nodeId;
+        }
+
+        function zoomGraph(factor) {
+            graphScale *= factor;
+            graphScale = Math.max(0.1, Math.min(3, graphScale)); // Clamp scale
+            renderGraph();
+        }
+
+        function resetGraphView() {
+            graphScale = 1;
+            graphOffset = { x: 0, y: 0 };
+            renderGraph();
+        }
+
+        function toggleGraphDetails() {
+            // Toggle between showing full labels vs abbreviated
+            const nodes = document.querySelectorAll('.graph-node');
+            nodes.forEach(node => {
+                const textSpan = node.querySelector('span:last-child');
+                if (textSpan) {
+                    if (textSpan.style.display === 'none') {
+                        textSpan.style.display = 'block';
+                    } else {
+                        textSpan.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // Mouse interaction handlers for panning (removed node dragging for now)
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.closest('.graph-canvas') && !e.target.closest('.graph-node')) {
+                // Start view panning
+                isDragging = true;
+                lastMousePos = { x: e.clientX, y: e.clientY };
+                e.preventDefault();
+                document.body.style.cursor = 'grabbing';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (draggedNode) {
+                // Handle individual node dragging
+                const newX = e.clientX - (lastMousePos.x - draggedNode.x);
+                const newY = e.clientY - (lastMousePos.y - draggedNode.y);
+                draggedNode.x = Math.max(0, Math.min(800, newX));
+                draggedNode.y = Math.max(0, Math.min(600, newY));
+                renderGraph();
+                lastMousePos = { x: e.clientX, y: e.clientY };
+            } else if (isDragging) {
+                // Handle view panning
+                const deltaX = e.clientX - lastMousePos.x;
+                const deltaY = e.clientY - lastMousePos.y;
+
+                graphOffset.x += deltaX;
+                graphOffset.y += deltaY;
+
+                lastMousePos = { x: e.clientX, y: e.clientY };
+                renderGraph();
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (draggedNode) {
+                console.log('Node drag ended for:', draggedNode.label);
+                draggedNode = null;
+                document.body.style.userSelect = '';
+            }
+            document.body.style.cursor = 'default';
+        });
+
+        document.addEventListener('wheel', (e) => {
+            if (e.target.closest('.graph-canvas')) {
+                e.preventDefault();
+                const factor = e.deltaY > 0 ? 0.9 : 1.1;
+                zoomGraph(factor);
+            }
+        });
 
         function selectCard(cardName, description) {
             // Remove previous selection
@@ -1244,8 +1746,13 @@
                 node.classList.remove('selected');
             });
 
-            // Add selection to clicked node
-            event.target.closest('.tree-node').classList.add('selected');
+            // Find and select the tree node
+            const treeNode = document.querySelector(`[data-node-id="${cardName}"]`) ||
+                           Array.from(document.querySelectorAll('.tree-node')).find(node =>
+                               node.textContent.trim().includes(cardName));
+            if (treeNode) {
+                treeNode.classList.add('selected');
+            }
 
             selectedCard = cardName;
             updateCenterVisualization();

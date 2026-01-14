@@ -1,0 +1,67 @@
+{
+  "orchestrator": {
+    "status": "idle",
+    "current_cycle": 0,
+    "current_agent": null,
+    "start_time": 1736822328.406,
+    "last_update": 1736822328.406
+  },
+  "agents": {
+    "frontend": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "backend": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "api": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "styling": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "testing": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "security": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "documentation": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    },
+    "deployment": {
+      "status": "idle",
+      "progress": 0,
+      "message": "Ready for work",
+      "last_run": null,
+      "last_result": "Agent initialized"
+    }
+  }
+}

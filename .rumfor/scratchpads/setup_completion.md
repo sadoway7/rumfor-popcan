@@ -1,4 +1,4 @@
-# 🎉 Ralph's Infinity Rule List - SETUP COMPLETE
+ cu# 🎉 Ralph's Infinity Rule List - SETUP COMPLETE
 
 ## ✅ MISSION ACCOMPLISHED
 
