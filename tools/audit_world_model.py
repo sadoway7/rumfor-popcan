@@ -492,14 +492,14 @@ class WorldModelAuditor:
             return False
 
     def _replace_js_function(self, content: str, function_name: str, new_array: str) -> str:
-        """Replace a JavaScript function's return array in the HTML content."""
+        """Replace a JavaScript function's array assignment in the HTML content."""
         import re
 
-        # Pattern to find the function and its array
-        pattern = rf'function {function_name}\(\) \{{\s*return \[([^\]]*)\];'
+        # Pattern to find the function and its array assignment (components = [content];)
+        pattern = rf'function {function_name}\(\) \{{\s*(\w+)\s*=\s*\[([^\]]*)\];'
 
         # Replace the entire array with new content
-        replacement = f'function {function_name}() {{\n    return {new_array};'
+        replacement = f'function {function_name}() {{\n    \\1 = {new_array};'
 
         result = re.sub(pattern, replacement, content, flags=re.DOTALL)
 

@@ -1248,6 +1248,14 @@
                     route: '/'
                 },
                 {
+                    name: 'HomePageLoggedIn.tsx',
+                    icon: '🏠',
+                    description: 'Personalized homepage for logged-in users',
+                    features: ['🏪 Market Discovery Hub', '⭐ Favorites & Saved Markets'],
+                    persona: 'vendor',
+                    route: '/'
+                },
+                {
                     name: 'MarketDetailPage.tsx',
                     icon: '📱',
                     description: 'Detailed view of individual markets with photos and application button',
@@ -1272,6 +1280,14 @@
                     route: '/apply/:marketId'
                 },
                 {
+                    name: 'ApplicationDetailPage.tsx',
+                    icon: '📋',
+                    description: 'Detailed view of vendor application status',
+                    features: ['📊 Application Status Dashboard', '💬 Application Communications'],
+                    persona: 'vendor',
+                    route: '/my-applications/:id'
+                },
+                {
                     name: 'MyApplicationsPage.tsx',
                     icon: '📊',
                     description: 'Dashboard showing vendor application status',
@@ -1286,6 +1302,38 @@
                     features: ['⭐ Favorites & Saved Markets'],
                     persona: 'vendor',
                     route: '/my-markets'
+                },
+                {
+                    name: 'MarketPlanningWorkspace.tsx',
+                    icon: '🏪',
+                    description: 'Dedicated planning workspace for each market',
+                    features: ['🏪 Market Planning Workspaces', '📋 Market-Specific Todo Lists', '💰 Per-Market Budget Tracking'],
+                    persona: 'vendor',
+                    route: '/market/:id/plan'
+                },
+                {
+                    name: 'VendorExpenseTracker.tsx',
+                    icon: '💰',
+                    description: 'Track and manage business expenses',
+                    features: ['💰 Overall Business Expense Tracking', '💰 Per-Market Budget Tracking'],
+                    persona: 'vendor',
+                    route: '/expenses'
+                },
+                {
+                    name: 'VendorAnalytics.tsx',
+                    icon: '📈',
+                    description: 'Performance analytics and insights for vendors',
+                    features: ['📊 Vendor Performance Analytics'],
+                    persona: 'vendor',
+                    route: '/analytics'
+                },
+                {
+                    name: 'PreparationTemplates.tsx',
+                    icon: '✅',
+                    description: 'Library of preparation templates and checklists',
+                    features: ['📋 General Preparation Templates'],
+                    persona: 'vendor',
+                    route: '/templates'
                 },
                 {
                     name: 'PromoterDashboardPage.tsx',
@@ -1304,12 +1352,44 @@
                     route: '/promoter/market/create'
                 },
                 {
+                    name: 'PromoterMarketsPage.tsx',
+                    icon: '🏪',
+                    description: 'Manage and edit existing markets',
+                    features: ['🏪 Market Management Console'],
+                    persona: 'promoter',
+                    route: '/promoter/markets'
+                },
+                {
+                    name: 'PromoterCalendarPage.tsx',
+                    icon: '📅',
+                    description: 'Calendar view of all markets and events',
+                    features: ['📅 Market Calendar System'],
+                    persona: 'promoter',
+                    route: '/promoter/calendar'
+                },
+                {
                     name: 'PromoterApplicationsPage.tsx',
                     icon: '📋',
                     description: 'Queue for reviewing vendor applications',
                     features: ['🔍 Application Review Queue', '📝 Detailed Application Review', '💬 Promoter-Vendor Communication'],
                     persona: 'promoter',
                     route: '/promoter/applications'
+                },
+                {
+                    name: 'PromoterVendorsPage.tsx',
+                    icon: '👥',
+                    description: 'Directory of approved vendors for markets',
+                    features: ['👥 Approved Vendor Directory'],
+                    persona: 'promoter',
+                    route: '/promoter/vendors'
+                },
+                {
+                    name: 'PromoterAnalyticsPage.tsx',
+                    icon: '📊',
+                    description: 'Analytics and insights for promoters',
+                    features: ['📈 Promoter Analytics Suite'],
+                    persona: 'promoter',
+                    route: '/promoter/analytics'
                 },
                 {
                     name: 'LoginPage.tsx',
@@ -1328,12 +1408,44 @@
                     route: '/register'
                 },
                 {
+                    name: 'EmailVerificationPage.tsx',
+                    icon: '📧',
+                    description: 'Email verification after registration',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/verify-email'
+                },
+                {
+                    name: 'PasswordRecoveryPage.tsx',
+                    icon: '🔐',
+                    description: 'Password recovery workflow',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/forgot-password'
+                },
+                {
                     name: 'ProfilePage.tsx',
                     icon: '👤',
                     description: 'User profile and settings management',
                     features: ['👤 User Profile Management', '🔐 Unified Authentication'],
                     persona: 'all',
                     route: '/profile'
+                },
+                {
+                    name: 'SettingsPage.tsx',
+                    icon: '⚙️',
+                    description: 'User preferences and notification settings',
+                    features: ['👤 User Profile Management'],
+                    persona: 'all',
+                    route: '/settings'
+                },
+                {
+                    name: 'EmailAlertsSettings.tsx',
+                    icon: '📧',
+                    description: 'Email notification preferences',
+                    features: ['👤 User Profile Management'],
+                    persona: 'all',
+                    route: '/settings/notifications'
                 },
                 {
                     name: 'AdminDashboardPage.tsx',
@@ -1358,6 +1470,310 @@
                     features: ['🛡️ Content Moderation System'],
                     persona: 'admin',
                     route: '/admin/moderation'
+                },
+                {
+                    name: 'AdminAnalyticsPage.tsx',
+                    icon: '📊',
+                    description: 'System-wide analytics and metrics',
+                    features: ['📊 System Analytics Platform'],
+                    persona: 'admin',
+                    route: '/admin/analytics'
+                },
+                {
+                    name: 'DashboardRedirectPage.tsx',
+                    icon: '🔄',
+                    description: 'Redirects users to appropriate dashboard based on role',
+                    features: ['🏠 Promoter Command Center', '📊 Vendor Performance Analytics'],
+                    persona: 'all',
+                    route: '/dashboard'
+                },
+                {
+                    name: 'AboutPage.tsx',
+                    icon: 'ℹ️',
+                    description: 'About page for the application',
+                    features: ['🏪 Market Discovery Hub'],
+                    persona: 'all',
+                    route: '/about'
+                },
+                {
+                    name: 'ContactPage.tsx',
+                    icon: '📞',
+                    description: 'Contact information and support',
+                    features: ['🏪 Market Discovery Hub'],
+                    persona: 'all',
+                    route: '/contact'
+                },
+                {
+                    name: 'NotFoundPage.tsx',
+                    icon: '❓',
+                    description: '404 page for invalid routes',
+                    features: ['🏪 Market Discovery Hub'],
+                    persona: 'all',
+                    route: '/*'
+                },
+                {
+                    name: 'AdminSupportPage.tsx',
+                    icon: '🆘',
+                    description: 'Support ticket management for admins',
+                    features: ['👤 User Administration Hub'],
+                    persona: 'admin',
+                    route: '/admin/support'
+                },
+                {
+                    name: 'AdminApplicationsPage.tsx',
+                    icon: '📋',
+                    description: 'Admin view of all applications',
+                    features: ['📊 System Analytics Platform'],
+                    persona: 'admin',
+                    route: '/admin/applications'
+                },
+                {
+                    name: 'AdminMarketsPage.tsx',
+                    icon: '🏪',
+                    description: 'Admin view of all markets',
+                    features: ['📊 System Analytics Platform'],
+                    persona: 'admin',
+                    route: '/admin/markets'
+                },
+                {
+                    name: 'BusinessPlanningPage.tsx',
+                    icon: '💼',
+                    description: 'Business planning and strategy for promoters',
+                    features: ['🏪 Market Creation Wizard'],
+                    persona: 'promoter',
+                    route: '/promoter/business-planning'
+                },
+                {
+                    name: 'PromoterCreateMarketPage.tsx',
+                    icon: '🏪',
+                    description: 'Wizard for creating new markets',
+                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console'],
+                    persona: 'promoter',
+                    route: '/promoter/market/create'
+                },
+                {
+                    name: 'NotificationsPage.tsx',
+                    icon: '🔔',
+                    description: 'User notifications and alerts center',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    persona: 'all',
+                    route: '/notifications'
+                },
+                {
+                    name: 'MarketResultsPage.tsx',
+                    icon: '🔍',
+                    description: 'Search results page showing filtered markets',
+                    features: ['🔍 Advanced Market Search', '🏪 Market Discovery Hub'],
+                    persona: 'vendor',
+                    route: '/search/results'
+                },
+                {
+                    name: 'MarketMapPage.tsx',
+                    icon: '🗺️',
+                    description: 'Interactive map showing market locations',
+                    features: ['🔍 Advanced Market Search', '🏪 Market Discovery Hub'],
+                    persona: 'vendor',
+                    route: '/markets/map'
+                },
+                {
+                    name: 'VendorOnboardingPage.tsx',
+                    icon: '🎯',
+                    description: 'Onboarding flow for new vendors',
+                    features: ['🏪 Market Discovery Hub', '📝 Multi-Step Application Builder'],
+                    persona: 'vendor',
+                    route: '/vendor/onboarding'
+                },
+                {
+                    name: 'PromoterOnboardingPage.tsx',
+                    icon: '🎯',
+                    description: 'Onboarding flow for new promoters',
+                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console'],
+                    persona: 'promoter',
+                    route: '/promoter/onboarding'
+                },
+                {
+                    name: 'MarketSettingsPage.tsx',
+                    icon: '⚙️',
+                    description: 'Market settings and configuration (promoters)',
+                    features: ['🏪 Market Management Console'],
+                    persona: 'promoter',
+                    route: '/promoter/market/:id/settings'
+                },
+                {
+                    name: 'ApplicationReviewPage.tsx',
+                    icon: '🔍',
+                    description: 'Detailed application review interface',
+                    features: ['📝 Detailed Application Review', '💬 Promoter-Vendor Communication'],
+                    persona: 'promoter',
+                    route: '/promoter/application/:id/review'
+                },
+                {
+                    name: 'VendorCommunicationPage.tsx',
+                    icon: '💬',
+                    description: 'Communication center with promoters',
+                    features: ['💬 Application Communications', '💬 Promoter-Vendor Communication'],
+                    persona: 'vendor',
+                    route: '/communication'
+                },
+                {
+                    name: 'MarketPhotoManagementPage.tsx',
+                    icon: '📸',
+                    description: 'Photo gallery and management for markets',
+                    features: ['📸 Photo Sharing & Gallery', '📱 Market Detail Views'],
+                    persona: 'promoter',
+                    route: '/promoter/market/:id/photos'
+                },
+                {
+                    name: 'SupportPage.tsx',
+                    icon: '🆘',
+                    description: 'Help and support center',
+                    features: ['🏪 Market Discovery Hub'],
+                    persona: 'all',
+                    route: '/support'
+                },
+                {
+                    name: 'TermsAndConditionsPage.tsx',
+                    icon: '📄',
+                    description: 'Terms of service and conditions',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/terms'
+                },
+                {
+                    name: 'PrivacyPolicyPage.tsx',
+                    icon: '🔒',
+                    description: 'Privacy policy and data handling',
+                    features: ['🔐 Unified Authentication', '👤 User Profile Management'],
+                    persona: 'all',
+                    route: '/privacy'
+                },
+                {
+                    name: 'MarketPromotionPage.tsx',
+                    icon: '📣',
+                    description: 'Market promotion and social sharing tools',
+                    features: ['🏪 Market Management Console', '🏷️ Hashtag & Discovery System'],
+                    persona: 'promoter',
+                    route: '/promoter/market/:id/promote'
+                },
+                {
+                    name: 'ExpenseReportsPage.tsx',
+                    icon: '📊',
+                    description: 'Detailed expense reports and analytics',
+                    features: ['💰 Overall Business Expense Tracking', '💰 Per-Market Budget Tracking'],
+                    persona: 'vendor',
+                    route: '/expenses/reports'
+                },
+                {
+                    name: 'TodoDashboardPage.tsx',
+                    icon: '📋',
+                    description: 'Comprehensive todo management dashboard',
+                    features: ['📋 Market-Specific Todo Lists', '📋 General Preparation Templates'],
+                    persona: 'vendor',
+                    route: '/todos'
+                },
+                {
+                    name: 'BudgetPlannerPage.tsx',
+                    icon: '💰',
+                    description: 'Comprehensive budget planning tool',
+                    features: ['💰 Per-Market Budget Tracking', '💰 Overall Business Expense Tracking'],
+                    persona: 'vendor',
+                    route: '/budget'
+                },
+                {
+                    name: 'MarketTimelinePage.tsx',
+                    icon: '📅',
+                    description: 'Timeline view for market events',
+                    features: ['📅 Market Timeline & Deadlines', '📅 Market Calendar System'],
+                    persona: 'vendor',
+                    route: '/timeline'
+                },
+                {
+                    name: 'PerformanceAnalyticsPage.tsx',
+                    icon: '📈',
+                    description: 'Advanced performance analytics',
+                    features: ['📊 Vendor Performance Analytics', '📈 Promoter Analytics Suite'],
+                    persona: 'vendor',
+                    route: '/performance'
+                },
+                {
+                    name: 'InventoryManagementPage.tsx',
+                    icon: '📦',
+                    description: 'Product inventory management',
+                    features: ['📦 Inventory & Product Planning'],
+                    persona: 'vendor',
+                    route: '/inventory'
+                },
+                {
+                    name: 'ProductCatalogPage.tsx',
+                    icon: '🛍️',
+                    description: 'Product catalog and management',
+                    features: ['📦 Inventory & Product Planning'],
+                    persona: 'vendor',
+                    route: '/products'
+                },
+                {
+                    name: 'PricingStrategyPage.tsx',
+                    icon: '💰',
+                    description: 'Pricing strategy and optimization',
+                    features: ['📦 Inventory & Product Planning'],
+                    persona: 'vendor',
+                    route: '/pricing'
+                },
+                {
+                    name: 'TwoFactorSetupPage.tsx',
+                    icon: '🔐',
+                    description: 'Two-factor authentication setup',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/settings/2fa'
+                },
+                {
+                    name: 'PasswordChangePage.tsx',
+                    icon: '🔐',
+                    description: 'Change password interface',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/settings/password'
+                },
+                {
+                    name: 'AccountDeletionPage.tsx',
+                    icon: '🗑️',
+                    description: 'Account deletion and data export',
+                    features: ['👤 User Profile Management'],
+                    persona: 'all',
+                    route: '/settings/delete-account'
+                },
+                {
+                    name: 'SubscriptionManagementPage.tsx',
+                    icon: '💳',
+                    description: 'Subscription and billing management',
+                    features: ['🏪 Market Discovery Hub'],
+                    persona: 'all',
+                    route: '/billing'
+                },
+                {
+                    name: 'AdminSettingsPage.tsx',
+                    icon: '⚙️',
+                    description: 'System settings and configuration',
+                    features: ['👤 User Administration Hub'],
+                    persona: 'admin',
+                    route: '/admin/settings'
+                },
+                {
+                    name: 'AdminLogsPage.tsx',
+                    icon: '📋',
+                    description: 'System logs and audit trails',
+                    features: ['👤 User Administration Hub'],
+                    persona: 'admin',
+                    route: '/admin/logs'
+                },
+                {
+                    name: 'AdminReportsPage.tsx',
+                    icon: '📊',
+                    description: 'Administrative reports and exports',
+                    features: ['📊 System Analytics Platform'],
+                    persona: 'admin',
+                    route: '/admin/reports'
                 }
             ];
         }
@@ -1365,70 +1781,638 @@
         // Build components array
         function buildComponentsArray() {
             components = [
-                {
-                    name: 'MarketCard.tsx',
-                    icon: '🏪',
-                    description: 'Re-usable market information card',
-                    pages: ['HomePage.tsx', 'MarketSearchPage.tsx', 'MyMarketsPage.tsx'],
-                    features: ['🏪 Market Discovery Hub', '🔍 Advanced Market Search', '⭐ Favorites & Saved Markets'],
-                    category: 'ui'
-                },
-                {
-                    name: 'ApplicationForm.tsx',
-                    icon: '📝',
-                    description: 'Multi-step form component with validation',
-                    pages: ['ApplicationFormPage.tsx'],
-                    features: ['📝 Multi-Step Application Builder', '📄 Application Documents'],
-                    category: 'form'
-                },
-                {
-                    name: 'ApplicationCard.tsx',
-                    icon: '📊',
-                    description: 'Status display for applications',
-                    pages: ['MyApplicationsPage.tsx'],
-                    features: ['📊 Application Status Dashboard'],
-                    category: 'dashboard'
-                },
-                {
-                    name: 'NotificationBell.tsx',
-                    icon: '🔔',
-                    description: 'Notification dropdown component',
-                    pages: ['HomePage.tsx', 'MyMarketsPage.tsx'],
-                    features: ['⭐ Favorites & Saved Markets'],
-                    category: 'ui'
-                },
-                {
-                    name: 'PhotoGallery.tsx',
-                    icon: '📸',
-                    description: 'Image gallery with upload functionality',
-                    pages: ['MarketDetailPage.tsx', 'ApplicationFormPage.tsx'],
-                    features: ['📱 Market Detail Views', '📄 Application Documents', '📸 Photo Sharing & Gallery'],
-                    category: 'media'
-                },
-                {
-                    name: 'CommentList.tsx',
-                    icon: '💬',
-                    description: 'Threaded comments component',
-                    pages: ['MarketDetailPage.tsx', 'ApplicationDetailPage.tsx'],
-                    features: ['💬 Market Discussion Forums', '💬 Application Communications'],
-                    category: 'social'
-                },
-                {
-                    name: 'AdminAnalyticsDashboard.tsx',
-                    icon: '📊',
-                    description: 'Analytics charts and metrics',
-                    pages: ['PromoterDashboardPage.tsx', 'AdminDashboardPage.tsx'],
-                    features: ['📈 Promoter Analytics Suite', '📊 System Analytics Platform'],
-                    category: 'analytics'
-                },
-                {
-                    name: 'BottomNav.tsx',
-                    icon: '📱',
-                    description: 'Mobile navigation component',
-                    pages: ['All mobile pages'],
-                    features: ['🏠 Promoter Command Center'],
-                    category: 'navigation'
-                }
+    {
+        name: 'Header.tsx',
+        icon: '🖼️',
+        description: 'Main application header with navigation',
+        pages: [],
+        features: ['🏪 Market Discovery Hub'],
+        category: 'ui'
+    },
+    {
+        name: 'Footer.tsx',
+        icon: '🖼️',
+        description: 'Application footer component',
+        pages: [],
+        features: ['🏪 Market Discovery Hub'],
+        category: 'ui'
+    },
+    {
+        name: 'BottomNav.tsx',
+        icon: '🧭',
+        description: 'Mobile navigation component',
+        pages: ['All mobile pages'],
+        features: ['🏠 Promoter Command Center'],
+        category: 'navigation'
+    },
+    {
+        name: 'MarketCard.tsx',
+        icon: '🏪',
+        description: 'Re-usable market information card',
+        pages: ['HomePage.tsx', 'MarketSearchPage.tsx', 'MyMarketsPage.tsx'],
+        features: ['🏪 Market Discovery Hub', '🔍 Advanced Market Search', '⭐ Favorites & Saved Markets'],
+        category: 'ui'
+    },
+    {
+        name: 'ApplicationCard.tsx',
+        icon: '📊',
+        description: 'Status display for applications',
+        pages: ['MyApplicationsPage.tsx'],
+        features: ['📊 Application Status Dashboard'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ApplicationForm.tsx',
+        icon: '📝',
+        description: 'Multi-step form component with validation',
+        pages: ['ApplicationFormPage.tsx'],
+        features: ['📝 Multi-Step Application Builder', '📄 Application Documents'],
+        category: 'form'
+    },
+    {
+        name: 'NotificationBell.tsx',
+        icon: '🔔',
+        description: 'Notification dropdown component',
+        pages: ['HomePage.tsx', 'MyMarketsPage.tsx'],
+        features: ['⭐ Favorites & Saved Markets'],
+        category: 'ui'
+    },
+    {
+        name: 'PhotoGallery.tsx',
+        icon: '📸',
+        description: 'Image gallery with upload functionality',
+        pages: ['MarketDetailPage.tsx', 'ApplicationFormPage.tsx'],
+        features: ['📱 Market Detail Views', '📄 Application Documents', '📸 Photo Sharing & Gallery'],
+        category: 'media'
+    },
+    {
+        name: 'PhotoUploader.tsx',
+        icon: '📸',
+        description: 'Component for uploading and displaying photos',
+        pages: [],
+        features: ['📸 Photo Sharing & Gallery'],
+        category: 'media'
+    },
+    {
+        name: 'PhotoThumbnail.tsx',
+        icon: '📸',
+        description: 'Thumbnail component for photo display',
+        pages: [],
+        features: ['📸 Photo Sharing & Gallery'],
+        category: 'media'
+    },
+    {
+        name: 'CommentList.tsx',
+        icon: '💬',
+        description: 'Threaded comments component',
+        pages: ['MarketDetailPage.tsx', 'ApplicationDetailPage.tsx'],
+        features: ['💬 Market Discussion Forums', '💬 Application Communications'],
+        category: 'social'
+    },
+    {
+        name: 'CommentForm.tsx',
+        icon: '💬',
+        description: 'Form for adding comments and replies',
+        pages: [],
+        features: ['💬 Market Discussion Forums'],
+        category: 'social'
+    },
+    {
+        name: 'CommentItem.tsx',
+        icon: '💬',
+        description: 'Individual comment item component',
+        pages: [],
+        features: ['💬 Market Discussion Forums'],
+        category: 'social'
+    },
+    {
+        name: 'CommentReactions.tsx',
+        icon: '💬',
+        description: 'Emoji reactions for comments',
+        pages: [],
+        features: ['💬 Market Discussion Forums'],
+        category: 'social'
+    },
+    {
+        name: 'AdminAnalyticsDashboard.tsx',
+        icon: '📊',
+        description: 'Analytics charts and metrics',
+        pages: ['PromoterDashboardPage.tsx', 'AdminDashboardPage.tsx'],
+        features: ['📈 Promoter Analytics Suite', '📊 System Analytics Platform'],
+        category: 'analytics'
+    },
+    {
+        name: 'VendorExpenseTracker.tsx',
+        icon: '💰',
+        description: 'Track vendor expenses and budget',
+        pages: [],
+        features: ['💰 Overall Business Expense Tracking'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ExpenseForm.tsx',
+        icon: '💰',
+        description: 'Form for adding expense entries',
+        pages: [],
+        features: ['💰 Overall Business Expense Tracking'],
+        category: 'form'
+    },
+    {
+        name: 'MarketPlanningWorkspace.tsx',
+        icon: '🏪',
+        description: 'Workspace for planning market participation',
+        pages: [],
+        features: ['🏪 Market Planning Workspaces'],
+        category: 'dashboard'
+    },
+    {
+        name: 'MarketPlanCard.tsx',
+        icon: '🏪',
+        description: 'Card displaying market plan information',
+        pages: [],
+        features: ['🏪 Market Planning Workspaces'],
+        category: 'ui'
+    },
+    {
+        name: 'MarketTodoList.tsx',
+        icon: '📋',
+        description: 'Todo list for market preparation',
+        pages: [],
+        features: ['📋 Market-Specific Todo Lists'],
+        category: 'ui'
+    },
+    {
+        name: 'TodoTemplates.tsx',
+        icon: '📋',
+        description: 'Templates for different types of todos',
+        pages: [],
+        features: ['📋 Market-Specific Todo Lists'],
+        category: 'ui'
+    },
+    {
+        name: 'TodoItem.tsx',
+        icon: '📋',
+        description: 'Individual todo item component',
+        pages: [],
+        features: ['📋 Market-Specific Todo Lists'],
+        category: 'ui'
+    },
+    {
+        name: 'TodoProgress.tsx',
+        icon: '📊',
+        description: 'Progress tracking for todos',
+        pages: [],
+        features: ['📋 Market-Specific Todo Lists'],
+        category: 'ui'
+    },
+    {
+        name: 'MarketBudgetTracker.tsx',
+        icon: '💰',
+        description: 'Budget tracking for market participation',
+        pages: [],
+        features: ['💰 Per-Market Budget Tracking'],
+        category: 'dashboard'
+    },
+    {
+        name: 'BudgetForm.tsx',
+        icon: '💰',
+        description: 'Form for budget planning',
+        pages: [],
+        features: ['💰 Per-Market Budget Tracking'],
+        category: 'form'
+    },
+    {
+        name: 'BudgetChart.tsx',
+        icon: '📊',
+        description: 'Visual budget display',
+        pages: [],
+        features: ['💰 Per-Market Budget Tracking'],
+        category: 'analytics'
+    },
+    {
+        name: 'MarketTimeline.tsx',
+        icon: '📅',
+        description: 'Timeline for market events and deadlines',
+        pages: [],
+        features: ['📅 Market Timeline & Deadlines'],
+        category: 'ui'
+    },
+    {
+        name: 'DeadlineTracker.tsx',
+        icon: '📅',
+        description: 'Component for tracking deadlines',
+        pages: [],
+        features: ['📅 Market Timeline & Deadlines'],
+        category: 'ui'
+    },
+    {
+        name: 'ProductPlanner.tsx',
+        icon: '📦',
+        description: 'Planning tool for products and inventory',
+        pages: [],
+        features: ['📦 Inventory & Product Planning'],
+        category: 'dashboard'
+    },
+    {
+        name: 'InventoryTracker.tsx',
+        icon: '📦',
+        description: 'Inventory management component',
+        pages: [],
+        features: ['📦 Inventory & Product Planning'],
+        category: 'dashboard'
+    },
+    {
+        name: 'PreparationTemplates.tsx',
+        icon: '✅',
+        description: 'Templates for preparation checklists',
+        pages: [],
+        features: ['📋 General Preparation Templates'],
+        category: 'ui'
+    },
+    {
+        name: 'QuickSetupGuide.tsx',
+        icon: '✅',
+        description: 'Quick setup guide component',
+        pages: [],
+        features: ['📋 General Preparation Templates'],
+        category: 'ui'
+    },
+    {
+        name: 'BusinessExpenseTracker.tsx',
+        icon: '💰',
+        description: 'Track overall business expenses',
+        pages: [],
+        features: ['💰 Overall Business Expense Tracking'],
+        category: 'dashboard'
+    },
+    {
+        name: 'TaxReport.tsx',
+        icon: '📋',
+        description: 'Tax reporting component',
+        pages: [],
+        features: ['💰 Overall Business Expense Tracking'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ProfitAnalysis.tsx',
+        icon: '📊',
+        description: 'Profit analysis dashboard',
+        pages: [],
+        features: ['💰 Overall Business Expense Tracking'],
+        category: 'analytics'
+    },
+    {
+        name: 'VendorAnalytics.tsx',
+        icon: '📈',
+        description: 'Analytics for vendor performance',
+        pages: [],
+        features: ['📊 Vendor Performance Analytics'],
+        category: 'analytics'
+    },
+    {
+        name: 'PerformanceDashboard.tsx',
+        icon: '📈',
+        description: 'Performance metrics dashboard',
+        pages: [],
+        features: ['📊 Vendor Performance Analytics'],
+        category: 'analytics'
+    },
+    {
+        name: 'PromoterCreateMarketPage.tsx',
+        icon: '🏪',
+        description: 'Page for creating new markets',
+        pages: [],
+        features: ['🏪 Market Creation Wizard'],
+        category: 'form'
+    },
+    {
+        name: 'LocationModal.tsx',
+        icon: '📍',
+        description: 'Modal for selecting market locations',
+        pages: [],
+        features: ['🏪 Market Creation Wizard'],
+        category: 'ui'
+    },
+    {
+        name: 'PromoterMarketsPage.tsx',
+        icon: '🏪',
+        description: 'Page for managing markets',
+        pages: [],
+        features: ['🏪 Market Management Console'],
+        category: 'dashboard'
+    },
+    {
+        name: 'PromoterCalendarPage.tsx',
+        icon: '📅',
+        description: 'Calendar page for market events',
+        pages: [],
+        features: ['📅 Market Calendar System'],
+        category: 'dashboard'
+    },
+    {
+        name: 'MarketCalendar.tsx',
+        icon: '📅',
+        description: 'Calendar component for markets',
+        pages: [],
+        features: ['📅 Market Calendar System'],
+        category: 'ui'
+    },
+    {
+        name: 'PromoterApplicationsPage.tsx',
+        icon: '📋',
+        description: 'Page for reviewing applications',
+        pages: [],
+        features: ['🔍 Application Review Queue'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ApplicationFilters.tsx',
+        icon: '🔍',
+        description: 'Filters for applications',
+        pages: [],
+        features: ['🔍 Application Review Queue'],
+        category: 'ui'
+    },
+    {
+        name: 'ApplicationDetailPage.tsx',
+        icon: '🔍',
+        description: 'Detailed application review page',
+        pages: [],
+        features: ['📝 Detailed Application Review'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ApplicationActions.tsx',
+        icon: '💬',
+        description: 'Actions for application management',
+        pages: [],
+        features: ['💬 Application Communications'],
+        category: 'ui'
+    },
+    {
+        name: 'ApplicationStatus.tsx',
+        icon: '📊',
+        description: 'Status component for applications',
+        pages: [],
+        features: ['📊 Application Status Dashboard'],
+        category: 'ui'
+    },
+    {
+        name: 'PromoterVendorsPage.tsx',
+        icon: '👥',
+        description: 'Page for managing approved vendors',
+        pages: [],
+        features: ['👥 Approved Vendor Directory'],
+        category: 'dashboard'
+    },
+    {
+        name: 'VendorMarketRow.tsx',
+        icon: '👥',
+        description: 'Row component for vendor display',
+        pages: [],
+        features: ['👥 Approved Vendor Directory'],
+        category: 'ui'
+    },
+    {
+        name: 'VendorMarketCard.tsx',
+        icon: '👥',
+        description: 'Card component for vendor display',
+        pages: [],
+        features: ['👥 Approved Vendor Directory'],
+        category: 'ui'
+    },
+    {
+        name: 'PromoterAnalyticsPage.tsx',
+        icon: '📊',
+        description: 'Analytics page for promoters',
+        pages: [],
+        features: ['📈 Promoter Analytics Suite'],
+        category: 'analytics'
+    },
+    {
+        name: 'PromoterDashboardPage.tsx',
+        icon: '🏠',
+        description: 'Promoter dashboard',
+        pages: [],
+        features: ['🏠 Promoter Command Center'],
+        category: 'dashboard'
+    },
+    {
+        name: 'Sidebar.tsx',
+        icon: '🧭',
+        description: 'Sidebar navigation component',
+        pages: [],
+        features: ['🏠 Promoter Command Center'],
+        category: 'navigation'
+    },
+    {
+        name: 'AdminUsersPage.tsx',
+        icon: '👤',
+        description: 'User management page',
+        pages: [],
+        features: ['👤 User Administration Hub'],
+        category: 'dashboard'
+    },
+    {
+        name: 'AdminUserTable.tsx',
+        icon: '👤',
+        description: 'Table for user management',
+        pages: [],
+        features: ['👤 User Administration Hub'],
+        category: 'ui'
+    },
+    {
+        name: 'AdminModerationPage.tsx',
+        icon: '🛡️',
+        description: 'Content moderation page',
+        pages: [],
+        features: ['🛡️ Content Moderation System'],
+        category: 'dashboard'
+    },
+    {
+        name: 'AdminModerationQueue.tsx',
+        icon: '🛡️',
+        description: 'Moderation queue component',
+        pages: [],
+        features: ['🛡️ Content Moderation System'],
+        category: 'ui'
+    },
+    {
+        name: 'AdminDashboardPage.tsx',
+        icon: '👑',
+        description: 'Admin dashboard',
+        pages: [],
+        features: ['📊 System Analytics Platform'],
+        category: 'dashboard'
+    },
+    {
+        name: 'AdminAnalyticsPage.tsx',
+        icon: '📊',
+        description: 'System analytics page',
+        pages: [],
+        features: ['📊 System Analytics Platform'],
+        category: 'analytics'
+    },
+    {
+        name: 'MarketSearchPage.tsx',
+        icon: '🔍',
+        description: 'Search page for markets',
+        pages: [],
+        features: ['🔍 Advanced Market Search'],
+        category: 'dashboard'
+    },
+    {
+        name: 'MarketFilters.tsx',
+        icon: '🔍',
+        description: 'Filters for market search',
+        pages: [],
+        features: ['🔍 Advanced Market Search'],
+        category: 'ui'
+    },
+    {
+        name: 'ApplicationFilters.tsx',
+        icon: '🔍',
+        description: 'Filters for applications',
+        pages: [],
+        features: ['🔍 Advanced Market Search'],
+        category: 'ui'
+    },
+    {
+        name: 'MarketDetailPage.tsx',
+        icon: '📱',
+        description: 'Detailed market information page',
+        pages: [],
+        features: ['📱 Market Detail Views'],
+        category: 'dashboard'
+    },
+    {
+        name: 'MyMarketsPage.tsx',
+        icon: '⭐',
+        description: 'Personal markets page',
+        pages: [],
+        features: ['⭐ Favorites & Saved Markets'],
+        category: 'dashboard'
+    },
+    {
+        name: 'MyApplicationsPage.tsx',
+        icon: '📊',
+        description: 'Applications dashboard',
+        pages: [],
+        features: ['📊 Application Status Dashboard'],
+        category: 'dashboard'
+    },
+    {
+        name: 'HomePage.tsx',
+        icon: '🏠',
+        description: 'Main homepage',
+        pages: [],
+        features: ['🏪 Market Discovery Hub'],
+        category: 'dashboard'
+    },
+    {
+        name: 'ProfilePage.tsx',
+        icon: '👤',
+        description: 'User profile page',
+        pages: [],
+        features: ['👤 User Profile Management'],
+        category: 'dashboard'
+    },
+    {
+        name: 'SettingsPage.tsx',
+        icon: '⚙️',
+        description: 'Settings page',
+        pages: [],
+        features: ['👤 User Profile Management'],
+        category: 'dashboard'
+    },
+    {
+        name: 'EmailAlertsSettings.tsx',
+        icon: '📧',
+        description: 'Email alerts settings',
+        pages: [],
+        features: ['👤 User Profile Management'],
+        category: 'form'
+    },
+    {
+        name: 'LoginPage.tsx',
+        icon: '🔐',
+        description: 'Login page',
+        pages: [],
+        features: ['🔐 Unified Authentication'],
+        category: 'form'
+    },
+    {
+        name: 'RegisterPage.tsx',
+        icon: '👤',
+        description: 'Registration page',
+        pages: [],
+        features: ['🔐 Unified Authentication'],
+        category: 'form'
+    },
+    {
+        name: 'EmailVerificationPage.tsx',
+        icon: '📧',
+        description: 'Email verification page',
+        pages: [],
+        features: ['🔐 Unified Authentication'],
+        category: 'ui'
+    },
+    {
+        name: 'HashtagVoting.tsx',
+        icon: '🏷️',
+        description: 'Hashtag voting component',
+        pages: [],
+        features: ['🏷️ Hashtag & Discovery System'],
+        category: 'social'
+    },
+    {
+        name: 'FileUploader.tsx',
+        icon: '📎',
+        description: 'File upload component',
+        pages: [],
+        features: ['📄 Application Documents'],
+        category: 'form'
+    },
+    {
+        name: 'DashboardLayout.tsx',
+        icon: '🏠',
+        description: 'Dashboard layout component',
+        pages: [],
+        features: ['🏠 Promoter Command Center'],
+        category: 'layout'
+    },
+    {
+        name: 'AuthLayout.tsx',
+        icon: '🔐',
+        description: 'Authentication layout',
+        pages: [],
+        features: ['🔐 Unified Authentication'],
+        category: 'layout'
+    },
+    {
+        name: 'AdminLayout.tsx',
+        icon: '👑',
+        description: 'Admin layout',
+        pages: [],
+        features: ['👑 Admin'],
+        category: 'layout'
+    },
+    {
+        name: 'MainLayout.tsx',
+        icon: '🏠',
+        description: 'Main application layout',
+        pages: [],
+        features: ['🏪 Market Discovery Hub'],
+        category: 'layout'
+    },
+    {
+        name: 'PromoterLayout.tsx',
+        icon: '🏪',
+        description: 'Promoter layout',
+        pages: [],
+        features: ['🏪 Promoter'],
+        category: 'layout'
+    }
             ];
         }
 
@@ -1450,6 +2434,27 @@
                     category: 'markets'
                 },
                 {
+                    endpoint: 'POST /api/markets',
+                    icon: '🏪',
+                    description: 'Create a new market',
+                    features: ['🏪 Market Creation Wizard'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'PUT /api/markets/:id',
+                    icon: '🏪',
+                    description: 'Update market information',
+                    features: ['🏪 Market Management Console'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'DELETE /api/markets/:id',
+                    icon: '🏪',
+                    description: 'Delete a market',
+                    features: ['🏪 Market Management Console'],
+                    category: 'markets'
+                },
+                {
                     endpoint: 'POST /api/applications',
                     icon: '📝',
                     description: 'Submit vendor application',
@@ -1464,6 +2469,34 @@
                     category: 'applications'
                 },
                 {
+                    endpoint: 'GET /api/applications/:id',
+                    icon: '📝',
+                    description: 'Get detailed application information',
+                    features: ['📝 Detailed Application Review'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'PUT /api/applications/:id/status',
+                    icon: '📊',
+                    description: 'Update application status',
+                    features: ['🔍 Application Review Queue'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'POST /api/applications/:id/comments',
+                    icon: '💬',
+                    description: 'Add comment to application',
+                    features: ['💬 Promoter-Vendor Communication'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'GET /api/applications/:id/comments',
+                    icon: '💬',
+                    description: 'Get application comments',
+                    features: ['💬 Promoter-Vendor Communication'],
+                    category: 'applications'
+                },
+                {
                     endpoint: 'POST /api/auth/login',
                     icon: '🔐',
                     description: 'User authentication',
@@ -1471,25 +2504,627 @@
                     category: 'auth'
                 },
                 {
+                    endpoint: 'POST /api/auth/register',
+                    icon: '👤',
+                    description: 'User registration',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/logout',
+                    icon: '🔐',
+                    description: 'User logout',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'GET /api/auth/me',
+                    icon: '👤',
+                    description: 'Get current user information',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/forgot-password',
+                    icon: '🔐',
+                    description: 'Request password reset',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/reset-password',
+                    icon: '🔐',
+                    description: 'Reset user password',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/verify-email',
+                    icon: '📧',
+                    description: 'Verify user email',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/resend-verification',
+                    icon: '📧',
+                    description: 'Resend verification email',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/upload/photos',
+                    icon: '📸',
+                    description: 'Upload photos for applications',
+                    features: ['📄 Application Documents'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'GET /api/upload/photos/:id',
+                    icon: '📸',
+                    description: 'Get uploaded photo',
+                    features: ['📸 Photo Sharing & Gallery'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'DELETE /api/upload/photos/:id',
+                    icon: '📸',
+                    description: 'Delete uploaded photo',
+                    features: ['📸 Photo Sharing & Gallery'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'POST /api/upload/documents',
+                    icon: '📎',
+                    description: 'Upload documents for applications',
+                    features: ['📄 Application Documents'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'GET /api/upload/documents/:id',
+                    icon: '📎',
+                    description: 'Get uploaded document',
+                    features: ['📄 Application Documents'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'POST /api/comments',
+                    icon: '💬',
+                    description: 'Create new comment',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'GET /api/comments/:entityType/:entityId',
+                    icon: '💬',
+                    description: 'Get comments for entity',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'PUT /api/comments/:id',
+                    icon: '💬',
+                    description: 'Update comment',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'DELETE /api/comments/:id',
+                    icon: '💬',
+                    description: 'Delete comment',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'POST /api/comments/:id/reactions',
+                    icon: '😊',
+                    description: 'Add reaction to comment',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'GET /api/users/favorites',
+                    icon: '⭐',
+                    description: 'Get user favorites',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'POST /api/users/favorites',
+                    icon: '⭐',
+                    description: 'Add market to favorites',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'DELETE /api/users/favorites/:marketId',
+                    icon: '⭐',
+                    description: 'Remove market from favorites',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'GET /api/users/profile',
+                    icon: '👤',
+                    description: 'Get user profile',
+                    features: ['👤 User Profile Management'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'PUT /api/users/profile',
+                    icon: '👤',
+                    description: 'Update user profile',
+                    features: ['👤 User Profile Management'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'PUT /api/users/settings',
+                    icon: '⚙️',
+                    description: 'Update user settings',
+                    features: ['👤 User Profile Management'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'GET /api/users/notifications',
+                    icon: '🔔',
+                    description: 'Get user notifications',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'PUT /api/users/notifications/:id/read',
+                    icon: '🔔',
+                    description: 'Mark notification as read',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
                     endpoint: 'GET /api/admin/users',
                     icon: '👤',
-                    description: 'User management APIs',
+                    description: 'Get all users for admin',
                     features: ['👤 User Administration Hub'],
                     category: 'admin'
                 },
                 {
-                    endpoint: 'POST /api/upload',
-                    icon: '📎',
-                    description: 'File upload endpoint',
-                    features: ['📄 Application Documents', '📸 Photo Sharing & Gallery'],
+                    endpoint: 'GET /api/admin/users/:id',
+                    icon: '👤',
+                    description: 'Get specific user details',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'PUT /api/admin/users/:id',
+                    icon: '👤',
+                    description: 'Update user (admin)',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'DELETE /api/admin/users/:id',
+                    icon: '👤',
+                    description: 'Delete user (admin)',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'PUT /api/admin/users/:id/role',
+                    icon: '👤',
+                    description: 'Change user role',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/admin/analytics/overview',
+                    icon: '📊',
+                    description: 'System-wide analytics',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/admin/analytics/users',
+                    icon: '📊',
+                    description: 'User analytics',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/admin/analytics/markets',
+                    icon: '📊',
+                    description: 'Market analytics',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/admin/analytics/applications',
+                    icon: '📊',
+                    description: 'Application analytics',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/promoter/analytics/dashboard',
+                    icon: '📊',
+                    description: 'Promoter analytics dashboard',
+                    features: ['📈 Promoter Analytics Suite'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/promoter/analytics/markets',
+                    icon: '📊',
+                    description: 'Promoter market analytics',
+                    features: ['📈 Promoter Analytics Suite'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/promoter/analytics/vendors',
+                    icon: '📊',
+                    description: 'Promoter vendor analytics',
+                    features: ['📈 Promoter Analytics Suite'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/promoter/markets',
+                    icon: '🏪',
+                    description: 'Get markets for promoter',
+                    features: ['🏪 Market Management Console'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'GET /api/promoter/applications',
+                    icon: '📋',
+                    description: 'Get applications for promoter review',
+                    features: ['🔍 Application Review Queue'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'GET /api/promoter/applications/stats',
+                    icon: '📊',
+                    description: 'Get application statistics',
+                    features: ['🔍 Application Review Queue'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'GET /api/promoter/vendors',
+                    icon: '👥',
+                    description: 'Get approved vendors',
+                    features: ['👥 Approved Vendor Directory'],
+                    category: 'vendors'
+                },
+                {
+                    endpoint: 'GET /api/promoter/vendors/:id',
+                    icon: '👥',
+                    description: 'Get vendor details',
+                    features: ['👥 Approved Vendor Directory'],
+                    category: 'vendors'
+                },
+                {
+                    endpoint: 'GET /api/vendor/analytics/dashboard',
+                    icon: '📊',
+                    description: 'Vendor analytics dashboard',
+                    features: ['📊 Vendor Performance Analytics'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/vendor/analytics/markets',
+                    icon: '📊',
+                    description: 'Vendor market performance',
+                    features: ['📊 Vendor Performance Analytics'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/vendor/expenses',
+                    icon: '💰',
+                    description: 'Get vendor expenses',
+                    features: ['💰 Overall Business Expense Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'POST /api/vendor/expenses',
+                    icon: '💰',
+                    description: 'Add vendor expense',
+                    features: ['💰 Overall Business Expense Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'PUT /api/vendor/expenses/:id',
+                    icon: '💰',
+                    description: 'Update vendor expense',
+                    features: ['💰 Overall Business Expense Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'DELETE /api/vendor/expenses/:id',
+                    icon: '💰',
+                    description: 'Delete vendor expense',
+                    features: ['💰 Overall Business Expense Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'GET /api/vendor/market-plans/:marketId',
+                    icon: '🏪',
+                    description: 'Get market planning data',
+                    features: ['🏪 Market Planning Workspaces'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'PUT /api/vendor/market-plans/:marketId',
+                    icon: '🏪',
+                    description: 'Update market plan',
+                    features: ['🏪 Market Planning Workspaces'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'GET /api/vendor/todos/:marketId',
+                    icon: '📋',
+                    description: 'Get market todos',
+                    features: ['📋 Market-Specific Todo Lists'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'POST /api/vendor/todos',
+                    icon: '📋',
+                    description: 'Create market todo',
+                    features: ['📋 Market-Specific Todo Lists'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'PUT /api/vendor/todos/:id',
+                    icon: '📋',
+                    description: 'Update todo',
+                    features: ['📋 Market-Specific Todo Lists'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'DELETE /api/vendor/todos/:id',
+                    icon: '📋',
+                    description: 'Delete todo',
+                    features: ['📋 Market-Specific Todo Lists'],
+                    category: 'planning'
+                },
+                {
+                    endpoint: 'GET /api/vendor/budgets/:marketId',
+                    icon: '💰',
+                    description: 'Get market budget',
+                    features: ['💰 Per-Market Budget Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'PUT /api/vendor/budgets/:marketId',
+                    icon: '💰',
+                    description: 'Update market budget',
+                    features: ['💰 Per-Market Budget Tracking'],
+                    category: 'finance'
+                },
+                {
+                    endpoint: 'GET /api/promoter/calendar/events',
+                    icon: '📅',
+                    description: 'Get calendar events',
+                    features: ['📅 Market Calendar System'],
+                    category: 'calendar'
+                },
+                {
+                    endpoint: 'POST /api/promoter/calendar/events',
+                    icon: '📅',
+                    description: 'Create calendar event',
+                    features: ['📅 Market Calendar System'],
+                    category: 'calendar'
+                },
+                {
+                    endpoint: 'PUT /api/promoter/calendar/events/:id',
+                    icon: '📅',
+                    description: 'Update calendar event',
+                    features: ['📅 Market Calendar System'],
+                    category: 'calendar'
+                },
+                {
+                    endpoint: 'DELETE /api/promoter/calendar/events/:id',
+                    icon: '📅',
+                    description: 'Delete calendar event',
+                    features: ['📅 Market Calendar System'],
+                    category: 'calendar'
+                },
+                {
+                    endpoint: 'POST /api/admin/moderate/photos/:id',
+                    icon: '🛡️',
+                    description: 'Moderate photo content',
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'POST /api/admin/moderate/comments/:id',
+                    icon: '🛡️',
+                    description: 'Moderate comment content',
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/admin/reports/content',
+                    icon: '🛡️',
+                    description: 'Get content moderation reports',
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/search/markets',
+                    icon: '🔍',
+                    description: 'Search markets with filters',
+                    features: ['🔍 Advanced Market Search'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'GET /api/search/applications',
+                    icon: '🔍',
+                    description: 'Search applications',
+                    features: ['🔍 Application Review Queue'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'GET /api/admin/health',
+                    icon: '⚕️',
+                    description: 'System health check',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/admin/logs',
+                    icon: '📋',
+                    description: 'System logs',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'POST /api/admin/backup',
+                    icon: '💾',
+                    description: 'Create system backup',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/hashtags/trending',
+                    icon: '🏷️',
+                    description: 'Get trending hashtags',
+                    features: ['🏷️ Hashtag & Discovery System'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'POST /api/hashtags/vote/:tag',
+                    icon: '🏷️',
+                    description: 'Vote on hashtag',
+                    features: ['🏷️ Hashtag & Discovery System'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'GET /api/notifications/settings',
+                    icon: '🔔',
+                    description: 'Get notification settings',
+                    features: ['👤 User Profile Management'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'PUT /api/notifications/settings',
+                    icon: '🔔',
+                    description: 'Update notification settings',
+                    features: ['👤 User Profile Management'],
+                    category: 'users'
+                },
+                {
+                    endpoint: 'GET /api/vendor/templates/preparation',
+                    icon: '✅',
+                    description: 'Get preparation templates',
+                    features: ['📋 General Preparation Templates'],
+                    category: 'templates'
+                },
+                {
+                    endpoint: 'POST /api/vendor/templates/preparation',
+                    icon: '✅',
+                    description: 'Create preparation template',
+                    features: ['📋 General Preparation Templates'],
+                    category: 'templates'
+                },
+                {
+                    endpoint: 'GET /api/admin/export/users',
+                    icon: '📊',
+                    description: 'Export user data',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/admin/export/markets',
+                    icon: '📊',
+                    description: 'Export market data',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'POST /api/auth/two-factor/enable',
+                    icon: '🔐',
+                    description: 'Enable 2FA',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/two-factor/verify',
+                    icon: '🔐',
+                    description: 'Verify 2FA code',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'POST /api/auth/two-factor/disable',
+                    icon: '🔐',
+                    description: 'Disable 2FA',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'GET /api/markets/:id/comments',
+                    icon: '💬',
+                    description: 'Get market comments',
+                    features: ['💬 Market Discussion Forums'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'GET /api/markets/:id/photos',
+                    icon: '📸',
+                    description: 'Get market photos',
+                    features: ['📸 Photo Sharing & Gallery'],
                     category: 'media'
                 },
                 {
-                    endpoint: 'GET /api/admin/analytics',
+                    endpoint: 'GET /api/applications/:id/documents',
+                    icon: '📎',
+                    description: 'Get application documents',
+                    features: ['📄 Application Documents'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'GET /api/promoter/dashboard/stats',
                     icon: '📊',
-                    description: 'System and market analytics',
-                    features: ['📊 System Analytics Platform', '📈 Promoter Analytics Suite'],
+                    description: 'Get promoter dashboard stats',
+                    features: ['🏠 Promoter Command Center'],
                     category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/vendor/dashboard/stats',
+                    icon: '📊',
+                    description: 'Get vendor dashboard stats',
+                    features: ['📊 Vendor Performance Analytics'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'GET /api/admin/dashboard/stats',
+                    icon: '📊',
+                    description: 'Get admin dashboard stats',
+                    features: ['📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    endpoint: 'POST /api/markets/:id/hashtags',
+                    icon: '🏷️',
+                    description: 'Add hashtags to market',
+                    features: ['🏷️ Hashtag & Discovery System'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'GET /api/hashtags/search',
+                    icon: '🏷️',
+                    description: 'Search hashtags',
+                    features: ['🏷️ Hashtag & Discovery System'],
+                    category: 'social'
+                },
+                {
+                    endpoint: 'POST /api/comments/:id/report',
+                    icon: '🚨',
+                    description: 'Report comment',
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'GET /api/admin/reports/spam',
+                    icon: '🚨',
+                    description: 'Get spam reports',
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
                 }
             ];
         }
@@ -1501,7 +3136,7 @@
                     model: 'User',
                     icon: '👤',
                     description: 'User accounts with roles and profiles',
-                    fields: ['email', 'role', 'profile', 'preferences'],
+                    fields: ['email', 'password', 'role', 'firstName', 'lastName', 'businessName', 'phone', 'address', 'createdAt', 'updatedAt', 'isVerified', 'lastLogin', 'twoFactorEnabled', 'preferences'],
                     features: ['🔐 Unified Authentication', '👤 User Profile Management'],
                     category: 'core'
                 },
@@ -1509,41 +3144,145 @@
                     model: 'Market',
                     icon: '🏪',
                     description: 'Market information and configuration',
-                    fields: ['name', 'description', 'location', 'dates', 'requirements'],
-                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console'],
+                    fields: ['name', 'description', 'promoterId', 'location', 'address', 'city', 'state', 'zipCode', 'startDate', 'endDate', 'startTime', 'endTime', 'applicationDeadline', 'requirements', 'fee', 'status', 'category', 'maxVendors', 'createdAt', 'updatedAt'],
+                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console', '🏪 Market Planning Workspaces'],
                     category: 'markets'
                 },
                 {
                     model: 'Application',
                     icon: '📋',
                     description: 'Vendor applications for markets',
-                    fields: ['marketId', 'vendorId', 'status', 'documents', 'reviews'],
-                    features: ['📝 Multi-Step Application Builder', '📊 Application Status Dashboard'],
+                    fields: ['marketId', 'vendorId', 'status', 'businessName', 'businessDescription', 'productTypes', 'yearsExperience', 'website', 'socialMedia', 'insuranceProvider', 'insurancePolicyNumber', 'businessLicenseNumber', 'createdAt', 'updatedAt', 'submittedAt', 'reviewedAt', 'approvedAt', 'rejectedAt', 'reviewNotes'],
+                    features: ['📝 Multi-Step Application Builder', '📊 Application Status Dashboard', '🔍 Application Review Queue'],
+                    category: 'applications'
+                },
+                {
+                    model: 'ApplicationDocument',
+                    icon: '📎',
+                    description: 'Documents uploaded with applications',
+                    fields: ['applicationId', 'type', 'filename', 'originalFilename', 'mimeType', 'size', 'url', 'uploadedAt', 'verifiedBy', 'verificationStatus', 'verificationNotes'],
+                    features: ['📄 Application Documents', '🔍 Detailed Application Review'],
                     category: 'applications'
                 },
                 {
                     model: 'Photo',
                     icon: '📸',
                     description: 'Uploaded images and galleries',
-                    fields: ['url', 'alt', 'uploadedBy', 'associatedEntity'],
-                    features: ['📸 Photo Sharing & Gallery', '📄 Application Documents'],
+                    fields: ['uploadedBy', 'entityType', 'entityId', 'filename', 'originalFilename', 'mimeType', 'size', 'url', 'alt', 'description', 'order', 'uploadedAt', 'isApproved', 'approvedBy', 'approvedAt'],
+                    features: ['📸 Photo Sharing & Gallery', '📄 Application Documents', '🛡️ Content Moderation System'],
                     category: 'media'
                 },
                 {
                     model: 'Comment',
                     icon: '💬',
                     description: 'Threaded discussions and communications',
-                    fields: ['content', 'author', 'parentId', 'entityType', 'entityId'],
-                    features: ['💬 Market Discussion Forums', '💬 Application Communications'],
+                    fields: ['content', 'authorId', 'entityType', 'entityId', 'parentId', 'createdAt', 'updatedAt', 'isEdited', 'editHistory', 'isApproved', 'approvedBy', 'approvedAt'],
+                    features: ['💬 Market Discussion Forums', '💬 Application Communications', '🛡️ Content Moderation System'],
+                    category: 'social'
+                },
+                {
+                    model: 'CommentReaction',
+                    icon: '😊',
+                    description: 'Emoji reactions on comments',
+                    fields: ['commentId', 'userId', 'reactionType', 'createdAt'],
+                    features: ['💬 Market Discussion Forums'],
                     category: 'social'
                 },
                 {
                     model: 'Notification',
                     icon: '🔔',
                     description: 'User notifications and alerts',
-                    fields: ['userId', 'type', 'message', 'read', 'priority'],
-                    features: ['⭐ Favorites & Saved Markets'],
+                    fields: ['userId', 'type', 'title', 'message', 'isRead', 'readAt', 'priority', 'actionUrl', 'expiresAt', 'createdAt'],
+                    features: ['⭐ Favorites & Saved Markets', '📊 Application Status Dashboard'],
                     category: 'communication'
+                },
+                {
+                    model: 'UserFavorite',
+                    icon: '⭐',
+                    description: 'User favorite markets',
+                    fields: ['userId', 'marketId', 'createdAt', 'notes'],
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'users'
+                },
+                {
+                    model: 'Expense',
+                    icon: '💰',
+                    description: 'Business expense tracking',
+                    fields: ['userId', 'marketId', 'amount', 'description', 'category', 'date', 'receiptUrl', 'taxCategory', 'isReimbursable', 'isBusinessDeductible', 'createdAt'],
+                    features: ['💰 Overall Business Expense Tracking', '💰 Per-Market Budget Tracking'],
+                    category: 'finance'
+                },
+                {
+                    model: 'Todo',
+                    icon: '📋',
+                    description: 'Market preparation todos',
+                    fields: ['userId', 'marketId', 'title', 'description', 'category', 'priority', 'dueDate', 'isCompleted', 'completedAt', 'templateId', 'createdAt', 'updatedAt'],
+                    features: ['📋 Market-Specific Todo Lists'],
+                    category: 'planning'
+                },
+                {
+                    model: 'TodoTemplate',
+                    icon: '📋',
+                    description: 'Todo templates for preparation',
+                    fields: ['name', 'description', 'category', 'tasks', 'isDefault', 'createdBy', 'createdAt'],
+                    features: ['📋 General Preparation Templates'],
+                    category: 'planning'
+                },
+                {
+                    model: 'Budget',
+                    icon: '💰',
+                    description: 'Market-specific budgets',
+                    fields: ['userId', 'marketId', 'totalBudget', 'expenses', 'categories', 'profitGoal', 'createdAt', 'updatedAt'],
+                    features: ['💰 Per-Market Budget Tracking'],
+                    category: 'finance'
+                },
+                {
+                    model: 'MarketPlan',
+                    icon: '🏪',
+                    description: 'Detailed market participation plans',
+                    fields: ['userId', 'marketId', 'inventory', 'setupPlan', 'timeline', 'budget', 'goals', 'notes', 'createdAt', 'updatedAt'],
+                    features: ['🏪 Market Planning Workspaces'],
+                    category: 'planning'
+                },
+                {
+                    model: 'CalendarEvent',
+                    icon: '📅',
+                    description: 'Calendar events and deadlines',
+                    fields: ['promoterId', 'marketId', 'title', 'description', 'startDate', 'endDate', 'type', 'isPublic', 'createdAt'],
+                    features: ['📅 Market Calendar System', '📅 Market Timeline & Deadlines'],
+                    category: 'calendar'
+                },
+                {
+                    model: 'Hashtag',
+                    icon: '🏷️',
+                    description: 'Hashtags for content discovery',
+                    fields: ['tag', 'entityType', 'entityId', 'userId', 'createdAt', 'votes'],
+                    features: ['🏷️ Hashtag & Discovery System'],
+                    category: 'social'
+                },
+                {
+                    model: 'ContentReport',
+                    icon: '🚨',
+                    description: 'Content moderation reports',
+                    fields: ['reporterId', 'entityType', 'entityId', 'reason', 'description', 'status', 'reviewedBy', 'reviewedAt', 'actionTaken', 'createdAt'],
+                    features: ['🛡️ Content Moderation System'],
+                    category: 'admin'
+                },
+                {
+                    model: 'AnalyticsEvent',
+                    icon: '📊',
+                    description: 'Analytics and tracking events',
+                    fields: ['userId', 'eventType', 'entityType', 'entityId', 'metadata', 'timestamp', 'userAgent', 'ipAddress'],
+                    features: ['📊 System Analytics Platform', '📈 Promoter Analytics Suite', '📊 Vendor Performance Analytics'],
+                    category: 'analytics'
+                },
+                {
+                    model: 'AuditLog',
+                    icon: '📋',
+                    description: 'System audit logs',
+                    fields: ['userId', 'action', 'entityType', 'entityId', 'oldValues', 'newValues', 'ipAddress', 'userAgent', 'timestamp'],
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
                 }
             ];
         }
@@ -1679,11 +3418,18 @@
                     const node = document.createElement('div');
                     node.className = 'tree-node';
 
-                    const tooltip = `${page.description}\n\n🎯 Features: ${page.features.join(', ')}\n🏗️ Route: ${page.route}`;
+                    // Get components used by this page
+                    const pageComponents = components.filter(comp =>
+                        comp.pages && comp.pages.includes(page.name.replace('.tsx', ''))
+                    ).map(comp => comp.name);
+
+                    const pageFeatures = page.features || [];
+                    const tooltip = `${page.description}\n\n🎯 Features: ${pageFeatures.join(', ')}\n\n🧩 Components: ${pageComponents.length > 0 ? pageComponents.join(', ') : 'None listed'}\n\n🏗️ Route: ${page.route}`;
 
                     node.innerHTML = `
                         <span class="tree-icon">${page.icon}</span>
                         <span>${page.name}</span>
+                        ${pageComponents.length > 0 ? `<small style="opacity: 0.6; font-size: 10px;">(${pageComponents.length} components)</small>` : ''}
                     `;
                     node.title = tooltip;
                     node.setAttribute('data-node-id', page.name);
@@ -1735,8 +3481,8 @@
                 stats.style.opacity = '0.7';
                 container.appendChild(stats);
 
-                // Add a few key features
-                persona.features.slice(0, 3).forEach(featureName => {
+                // Show all features for this persona (no truncation)
+                persona.features.forEach(featureName => {
                     const feature = features.find(f => f.name === featureName);
                     if (feature) {
                         const node = document.createElement('div');
@@ -1752,15 +3498,6 @@
                         container.appendChild(node);
                     }
                 });
-
-                if (persona.features.length > 3) {
-                    const moreNode = document.createElement('div');
-                    moreNode.className = 'tree-node';
-                    moreNode.innerHTML = `<span class="tree-icon">⋯</span><span>+ ${persona.features.length - 3} more features</span>`;
-                    moreNode.style.fontSize = '11px';
-                    moreNode.style.opacity = '0.7';
-                    container.appendChild(moreNode);
-                }
             });
         }
 
@@ -1787,7 +3524,7 @@
                     const node = document.createElement('div');
                     node.className = 'tree-node';
 
-                    const tooltip = `${component.description}\n\n📄 Used in: ${component.pages.join(', ')}\n✨ Features: ${component.features.slice(0, 2).join(', ')}${component.features.length > 2 ? '...' : ''}`;
+                    const tooltip = `${component.description}\n\n📄 Used in: ${component.pages.join(', ')}\n✨ Features: ${component.features.join(', ')}`;
 
                     node.innerHTML = `
                         <span class="tree-icon">${component.icon}</span>
@@ -1859,7 +3596,7 @@
                     const node = document.createElement('div');
                     node.className = 'tree-node';
 
-                    const tooltip = `${model.description}\n\n🔧 Fields: ${model.fields.join(', ')}\n✨ Features: ${model.features.slice(0, 2).join(', ')}${model.features.length > 2 ? '...' : ''}`;
+                    const tooltip = `${model.description}\n\n🔧 Fields: ${model.fields.join(', ')}\n✨ Features: ${model.features.join(', ')}`;
 
                     node.innerHTML = `
                         <span class="tree-icon">${model.icon}</span>
