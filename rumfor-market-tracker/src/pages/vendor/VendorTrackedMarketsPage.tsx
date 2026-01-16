@@ -123,6 +123,7 @@ export function VendorTrackedMarketsPage() {
               onTrack={handleTrackMarket}
               onUntrack={handleUntrackMarket}
               showTrackButton={true}
+              detailPath={`/vendor/markets/${market.id}`}
             />
           ))}
         </div>

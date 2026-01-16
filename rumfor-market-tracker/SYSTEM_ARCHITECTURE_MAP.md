@@ -234,6 +234,15 @@ App.tsx
 | `trackMarket(id)` | `/api/markets/:id/track` | POST |
 | `untrackMarket(id)` | `/api/markets/:id/track` | DELETE |
 | `getUserTrackedMarkets(userId)` | `/api/users/:id/tracked-markets` | GET |
+| `getVendorView(id)` | `/api/markets/:id/vendor-view` | GET |
+| `getVendorAnalytics(id)` | `/api/markets/:id/vendor-analytics` | GET |
+| `getPromoterMessages(id, options)` | `/api/markets/:id/promoter-messages` | GET |
+| `sendPromoterMessage(id, content)` | `/api/markets/:id/promoter-messages` | POST |
+| `getVendorTodos(marketId, options)` | `/api/markets/:id/vendor-todos` | GET |
+| `getVendorExpenses(marketId, options)` | `/api/markets/:id/vendor-expenses` | GET |
+| `getLogistics(id)` | `/api/markets/:id/logistics` | GET |
+| `getWeatherForecast(id)` | `/api/markets/:id/weather` | GET |
+| `getCalendarEvents(id)` | `/api/markets/:id/calendar` | GET |
 
 #### adminApi.ts
 | Function | Endpoint | Method |
@@ -391,7 +400,7 @@ App.tsx
 | Endpoint | Mock Data | Real API | Notes |
 |----------|-----------|----------|-------|
 | `/api/auth/*` | ✅ Yes | ✅ Complete | JWT auth, registration, password reset, 2FA ready |
-| `/api/markets/*` | ✅ Yes | ✅ Complete | Full CRUD with geospatial search and tracking |
+| `/api/markets/*` | ✅ Yes | ✅ Complete | Full CRUD with geospatial search, tracking, vendor analytics, promoter messaging |
 | `/api/admin/*` | ✅ Yes | ✅ Complete | User management, moderation, statistics, bulk operations |
 | `/api/applications/*` | ✅ Yes | ✅ Complete | Application workflow with status history and reviews |
 | `/api/comments/*` | ✅ Yes | ✅ Complete | Threaded comments with reactions and moderation |
@@ -414,6 +423,7 @@ App.tsx
 | Admin Moderation | ✅ Complete | Queue, approve/reject |
 | Promoter Management | ✅ Complete | Create markets, manage vendors |
 | Vendor Tracking | ✅ Complete | Expenses, todos |
+| Vendor Market Detail | ✅ Documented | 6-tab interface (Overview, Preparation, Expenses, Analytics, Logistics, Communication) |
 | Applications | ✅ Complete | Submit, review, status |
 | Notifications | ✅ Complete | Bell, list, mark read |
 | Theme Switching | ✅ Complete | Light/dark mode |

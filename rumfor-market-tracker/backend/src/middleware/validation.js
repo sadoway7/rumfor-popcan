@@ -580,6 +580,41 @@ const validateSearch = [
   handleValidationErrors
 ]
 
+// Message validation with enhanced XSS prevention
+const validateMessageCreation = [
+  body('content')
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Message content must be between 1 and 1000 characters')
+    .customSanitizer(sanitizeString)
+    .custom((value) => {
+      // Check for suspicious patterns that might indicate XSS or injection attempts
+      const suspiciousPatterns = [
+        /<script/i,
+        /javascript:/i,
+        /on\w+\s*=/i,
+        /<iframe/i,
+        /<object/i,
+        /<embed/i,
+        /<link/i,
+        /\b(eval|alert|document\.|window\.|location\.)/i
+      ]
+
+      for (const pattern of suspiciousPatterns) {
+        if (pattern.test(value)) {
+          throw new Error('Message contains potentially malicious content')
+        }
+      }
+      return true
+    }),
+
+  body('recipientId')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid recipient ID'),
+
+  handleValidationErrors
+]
+
 module.exports = {
   handleValidationErrors,
   validateUserRegistration,
@@ -591,6 +626,7 @@ module.exports = {
   validatePhotoUpload,
   validateTodoCreation,
   validateExpenseCreation,
+  validateMessageCreation,
   validateApplicationCreation,
   validateMongoId,
   validatePagination,

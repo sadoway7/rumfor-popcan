@@ -10,6 +10,7 @@ from pathlib import Path
 
 # Add the orchestrator to Python path
 sys.path.insert(0, str(Path(__file__).parent / "rumfor_orchestrator"))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from rumfor_orchestrator.orchestrator import RumforOrchestrator
 

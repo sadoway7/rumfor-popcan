@@ -49,9 +49,9 @@ const Tabs: React.FC<TabsProps> = ({
   }
 
   const tabPaddingClasses = {
-    sm: 'px-3 py-2',
-    md: 'px-4 py-2',
-    lg: 'px-6 py-3',
+    sm: 'px-4 py-3 min-h-[44px]', // 44px minimum touch target
+    md: 'px-5 py-3 min-h-[44px]',
+    lg: 'px-6 py-4 min-h-[48px]',
   }
 
   const tabBaseClasses = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:pointer-events-none disabled:opacity-50'

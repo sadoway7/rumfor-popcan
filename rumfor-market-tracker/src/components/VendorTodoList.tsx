@@ -30,7 +30,7 @@ const priorityOrder: Record<TodoPriority, number> = {
   low: 1
 }
 
-export const VendorTodoList: React.FC<VendorTodoListProps> = ({
+export const VendorTodoList: React.FC<VendorTodoListProps> = React.memo(({
   marketId,
   className
 }) => {
@@ -193,7 +193,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
       <Card className={cn("p-8", className)}>
         <div className="flex items-center justify-center">
           <Spinner className="w-6 h-6" />
-          <span className="ml-2 text-gray-600">Loading todos...</span>
+          <span className="ml-2 text-muted-foreground">Loading todos...</span>
         </div>
       </Card>
     )
@@ -215,8 +215,8 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Market Preparation</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Market Preparation</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Track your progress and stay organized for market day
           </p>
         </div>
@@ -243,48 +243,48 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CheckSquare className="w-4 h-4 text-blue-600" />
+            <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+              <CheckSquare className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-lg font-semibold">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-lg font-semibold text-foreground">{stats.total}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckSquare className="w-4 h-4 text-green-600" />
+            <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
+              <CheckSquare className="w-4 h-4 text-success" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-lg font-semibold">{stats.completed}</p>
+              <p className="text-sm text-muted-foreground">Completed</p>
+              <p className="text-lg font-semibold text-foreground">{stats.completed}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-4 h-4 text-orange-600" />
+            <div className="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center">
+              <Clock className="w-4 h-4 text-warning" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-lg font-semibold">{stats.pending}</p>
+              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-lg font-semibold text-foreground">{stats.pending}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-4 h-4 text-red-600" />
+            <div className="w-8 h-8 bg-destructive/10 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 text-destructive" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Overdue</p>
-              <p className="text-lg font-semibold">{stats.overdue}</p>
+              <p className="text-sm text-muted-foreground">Overdue</p>
+              <p className="text-lg font-semibold text-foreground">{stats.overdue}</p>
             </div>
           </div>
         </Card>
@@ -309,7 +309,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search todos..."
                 value={searchQuery}
@@ -370,7 +370,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
       {filteredAndSortedTodos.length === 0 ? (
         <Card className="p-8">
           <EmptyState
-            icon={<CheckSquare className="w-12 h-12 text-gray-300" />}
+            icon={<CheckSquare className="w-12 h-12 text-muted-foreground/50" />}
             title="No todos found"
             description={
               searchQuery || filter !== 'all' || selectedCategory
@@ -409,4 +409,4 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({
       />
     </div>
   )
-}
+})

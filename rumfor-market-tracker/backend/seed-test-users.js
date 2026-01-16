@@ -24,8 +24,8 @@ const testUsers = [
   {
     username: 'vendor',
     email: 'vendor@rumfor.com',
-    password: 'vendor',
-    role: 'user',
+    password: 'vendor123',
+    role: 'vendor',
     profile: {
       firstName: 'Test',
       lastName: 'Vendor',
@@ -64,8 +64,8 @@ const testUsers = [
   {
     username: 'user',
     email: 'user@rumfor.com',
-    password: 'user',
-    role: 'user',
+    password: 'user12345',
+    role: 'visitor',
     profile: {
       firstName: 'Regular',
       lastName: 'User',
@@ -80,8 +80,8 @@ const testUsers = [
   {
     username: 'artisan',
     email: 'artisan@rumfor.com',
-    password: 'artisan',
-    role: 'user',
+    password: 'artisan123',
+    role: 'vendor',
     profile: {
       firstName: 'Creative',
       lastName: 'Artisan',

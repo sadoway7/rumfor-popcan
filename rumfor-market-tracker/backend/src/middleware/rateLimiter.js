@@ -44,11 +44,19 @@ const getUserRateLimit = (userRole, endpoint) => {
       vendor: { windowMs: 60 * 60 * 1000, max: 20 },     // 20 uploads per hour
       promoter: { windowMs: 60 * 60 * 1000, max: 50 },   // 50 uploads per hour
       admin: { windowMs: 60 * 60 * 1000, max: 100 },     // 100 uploads per hour
+    },
+    // Vendor dashboard analytics and messaging
+    vendorDashboard: {
+      visitor: { windowMs: 15 * 60 * 1000, max: 20 },    // 20 requests per 15 min (not applicable)
+      vendor: { windowMs: 15 * 60 * 1000, max: 50 },     // 50 analytics/messaging requests per 15 min
+      promoter: { windowMs: 15 * 60 * 1000, max: 100 },  // 100 requests per 15 min
+      admin: { windowMs: 15 * 60 * 1000, max: 200 },     // 200 requests per 15 min
     }
   }
 
   if (endpoint.includes('/auth/')) return limits.auth[userRole] || limits.auth.visitor
   if (endpoint.includes('/upload') || endpoint.includes('/photos')) return limits.upload[userRole] || limits.upload.visitor
+  if (endpoint.url.includes('/vendor-analytics') || endpoint.url.includes('/promoter-messages')) return limits.vendorDashboard[userRole] || limits.vendorDashboard.visitor
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(endpoint.method)) return limits.write[userRole] || limits.write.visitor
 
   return limits.general[userRole] || limits.general.visitor

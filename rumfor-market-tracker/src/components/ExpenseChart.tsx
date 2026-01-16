@@ -49,7 +49,7 @@ const categoryConfig = {
   'other': { label: 'Other', color: COLORS[9] }
 }
 
-export const ExpenseChart: React.FC<ExpenseChartProps> = ({
+export const ExpenseChart: React.FC<ExpenseChartProps> = React.memo(({
   expenses,
   className
 }) => {
@@ -350,4 +350,4 @@ export const ExpenseChart: React.FC<ExpenseChartProps> = ({
       </Card>
     </div>
   )
-}
+})

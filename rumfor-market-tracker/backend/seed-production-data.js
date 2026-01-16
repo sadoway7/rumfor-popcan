@@ -16,7 +16,7 @@ const realUsers = [
     username: 'sarah_ceramics',
     email: 'sarah@artisanstudio.com',
     password: 'artisan123',
-    role: 'user',
+    role: 'vendor',
     profile: {
       firstName: 'Sarah',
       lastName: 'Chen',
@@ -68,7 +68,7 @@ const realUsers = [
     username: 'emma_textiles',
     email: 'emma@handwovenjoy.com',
     password: 'textile123',
-    role: 'user',
+    role: 'vendor',
     profile: {
       firstName: 'Emma',
       lastName: 'Thompson',
@@ -94,7 +94,7 @@ const realUsers = [
     username: 'david_woodworks',
     email: 'david@woodcraftdesigns.com',
     password: 'wood123',
-    role: 'user',
+    role: 'vendor',
     profile: {
       firstName: 'David',
       lastName: 'Johnson',
@@ -120,7 +120,7 @@ const realUsers = [
     username: 'lisa_organic_farm',
     email: 'lisa@greenvalleyfarm.com',
     password: 'organic123',
-    role: 'user',
+    role: 'vendor',
     profile: {
       firstName: 'Lisa',
       lastName: 'Williams',

@@ -18,6 +18,7 @@ export { Toast, ToastProvider, type ToastProps, type ToastContextType, type Toas
 export { Tooltip, useTooltip, type TooltipProps, type UseTooltipProps } from './Tooltip'
 export { Alert, type AlertProps } from './Alert'
 export { EmptyState, type EmptyStateProps } from './EmptyState'
+export { ErrorBoundary } from './ErrorBoundary'
 export { 
   Card, 
   CardHeader, 

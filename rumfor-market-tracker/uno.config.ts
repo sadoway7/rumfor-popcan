@@ -48,6 +48,18 @@ export default defineConfig({
     'progress': 'w-full bg-muted rounded-full h-2',
     'progress-bar': 'bg-accent h-2 rounded-full transition-all duration-300',
     'spinner': 'inline-block animate-spin rounded-full border-2 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]',
+
+    // Vendor Planning Dashboard
+    'planning-card': 'card hover:shadow-md transition-all duration-200',
+    'planning-section': 'space-y-6',
+    'planning-header': 'flex items-center justify-between pb-4 border-b border-border',
+    'planning-progress': 'flex items-center space-x-2 text-sm',
+    'touch-target': 'min-h-[44px] min-w-[44px]',
+
+    // Mobile Optimizations
+    'mobile-stack': 'flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4',
+    'mobile-padding': 'px-4 py-6 sm:px-6 lg:px-8',
+    'mobile-text': 'text-sm sm:text-base',
     
     // Shadows & Effects - Minimal & Subtle
     'surface-shadow': 'shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)]',

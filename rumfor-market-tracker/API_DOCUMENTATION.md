@@ -317,6 +317,151 @@ GET /api/promoter/applications
 ```
 **Role Required:** promoter
 
+### Vendor Analytics
+
+#### Get Vendor Analytics for Market
+```
+GET /api/markets/:id/vendor-analytics
+```
+
+**Role Required:** vendor
+
+**Description:** Retrieves earnings, attendance trends, and performance analytics for the authenticated vendor at a specific market.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "expenses": {
+      "total": 450.00,
+      "byCategory": {
+        "booth-fee": 150.00,
+        "supplies": 200.00,
+        "transportation": 100.00
+      }
+    },
+    "revenue": {
+      "total": 800.00,
+      "byCategory": {
+        "sales": 800.00
+      }
+    },
+    "profit": 350.00,
+    "expenseCount": 3,
+    "transactionCount": 4
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### Promoter Communications
+
+#### Get Messages with Promoter/Vendor
+```
+GET /api/markets/:id/promoter-messages
+```
+
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 20, max: 50)
+
+**Role Required:** vendor or promoter
+
+**Description:** Retrieves message history between vendors and market promoters for communication about applications and requirements.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "content": "Can I bring my own canopy for the booth?",
+        "sender": {
+          "_id": "507f1f77bcf86cd799439012",
+          "username": "johndoe",
+          "profile": {
+            "firstName": "John",
+            "lastName": "Doe"
+          }
+        },
+        "recipient": {
+          "_id": "507f1f77bcf86cd799439013",
+          "username": "marketadmin",
+          "profile": {
+            "firstName": "Market",
+            "lastName": "Admin"
+          }
+        },
+        "market": "507f1f77bcf86cd799439014",
+        "messageType": "vendor-to-promoter",
+        "createdAt": "2024-01-01T10:00:00.000Z"
+      }
+    ],
+    "market": {
+      "id": "507f1f77bcf86cd799439014",
+      "name": "Downtown Farmers Market",
+      "promoter": "507f1f77bcf86cd799439015"
+    },
+    "pagination": {
+      "current": 1,
+      "total": 2,
+      "count": 20,
+      "hasMore": false
+    }
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+#### Send Message to Promoter/Vendor
+```
+POST /api/markets/:id/promoter-messages
+```
+
+**Role Required:** vendor or promoter
+
+**Request Body:**
+```json
+{
+  "content": "Question about booth setup requirements",
+  "recipientId": "507f1f77bcf86cd799439011" // Optional: for promoter-to-vendor messages
+}
+```
+
+**Description:** Sends a message from a vendor to the market promoter, or from the promoter to a specific vendor who has applied.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "content": "Question about booth setup requirements",
+    "sender": {
+      "_id": "507f1f77bcf86cd799439012",
+      "username": "johndoe"
+    },
+    "recipient": {
+      "_id": "507f1f77bcf86cd799439013",
+      "username": "marketadmin"
+    },
+    "market": "507f1f77bcf86cd799439014",
+    "messageType": "vendor-to-promoter",
+    "createdAt": "2024-01-01T10:00:00.000Z"
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Notes:**
+- Vendors can only send messages to the promoter of markets they have or want to apply to
+- Promoters can send messages to any vendor who has applied to their markets
+- Messages are threaded by market and participant
+
 ### Comments
 
 #### Get Comments for Market
@@ -881,16 +1026,56 @@ PATCH /api/admin/users/:id/status
 
 ## Rate Limiting
 
-API endpoints are rate-limited based on user type:
+API endpoints are rate-limited based on user type and endpoint category:
+
+### Rate Limits by User Role
 
 - **Standard Users**: 100 requests per 15 minutes
-- **Promoters/Admins**: 500 requests per 15 minutes
+- **Vendors**: 200 requests per 15 minutes (includes vendor-specific endpoints)
+- **Promoters**: 400 requests per 15 minutes (includes management endpoints)
+- **Admins**: 500 requests per 15 minutes
 - **Auth Endpoints**: 5 attempts per 15 minutes
 
-Rate limit headers are included in responses:
-- `X-RateLimit-Limit`: Maximum requests allowed
-- `X-RateLimit-Remaining`: Remaining requests
-- `X-RateLimit-Reset`: Time when limit resets (Unix timestamp)
+### Rate Limits by Endpoint Category
+
+- **Vendor Analytics Endpoints** (`/api/markets/*/vendor-analytics`, `/api/markets/*/promoter-messages`): 50 requests per 15 minutes
+- **Vendor Dashboard Endpoints** (`/api/todos`, `/api/expenses`): 100 requests per 15 minutes
+- **Promoter Management Endpoints** (`/api/promoter/*`): 150 requests per 15 minutes
+- **Admin Operations** (`/api/admin/*`): 200 requests per 15 minutes
+- **Media Uploads** (`/api/photos`, `/api/documents`): 20 requests per 15 minutes
+- **Search Endpoints** (`/api/markets/search`, `/api/users/search`): 60 requests per 15 minutes
+
+### Rate Limit Headers
+
+All responses include rate limit headers:
+- `X-RateLimit-Limit`: Maximum requests allowed in the current window
+- `X-RateLimit-Remaining`: Remaining requests in the current window
+- `X-RateLimit-Reset`: Time when the rate limit window resets (Unix timestamp)
+- `X-RateLimit-Retry-After`: Seconds until you can make another request (only sent when limit exceeded)
+
+### Rate Limit Exceeded Response
+
+```json
+{
+  "success": false,
+  "message": "Too many requests",
+  "error": "RATE_LIMIT_EXCEEDED",
+  "retryAfter": 900,
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### Burst Protection
+
+Endpoints with file uploads have additional burst protection to prevent abuse:
+- Maximum 5 concurrent uploads per user
+- Automatic retry with exponential backoff recommended
+
+### Special Considerations
+
+- **Vendor Market Detail**: Heavy usage scenarios (analytics dashboard, message threads) may consume rate limits quickly
+- **Batch Operations**: Use bulk endpoints where available to reduce request counts
+- **Caching**: Implement client-side caching to minimize repeated requests
 
 ## Pagination
 

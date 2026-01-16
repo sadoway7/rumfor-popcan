@@ -1,6 +1,10 @@
+const mongoose = require('mongoose')
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const Market = require('../models/Market')
 const UserMarketTracking = require('../models/UserMarketTracking')
+const Todo = require('../models/Todo')
+const Expense = require('../models/Expense')
+const Message = require('../models/Message')
 const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch } = require('../middleware/validation')
 
 // Get all markets with filtering and pagination
@@ -426,6 +430,522 @@ const verifyMarket = catchAsync(async (req, res, next) => {
   }, 'Market verified successfully')
 })
 
+// Get market data tailored for vendor perspective
+const getVendorView = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+    .populate('promoter', 'username profile.firstName profile.lastName profile.business contact')
+
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Get vendor-specific tracking info
+  const tracking = await UserMarketTracking.findOne({
+    user: req.user.id,
+    market: id
+  })
+
+  // Get recent photos
+  const recentPhotos = await market.getPopulated('images.uploadedBy', 'username profile.firstName profile.lastName')
+
+  // Get market statistics for vendors
+  const totalApplicants = await UserMarketTracking.countDocuments({
+    market: id,
+    status: { $in: ['applied', 'booked', 'completed'] }
+  })
+
+  // Get vendor's expense summary for this market
+  const expenseSummary = await Expense.getVendorMarketSummary(req.user.id, id)
+
+  sendSuccess(res, {
+    market: {
+      ...market.toObject(),
+      vendorData: {
+        tracking: tracking || null,
+        expenseSummary: expenseSummary.length > 0 ? expenseSummary[0] : null,
+        totalApplicants,
+        nextEventDate: market.nextEventDate,
+        upcomingEvents: market.upcomingEvents
+      }
+    },
+    recentPhotos: recentPhotos.images?.slice(0, 5) || []
+  }, 'Vendor market view retrieved successfully')
+})
+
+// Track vendor interactions with market
+const trackVendorInteraction = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { action, notes } = req.body
+
+  // Check if market exists
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Find or create tracking record
+  let tracking = await UserMarketTracking.findOne({
+    user: req.user.id,
+    market: id
+  })
+
+  if (!tracking) {
+    tracking = await UserMarketTracking.create({
+      user: req.user.id,
+      market: id,
+      status: 'interested'
+    })
+  }
+
+  // Update tracking with interaction data
+  tracking.personalNotes = notes || tracking.personalNotes
+  await tracking.save()
+
+  // Log the interaction (you might want to create a separate interaction log)
+  sendSuccess(res, {
+    tracking,
+    market: {
+      id: market._id,
+      name: market.name
+    }
+  }, `Market interaction '${action}' recorded successfully`)
+})
+
+// Get vendor's past appearances and performance at this market
+const getVendorHistory = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  // Get all tracking records for this vendor and market
+  const history = await UserMarketTracking.find({
+    user: req.user.id,
+    market: id
+  })
+  .populate('market', 'name category location.city location.state dates')
+  .sort({ createdAt: -1 })
+
+  // Get market details
+  const market = await Market.findById(id).select('name category location')
+
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  sendSuccess(res, {
+    market,
+    history,
+    stats: {
+      totalAppearances: history.filter(h => h.status === 'completed').length,
+      totalApplications: history.filter(h => ['applied', 'booked', 'completed'].includes(h.status)).length,
+      lastAppearance: history.find(h => h.status === 'completed')
+    }
+  }, 'Vendor market history retrieved successfully')
+})
+
+// Get current application status for the authenticated vendor
+const getApplicationStatus = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+    .populate('promoter', 'username profile.firstName profile.lastName contact')
+
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Get current application/tracking status
+  const tracking = await UserMarketTracking.findOne({
+    user: req.user.id,
+    market: id
+  }).populate('applicationData.reviewedBy', 'username profile.firstName profile.lastName')
+
+  const applicationStatus = {
+    market: {
+      id: market._id,
+      name: market.name,
+      promoter: market.promoter,
+      applicationDeadline: market.vendorInfo.applicationDeadline,
+      capacity: market.vendorInfo.capacity
+    },
+    status: tracking || null,
+    isOpen: market.vendorInfo.applicationDeadline ?
+      new Date() < market.vendorInfo.applicationDeadline : true,
+    canApply: !tracking || tracking.status === 'cancelled',
+    isBooked: tracking && tracking.status === 'booked'
+  }
+
+  sendSuccess(res, applicationStatus, 'Application status retrieved successfully')
+})
+
+// Get earnings, attendance trends for the vendor at this market
+const getVendorAnalytics = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  // Get expense data for analytics
+  const expenses = await Expense.find({
+    vendor: req.user.id,
+    market: id,
+    isDeleted: false
+  })
+
+  // Calculate analytics
+  const analytics = {
+    expenses: {
+      total: expenses.reduce((sum, exp) => sum + (exp.category === 'revenue' ? 0 : exp.amount), 0),
+      byCategory: expenses.reduce((acc, exp) => {
+        if (exp.category !== 'revenue') {
+          acc[exp.category] = (acc[exp.category] || 0) + exp.amount
+        }
+        return acc
+      }, {})
+    },
+    revenue: {
+      total: expenses.reduce((sum, exp) => sum + (exp.category === 'revenue' ? exp.amount : 0), 0),
+      byCategory: expenses.reduce((acc, exp) => {
+        if (exp.category === 'revenue') {
+          acc[exp.category] = (acc[exp.category] || 0) + exp.amount
+        }
+        return acc
+      }, {})
+    },
+    profit: expenses.reduce((sum, exp) =>
+      sum + (exp.category === 'revenue' ? exp.amount : -exp.amount), 0
+    ),
+    expenseCount: expenses.filter(e => e.category !== 'revenue').length,
+    transactionCount: expenses.length
+  }
+
+  sendSuccess(res, analytics, 'Vendor analytics retrieved successfully')
+})
+
+// How vendor performs at this vs other markets - comparison data
+const getVendorComparison = catchAsync(async (req, res, next) => {
+  // Get all markets where vendor has participated
+  const participations = await UserMarketTracking.find({
+    user: req.user.id,
+    status: 'completed'
+  }).populate('market', 'name category location.city location.state')
+
+  // Single aggregation query for all expense summaries
+  const marketIds = participations.map(p => p.market._id)
+
+  const expenseSummaries = await Expense.aggregate([
+    {
+      $match: {
+        vendor: mongoose.Types.ObjectId(req.user.id),
+        market: { $in: marketIds },
+        isDeleted: false
+      }
+    },
+    {
+      $group: {
+        _id: { market: '$market', category: '$category' },
+        totalAmount: { $sum: '$amount' },
+        count: { $sum: 1 },
+        taxDeductible: {
+          $sum: { $cond: ['$isTaxDeductible', '$amount', 0] }
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$_id.market',
+        categories: {
+          $push: {
+            category: '$_id.category',
+            totalAmount: '$totalAmount',
+            count: '$count',
+            taxDeductible: '$taxDeductible'
+          }
+        },
+        totalExpenses: { $sum: { $cond: [{ $eq: ['$_id.category', 'revenue'] }, 0, '$totalAmount'] } },
+        totalRevenue: { $sum: { $cond: [{ $eq: ['$_id.category', 'revenue'] }, '$totalAmount', 0] } },
+        totalTaxDeductible: { $sum: '$taxDeductible' },
+        totalCount: { $sum: '$count' }
+      }
+    }
+  ])
+
+  const comparison = {
+    totalMarkets: participations.length,
+    markets: participations.map(p => {
+      const summary = expenseSummaries.find(s => s._id.equals(p.market._id))
+      return {
+        market: p.market,
+        summary: summary ? {
+          totalExpenses: summary.totalExpenses,
+          totalRevenue: summary.totalRevenue,
+          netProfit: summary.totalRevenue - summary.totalExpenses,
+          totalTaxDeductible: summary.totalTaxDeductible,
+          totalTransactions: summary.totalCount,
+          categories: summary.categories
+        } : null
+      }
+    })
+  }
+
+  // Calculate average performance metrics
+  if (expenseSummaries.length > 0) {
+    const totalProfit = expenseSummaries.reduce((sum, s) => sum + (s.totalRevenue - s.totalExpenses), 0)
+    comparison.averageProfit = totalProfit / expenseSummaries.length
+    comparison.markets.sort((a, b) => (b.summary?.netProfit || 0) - (a.summary?.netProfit || 0))
+  }
+
+  sendSuccess(res, comparison, 'Vendor market comparison retrieved successfully')
+})
+
+// Get message history with market promoter
+const getPromoterMessages = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { page = 1, limit = 20 } = req.query
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Only vendors and the market promoter can see messages
+  if (req.user.role !== 'admin' &&
+      !market.promoter.equals(req.user._id) &&
+      req.user.role !== 'vendor') {
+    return next(new AppError('Access denied. You can only see messages for markets you own or applied to.', 403))
+  }
+
+  const messages = await Message.getUserMarketMessages(req.user.id, id, { page: parseInt(page), limit: parseInt(limit) })
+
+  sendSuccess(res, {
+    messages,
+    market: {
+      id: market._id,
+      name: market.name,
+      promoter: market.promoter
+    }
+  }, 'Promoter messages retrieved successfully')
+})
+
+// Send message to promoter
+const sendPromoterMessage = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { content, recipientId } = req.body
+
+  if (!content || !content.trim()) {
+    return next(new AppError('Message content cannot be empty or contain only whitespace', 400))
+  }
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  let recipient
+  if (req.user.role === 'vendor') {
+    // Vendor can only send to market promoter
+    recipient = market.promoter
+  } else if (market.promoter.equals(req.user._id)) {
+    // Promoter sending to a specific vendor who has applied to their market
+    if (!recipientId) {
+      return next(new AppError('Promoter-to-vendor messaging requires specifying recipient vendor', 400))
+    }
+
+    // Check if vendor has applied to this market
+    const vendorApplication = await UserMarketTracking.findOne({
+      user: recipientId,
+      market: id,
+      status: { $in: ['applied', 'booked', 'completed'] }
+    })
+
+    if (!vendorApplication) {
+      return next(new AppError('Can only send messages to vendors who have applied to your market', 403))
+    }
+
+    recipient = recipientId
+  } else {
+    return next(new AppError('Only vendors and promoters for this market can send messages', 403))
+  }
+
+  const message = await Message.create({
+    content: content.trim(),
+    sender: req.user.id,
+    recipient,
+    market: id,
+    messageType: req.user.role === 'vendor' ? 'vendor-to-promoter' : 'promoter-to-vendor'
+  })
+
+  const populatedMessage = await Message.findById(message._id)
+    .populate('sender', 'username profile.firstName profile.lastName')
+    .populate('recipient', 'username profile.firstName profile.lastName')
+
+  sendSuccess(res, populatedMessage, 'Message sent successfully', 201)
+})
+
+// Get market-specific todo lists
+const getVendorTodos = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { status, category, priority } = req.query
+
+  // Verify market exists
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  const options = {}
+  if (status) options.status = status
+  if (category) options.category = category
+  if (priority) options.priority = priority
+
+  const todos = await Todo.getVendorMarketTodos(req.user.id, id, options)
+
+  sendSuccess(res, {
+    todos,
+    market: {
+      id: market._id,
+      name: market.name
+    }
+  }, 'Vendor todos retrieved successfully')
+})
+
+// Get market-specific expense tracking
+const getVendorExpenses = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { category, dateFrom, dateTo } = req.query
+
+  // Verify market exists
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  const options = {}
+  if (category) options.category = category
+  if (dateFrom) options.dateFrom = dateFrom
+  if (dateTo) options.dateTo = dateTo
+
+  const expenses = await Expense.getVendorMarketExpenses(req.user.id, id, options)
+
+  sendSuccess(res, {
+    expenses,
+    market: {
+      id: market._id,
+      name: market.name
+    }
+  }, 'Vendor expenses retrieved successfully')
+})
+
+// Get parking, loading, setup information
+const getLogistics = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+    .populate('promoter', 'username profile.firstName profile.lastName contact')
+
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Extract logistics-related information
+  const logistics = {
+    market: {
+      id: market._id,
+      name: market.name,
+      address: market.location,
+      contact: market.contact,
+      promoter: market.promoter
+    },
+    setupInfo: {
+      boothSizes: market.vendorInfo.boothSizes,
+      requirements: market.vendorInfo.requirements,
+      amenities: market.vendorInfo.amenities,
+      setupTimes: market.dates
+    },
+    accessibility: market.accessibility
+  }
+
+  sendSuccess(res, logistics, 'Logistics information retrieved successfully')
+})
+
+// Get weather forecast for market dates
+const getWeatherForecast = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // For now, return a mock weather forecast
+  // In a real implementation, this would integrate with a weather API
+  const mockForecast = {
+    market: {
+      id: market._id,
+      name: market.name,
+      location: market.location,
+      dates: market.dates
+    },
+    forecast: [
+      {
+        date: new Date().toISOString().split('T')[0],
+        condition: 'Sunny',
+        temperature: { high: 75, low: 55 },
+        precipitation: 10
+      }
+    ],
+    note: 'This is mock data. Integrate with a weather service API for real forecasts.'
+  }
+
+  sendSuccess(res, mockForecast, 'Weather forecast retrieved successfully')
+})
+
+// Get calendar integration data
+const getCalendarEvents = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Convert market dates to calendar events
+  const events = []
+
+  if (market.dates.type === 'one-time') {
+    market.dates.events.forEach(event => {
+      events.push({
+        id: `${market._id}_${event.startDate.getTime()}`,
+        title: market.name,
+        start: event.startDate,
+        end: event.endDate,
+        location: `${market.location.address}, ${market.location.city}, ${market.location.state}`,
+        description: market.description,
+        marketId: market._id
+      })
+    })
+  } else if (market.dates.type === 'recurring') {
+    // For recurring markets, generate next few occurrences
+    // This would need more complex logic for real implementation
+    events.push({
+      id: `${market._id}_recurring`,
+      title: `${market.name} (Recurring)`,
+      start: null, // Would calculate next occurrence
+      end: null,
+      location: `${market.location.address}, ${market.location.city}, ${market.location.state}`,
+      description: market.description,
+      marketId: market._id,
+      recurring: market.dates.recurring
+    })
+  }
+
+  sendSuccess(res, {
+    events,
+    market: {
+      id: market._id,
+      name: market.name,
+      dates: market.dates
+    }
+  }, 'Calendar events retrieved successfully')
+})
+
 module.exports = {
   getMarkets,
   getMarket,
@@ -437,5 +957,18 @@ module.exports = {
   searchMarkets,
   getPopularMarkets,
   getMarketsByCategory,
-  verifyMarket
+  verifyMarket,
+  getVendorView,
+  trackVendorInteraction,
+  getVendorHistory,
+  getApplicationStatus,
+  getVendorAnalytics,
+  getVendorComparison,
+  getPromoterMessages,
+  sendPromoterMessage,
+  getVendorTodos,
+  getVendorExpenses,
+  getLogistics,
+  getWeatherForecast,
+  getCalendarEvents
 }

@@ -242,6 +242,9 @@ const requireRole = (...roles) => {
 // Middleware to check if user is admin
 const requireAdmin = requireRole('admin')
 
+// Middleware to check if user is vendor or admin
+const requireVendor = requireRole('vendor', 'admin')
+
 // Middleware to check if user is promoter or admin
 const requirePromoter = requireRole('promoter', 'admin')
 
@@ -305,6 +308,54 @@ const requireOwnershipOrAdmin = (resourceField = 'user') => {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only access your own resources.'
+      })
+    }
+
+    next()
+  }
+}
+
+// Middleware to check if vendor owns the resource or has admin privileges
+const requireVendorOwnershipOrAdmin = (vendorField = 'vendor') => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required.'
+      })
+    }
+
+    // Admin can access anything
+    if (req.user.role === 'admin') {
+      return next()
+    }
+
+    // User must be vendor
+    if (req.user.role !== 'vendor') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Vendor role required.'
+      })
+    }
+
+    // Check vendor ownership
+    const resourceVendorId = req[vendorField] || req.body[vendorField] || req.params[vendorField]
+
+    if (!resourceVendorId) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot determine vendor ownership of resource. Field: ${vendorField}`
+      })
+    }
+
+    // Convert to string for comparison
+    const resourceOwnerId = resourceVendorId.toString()
+    const currentUserId = req.user._id.toString()
+
+    if (resourceOwnerId !== currentUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only access your own vendor resources.'
       })
     }
 
@@ -441,8 +492,10 @@ module.exports = {
   requireRole,
   requireAdmin,
   requirePromoter,
+  requireVendor,
   requireVerifiedPromoter,
   requireOwnershipOrAdmin,
+  requireVendorOwnershipOrAdmin,
   optionalAuth,
   requireEmailVerification,
   verifyTwoFactorToken,

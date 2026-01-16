@@ -29,55 +29,56 @@ Review and enhancement of authentication systems and data modeling for the rumfo
 ## Planned Enhancements
 
 ### Authentication Improvements
-1. **Two-Factor Authentication (2FA)**: TOTP implementation for enhanced security
+1. **Two-Factor Authentication (2FA)**: ✅ TOTP implementation for enhanced security
 2. **Social Login Integration**: OAuth providers (Google, GitHub)
 3. **Improved Session Management**: Device tracking and session limits
-4. **JWT Token Rotation**: Automatic token renewal strategy
+4. **JWT Token Rotation**: ✅ Automatic token renewal strategy with refresh invalidation
 
 ### Data Model Optimizations
-1. **Database Indexing Strategy**: Performance analysis and compound indexes
+1. **Database Indexing Strategy**: ✅ Performance analysis and compound indexes for vendor analytics
 2. **Relationship Optimization**: Better population and aggregation queries
-3. **Data Validation Refinement**: Enhanced constraints and business rules
+3. **Data Validation Refinement**: ✅ Enhanced constraints and business rules for vendor data
 4. **Caching Strategy**: Redis integration for frequently accessed data
 
 ### Security Enhancements
-1. **Rate Limiting**: User-type based limits and DDoS protection
-2. **Input Sanitization**: XSS prevention and HTML injection protection
-3. **Security Headers**: Comprehensive middleware implementation
+1. **Rate Limiting**: ✅ User-type based limits and vendor dashboard protection
+2. **Input Sanitization**: ✅ XSS prevention and HTML injection protection for messages
+3. **Security Headers**: ✅ Comprehensive middleware implementation (HSTS, CSP, etc.)
 4. **Audit Logging**: Security events and access logs
+5. **Vendor RBAC**: ✅ Role-based access control for vendor-specific endpoints
+6. **JWT Token Security**: ✅ Refresh token rotation and secure blacklisting
 
 ### API Improvements
-1. **Versioning**: API versioning strategy (/v1/ prefix)
+1. **Versioning**: ✅ API versioning strategy (/v1/ prefix)
 2. **Request Logging**: Detailed request/response logging
 3. **OpenAPI Documentation**: Automated API spec generation
-4. **Health Checks**: API and database health monitoring
+4. **Health Checks**: ✅ API and database health monitoring
 
 ## Implementation Progress
 
 ### Completed Tasks
-- ✅ Comprehensive rate limiting with user-based limits
+- ✅ Comprehensive rate limiting with user-based limits (vendors: 50/15min for analytics)
 - ✅ Enhanced security headers (HSTS, CSP, X-Frame-Options)
-- ✅ Input validation with sanitization and XSS prevention
+- ✅ Input validation with sanitization and XSS prevention for messages
 - ✅ Two-Factor Authentication (TOTP) system with backup codes
-- ✅ Database index optimization for performance
+- ✅ Database index optimization for vendor analytics performance
 - ✅ API versioning strategy with backward compatibility
 - ✅ Enhanced middleware stack with versioning headers
 - ✅ Frontend API client updated to use versioned endpoints
+- ✅ Vendor-specific RBAC middleware (requireVendor, requireVendorOwnershipOrAdmin)
+- ✅ Secure messaging system between vendors and promoters
+- ✅ JWT token rotation for refresh tokens
+- ✅ OWASP compliance audit (broken auth, injection, access control, etc.)
+- ✅ Enhanced vendor data validation (message XSS prevention)
 
 ### In Progress
 
 ### Pending Tasks
-- [ ] Implement 2FA authentication system
-- [ ] Add social login providers
-- [ ] Optimize database indexes for read operations
+- [ ] Implement social login providers (Google, GitHub)
 - [ ] Implement Redis caching for market listings
-- [ ] Add comprehensive rate limiting
-- [ ] Enhance input validation and sanitization
-- [ ] Add security headers middleware
-- [ ] Implement API versioning
 - [ ] Add request/response logging
 - [ ] Generate OpenAPI specification
-- [ ] Add health check endpoints
+- [ ] Audit logging for security events
 
 ## Technical Notes
 
@@ -117,13 +118,37 @@ Refresh Token -> New Access Token (if refresh valid)
 
 ### API Structure
 ```
+# Authentication & Security
 GET  /api/v1/health              # Health check with version info
 GET  /api/v1                     # API version information
 POST /api/v1/auth/login          # Login with 2FA support
+POST /api/v1/auth/refresh-token  # Refresh JWT with rotation
 POST /api/v1/auth/2fa/setup      # Setup TOTP 2FA
 POST /api/v1/auth/2fa/verify     # Verify 2FA token for login
+
+# Market Management
 GET  /api/v1/markets             # List markets with filtering
+POST /api/v1/markets             # Create market (promoters only)
+GET  /api/v1/markets/:id         # Get market details
+
+# Vendor-Specific Features (requireVendor role)
+GET  /api/v1/markets/:id/vendor-view          # Vendor market perspective
+GET  /api/v1/markets/:id/vendor-analytics     # Performance analytics
+GET  /api/v1/markets/:id/vendor-comparison    # Market comparison data
+POST /api/v1/markets/:id/promoter-messages    # Send message to promoter
+GET  /api/v1/markets/:id/promoter-messages    # Get message conversation
+GET  /api/v1/markets/:id/vendor-todos        # Market-specific todos
+GET  /api/v1/markets/:id/vendor-expenses     # Market-specific expenses
+
+# Applications
 POST /api/v1/applications        # Submit vendor application
+GET  /api/v1/my/markets          # Get user's tracked markets
+
+# Security & Validation
+- Enhanced input validation with XSS prevention
+- Rate limiting: Vendor analytics (50/15min), messaging protected
+- JWT token rotation: Refresh invalidates previous token
+- GDPR-compliant vendor data handling
 ```
 
 ## Testing Strategy

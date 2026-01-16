@@ -12,11 +12,24 @@ const {
   searchMarkets,
   getPopularMarkets,
   getMarketsByCategory,
-  verifyMarket
+  verifyMarket,
+  getVendorView,
+  trackVendorInteraction,
+  getVendorHistory,
+  getApplicationStatus,
+  getVendorAnalytics,
+  getVendorComparison,
+  getPromoterMessages,
+  sendPromoterMessage,
+  getVendorTodos,
+  getVendorExpenses,
+  getLogistics,
+  getWeatherForecast,
+  getCalendarEvents
 } = require('../controllers/marketsController')
 
-const { verifyToken, optionalAuth, requireVerifiedPromoter, requireAdmin } = require('../middleware/auth')
-const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch } = require('../middleware/validation')
+const { verifyToken, optionalAuth, requireVerifiedPromoter, requireAdmin, requireVendor, requireVendorOwnershipOrAdmin } = require('../middleware/auth')
+const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch, validateMessageCreation } = require('../middleware/validation')
 
 // Public routes
 router.get('/', validatePagination, validateSearch, getMarkets)
@@ -36,5 +49,20 @@ router.post('/:id/track', validateMongoId('id'), toggleTracking)
 
 // Admin routes
 router.patch('/:id/verify', validateMongoId('id'), requireAdmin, verifyMarket)
+
+// Vendor-specific routes
+router.get('/:id/vendor-view', validateMongoId('id'), requireVendor, getVendorView)
+router.post('/:id/vendor-tracking', validateMongoId('id'), requireVendor, trackVendorInteraction)
+router.get('/:id/vendor-history', validateMongoId('id'), requireVendor, getVendorHistory)
+router.get('/:id/application-status', validateMongoId('id'), requireVendor, getApplicationStatus)
+router.get('/:id/vendor-analytics', validateMongoId('id'), requireVendor, getVendorAnalytics)
+router.get('/:id/vendor-comparison', validateMongoId('id'), requireVendor, getVendorComparison)
+router.get('/:id/promoter-messages', validateMongoId('id'), requireVendor, getPromoterMessages)
+router.post('/:id/promoter-messages', validateMongoId('id'), validateMessageCreation, requireVendor, sendPromoterMessage)
+router.get('/:id/vendor-todos', validateMongoId('id'), requireVendor, getVendorTodos)
+router.get('/:id/vendor-expenses', validateMongoId('id'), requireVendor, getVendorExpenses)
+router.get('/:id/logistics', validateMongoId('id'), requireVendor, getLogistics)
+router.get('/:id/weather-forecast', validateMongoId('id'), requireVendor, getWeatherForecast)
+router.get('/:id/calendar-events', validateMongoId('id'), requireVendor, getCalendarEvents)
 
 module.exports = router

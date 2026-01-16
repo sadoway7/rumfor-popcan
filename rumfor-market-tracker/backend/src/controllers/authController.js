@@ -117,6 +117,9 @@ const refreshToken = catchAsync(async (req, res, next) => {
   // The verifyRefreshToken middleware will handle token validation
   const user = req.user
 
+  // Implement refresh token rotation: blacklist the old refresh token
+  addRefreshTokenToBlacklist(refreshToken, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
+
   // Generate new tokens
   const tokens = generateTokens(user._id)
 

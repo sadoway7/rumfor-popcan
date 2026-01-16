@@ -7,7 +7,7 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
 
 // Page imports
-import { LoginPage } from '@/pages/auth/LoginPage'
+import LoginPage from '@/pages/auth/LoginPage'
 import { RegisterPage } from '@/pages/auth/RegisterPage'
 import { PasswordRecoveryPage } from '@/pages/auth/PasswordRecoveryPage'
 import { EmailVerificationPage } from '@/pages/auth/EmailVerificationPage'
@@ -27,6 +27,7 @@ import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
 import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
 import { VendorTrackedMarketsPage } from '@/pages/vendor/VendorTrackedMarketsPage'
 import { VendorTodosPage } from '@/pages/vendor/VendorTodosPage'
+import { VendorMarketDetailPage } from '@/pages/vendor/VendorMarketDetailPage'
 
 // Promoter pages
 import { PromoterDashboardPage } from '@/pages/promoter/PromoterDashboardPage'
@@ -173,6 +174,14 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><VendorTrackedMarketsPage /></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/markets/:id" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><VendorMarketDetailPage /></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />

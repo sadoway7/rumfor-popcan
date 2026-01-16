@@ -406,6 +406,10 @@ This project is licensed under the MIT License.
 - [Component Props Guide](./COMPONENTS_PROPS.md) - React components documentation
 - [System Architecture](./SYSTEM_ARCHITECTURE_MAP.md) - Technical architecture overview
 
+### Vendor-Specific Documentation
+- [Vendor User Guide](./VENDOR_USER_GUIDE.md) - Comprehensive guide for vendor market detail interface
+- [Developer Vendor Guide](./DEVELOPER_VENDOR_GUIDE.md) - Technical implementation guide for vendor features
+
 ### Development & Deployment
 - [Development Guide](./DEVELOPMENT_GUIDE.md) - Setup and development workflow
 - [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment strategies

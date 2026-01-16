@@ -2,7 +2,7 @@
 Agent stub template for Rumfor Infinity Rule List.
 """
 
-from .agent_base import RumforAgent, AgentResult
+from agent_base import RumforAgent, AgentResult
 
 
 class StubAgent(RumforAgent):

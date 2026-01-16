@@ -38,7 +38,7 @@ const categoryLabels: Record<ExpenseCategory, string> = {
   'other': 'Other'
 }
 
-export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
+export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = React.memo(({
   marketId,
   className
 }) => {
@@ -201,7 +201,7 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
       <Card className={cn("p-8", className)}>
         <div className="flex items-center justify-center">
           <Spinner className="w-6 h-6" />
-          <span className="ml-2 text-gray-600">Loading expenses...</span>
+          <span className="ml-2 text-muted-foreground">Loading expenses...</span>
         </div>
       </Card>
     )
@@ -223,8 +223,8 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Expense Tracking</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-foreground">Expense Tracking</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Monitor and analyze your market-related expenses
           </p>
         </div>
@@ -259,48 +259,48 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-purple-600" />
+            <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-accent" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-lg font-semibold">{formatCurrency(stats.total)}</p>
+              <p className="text-sm text-muted-foreground">Total</p>
+              <p className="text-lg font-semibold text-foreground">{formatCurrency(stats.total)}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Plus className="w-4 h-4 text-blue-600" />
+            <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
+              <Plus className="w-4 h-4 text-blue-500" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Transactions</p>
-              <p className="text-lg font-semibold">{stats.count}</p>
+              <p className="text-sm text-muted-foreground">Transactions</p>
+              <p className="text-lg font-semibold text-foreground">{stats.count}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-green-600" />
+            <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-success" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">This Month</p>
-              <p className="text-lg font-semibold">{formatCurrency(stats.thisMonth)}</p>
+              <p className="text-sm text-muted-foreground">This Month</p>
+              <p className="text-lg font-semibold text-foreground">{formatCurrency(stats.thisMonth)}</p>
             </div>
           </div>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-4 h-4 text-orange-600" />
+            <div className="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-warning" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Average</p>
-              <p className="text-lg font-semibold">{formatCurrency(stats.average)}</p>
+              <p className="text-sm text-muted-foreground">Average</p>
+              <p className="text-lg font-semibold text-foreground">{formatCurrency(stats.average)}</p>
             </div>
           </div>
         </Card>
@@ -325,7 +325,7 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search expenses..."
                 value={searchQuery}
@@ -390,7 +390,7 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
       {filteredAndSortedExpenses.length === 0 ? (
         <Card className="p-8">
           <EmptyState
-            icon={<DollarSign className="w-12 h-12 text-gray-300" />}
+            icon={<DollarSign className="w-12 h-12 text-muted-foreground/50" />}
             title="No expenses found"
             description={
               searchQuery || filter !== 'all' || selectedCategory
@@ -428,4 +428,4 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = ({
       />
     </div>
   )
-}
+})

@@ -16,6 +16,7 @@ interface MarketCardProps {
   isLoading?: boolean
   showTrackButton?: boolean
   variant?: 'default' | 'compact' | 'featured' | 'minimal'
+  detailPath?: string // Custom path for market detail page
 }
 
 const categoryLabels = {
@@ -53,7 +54,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   isTracked = false,
   isLoading = false,
   showTrackButton = true,
-  variant = 'default'
+  variant = 'default',
+  detailPath
 }) => {
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -105,7 +107,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   if (variant === 'compact') {
     return (
-      <Link to={`/markets/${market.id}`} className="block">
+      <Link to={detailPath || `/markets/${market.id}`} className="block">
         <Card className={cn('p-4 hover:shadow-md transition-shadow cursor-pointer', className)}>
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
@@ -138,7 +140,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   if (variant === 'featured') {
     return (
-      <Link to={`/markets/${market.id}`} className="block">
+      <Link to={detailPath || `/markets/${market.id}`} className="block">
         <Card className={cn('overflow-hidden hover:shadow-lg transition-shadow cursor-pointer', className)}>
           {market.images && market.images.length > 0 && (
             <div className="relative h-48">
@@ -240,7 +242,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     }
 
     return (
-      <Link to={`/markets/${market.id}`} className="block group">
+      <Link to={detailPath || `/markets/${market.id}`} className="block group">
         <div className={cn(
           'bg-surface hover:bg-surface-2 transition-all duration-200 cursor-pointer',
           'rounded-lg overflow-hidden',
@@ -335,7 +337,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Default variant
   return (
-    <Link to={`/markets/${market.id}`} className="block">
+    <Link to={detailPath || `/markets/${market.id}`} className="block">
       <Card className={cn('overflow-hidden hover:shadow-md transition-shadow cursor-pointer', className)}>
         {market.images && market.images.length > 0 && (
           <div className="relative h-40">

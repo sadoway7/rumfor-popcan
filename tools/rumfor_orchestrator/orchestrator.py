@@ -20,10 +20,16 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 
-from .agent_base import AgentResult
-from .state_manager import RumforStateManager
-from .agents.frontend_agent import FrontendAgent
-from .agents.backend_agent import BackendAgent
+from agent_base import AgentResult
+from state_manager import RumforStateManager
+from agents.frontend_agent import FrontendAgent
+from agents.backend_agent import BackendAgent
+from agents.api_agent import APIAgent
+from agents.styling_agent import StylingAgent
+from agents.testing_agent import TestingAgent
+from agents.security_agent import SecurityAgent
+from agents.documentation_agent import DocumentationAgent
+from agents.deployment_agent import DeploymentAgent
 
 
 @dataclass
@@ -81,13 +87,12 @@ class RumforOrchestrator:
         agent_classes = [
             ('frontend', FrontendAgent),
             ('backend', BackendAgent),
-            # Add more agents as they are implemented:
-            # ('api', APIAgent),
-            # ('styling', StylingAgent),
-            # ('testing', TestingAgent),
-            # ('security', SecurityAgent),
-            # ('documentation', DocumentationAgent),
-            # ('deployment', DeploymentAgent)
+            ('api', APIAgent),
+            ('styling', StylingAgent),
+            ('testing', TestingAgent),
+            ('security', SecurityAgent),
+            ('documentation', DocumentationAgent),
+            ('deployment', DeploymentAgent)
         ]
 
         for agent_slug, agent_class in agent_classes:

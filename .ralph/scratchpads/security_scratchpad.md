@@ -77,6 +77,76 @@ Comprehensive security audit for rumfor-market-tracker project, including fronte
 - Low Priority:
   - Audit session secret fallback in server.js
 
+## New Vendor Market Detail Functionality Security Audit (2026-01-14)
+
+### API Endpoint Security Audit
+- **Endpoints**: `/vendor-analytics`, `/promoter-messages` (GET/POST)
+- **Authentication**: ✅ JWT token required via `requireVendor` middleware
+- **Authorization**: ✅ Only vendors and admins can access
+- **Rate Limiting**: ✅ 50 requests per 15 min for vendor dashboard endpoints
+- **Input Validation**: ✅ MongoDB ID validation, message content validation with XSS prevention
+- **SQL Injection**: ✅ No SQL queries, using MongoDB with parameterized queries
+- **XSS Protection**: ✅ Message validation includes suspicious pattern detection and HTML escaping
+
+### Data Privacy & Access Control Audit
+- **Analytics Data Isolation**: ✅ `getVendorAnalytics` filters by `req.user.id` - vendors only see their own expense data
+- **Message Privacy**: ✅ `getPromoterMessages` uses `Message.getUserMarketMessages` which only returns messages where user is sender/recipient
+- **Market Ownership**: ✅ Controllers validate market exists and user has appropriate access
+- **Role Boundaries**: ✅ Promoter-to-vendor messaging requires vendor to have applied to promoter's market
+- **Data Leakage**: ✅ No sensitive data exposed in error responses or success responses
+
+### Frontend Security Audit
+- **VendorMarketDetailPage**: ✅ Uses existing security measures (no new vulnerabilities)
+- **API Key Handling**: ✅ Uses existing `httpClient` with JWT token handling
+- **Input Sanitization**: ✅ No user inputs processed server-side without validation
+- **Error Handling**: ✅ Proper error display without sensitive information leakage
+
+### Session & Authentication Security
+- **JWT Token Validation**: ✅ All endpoints require valid tokens
+- **Token Blacklisting**: ✅ Blacklist mechanism for logout works correctly
+- **Session Timeouts**: ✅ JWT tokens have proper expiration
+- **Session Fixation**: ✅ No session fixation vulnerabilities (JWT stateless)
+
+### Input Validation & Sanitization
+- **Message Creation**: ✅ Comprehensive validation including XSS pattern detection:
+  - Length limits (1-1000 chars)
+  - Control character removal
+  - Suspicious script/JS pattern detection
+  - HTML/JS injection prevention
+- **Market ID Validation**: ✅ MongoDB ID format validation
+- **Error Logging**: ✅ Validation errors logged with context for monitoring
+
+### OWASP Top 10 Compliance
+- **Broken Access Control**: ✅ Proper authorization checks in place
+- **Cryptographic Failures**: ✅ JWT uses proper secrets (though development secrets are weak)
+- **Injection**: ✅ No SQL injection, XSS prevention in place
+- **Insecure Design**: ✅ Proper separation of vendor/promoter roles
+- **Security Misconfiguration**: ✅ Rate limiting, input validation active
+- **Vulnerable Components**: ❌ Dependencies have known vulnerabilities (esbuild, jspdf, nodemailer)
+
+### Logging & Monitoring
+- **Security Events**: ✅ Validation errors logged with IP, UA, endpoint
+- **Access Attempts**: ✅ Unauthorized access attempts logged via middleware
+- **Rate Limiting**: ✅ Hit limits logged for monitoring
+- **Error Information**: ✅ No sensitive data leaked in error responses
+
+### Dependency Security Assessment
+- **Frontend**: ❌ esbuild (moderate), jspdf (critical), vite (derived)
+- **Backend**: ❌ cookie (low), nodemailer (moderate), csurf (derived)
+- **Recommendation**: Update dependencies using `npm audit fix --force` (breaking changes required)
+
+### Critical Security Findings
+1. **HIGH**: Known vulnerable dependencies in production
+2. **MEDIUM**: Analytics endpoint exposes financial data - ensure proper HTTPS/encryption in production
+3. **LOW**: Message content validation could be enhanced for edge cases
+
+### Remediation Actions
+- [ ] Update vulnerable npm dependencies with breaking changes
+- [ ] Implement proper production JWT secrets (not dev-jwt-secret-12345)
+- [ ] Review analytics data exposure over HTTPS only
+- [ ] Add content-type validation for file uploads if implemented later
+- [ ] Consider implementing message encryption for additional privacy
+
 ## Action Items
 - [x] Run npm audit on frontend
 - [x] Run npm audit on backend
@@ -91,3 +161,4 @@ Comprehensive security audit for rumfor-market-tracker project, including fronte
 - [ ] Update dependencies to fix security vulnerabilities
 - [ ] Add ESLint security plugins
 - [ ] Generate proper production secrets
+- [x] Audit new vendor market detail functionality security
