@@ -1,4 +1,4 @@
-from agent_base import RumforAgent, AgentResult
+from ..agent_base import RumforAgent, AgentResult
 
 class StylingAgent(RumforAgent):
     """Styling agent for responsive design and accessibility."""

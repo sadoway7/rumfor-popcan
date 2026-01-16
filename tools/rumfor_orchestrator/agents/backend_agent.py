@@ -5,7 +5,7 @@ Backend agent for Node.js/Express/MongoDB development.
 """
 
 from pathlib import Path
-from agent_base import RumforAgent, AgentResult
+from ..agent_base import RumforAgent, AgentResult
 
 
 class BackendAgent(RumforAgent):

@@ -11,7 +11,65 @@ Works through **Roo Code's agent mode system** combined with file-based state ma
 
 ---
 
-## What Is This?
+## The Rumfor Market Tracker Application
+
+Rumfor Infinity Rule List was developed for the **Rumfor Market Tracker** - a comprehensive platform for discovering, tracking, and participating in markets and community events.
+
+### What Rumfor Market Tracker Is
+
+Rumfor Market Tracker is a modern web platform that helps people discover and engage with local markets, vendors, and community events. It serves three main user types:
+
+- **Visitors**: Find markets and events, read reviews, save favorites
+- **Vendors**: Apply to participate in markets, manage their presence
+- **Organizers**: Create and manage market events, review applications
+
+### Core Features
+
+**Market Discovery**
+- Browse markets by category: Farmers Markets, Arts & Crafts, Food Festivals, Flea Markets, etc.
+- Advanced search with filters (location, date, category, accessibility)
+- Interactive map integration for location-based discovery
+- Save favorite markets and get personalized recommendations
+
+**Vendor Management**
+- Application system for vendors to join markets
+- Profile management with photos, descriptions, and specialties
+- Real-time application status tracking
+- Integration with market calendars and schedules
+
+**Community Engagement**
+- Market reviews and ratings system
+- Photo sharing and social features
+- Comment threads and discussions
+- Follow vendors and organizers
+- Notification system for market updates
+
+**Organizer Tools**
+- Market creation and management
+- Vendor application review and approval
+- Attendee analytics and reporting
+- Marketing tools and event promotion
+- Calendar integration and scheduling
+
+**Admin Dashboard**
+- User management and moderation
+- Market oversight and quality control
+- Analytics and platform metrics
+- Support ticket system
+- Security monitoring
+
+### Technical Stack
+
+**Frontend**: React 18 + TypeScript + Vite
+**State Management**: Zustand + TanStack Query
+**Styling**: UnoCSS + Tailwind CSS + Radix UI
+**Backend**: Node.js + Express.js
+**Database**: MongoDB with Mongoose
+**Authentication**: JWT with role-based access control
+**Testing**: Playwright E2E + ESLint
+**Deployment**: GitLab CI/CD + Docker
+
+## Rumfor Infinity Rule List System
 
 Rumfor Infinity Rule List is a pattern for running continuous autonomous development cycles using AI coding assistants. It was developed for the Rumfor Market Tracker project but can be adapted to any full-stack web application.
 
@@ -222,16 +280,76 @@ This provides persistent memory across cycles.
 
 ## Documentation
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Deep dive into system architecture
-- [SETUP.md](SETUP.md) - Installation and configuration guide
-- [USAGE.md](USAGE.md) - How to use the system day-to-day
-- [CUSTOM_AGENTS.md](CUSTOM_AGENTS.md) - Creating your own specialist agents
+- [ARCHITECTURE.md](tools/RUMFOR_INFINITY_ARCHITECTURE.md) - Deep dive into system architecture
+- [SETUP.md](tools/RUMFOR_INFINITY_SETUP.md) - Installation and configuration guide
+- [USAGE.md](tools/RUMFOR_INFINITY_USAGE.md) - How to use the system day-to-day
+- [CUSTOM_AGENTS.md](tools/RUMFOR_INFINITY_CUSTOM_AGENTS.md) - Creating your own specialist agents
 
 ---
 
 ## License
 
 MIT License - Feel free to use this pattern in your own projects!
+
+---
+
+## User Journeys
+
+### Visitor Journey
+1. **Discover**: Browse markets by category or search by location
+2. **Explore**: View market details, photos, reviews, and vendor lists
+3. **Engage**: Save favorites, follow vendors, read comments
+4. **Plan**: Check schedules, get notifications for upcoming markets
+5. **Participate**: Leave reviews and share experiences
+
+### Vendor Journey
+1. **Apply**: Browse available markets and submit applications
+2. **Build Profile**: Create vendor profile with photos and specialties
+3. **Track Status**: Monitor application approval and market assignments
+4. **Manage Presence**: Update product information and availability
+5. **Grow Network**: Connect with other vendors and organizers
+
+### Organizer Journey
+1. **Create Events**: Set up market events with details and requirements
+2. **Review Applications**: Evaluate vendor applications and make selections
+3. **Manage Logistics**: Coordinate vendor assignments and booth layouts
+4. **Promote Events**: Use platform tools for marketing and engagement
+5. **Analyze Success**: Review attendance data and vendor performance
+
+### Admin Journey
+1. **Moderate Content**: Review user-generated content and reports
+2. **Manage Users**: Handle user accounts, roles, and permissions
+3. **Monitor Platform**: Track metrics and system health
+4. **Support Users**: Handle tickets and resolve issues
+5. **Improve Platform**: Analyze feedback and implement enhancements
+
+---
+
+## System Architecture Overview
+
+The Rumfor Market Tracker follows a modern full-stack architecture:
+
+### Frontend Architecture
+- **Single Page Application** built with React 18 functional components
+- **Type-Safe Development** using TypeScript with strict mode
+- **State Management** via Zustand stores with TanStack Query for server state
+- **Component Library** using Radix UI primitives for accessibility
+- **Styling System** combining UnoCSS for utility classes and Tailwind for theming
+- **Build Tool** using Vite for fast development and optimized production builds
+
+### Backend Architecture
+- **API Server** built with Express.js and Node.js
+- **Database Layer** using MongoDB with Mongoose ODM
+- **Authentication** implemented with JWT tokens and role-based access control
+- **File Storage** for vendor photos, market images, and application documents
+- **RESTful API** design with proper HTTP methods and status codes
+
+### Data Model
+- **Users**: Visitor, Vendor, Organizer, Admin roles with profile data
+- **Markets**: Event details, location, dates, categories, requirements
+- **Applications**: Vendor applications with status tracking and documents
+- **Reviews**: User-generated ratings and comments
+- **Notifications**: Real-time updates and reminders
 
 ---
 

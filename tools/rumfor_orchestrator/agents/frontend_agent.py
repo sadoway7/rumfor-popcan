@@ -7,7 +7,7 @@ React/TypeScript/Vite specialist focused on frontend development.
 import os
 import glob
 from pathlib import Path
-from rumfor_orchestrator.agent_base import RumforAgent, AgentResult
+from ..agent_base import RumforAgent, AgentResult
 
 
 class FrontendAgent(RumforAgent):

@@ -1,4 +1,4 @@
-from agent_base import RumforAgent, AgentResult
+from ..agent_base import RumforAgent, AgentResult
 
 class APIAgent(RumforAgent):
     """API agent for authentication and data modeling."""

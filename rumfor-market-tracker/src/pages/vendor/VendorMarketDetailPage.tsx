@@ -33,6 +33,7 @@ import { format } from 'date-fns'
 // Lazy load heavy components for better performance
 const VendorTodoList = React.lazy(() => import('@/components/VendorTodoList').then(module => ({ default: module.VendorTodoList })))
 const VendorExpenseTracker = React.lazy(() => import('@/components/VendorExpenseTracker').then(module => ({ default: module.VendorExpenseTracker })))
+const VendorAnalyticsDashboard = React.lazy(() => import('@/components/VendorAnalyticsDashboard').then(module => ({ default: module.VendorAnalyticsDashboard })))
 
 // Loading component for lazy-loaded content
 const TabContentLoader: React.FC = () => (

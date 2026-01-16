@@ -54,8 +54,8 @@ const getUserRateLimit = (userRole, endpoint) => {
     }
   }
 
-  if (endpoint.includes('/auth/')) return limits.auth[userRole] || limits.auth.visitor
-  if (endpoint.includes('/upload') || endpoint.includes('/photos')) return limits.upload[userRole] || limits.upload.visitor
+  if (endpoint.url.includes('/auth/')) return limits.auth[userRole] || limits.auth.visitor
+  if (endpoint.url.includes('/upload') || endpoint.url.includes('/photos')) return limits.upload[userRole] || limits.upload.visitor
   if (endpoint.url.includes('/vendor-analytics') || endpoint.url.includes('/promoter-messages')) return limits.vendorDashboard[userRole] || limits.vendorDashboard.visitor
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(endpoint.method)) return limits.write[userRole] || limits.write.visitor
 

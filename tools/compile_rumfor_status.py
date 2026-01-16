@@ -94,11 +94,47 @@ if (typeof module !== 'undefined' && module.exports) {{
 
 def _create_initial_status(status_file: Path):
     """Create initial status file."""
-    from rumfor_orchestrator.state_manager import RumforStateManager
+    import time
 
-    # Use the state manager to create initial status
-    state_manager = RumforStateManager(status_file.parent)
-    # The constructor will create the initial file
+    # Create simple initial status without dependencies
+    initial_status = {
+        "orchestrator": {
+            "status": "idle",
+            "current_cycle": 0,
+            "current_agent": None,
+            "start_time": None,
+            "last_update": time.time(),
+            "total_cycles_run": 0,
+            "system_health": "healthy",
+            "auto_mode": False
+        },
+        "agents": {
+            "frontend": {"status": "idle", "progress": 0, "message": "Ready"},
+            "backend": {"status": "idle", "progress": 0, "message": "Ready"},
+            "api": {"status": "idle", "progress": 0, "message": "Ready"},
+            "styling": {"status": "idle", "progress": 0, "message": "Ready"},
+            "testing": {"status": "idle", "progress": 0, "message": "Ready"},
+            "security": {"status": "idle", "progress": 0, "message": "Ready"},
+            "documentation": {"status": "idle", "progress": 0, "message": "Ready"},
+            "deployment": {"status": "idle", "progress": 0, "message": "Ready"}
+        },
+        "metadata": {
+            "version": "2.0",
+            "created_at": time.time(),
+            "last_modified": time.time()
+        }
+    }
+
+    try:
+        status_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(status_file, 'w') as f:
+            json.dump(initial_status, f, indent=2)
+        print(f"Created initial status file: {status_file}")
+    except IOError as e:
+        print(f"Error creating initial status file: {e}")
+        return False
+
+    return True
 
 
 if __name__ == "__main__":

@@ -1,500 +1,312 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const applicationSchema = new mongoose.Schema({
-  vendor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+  // Relationships
   market: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Market',
     required: true
   },
+  vendor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  promoter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Market'
+  },
+
+  // Application status
   status: {
     type: String,
-    enum: ['draft', 'submitted', 'under-review', 'approved', 'rejected', 'withdrawn'],
+    enum: ['draft', 'submitted', 'under_review', 'approved', 'rejected', 'withdrawn'],
     default: 'draft'
   },
-  statusHistory: [{
-    status: {
-      type: String,
-      enum: ['draft', 'submitted', 'under-review', 'approved', 'rejected', 'withdrawn'],
-      required: true
-    },
-    changedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    changedAt: {
-      type: Date,
-      default: Date.now
-    },
-    notes: String
-  }],
-  // Vendor Business Information
+
+  // Step-by-step application data
+  // Step 1: Business Information
   businessInfo: {
-    businessName: {
-      type: String,
-      required: [true, 'Business name is required'],
-      trim: true,
-      maxlength: [100, 'Business name must be less than 100 characters']
-    },
+    businessName: { type: String, required: true },
     businessType: {
       type: String,
-      enum: ['individual', 'partnership', 'llc', 'corporation'],
-      required: [true, 'Business type is required']
+      enum: ['individual', 'llc', 'corporation', 'partnership', 'nonprofit'],
+      required: true
     },
+    taxId: String,
+    businessLicense: String,
+    yearsInOperation: Number,
+    website: String,
     description: {
       type: String,
-      required: [true, 'Business description is required'],
-      maxlength: [500, 'Description must be less than 500 characters']
-    },
-    yearsInBusiness: {
-      type: Number,
-      min: [0, 'Years in business cannot be negative']
-    },
-    website: String,
-    phone: {
-      type: String,
-      required: [true, 'Phone number is required']
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      lowercase: true,
-      trim: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
-    }
-  },
-  // Products and Services
-  products: [{
-    name: {
-      type: String,
-      required: true,
-      maxlength: [100, 'Product name must be less than 100 characters']
+      maxlength: 1000
     },
     category: {
       type: String,
-      required: true,
-      enum: ['produce', 'bakery', 'dairy', 'meat', 'crafts', 'jewelry', 'clothing', 'art', 'other']
+      enum: ['produce', 'baked_goods', 'meat', 'dairy', 'crafts', 'art', 'jewelry', 'clothing', 'books', 'antiques', 'food_trucks', 'plants', 'specialty', 'mixed'],
+      required: true
     },
-    description: {
-      type: String,
-      maxlength: [300, 'Product description must be less than 300 characters']
-    },
+    specialRequirements: [String]
+  },
+
+  // Step 2: Products & Services
+  products: [{
+    name: { type: String, required: true },
+    category: { type: String, required: true },
+    description: String,
     priceRange: {
       min: Number,
       max: Number
     },
-    isLocal: {
-      type: Boolean,
-      default: true
-    },
-    isOrganic: Boolean,
+    isOrganic: { type: Boolean, default: false },
+    isLocallySourced: { type: Boolean, default: true },
     certifications: [String]
   }],
-  // Booth Requirements
-  boothRequirements: {
-    spaceNeeded: {
+
+  // Step 3: Booth & Space Requirements
+  spaceRequirements: {
+    boothSize: {
       type: String,
-      enum: ['small', 'medium', 'large', 'extra-large'],
-      required: [true, 'Space size is required']
+      enum: ['small', 'medium', 'large', 'extra_large'],
+      default: 'medium'
     },
+    specialEquipment: [String],
     electricity: {
-      type: Boolean,
-      default: false
+      type: String,
+      enum: ['none', 'basic', 'heavy'],
+      default: 'none'
     },
-    water: {
-      type: Boolean,
-      default: false
-    },
-    tent: {
-      type: Boolean,
-      default: false
-    },
-    tables: {
-      type: Number,
-      default: 0
-    },
-    chairs: {
-      type: Number,
-      default: 0
-    },
-    specialRequirements: String
+    waterAccess: { type: Boolean, default: false },
+    tentRequired: { type: Boolean, default: true },
+    additionalNotes: String
   },
-  // Insurance and Permits
-  insurance: {
-    generalLiability: {
-      hasInsurance: {
-        type: Boolean,
-        default: false
-      },
-      coverage: Number,
+
+  // Step 4: Insurance & Compliance
+  compliance: {
+    liabilityInsurance: {
       provider: String,
       policyNumber: String,
-      expirationDate: Date
+      coverageAmount: Number,
+      expirationDate: Date,
+      certificateUrl: String
     },
-    foodHandlersPermit: {
-      hasPermit: {
-        type: Boolean,
-        default: false
+    healthPermit: {
+      type: {
+        type: String,
+        enum: ['food', 'health', 'alcohol', 'none']
       },
-      permitNumber: String,
-      expirationDate: Date
+      number: String,
+      expirationDate: Date,
+      certificateUrl: String
     },
     businessLicense: {
-      hasLicense: {
-        type: Boolean,
-        default: false
-      },
-      licenseNumber: String,
-      expirationDate: Date
-    }
-  },
-  // Documents and Files
-  documents: {
-    businessLicense: [{
-      url: String,
-      filename: String,
-      uploadedAt: Date
-    }],
-    insuranceCertificate: [{
-      url: String,
-      filename: String,
-      uploadedAt: Date
-    }],
-    permits: [{
+      number: String,
+      expirationDate: Date,
+      certificateUrl: String
+    },
+    foodHandlerPermit: {
       type: String,
-      url: String,
-      filename: String,
-      uploadedAt: Date
-    }],
-    photos: [{
-      url: String,
-      filename: String,
-      caption: String,
-      uploadedAt: Date
-    }]
-  },
-  // Financial Information
-  fees: {
-    applicationFee: {
-      amount: Number,
-      currency: {
-        type: String,
-        default: 'USD'
-      },
-      paid: {
-        type: Boolean,
-        default: false
-      },
-      paidAt: Date,
-      transactionId: String
+      enum: ['serve_safe', 'haccp', 'other', 'none'],
+      number: String,
+      expirationDate: Date,
+      certificateUrl: String
     },
-    boothFee: {
-      amount: Number,
-      currency: {
-        type: String,
-        default: 'USD'
-      }
-    }
+    agreementAccepted: { type: Boolean, default: false },
+    agreementAcceptedAt: Date
   },
-  // Marketing and Social Media
-  marketing: {
-    socialMediaLinks: {
-      facebook: String,
-      instagram: String,
-      twitter: String
-    },
-    marketingMaterials: String,
-    previousMarkets: [String],
-    awards: [String]
-  },
-  // Internal Notes and Review
-  internalNotes: [{
-    note: {
+
+  // Step 5: Contact & Emergency Information
+  contacts: [{
+    type: {
       type: String,
-      required: true
+      enum: ['primary', 'emergency', 'alternate'],
+      default: 'primary'
     },
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    },
-    isPublic: {
-      type: Boolean,
-      default: false
-    }
+    name: { type: String, required: true },
+    relationship: String,
+    phone: { type: String, required: true },
+    email: String
   }],
-  // Review and Approval Workflow
-  review: {
-    assignedReviewer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    reviewedAt: Date,
-    approvalNotes: String,
-    rejectionReason: String,
-    waitlistPosition: Number
-  },
-  // Communication and Timeline
-  communication: {
-    preferredContact: {
-      type: String,
-      enum: ['email', 'phone', 'both'],
-      default: 'email'
-    },
-    emergencyContact: {
-      name: String,
-      relationship: String,
-      phone: String,
-      email: String
-    }
-  },
-  // Metadata
+
+  // Application workflow
   submittedAt: Date,
-  isDeleted: {
-    type: Boolean,
-    default: false
+  reviewedAt: Date,
+  approvedAt: Date,
+  rejectedAt: Date,
+
+  reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  reviewNotes: String,
+  rejectionReason: String,
+
+  // Booth assignment (once approved)
+  boothAssignment: {
+    boothNumber: String,
+    location: String,
+    size: String,
+    assignedAt: Date,
+    assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
-  deletedAt: Date,
-  version: {
-    type: Number,
-    default: 1
+
+  // Fees and payments
+  fees: {
+    applicationFee: { type: Number, default: 0 },
+    boothFee: { type: Number, default: 0 },
+    totalAmount: { type: Number, default: 0 },
+    paid: { type: Boolean, default: false },
+    paidAt: Date,
+    paymentMethod: String,
+    transactionId: String
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+
+  // Communication and updates
+  communicationHistory: [{
+    type: {
+      type: String,
+      enum: ['note', 'email', 'phone', 'meeting']
+    },
+    direction: {
+      type: String,
+      enum: ['to_vendor', 'from_vendor', 'internal']
+    },
+    subject: String,
+    message: { type: String, required: true },
+    sentBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    sentAt: { type: Date, default: Date.now },
+    attachments: [String]
+  }],
+
+  // Audit and tracking
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  // Internal flags
+  priority: {
+    type: String,
+    enum: ['low', 'normal', 'high', 'urgent'],
+    default: 'normal'
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  followUpRequired: { type: Boolean, default: false },
+  followUpDate: Date,
+
+  // Market-specific metadata
+  metadata: {
+    previousApplications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Application' }],
+    marketExperience: String,
+    specialRequests: String,
+    notes: String
   }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-})
+  timestamps: true
+});
 
-// Virtual for checking if application is complete
+// Indexes
+applicationSchema.index({ market: 1, status: 1 });
+applicationSchema.index({ vendor: 1, market: 1 });
+applicationSchema.index({ promoter: 1 });
+applicationSchema.index({ status: 1 });
+applicationSchema.index({ submittedAt: -1 });
+applicationSchema.index({ 'businessInfo.businessName': 1 });
+applicationSchema.index({ priority: 1 });
+applicationSchema.index({ followUpRequired: 1 });
+
+// Virtual for application completeness
 applicationSchema.virtual('isComplete').get(function() {
-  // Basic completeness check
-  return !!(
-    this.businessInfo.businessName &&
-    this.businessInfo.businessType &&
-    this.businessInfo.description &&
-    this.businessInfo.phone &&
-    this.businessInfo.email &&
-    this.products.length > 0 &&
-    this.boothRequirements.spaceNeeded
-  )
-})
+  return this.businessInfo &&
+         this.products.length > 0 &&
+         this.compliance.agreementAccepted;
+});
 
 // Virtual for days since submission
 applicationSchema.virtual('daysSinceSubmission').get(function() {
-  if (!this.submittedAt) return null
-  const now = new Date()
-  const diffTime = now - this.submittedAt
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24))
-})
+  if (!this.submittedAt) return null;
+  const now = new Date();
+  const diffTime = Math.abs(now - this.submittedAt);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+});
 
-// Virtual for current status age
-applicationSchema.virtual('statusAge').get(function() {
-  if (!this.statusHistory || this.statusHistory.length === 0) return null
-  const latestStatus = this.statusHistory[this.statusHistory.length - 1]
-  if (!latestStatus.changedAt) return null
-  const now = new Date()
-  const diffTime = now - latestStatus.changedAt
-  return Math.floor(diffTime / (1000 * 60 * 60 * 24))
-})
-
-// Indexes for performance
-applicationSchema.index({ vendor: 1, market: 1 }, { unique: true })
-applicationSchema.index({ vendor: 1, status: 1 })
-applicationSchema.index({ market: 1, status: 1 })
-applicationSchema.index({ status: 1, submittedAt: -1 })
-applicationSchema.index({ 'review.assignedReviewer': 1 })
-applicationSchema.index({ createdAt: -1 })
-applicationSchema.index({ updatedAt: -1 })
-applicationSchema.index({ isDeleted: 1 })
-applicationSchema.index({ submittedAt: -1 })
-
-// Date range indexes for better query performance
-applicationSchema.index({ submittedAt: 1, status: 1 })
-applicationSchema.index({ createdAt: 1, status: 1 })
-
-// Compound indexes for common filtering patterns
-applicationSchema.index({ status: 1, 'review.assignedReviewer': 1 })
-applicationSchema.index({ vendor: 1, isDeleted: 1 })
-applicationSchema.index({ market: 1, isDeleted: 1 })
-applicationSchema.index({ status: 1, 'statusHistory.changedAt': -1 })
-
-// Method to submit application
+// Instance methods
 applicationSchema.methods.submit = function() {
-  if (this.status !== 'draft') {
-    throw new Error('Only draft applications can be submitted')
+  if (this.status === 'draft' && this.isComplete) {
+    this.status = 'submitted';
+    this.submittedAt = new Date();
+    return this.save();
+  }
+  throw new Error('Application is not ready for submission');
+};
+
+applicationSchema.methods.approve = function(reviewerId, boothAssignment = null) {
+  this.status = 'approved';
+  this.approvedAt = new Date();
+  this.approvedBy = reviewerId;
+
+  if (boothAssignment) {
+    this.boothAssignment = {
+      ...boothAssignment,
+      assignedAt: new Date(),
+      assignedBy: reviewerId
+    };
   }
 
-  if (!this.isComplete) {
-    throw new Error('Application must be complete before submission')
+  return this.save();
+};
+
+applicationSchema.methods.reject = function(reviewerId, reason) {
+  this.status = 'rejected';
+  this.rejectedAt = new Date();
+  this.reviewedBy = reviewerId;
+  this.rejectionReason = reason;
+
+  return this.save();
+};
+
+applicationSchema.methods.withdraw = function() {
+  if (['draft', 'submitted', 'under_review'].includes(this.status)) {
+    this.status = 'withdrawn';
+    return this.save();
   }
+  throw new Error('Cannot withdraw application in current status');
+};
 
-  this.status = 'submitted'
-  this.submittedAt = new Date()
-  this.statusHistory.push({
-    status: 'submitted',
-    changedBy: this.vendor,
-    changedAt: new Date(),
-    notes: 'Application submitted'
-  })
+applicationSchema.methods.addCommunication = function(communication) {
+  this.communicationHistory.push({
+    ...communication,
+    sentAt: new Date()
+  });
 
-  return this.save()
-}
+  return this.save();
+};
 
-// Method to update status
-applicationSchema.methods.updateStatus = function(newStatus, changedBy, notes = '') {
-  const validStatuses = ['draft', 'submitted', 'under-review', 'approved', 'rejected', 'withdrawn']
-
-  if (!validStatuses.includes(newStatus)) {
-    throw new Error('Invalid status')
-  }
-
-  this.status = newStatus
-  this.statusHistory.push({
-    status: newStatus,
-    changedBy,
-    changedAt: new Date(),
-    notes
-  })
-
-  // Update review information for certain status changes
-  if (newStatus === 'under-review') {
-    this.review.reviewedAt = new Date()
-    this.review.assignedReviewer = changedBy
-  } else if (newStatus === 'approved' || newStatus === 'rejected') {
-    this.review.reviewedAt = new Date()
-    if (newStatus === 'approved') {
-      this.review.approvalNotes = notes
-    } else {
-      this.review.rejectionReason = notes
+// Static methods
+applicationSchema.statics.getApplicationStats = async function(marketId) {
+  return this.aggregate([
+    { $match: { market: marketId } },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
     }
-  }
+  ]);
+};
 
-  return this.save()
-}
-
-// Method to add internal note
-applicationSchema.methods.addInternalNote = function(note, author, isPublic = false) {
-  this.internalNotes.push({
-    note,
-    author,
-    createdAt: new Date(),
-    isPublic
-  })
-
-  return this.save()
-}
-
-// Method to withdraw application
-applicationSchema.methods.withdraw = function(reason = '') {
-  if (this.status === 'approved') {
-    throw new Error('Approved applications cannot be withdrawn')
-  }
-
-  this.status = 'withdrawn'
-  this.statusHistory.push({
-    status: 'withdrawn',
-    changedBy: this.vendor,
-    changedAt: new Date(),
-    notes: reason || 'Application withdrawn by vendor'
-  })
-
-  return this.save()
-}
-
-// Method to soft delete
-applicationSchema.methods.softDelete = function() {
-  this.isDeleted = true
-  this.deletedAt = new Date()
-
-  return this.save()
-}
-
-// Static method to get applications for vendor
-applicationSchema.statics.getVendorApplications = function(vendorId, options = {}) {
-  const {
-    status,
-    marketId,
-    sortBy = 'submittedAt',
-    sortOrder = 'desc'
-  } = options
-
-  const query = {
-    vendor: vendorId,
-    isDeleted: false
-  }
-
-  if (status) query.status = status
-  if (marketId) query.market = marketId
-
-  const sortOptions = {}
-  sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
-
-  return this.find(query)
-    .populate('market', 'name location.city location.state dates')
-    .sort(sortOptions)
-}
-
-// Static method to get applications for market
-applicationSchema.statics.getMarketApplications = function(marketId, options = {}) {
-  const {
-    status,
-    sortBy = 'submittedAt',
-    sortOrder = 'desc'
-  } = options
-
-  const query = {
+applicationSchema.statics.getPendingApplications = function(marketId) {
+  return this.find({
     market: marketId,
-    isDeleted: false
-  }
+    status: { $in: ['submitted', 'under_review'] }
+  })
+  .populate('vendor', 'firstName lastName businessName email')
+  .sort({ submittedAt: 1 });
+};
 
-  if (status) query.status = status
-
-  const sortOptions = {}
-  sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
-
-  return this.find(query)
-    .populate('vendor', 'username profile.firstName profile.lastName businessInfo.businessName')
-    .sort(sortOptions)
-}
-
-// Static method to get applications for reviewer
-applicationSchema.statics.getAssignedApplications = function(reviewerId, options = {}) {
-  const {
-    status = 'under-review',
-    sortBy = 'submittedAt',
-    sortOrder = 'asc'
-  } = options
-
-  const query = {
-    'review.assignedReviewer': reviewerId,
-    status,
-    isDeleted: false
-  }
-
-  const sortOptions = {}
-  sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
+applicationSchema.statics.getVendorApplications = function(vendorId, marketId = null) {
+  const query = { vendor: vendorId };
+  if (marketId) query.market = marketId;
 
   return this.find(query)
-    .populate('vendor', 'username profile.firstName profile.lastName businessInfo.businessName')
-    .populate('market', 'name location.city location.state')
-    .sort(sortOptions)
-}
+    .populate('market', 'name location schedule')
+    .sort({ createdAt: -1 });
+};
 
-module.exports = mongoose.model('Application', applicationSchema)
+module.exports = mongoose.model('Application', applicationSchema);

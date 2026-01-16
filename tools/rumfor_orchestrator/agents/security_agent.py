@@ -1,4 +1,4 @@
-from agent_base import RumforAgent, AgentResult
+from ..agent_base import RumforAgent, AgentResult
 
 class SecurityAgent(RumforAgent):
     AGENT_NAME = "Security Agent"

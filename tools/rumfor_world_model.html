@@ -47,12 +47,41 @@
 
         /* Left Sidebar - World Model */
         .sidebar {
-            width: 300px;
+            width: 350px;
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             background: var(--bg-card);
             z-index: 10;
+        }
+
+        /* Tab Navigation */
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-deep);
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .sidebar-tab:hover {
+            background: var(--bg-hover);
+        }
+
+        .sidebar-tab.active {
+            background: var(--accent);
+            color: white;
+            border-bottom-color: var(--gold);
         }
 
         .sidebar-header {
@@ -623,14 +652,24 @@
     <div class="container">
         <!-- Left Sidebar - World Model -->
         <div class="sidebar">
+            <div class="sidebar-tabs" id="sidebar-tabs">
+                <div class="sidebar-tab active" data-tab="features">✨ Features</div>
+                <div class="sidebar-tab" data-tab="pages">📄 Pages</div>
+                <div class="sidebar-tab" data-tab="personas">👥 Personas</div>
+                <div class="sidebar-tab" data-tab="components">🧩 Components</div>
+                <div class="sidebar-tab" data-tab="apis">🔗 APIs</div>
+                <div class="sidebar-tab" data-tab="database">🗄️ Database</div>
+            </div>
             <div class="sidebar-header">
-                🌍 World Model
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <span id="sidebar-title">🌍 World Model - Features</span>
+                    <button id="audit-mode-btn" class="action-button secondary" style="padding: 4px 8px; font-size: 11px; margin: 0;" onclick="toggleAuditMode()">
+                        📊 Audit Mode
+                    </button>
+                </div>
             </div>
             <div class="tree" id="world-tree">
-                <div class="tree-node" data-type="root">
-                    <span class="tree-icon">📁</span>
-                    <span>Rumfor Market Tracker</span>
-                </div>
+                <!-- Content will be populated by JavaScript -->
             </div>
         </div>
 
@@ -718,6 +757,12 @@
         let draggedNode = null;
         let lastMousePos = { x: 0, y: 0 };
         let features = []; // Global features array
+        let pages = []; // Pages with associated features
+        let components = []; // React components
+        let apis = []; // API endpoints
+        let database = []; // Database models
+        let activeTab = 'features'; // Current active tab
+        let auditMode = false; // World Model Audit Mode
 
         // Agent definitions
         const rumforAgents = [
@@ -735,6 +780,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Build comprehensive features array first
             buildFeaturesArray();
+            buildPagesArray();
+            buildComponentsArray();
+            buildApisArray();
+            buildDatabaseArray();
+
+            initializeTabs();
             initializeWorldModel();
             initializePanel();
             refreshStatus();
@@ -1185,80 +1236,402 @@
             ];
         }
 
-        // World Model functions
-        function initializeWorldModel() {
-            // Build simplified but comprehensive feature list
-            const tree = document.getElementById('world-tree');
+        // Build pages array with associated features
+        function buildPagesArray() {
+            pages = [
+                {
+                    name: 'HomePage.tsx',
+                    icon: '🏠',
+                    description: 'Main landing page with featured markets and hero content',
+                    features: ['🏪 Market Discovery Hub', '🔍 Advanced Market Search', '⭐ Favorites & Saved Markets'],
+                    persona: 'all',
+                    route: '/'
+                },
+                {
+                    name: 'MarketDetailPage.tsx',
+                    icon: '📱',
+                    description: 'Detailed view of individual markets with photos and application button',
+                    features: ['📱 Market Detail Views', '🏪 Market Discovery Hub', '💬 Application Communications'],
+                    persona: 'vendor',
+                    route: '/market/:id'
+                },
+                {
+                    name: 'MarketSearchPage.tsx',
+                    icon: '🔍',
+                    description: 'Advanced search and filtering interface for markets',
+                    features: ['🔍 Advanced Market Search', '🏪 Market Discovery Hub', '⭐ Favorites & Saved Markets'],
+                    persona: 'vendor',
+                    route: '/search'
+                },
+                {
+                    name: 'ApplicationFormPage.tsx',
+                    icon: '📝',
+                    description: 'Multi-step application form for vendors',
+                    features: ['📝 Multi-Step Application Builder', '📄 Application Documents', '📊 Application Status Dashboard'],
+                    persona: 'vendor',
+                    route: '/apply/:marketId'
+                },
+                {
+                    name: 'MyApplicationsPage.tsx',
+                    icon: '📊',
+                    description: 'Dashboard showing vendor application status',
+                    features: ['📊 Application Status Dashboard', '💬 Application Communications'],
+                    persona: 'vendor',
+                    route: '/my-applications'
+                },
+                {
+                    name: 'MyMarketsPage.tsx',
+                    icon: '⭐',
+                    description: 'Personal collection of saved markets and favorites',
+                    features: ['⭐ Favorites & Saved Markets'],
+                    persona: 'vendor',
+                    route: '/my-markets'
+                },
+                {
+                    name: 'PromoterDashboardPage.tsx',
+                    icon: '🏠',
+                    description: 'Promoter command center with analytics and quick actions',
+                    features: ['🏠 Promoter Command Center', '📈 Promoter Analytics Suite', '👥 Approved Vendor Directory'],
+                    persona: 'promoter',
+                    route: '/promoter/dashboard'
+                },
+                {
+                    name: 'PromoterCreateMarketPage.tsx',
+                    icon: '🏪',
+                    description: 'Wizard for creating new markets',
+                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console'],
+                    persona: 'promoter',
+                    route: '/promoter/market/create'
+                },
+                {
+                    name: 'PromoterApplicationsPage.tsx',
+                    icon: '📋',
+                    description: 'Queue for reviewing vendor applications',
+                    features: ['🔍 Application Review Queue', '📝 Detailed Application Review', '💬 Promoter-Vendor Communication'],
+                    persona: 'promoter',
+                    route: '/promoter/applications'
+                },
+                {
+                    name: 'LoginPage.tsx',
+                    icon: '🔐',
+                    description: 'Authentication entry point',
+                    features: ['🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/login'
+                },
+                {
+                    name: 'RegisterPage.tsx',
+                    icon: '👤',
+                    description: 'User registration with role selection',
+                    features: ['🔐 Unified Authentication', '👤 User Profile Management'],
+                    persona: 'all',
+                    route: '/register'
+                },
+                {
+                    name: 'ProfilePage.tsx',
+                    icon: '👤',
+                    description: 'User profile and settings management',
+                    features: ['👤 User Profile Management', '🔐 Unified Authentication'],
+                    persona: 'all',
+                    route: '/profile'
+                },
+                {
+                    name: 'AdminDashboardPage.tsx',
+                    icon: '👑',
+                    description: 'Administrative overview and system analytics',
+                    features: ['📊 System Analytics Platform', '👤 User Administration Hub', '🛡️ Content Moderation System'],
+                    persona: 'admin',
+                    route: '/admin/dashboard'
+                },
+                {
+                    name: 'AdminUsersPage.tsx',
+                    icon: '👤',
+                    description: 'User management and administration',
+                    features: ['👤 User Administration Hub'],
+                    persona: 'admin',
+                    route: '/admin/users'
+                },
+                {
+                    name: 'AdminModerationPage.tsx',
+                    icon: '🛡️',
+                    description: 'Content moderation queue and tools',
+                    features: ['🛡️ Content Moderation System'],
+                    persona: 'admin',
+                    route: '/admin/moderation'
+                }
+            ];
+        }
 
-            // Clear existing content
+        // Build components array
+        function buildComponentsArray() {
+            components = [
+                {
+                    name: 'MarketCard.tsx',
+                    icon: '🏪',
+                    description: 'Re-usable market information card',
+                    pages: ['HomePage.tsx', 'MarketSearchPage.tsx', 'MyMarketsPage.tsx'],
+                    features: ['🏪 Market Discovery Hub', '🔍 Advanced Market Search', '⭐ Favorites & Saved Markets'],
+                    category: 'ui'
+                },
+                {
+                    name: 'ApplicationForm.tsx',
+                    icon: '📝',
+                    description: 'Multi-step form component with validation',
+                    pages: ['ApplicationFormPage.tsx'],
+                    features: ['📝 Multi-Step Application Builder', '📄 Application Documents'],
+                    category: 'form'
+                },
+                {
+                    name: 'ApplicationCard.tsx',
+                    icon: '📊',
+                    description: 'Status display for applications',
+                    pages: ['MyApplicationsPage.tsx'],
+                    features: ['📊 Application Status Dashboard'],
+                    category: 'dashboard'
+                },
+                {
+                    name: 'NotificationBell.tsx',
+                    icon: '🔔',
+                    description: 'Notification dropdown component',
+                    pages: ['HomePage.tsx', 'MyMarketsPage.tsx'],
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'ui'
+                },
+                {
+                    name: 'PhotoGallery.tsx',
+                    icon: '📸',
+                    description: 'Image gallery with upload functionality',
+                    pages: ['MarketDetailPage.tsx', 'ApplicationFormPage.tsx'],
+                    features: ['📱 Market Detail Views', '📄 Application Documents', '📸 Photo Sharing & Gallery'],
+                    category: 'media'
+                },
+                {
+                    name: 'CommentList.tsx',
+                    icon: '💬',
+                    description: 'Threaded comments component',
+                    pages: ['MarketDetailPage.tsx', 'ApplicationDetailPage.tsx'],
+                    features: ['💬 Market Discussion Forums', '💬 Application Communications'],
+                    category: 'social'
+                },
+                {
+                    name: 'AdminAnalyticsDashboard.tsx',
+                    icon: '📊',
+                    description: 'Analytics charts and metrics',
+                    pages: ['PromoterDashboardPage.tsx', 'AdminDashboardPage.tsx'],
+                    features: ['📈 Promoter Analytics Suite', '📊 System Analytics Platform'],
+                    category: 'analytics'
+                },
+                {
+                    name: 'BottomNav.tsx',
+                    icon: '📱',
+                    description: 'Mobile navigation component',
+                    pages: ['All mobile pages'],
+                    features: ['🏠 Promoter Command Center'],
+                    category: 'navigation'
+                }
+            ];
+        }
+
+        // Build APIs array
+        function buildApisArray() {
+            apis = [
+                {
+                    endpoint: 'GET /api/markets',
+                    icon: '🏪',
+                    description: 'Fetch markets with filtering and pagination',
+                    features: ['🏪 Market Discovery Hub', '🔍 Advanced Market Search'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'GET /api/markets/:id',
+                    icon: '📱',
+                    description: 'Get detailed market information',
+                    features: ['📱 Market Detail Views'],
+                    category: 'markets'
+                },
+                {
+                    endpoint: 'POST /api/applications',
+                    icon: '📝',
+                    description: 'Submit vendor application',
+                    features: ['📝 Multi-Step Application Builder', '📄 Application Documents'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'GET /api/applications',
+                    icon: '📊',
+                    description: 'Get user applications with status',
+                    features: ['📊 Application Status Dashboard'],
+                    category: 'applications'
+                },
+                {
+                    endpoint: 'POST /api/auth/login',
+                    icon: '🔐',
+                    description: 'User authentication',
+                    features: ['🔐 Unified Authentication'],
+                    category: 'auth'
+                },
+                {
+                    endpoint: 'GET /api/admin/users',
+                    icon: '👤',
+                    description: 'User management APIs',
+                    features: ['👤 User Administration Hub'],
+                    category: 'admin'
+                },
+                {
+                    endpoint: 'POST /api/upload',
+                    icon: '📎',
+                    description: 'File upload endpoint',
+                    features: ['📄 Application Documents', '📸 Photo Sharing & Gallery'],
+                    category: 'media'
+                },
+                {
+                    endpoint: 'GET /api/admin/analytics',
+                    icon: '📊',
+                    description: 'System and market analytics',
+                    features: ['📊 System Analytics Platform', '📈 Promoter Analytics Suite'],
+                    category: 'analytics'
+                }
+            ];
+        }
+
+        // Build database array
+        function buildDatabaseArray() {
+            database = [
+                {
+                    model: 'User',
+                    icon: '👤',
+                    description: 'User accounts with roles and profiles',
+                    fields: ['email', 'role', 'profile', 'preferences'],
+                    features: ['🔐 Unified Authentication', '👤 User Profile Management'],
+                    category: 'core'
+                },
+                {
+                    model: 'Market',
+                    icon: '🏪',
+                    description: 'Market information and configuration',
+                    fields: ['name', 'description', 'location', 'dates', 'requirements'],
+                    features: ['🏪 Market Creation Wizard', '🏪 Market Management Console'],
+                    category: 'markets'
+                },
+                {
+                    model: 'Application',
+                    icon: '📋',
+                    description: 'Vendor applications for markets',
+                    fields: ['marketId', 'vendorId', 'status', 'documents', 'reviews'],
+                    features: ['📝 Multi-Step Application Builder', '📊 Application Status Dashboard'],
+                    category: 'applications'
+                },
+                {
+                    model: 'Photo',
+                    icon: '📸',
+                    description: 'Uploaded images and galleries',
+                    fields: ['url', 'alt', 'uploadedBy', 'associatedEntity'],
+                    features: ['📸 Photo Sharing & Gallery', '📄 Application Documents'],
+                    category: 'media'
+                },
+                {
+                    model: 'Comment',
+                    icon: '💬',
+                    description: 'Threaded discussions and communications',
+                    fields: ['content', 'author', 'parentId', 'entityType', 'entityId'],
+                    features: ['💬 Market Discussion Forums', '💬 Application Communications'],
+                    category: 'social'
+                },
+                {
+                    model: 'Notification',
+                    icon: '🔔',
+                    description: 'User notifications and alerts',
+                    fields: ['userId', 'type', 'message', 'read', 'priority'],
+                    features: ['⭐ Favorites & Saved Markets'],
+                    category: 'communication'
+                }
+            ];
+        }
+
+        // Tab management
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.sidebar-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+        }
+
+        function switchTab(tabName) {
+            // Update active tab
+            activeTab = tabName;
+
+            // Update UI
+            document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+            // Update title
+            const titles = {
+                'features': '🌍 World Model - Features',
+                'pages': '📄 World Model - Pages',
+                'personas': '👥 World Model - Personas',
+                'components': '🧩 World Model - Components',
+                'apis': '🔗 World Model - APIs',
+                'database': '🗄️ World Model - Database'
+            };
+            document.getElementById('sidebar-title').textContent = titles[tabName] || '🌍 World Model';
+
+            // Update content
+            updateSidebarContent();
+        }
+
+        function updateSidebarContent() {
+            const tree = document.getElementById('world-tree');
             tree.innerHTML = '';
 
-            // Use global features array for tree building
+            switch(activeTab) {
+                case 'features':
+                    renderFeaturesTree(tree);
+                    break;
+                case 'pages':
+                    renderPagesTree(tree);
+                    break;
+                case 'personas':
+                    renderPersonasTree(tree);
+                    break;
+                case 'components':
+                    renderComponentsTree(tree);
+                    break;
+                case 'apis':
+                    renderApisTree(tree);
+                    break;
+                case 'database':
+                    renderDatabaseTree(tree);
+                    break;
+            }
 
-            // Group features by user type (detailed breakdown by workflow and components)
+            updateCenterVisualization();
+        }
+
+        // Tree rendering functions for different tabs
+        function renderFeaturesTree(container) {
             const userTypeGroups = {
-                '🛒 VENDOR USER EXPERIENCE': [
-                    '🏪 Market Discovery Hub',
-                    '🔍 Advanced Market Search',
-                    '📱 Market Detail Views',
-                    '⭐ Favorites & Saved Markets',
-                    '📝 Multi-Step Application Builder',
-                    '📄 Application Documents',
-                    '📊 Application Status Dashboard',
-                    '💬 Application Communications',
-                    '🏪 Market Planning Workspaces',
-                    '📋 Market-Specific Todo Lists',
-                    '💰 Per-Market Budget Tracking',
-                    '📅 Market Timeline & Deadlines',
-                    '📦 Inventory & Product Planning',
-                    '📋 General Preparation Templates',
-                    '💰 Overall Business Expense Tracking',
-                    '📊 Vendor Performance Analytics'
-                ],
-                '🏪 PROMOTER USER EXPERIENCE': [
-                    '🏪 Market Creation Wizard',
-                    '🏪 Market Management Console',
-                    '📅 Market Calendar System',
-                    '🔍 Application Review Queue',
-                    '📝 Detailed Application Review',
-                    '💬 Promoter-Vendor Communication',
-                    '👥 Approved Vendor Directory',
-                    '📈 Promoter Analytics Suite',
-                    '🏠 Promoter Command Center'
-                ],
-                '👑 ADMIN USER EXPERIENCE': [
-                    '👤 User Administration Hub',
-                    '🛡️ Content Moderation System',
-                    '📊 System Analytics Platform'
-                ],
-                '👥 SHARED FEATURES (All Users)': [
-                    '🔐 Unified Authentication',
-                    '👤 User Profile Management',
-                    '💬 Market Discussion Forums',
-                    '📸 Photo Sharing & Gallery',
-                    '🏷️ Hashtag & Discovery System'
-                ],
-                '🔧 TECHNICAL INFRASTRUCTURE': [
-                    '🔗 API Architecture',
-                    '⚛️ Frontend Component Library',
-                    '🧪 Testing & Quality Assurance',
-                    '🚀 Deployment & Production'
-                ]
+                '🛒 VENDOR USER EXPERIENCE': features.filter(f => f.persona === 'vendor').map(f => f.name),
+                '🏪 PROMOTER USER EXPERIENCE': features.filter(f => f.persona === 'promoter').map(f => f.name),
+                '👑 ADMIN USER EXPERIENCE': features.filter(f => f.persona === 'admin').map(f => f.name),
+                '👥 SHARED FEATURES (All Users)': features.filter(f => f.persona === 'all').map(f => f.name),
+                '🔧 TECHNICAL INFRASTRUCTURE': features.filter(f => f.persona === 'developers').map(f => f.name)
             };
 
             Object.entries(userTypeGroups).forEach(([sectionTitle, sectionFeatures]) => {
-                // Add section header
                 const header = document.createElement('div');
                 header.className = 'tree-section-header-user';
                 header.innerHTML = `<strong>${sectionTitle}</strong>`;
-                tree.appendChild(header);
+                container.appendChild(header);
 
-                // Add features for this section
                 sectionFeatures.forEach(featureName => {
                     const feature = features.find(f => f.name === featureName);
                     if (feature) {
                         const node = document.createElement('div');
-                        // Add persona-based CSS classes
                         let personaClass = '';
                         if (feature.persona === 'vendor') personaClass = 'vendor-persona';
                         else if (feature.persona === 'promoter') personaClass = 'promoter-persona';
@@ -1268,10 +1641,9 @@
 
                         node.className = `tree-node ${personaClass}`;
 
-                        // Add pages info to tooltip if available
                         let tooltip = feature.description;
-                        if (feature.pages && feature.pages.length > 0) {
-                            tooltip += `\n\n📄 Pages: ${feature.pages.join(', ')}`;
+                        if (feature.components && feature.components.length > 0) {
+                            tooltip += `\n\n🧩 Components: ${feature.components.join(', ')}`;
                         }
 
                         node.innerHTML = `
@@ -1281,13 +1653,230 @@
                         node.title = tooltip;
                         node.setAttribute('data-node-id', feature.name);
                         node.addEventListener('click', () => selectCard(feature.name, feature.description));
-                        tree.appendChild(node);
+                        container.appendChild(node);
                     }
                 });
             });
+        }
 
-            // Initialize center visualization
-            updateCenterVisualization();
+        function renderPagesTree(container) {
+            const personaGroups = {
+                '👥 All Users': pages.filter(p => p.persona === 'all'),
+                '🛒 Vendors': pages.filter(p => p.persona === 'vendor'),
+                '🏪 Promoters': pages.filter(p => p.persona === 'promoter'),
+                '👑 Admins': pages.filter(p => p.persona === 'admin')
+            };
+
+            Object.entries(personaGroups).forEach(([sectionTitle, sectionPages]) => {
+                if (sectionPages.length === 0) return;
+
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionTitle}</strong>`;
+                container.appendChild(header);
+
+                sectionPages.forEach(page => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+
+                    const tooltip = `${page.description}\n\n🎯 Features: ${page.features.join(', ')}\n🏗️ Route: ${page.route}`;
+
+                    node.innerHTML = `
+                        <span class="tree-icon">${page.icon}</span>
+                        <span>${page.name}</span>
+                    `;
+                    node.title = tooltip;
+                    node.setAttribute('data-node-id', page.name);
+                    node.addEventListener('click', () => selectCard(page.name, page.description));
+                    container.appendChild(node);
+                });
+            });
+        }
+
+        function renderPersonasTree(container) {
+            const personas = [
+                {
+                    name: '🛒 Vendor',
+                    description: 'Farmers market vendors applying for booth space',
+                    features: features.filter(f => f.persona === 'vendor').map(f => f.name),
+                    pages: pages.filter(p => p.persona === 'vendor' || p.persona === 'all').map(p => p.name)
+                },
+                {
+                    name: '🏪 Promoter',
+                    description: 'Market organizers managing applications and events',
+                    features: features.filter(f => f.persona === 'promoter').map(f => f.name),
+                    pages: pages.filter(p => p.persona === 'promoter' || p.persona === 'all').map(p => p.name)
+                },
+                {
+                    name: '👑 Admin',
+                    description: 'Platform administrators managing users and content',
+                    features: features.filter(f => f.persona === 'admin').map(f => f.name),
+                    pages: pages.filter(p => p.persona === 'admin' || p.persona === 'all').map(p => p.name)
+                },
+                {
+                    name: '👥 Shared',
+                    description: 'Features and pages available to all user types',
+                    features: features.filter(f => f.persona === 'all').map(f => f.name),
+                    pages: pages.filter(p => p.persona === 'all').map(p => p.name)
+                }
+            ];
+
+            personas.forEach(persona => {
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${persona.name}</strong>`;
+                container.appendChild(header);
+
+                // Add feature count
+                const stats = document.createElement('div');
+                stats.className = 'tree-node';
+                stats.innerHTML = `<span class="tree-icon">📊</span><span>${persona.features.length} features, ${persona.pages.length} pages</span>`;
+                stats.style.fontSize = '11px';
+                stats.style.opacity = '0.7';
+                container.appendChild(stats);
+
+                // Add a few key features
+                persona.features.slice(0, 3).forEach(featureName => {
+                    const feature = features.find(f => f.name === featureName);
+                    if (feature) {
+                        const node = document.createElement('div');
+                        node.className = 'tree-node';
+
+                        node.innerHTML = `
+                            <span class="tree-icon">${feature.icon}</span>
+                            <span>${featureName}</span>
+                        `;
+                        node.title = feature.description;
+                        node.setAttribute('data-node-id', feature.name);
+                        node.addEventListener('click', () => selectCard(feature.name, feature.description));
+                        container.appendChild(node);
+                    }
+                });
+
+                if (persona.features.length > 3) {
+                    const moreNode = document.createElement('div');
+                    moreNode.className = 'tree-node';
+                    moreNode.innerHTML = `<span class="tree-icon">⋯</span><span>+ ${persona.features.length - 3} more features</span>`;
+                    moreNode.style.fontSize = '11px';
+                    moreNode.style.opacity = '0.7';
+                    container.appendChild(moreNode);
+                }
+            });
+        }
+
+        function renderComponentsTree(container) {
+            const categories = {
+                '🖼️ UI Components': components.filter(c => c.category === 'ui'),
+                '📝 Form Components': components.filter(c => c.category === 'form'),
+                '📊 Dashboard Components': components.filter(c => c.category === 'dashboard'),
+                '🖼️ Media Components': components.filter(c => c.category === 'media'),
+                '💬 Social Components': components.filter(c => c.category === 'social'),
+                '📈 Analytics Components': components.filter(c => c.category === 'analytics'),
+                '🧭 Navigation Components': components.filter(c => c.category === 'navigation')
+            };
+
+            Object.entries(categories).forEach(([sectionTitle, sectionComponents]) => {
+                if (sectionComponents.length === 0) return;
+
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionTitle}</strong>`;
+                container.appendChild(header);
+
+                sectionComponents.forEach(component => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+
+                    const tooltip = `${component.description}\n\n📄 Used in: ${component.pages.join(', ')}\n✨ Features: ${component.features.slice(0, 2).join(', ')}${component.features.length > 2 ? '...' : ''}`;
+
+                    node.innerHTML = `
+                        <span class="tree-icon">${component.icon}</span>
+                        <span>${component.name}</span>
+                    `;
+                    node.title = tooltip;
+                    node.setAttribute('data-node-id', component.name);
+                    node.addEventListener('click', () => selectCard(component.name, component.description));
+                    container.appendChild(node);
+                });
+            });
+        }
+
+        function renderApisTree(container) {
+            const categories = {
+                '🏪 Markets': apis.filter(a => a.category === 'markets'),
+                '📝 Applications': apis.filter(a => a.category === 'applications'),
+                '🔐 Authentication': apis.filter(a => a.category === 'auth'),
+                '👑 Admin': apis.filter(a => a.category === 'admin'),
+                '🖼️ Media': apis.filter(a => a.category === 'media'),
+                '📊 Analytics': apis.filter(a => a.category === 'analytics')
+            };
+
+            Object.entries(categories).forEach(([sectionTitle, sectionApis]) => {
+                if (sectionApis.length === 0) return;
+
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionTitle}</strong>`;
+                container.appendChild(header);
+
+                sectionApis.forEach(api => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+
+                    const tooltip = `${api.description}\n\n🎯 Related Features: ${api.features.join(', ')}`;
+
+                    node.innerHTML = `
+                        <span class="tree-icon">${api.icon}</span>
+                        <span style="font-family: monospace; font-size: 11px;">${api.endpoint}</span>
+                    `;
+                    node.title = tooltip;
+                    node.setAttribute('data-node-id', api.endpoint);
+                    node.addEventListener('click', () => selectCard(api.endpoint, api.description));
+                    container.appendChild(node);
+                });
+            });
+        }
+
+        function renderDatabaseTree(container) {
+            const categories = {
+                '🎯 Core Models': database.filter(m => m.category === 'core'),
+                '🏪 Market Models': database.filter(m => m.category === 'markets'),
+                '📝 Application Models': database.filter(m => m.category === 'applications'),
+                '🖼️ Media Models': database.filter(m => m.category === 'media'),
+                '💬 Social Models': database.filter(m => m.category === 'social'),
+                '🔔 Communication Models': database.filter(m => m.category === 'communication')
+            };
+
+            Object.entries(categories).forEach(([sectionTitle, sectionModels]) => {
+                if (sectionModels.length === 0) return;
+
+                const header = document.createElement('div');
+                header.className = 'tree-section-header-user';
+                header.innerHTML = `<strong>${sectionTitle}</strong>`;
+                container.appendChild(header);
+
+                sectionModels.forEach(model => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+
+                    const tooltip = `${model.description}\n\n🔧 Fields: ${model.fields.join(', ')}\n✨ Features: ${model.features.slice(0, 2).join(', ')}${model.features.length > 2 ? '...' : ''}`;
+
+                    node.innerHTML = `
+                        <span class="tree-icon">${model.icon}</span>
+                        <span>${model.model}</span>
+                    `;
+                    node.title = tooltip;
+                    node.setAttribute('data-node-id', model.model);
+                    node.addEventListener('click', () => selectCard(model.model, model.description));
+                    container.appendChild(node);
+                });
+            });
+        }
+
+        // World Model functions
+        function initializeWorldModel() {
+            // Initialize with features tab
+            updateSidebarContent();
         }
 
         function updateCenterVisualization() {

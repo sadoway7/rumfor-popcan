@@ -1,19 +1,11 @@
 {
   "orchestrator": {
-    "status": "running",
-    "current_cycle": 3,
-    "current_agent": "frontend",
-    "start_time": 1736997617.0,
-    "last_update": 1736997617.0,
-    "last_completed_cycle": "full_rumfor_orchestrator_cycle"
-  },
-  "orchestrator": {
     "status": "cycle_complete",
-    "current_cycle": 3,
+    "current_cycle": 5,
     "current_agent": null,
-    "start_time": 1736997617.0,
-    "last_update": 1736997880.0,
-    "last_completed_cycle": "full_rumfor_orchestrator_cycle_3"
+    "start_time": 1736998627.0,
+    "last_update": 1736998627.0,
+    "last_completed_cycle": "full_unified_rumfor_orchestrator_cycle_5_complete"
   },
   "agents": {
     "frontend": {

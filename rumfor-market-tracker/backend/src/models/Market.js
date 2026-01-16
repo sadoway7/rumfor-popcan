@@ -1,185 +1,112 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const marketSchema = new mongoose.Schema({
+  // Basic market information
   name: {
     type: String,
-    required: [true, 'Market name is required'],
+    required: true,
     trim: true,
-    maxlength: [100, 'Market name must be less than 100 characters']
+    maxlength: 100
   },
   description: {
     type: String,
-    maxlength: [1000, 'Description must be less than 1000 characters']
+    required: true,
+    maxlength: 2000
   },
-  category: {
+  shortDescription: {
     type: String,
-    required: [true, 'Category is required'],
-    enum: [
-      'farmers-market',
-      'arts-crafts',
-      'flea-market',
-      'food-festival',
-      'craft-fair',
-      'antique-market',
-      'seasonal-event',
-      'community-event',
-      'holiday-market',
-      'other'
-    ]
+    maxlength: 200
   },
-  location: {
-    address: {
-      type: String,
-      required: [true, 'Address is required']
-    },
-    city: {
-      type: String,
-      required: [true, 'City is required']
-    },
-    state: {
-      type: String,
-      required: [true, 'State is required']
-    },
-    country: {
-      type: String,
-      required: [true, 'Country is required'],
-      default: 'USA'
-    },
-    zipCode: String,
-    coordinates: {
-      latitude: {
-        type: Number,
-        min: -90,
-        max: 90
-      },
-      longitude: {
-        type: Number,
-        min: -180,
-        max: 180
-      }
-    }
-  },
-  dates: {
-    type: {
-      type: String,
-      enum: ['recurring', 'one-time', 'seasonal'],
-      required: true
-    },
-    // For recurring markets
-    recurring: {
-      frequency: {
-        type: String,
-        enum: ['weekly', 'monthly', 'bi-weekly', 'quarterly']
-      },
-      daysOfWeek: [{
-        type: Number,
-        min: 0,
-        max: 6 // 0 = Sunday, 6 = Saturday
-      }],
-      timeOfDay: {
-        start: String, // "9:00 AM"
-        end: String    // "5:00 PM"
-      }
-    },
-    // For one-time markets
-    events: [{
-      startDate: {
-        type: Date,
-        required: true
-      },
-      endDate: {
-        type: Date,
-        required: true
-      },
-      time: {
-        start: String,
-        end: String
-      }
-    }]
-  },
-  vendorInfo: {
-    capacity: {
-      type: Number,
-      min: [1, 'Capacity must be at least 1']
-    },
-    boothSizes: [{
-      size: String,
-      price: Number,
-      description: String
-    }],
-    requirements: [String],
-    applicationDeadline: Date,
-    applicationFee: {
-      amount: Number,
-      currency: {
-        type: String,
-        default: 'USD'
-      }
-    },
-    amenities: [String]
-  },
+
+  // Promoter/Admin who created the market
   promoter: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  isActive: {
-    type: Boolean,
-    default: true
+
+  // Location information
+  location: {
+    address: {
+      street: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      zipCode: { type: String, required: true },
+      country: { type: String, default: 'USA' }
+    },
+    coordinates: {
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true }
+    },
+    googlePlaceId: String,
+    formattedAddress: String
   },
-  isVerified: {
-    type: Boolean,
-    default: false
+
+  // Market details
+  marketType: {
+    type: String,
+    enum: ['farmers', 'flea', 'artisan', 'food_truck', 'craft', 'antique', 'specialty'],
+    required: true
   },
-  images: [{
-    url: String,
-    caption: String,
-    isHero: {
+  category: {
+    type: String,
+    enum: ['produce', 'baked_goods', 'meat', 'dairy', 'crafts', 'art', 'jewelry', 'clothing', 'books', 'antiques', 'food_trucks', 'plants', 'mixed'],
+    required: true
+  },
+
+  // Schedule information
+  schedule: {
+    recurring: {
       type: Boolean,
       default: false
     },
-    uploadedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    votes: {
-      up: { type: Number, default: 0 },
-      down: { type: Number, default: 0 }
-    }
-  }],
-  hashtags: [{
-    text: {
+    daysOfWeek: [{
       type: String,
-      required: true,
-      maxlength: [30, 'Hashtag must be less than 30 characters']
+      enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    }],
+    startTime: {
+      type: String, // "HH:MM" format
+      required: true
     },
-    votes: {
-      up: { type: Number, default: 0 },
-      down: { type: Number, default: 0 }
+    endTime: {
+      type: String, // "HH:MM" format
+      required: true
     },
-    suggestedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  }],
-  statistics: {
-    totalTrackers: {
-      type: Number,
-      default: 0
-    },
-    totalApplications: {
-      type: Number,
-      default: 0
-    },
-    totalPhotos: {
-      type: Number,
-      default: 0
-    },
-    totalComments: {
-      type: Number,
-      default: 0
-    }
+    specialDates: [{
+      date: { type: Date, required: true },
+      startTime: String,
+      endTime: String,
+      notes: String
+    }],
+    seasonStart: Date,
+    seasonEnd: Date
   },
+
+  // Application settings
+  applicationSettings: {
+    acceptVendors: { type: Boolean, default: true },
+    maxVendors: Number,
+    applicationFee: { type: Number, default: 0 },
+    boothFee: { type: Number, default: 0 },
+    requirements: {
+      businessLicense: { type: Boolean, default: false },
+      insurance: { type: Boolean, default: false },
+      healthPermit: { type: Boolean, default: false },
+      liabilityInsurance: { type: Boolean, default: false }
+    },
+    customRequirements: [String]
+  },
+
+  // Images and media
+  images: [{
+    url: { type: String, required: true },
+    alt: String,
+    isHero: { type: Boolean, default: false },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+
+  // Contact information
   contact: {
     email: String,
     phone: String,
@@ -190,127 +117,163 @@ const marketSchema = new mongoose.Schema({
       twitter: String
     }
   },
-  accessibility: {
-    wheelchairAccessible: {
-      type: Boolean,
-      default: false
+
+  // Amenities and features
+  amenities: [{
+    type: String,
+    enum: ['restrooms', 'parking', 'wifi', 'atm', 'food_court', 'playground', 'pet_friendly', 'accessible', 'covered_area', 'electricity', 'water']
+  }],
+
+  // Vendor information (populated from applications)
+  vendorCount: { type: Number, default: 0 },
+  vendors: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    businessName: String,
+    boothNumber: String,
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'pending', 'suspended'],
+      default: 'active'
     },
-    parkingAvailable: {
-      type: Boolean,
-      default: false
-    },
-    publicTransport: {
-      type: Boolean,
-      default: false
-    },
-    restrooms: {
-      type: Boolean,
-      default: false
-    }
+    joinedAt: { type: Date, default: Date.now }
+  }],
+
+  // Market statistics and engagement
+  stats: {
+    viewCount: { type: Number, default: 0 },
+    favoriteCount: { type: Number, default: 0 },
+    applicationCount: { type: Number, default: 0 },
+    commentCount: { type: Number, default: 0 },
+    rating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0 }
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+
+  // Moderation and status
+  status: {
+    type: String,
+    enum: ['draft', 'pending_approval', 'active', 'inactive', 'suspended', 'cancelled'],
+    default: 'draft'
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  isPublic: { type: Boolean, default: false },
+  moderationNotes: String,
+  approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  approvedAt: Date,
+
+  // Tags and search
+  tags: [String],
+  keywords: [String],
+
+  // Audit fields
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-})
-
-// Virtual for hero image
-marketSchema.virtual('heroImage').get(function() {
-  const heroImage = this.images.find(img => img.isHero)
-  if (heroImage) return heroImage
-  
-  // If no hero image, return the image with most votes
-  const sortedImages = this.images.sort((a, b) => (b.votes.up - b.votes.down) - (a.votes.up - a.votes.down))
-  return sortedImages[0] || null
-})
-
-// Virtual for upcoming events
-marketSchema.virtual('upcomingEvents').get(function() {
-  if (this.dates.type === 'one-time') {
-    return this.dates.events.filter(event => event.startDate > new Date())
-  }
-  return []
-})
-
-// Virtual for next event date
-marketSchema.virtual('nextEventDate').get(function() {
-  if (this.dates.type === 'one-time') {
-    const upcoming = this.upcomingEvents
-    return upcoming.length > 0 ? upcoming[0].startDate : null
-  }
-  // For recurring markets, calculate next occurrence
-  // This would need more complex logic in a real implementation
-  return null
-})
+  timestamps: true
+});
 
 // Indexes for performance
-marketSchema.index({ 'location.coordinates': '2dsphere' }) // Geospatial index
-marketSchema.index({ category: 1 })
-marketSchema.index({ 'dates.type': 1 })
-marketSchema.index({ promoter: 1 })
-marketSchema.index({ isActive: 1 })
-marketSchema.index({ isVerified: 1 })
-marketSchema.index({ createdAt: -1 })
-marketSchema.index({ updatedAt: -1 })
-marketSchema.index({ 'statistics.totalTrackers': -1 })
-marketSchema.index({ 'statistics.totalApplications': -1 })
+marketSchema.index({ 'location.coordinates': '2dsphere' }); // Geospatial index
+marketSchema.index({ marketType: 1 });
+marketSchema.index({ category: 1 });
+marketSchema.index({ status: 1 });
+marketSchema.index({ isPublic: 1 });
+marketSchema.index({ promoter: 1 });
+marketSchema.index({ 'location.address.city': 1 });
+marketSchema.index({ 'location.address.state': 1 });
+marketSchema.index({ name: 'text', description: 'text', tags: 'text' }); // Text search
+marketSchema.index({ createdAt: -1 });
+marketSchema.index({ 'stats.rating': -1 });
+marketSchema.index({ 'stats.favoriteCount': -1 });
 
-// Compound indexes for common queries
-marketSchema.index({ isActive: 1, category: 1 })
-marketSchema.index({ isActive: 1, createdAt: -1 })
-marketSchema.index({ promoter: 1, isActive: 1 })
-marketSchema.index({ category: 1, 'location.state': 1 })
-marketSchema.index({ category: 1, 'location.city': 1 })
+// Virtual for full address
+marketSchema.virtual('fullAddress').get(function() {
+  const addr = this.location.address;
+  return `${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
+});
 
-// Index for location-based searches
-marketSchema.index({ 'location.state': 1, 'location.city': 1 })
+// Virtual for next market date
+marketSchema.virtual('nextMarketDate').get(function() {
+  if (!this.schedule.recurring) return null;
 
-// Text search index
-marketSchema.index({
-  name: 'text',
-  description: 'text',
-  'location.city': 'text',
-  'location.state': 'text'
-})
+  const now = new Date();
+  const today = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const marketDays = this.schedule.daysOfWeek.map(day => {
+    const dayMap = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+    return dayMap[day.toLowerCase()];
+  });
 
-// Method to increment statistics
-marketSchema.methods.incrementStat = function(statName, incrementBy = 1) {
-  if (this.statistics[statName] !== undefined) {
-    this.statistics[statName] += incrementBy
-    return this.save()
+  // Find next market day
+  let daysUntilNext = 7; // Max 7 days ahead
+  for (const marketDay of marketDays) {
+    const daysDiff = (marketDay - today + 7) % 7;
+    if (daysDiff > 0 || (daysDiff === 0 && now.getHours() < parseInt(this.schedule.endTime.split(':')[0]))) {
+      daysUntilNext = Math.min(daysUntilNext, daysDiff);
+      break;
+    }
   }
-  return Promise.resolve(this)
-}
 
-// Method to update hashtags with voting
-marketSchema.methods.updateHashtagVotes = function(hashtagId, userId, voteType) {
-  const hashtag = this.hashtags.id(hashtagId)
-  if (!hashtag) return null
-  
-  // Remove any existing vote from this user for this hashtag
-  if (!hashtag.voters) hashtag.voters = []
-  hashtag.voters = hashtag.voters.filter(voter => !voter.userId.equals(userId))
-  
-  // Add new vote
-  hashtag.voters.push({
-    userId,
-    vote: voteType,
-    timestamp: new Date()
-  })
-  
-  // Recalculate votes
-  hashtag.votes.up = hashtag.voters.filter(v => v.vote === 'up').length
-  hashtag.votes.down = hashtag.voters.filter(v => v.vote === 'down').length
-  
-  return this.save()
-}
+  if (daysUntilNext < 7) {
+    const nextDate = new Date(now);
+    nextDate.setDate(now.getDate() + daysUntilNext);
+    return nextDate;
+  }
 
-module.exports = mongoose.model('Market', marketSchema)
+  return null;
+});
+
+// Calculate distance from coordinates (instance method)
+marketSchema.methods.getDistanceFrom = function(lat, lng) {
+  // Haversine formula for distance calculation
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat - this.location.coordinates.lat) * Math.PI / 180;
+  const dLng = (lng - this.location.coordinates.lng) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(this.location.coordinates.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+// Update statistics (instance method)
+marketSchema.methods.updateStats = async function() {
+  try {
+    const [
+      applicationCount,
+      vendorCount,
+      commentCount,
+      favoriteCount
+    ] = await Promise.all([
+      mongoose.model('Application').countDocuments({ market: this._id }),
+      mongoose.model('Application').countDocuments({ market: this._id, status: 'approved' }),
+      mongoose.model('Comment').countDocuments({ market: this._id, targetType: 'market' }),
+      mongoose.model('UserMarketTracking').countDocuments({ market: this._id })
+    ]);
+
+    this.vendorCount = vendorCount;
+    this.stats.applicationCount = applicationCount;
+    this.stats.commentCount = commentCount;
+    this.stats.favoriteCount = favoriteCount;
+
+    await this.save();
+  } catch (error) {
+    console.error('Error updating market stats:', error);
+  }
+};
+
+// Static method to find nearby markets
+marketSchema.statics.findNearby = function(lat, lng, maxDistance = 25) {
+  return this.find({
+    'location.coordinates': {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [lng, lat]
+        },
+        $maxDistance: maxDistance * 1609.34 // Convert miles to meters
+      }
+    },
+    status: 'active',
+    isPublic: true
+  });
+};
+
+module.exports = mongoose.model('Market', marketSchema);

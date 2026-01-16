@@ -20,16 +20,16 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict
 
-from agent_base import AgentResult
-from state_manager import RumforStateManager
-from agents.frontend_agent import FrontendAgent
-from agents.backend_agent import BackendAgent
-from agents.api_agent import APIAgent
-from agents.styling_agent import StylingAgent
-from agents.testing_agent import TestingAgent
-from agents.security_agent import SecurityAgent
-from agents.documentation_agent import DocumentationAgent
-from agents.deployment_agent import DeploymentAgent
+from rumfor_orchestrator.agent_base import AgentResult
+from rumfor_orchestrator.state_manager import RumforStateManager
+from rumfor_orchestrator.agents.frontend_agent import FrontendAgent
+from rumfor_orchestrator.agents.backend_agent import BackendAgent
+from rumfor_orchestrator.agents.api_agent import APIAgent
+from rumfor_orchestrator.agents.styling_agent import StylingAgent
+from rumfor_orchestrator.agents.testing_agent import TestingAgent
+from rumfor_orchestrator.agents.security_agent import SecurityAgent
+from rumfor_orchestrator.agents.documentation_agent import DocumentationAgent
+from rumfor_orchestrator.agents.deployment_agent import DeploymentAgent
 
 
 @dataclass
