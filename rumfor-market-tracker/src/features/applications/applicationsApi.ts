@@ -1,4 +1,5 @@
 import { Application, ApplicationStatus, ApplicationFilters, ApiResponse, PaginatedResponse } from '@/types'
+import { assertValidApplicationStatusTransition } from '@/utils/applicationStatus'
 
 // Environment configuration
 const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
@@ -136,7 +137,7 @@ const mockApplications: Application[] = [
       marketType: 'promoter-managed',
       status: 'active',
       images: ['https://picsum.photos/800/600?random=1'],
-      tags: ['organic', 'local', 'fresh-produce'],
+      tags: ['local-produce', 'fresh-produce', 'organic'],
       accessibility: {
         wheelchairAccessible: true,
         parkingAvailable: true,
@@ -241,7 +242,7 @@ const mockApplications: Application[] = [
       marketType: 'promoter-managed',
       status: 'active',
       images: ['https://picsum.photos/800/600?random=2'],
-      tags: ['handmade', 'local-artisans', 'crafts'],
+      tags: ['handmade', 'local-artisans', 'crafts', 'fine-art'],
       accessibility: {
         wheelchairAccessible: true,
         parkingAvailable: true,
@@ -494,6 +495,7 @@ export const applicationsApi = {
         }
       }
       
+      assertValidApplicationStatusTransition(mockApplications[applicationIndex].status, 'submitted')
       mockApplications[applicationIndex].status = 'submitted'
       mockApplications[applicationIndex].updatedAt = new Date().toISOString()
       
@@ -524,6 +526,7 @@ export const applicationsApi = {
         }
       }
       
+      assertValidApplicationStatusTransition(mockApplications[applicationIndex].status, status)
       mockApplications[applicationIndex].status = status
       mockApplications[applicationIndex].notes = notes
       mockApplications[applicationIndex].reviewedAt = new Date().toISOString()
@@ -556,13 +559,7 @@ export const applicationsApi = {
         }
       }
       
-      if (mockApplications[applicationIndex].status === 'approved') {
-        return {
-          success: false,
-          error: 'Cannot withdraw an approved application'
-        }
-      }
-      
+      assertValidApplicationStatusTransition(mockApplications[applicationIndex].status, 'withdrawn')
       mockApplications[applicationIndex].status = 'withdrawn'
       mockApplications[applicationIndex].updatedAt = new Date().toISOString()
       
@@ -651,6 +648,7 @@ export const applicationsApi = {
         const applicationIndex = mockApplications.findIndex(app => app.id === id)
         
         if (applicationIndex !== -1) {
+          assertValidApplicationStatusTransition(mockApplications[applicationIndex].status, status)
           mockApplications[applicationIndex].status = status
           mockApplications[applicationIndex].notes = notes
           mockApplications[applicationIndex].reviewedAt = new Date().toISOString()

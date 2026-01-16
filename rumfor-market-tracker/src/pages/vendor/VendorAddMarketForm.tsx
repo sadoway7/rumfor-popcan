@@ -70,14 +70,15 @@ interface MarketFormData {
 
 const categories = [
   { value: 'farmers-market', label: 'Farmers Market' },
-  { value: 'arts-crafts', label: 'Arts & Crafts Fair' },
+  { value: 'arts-crafts', label: 'Arts & Crafts' },
   { value: 'flea-market', label: 'Flea Market' },
   { value: 'food-festival', label: 'Food Festival' },
   { value: 'holiday-market', label: 'Holiday Market' },
   { value: 'craft-show', label: 'Craft Show' },
   { value: 'community-event', label: 'Community Event' },
-  { value: 'farmers-market', label: 'Farmers Market' },
-  { value: 'farmers-market', label: 'Farmers Market' }
+  { value: 'night-market', label: 'Night Market' },
+  { value: 'street-fair', label: 'Street Fair' },
+  { value: 'vintage-antique', label: 'Vintage & Antique' }
 ]
 
 const daysOfWeek = [

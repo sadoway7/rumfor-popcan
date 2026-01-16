@@ -38,7 +38,7 @@ export function useAuth() {
     resendVerification,
     
     // Token management
-    refreshToken,
+    refreshTokens,
     
     // Utility methods
     updateUser,
@@ -138,7 +138,7 @@ export function useAuth() {
 
     const intervalId = setInterval(async () => {
       try {
-        await refreshToken()
+        await refreshTokens()
       } catch (error) {
         console.error('Token refresh failed:', error)
         stopTokenRefresh()
@@ -149,7 +149,7 @@ export function useAuth() {
 
     // Cleanup function
     return () => stopTokenRefresh()
-  }, [token, isAuthenticated, refreshToken])
+  }, [token, isAuthenticated, refreshTokens])
 
   /**
    * Stop token refresh interval
@@ -283,7 +283,7 @@ export function useAuth() {
     resendVerification: handleResendVerification,
 
     // Token management
-    refreshToken,
+    refreshTokens,
     startTokenRefresh,
     stopTokenRefresh,
 

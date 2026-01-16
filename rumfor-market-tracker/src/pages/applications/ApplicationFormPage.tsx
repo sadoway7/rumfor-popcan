@@ -15,15 +15,16 @@ export const ApplicationFormPage: React.FC = () => {
   
   const [market, setMarket] = useState<Market | null>(null)
   const [existingApplication, setExistingApplication] = useState<any>(null)
+  const [draftApplication, setDraftApplication] = useState<any>(null)
 
   useEffect(() => {
     if (markets.length > 0 && marketId) {
       const foundMarket = markets.find(m => m.id === marketId)
       setMarket(foundMarket || null)
 
-      // Check if user already has an application for this market
       const existing = myApplications.find(app => app.marketId === marketId)
       setExistingApplication(existing || null)
+      setDraftApplication(existing?.status === 'draft' ? existing : null)
     }
   }, [markets, marketId, myApplications])
 
@@ -66,7 +67,7 @@ export const ApplicationFormPage: React.FC = () => {
     )
   }
 
-  if (existingApplication) {
+  if (existingApplication && !draftApplication) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -93,17 +94,44 @@ export const ApplicationFormPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Apply to {market.name}</h1>
-            <p className="text-muted-foreground mt-1">
-              Complete the application form below to apply for this market
-            </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-accent" />
+              Step 2 of 3 · Application Details
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Apply to {market.name}</h1>
+              <p className="text-muted-foreground mt-1">
+                Complete the application form below to apply for this market
+              </p>
+            </div>
           </div>
-          <Link to={`/markets/${marketId}`}>
-            <Button variant="outline">Back to Market</Button>
+          <Link to={`/markets/${marketId}`} className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto">Back to Market</Button>
           </Link>
         </div>
+
+        {draftApplication && (
+          <Card className="p-4 border-amber-200 bg-amber-50">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-amber-900">Draft application detected</p>
+                <p className="text-sm text-amber-700">
+                  Continue your saved draft for {market.name} and submit when ready.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Link to={`/applications/${draftApplication.id}`}>
+                  <Button className="bg-amber-600 hover:bg-amber-700">Continue Draft</Button>
+                </Link>
+                <Button variant="outline" onClick={() => setDraftApplication(null)}>
+                  Start New
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Market Preview */}
         <Card className="p-6">
@@ -115,7 +143,7 @@ export const ApplicationFormPage: React.FC = () => {
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Category</label>
-              <p className="font-medium">{market.category}</p>
+              <p className="font-medium capitalize">{market.category.replace('-', ' ')}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Location</label>
@@ -133,11 +161,14 @@ export const ApplicationFormPage: React.FC = () => {
         </Card>
 
         {/* Application Form */}
-        <ApplicationForm
-          market={market}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
+          <ApplicationForm
+            market={market}
+            existingApplication={draftApplication || undefined}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        </div>
       </div>
     </div>
   )

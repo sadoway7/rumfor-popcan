@@ -17,6 +17,7 @@ export type UserRole = 'visitor' | 'vendor' | 'promoter' | 'admin'
 export interface AuthState {
   user: User | null
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
@@ -67,7 +68,13 @@ export interface ResendVerificationRequest {
 }
 
 export interface TokenRefreshRequest {
-  token: string
+  refreshToken: string
+}
+
+export interface AuthTokens {
+  accessToken: string
+  refreshToken: string
+  expiresIn: string
 }
 
 // Market Types
@@ -100,6 +107,9 @@ export type MarketCategory =
   | 'holiday-market'
   | 'craft-show'
   | 'community-event'
+  | 'night-market'
+  | 'street-fair'
+  | 'vintage-antique'
 
 export type MarketStatus = 'draft' | 'active' | 'cancelled' | 'completed'
 

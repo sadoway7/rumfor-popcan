@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  emailVerified: {
+  isEmailVerified: {
     type: Boolean,
     default: false
   },
@@ -79,6 +79,11 @@ const userSchema = new mongoose.Schema({
   // Two-factor authentication
   twoFactorEnabled: { type: Boolean, default: false },
   twoFactorSecret: String,
+  twoFactorBackupCodes: [String],
+  twoFactorTempSecret: String,
+
+  // Token invalidation
+  tokenVersion: { type: Number, default: 0 },
 
   // Account status
   isActive: { type: Boolean, default: true },
@@ -168,6 +173,8 @@ userSchema.methods.toJSON = function() {
   delete userObject.emailVerificationToken;
   delete userObject.emailVerificationExpires;
   delete userObject.twoFactorSecret;
+  delete userObject.twoFactorBackupCodes;
+  delete userObject.twoFactorTempSecret;
   delete userObject.loginAttempts;
   delete userObject.lockUntil;
   return userObject;

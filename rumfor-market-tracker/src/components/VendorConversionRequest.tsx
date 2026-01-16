@@ -22,7 +22,7 @@ export interface VendorConversionRequestProps {
 }
 
 export const VendorConversionRequest: React.FC<VendorConversionRequestProps> = ({
-  userId,
+  userId: _userId,
   userRole,
   existingRequest,
   onSubmitRequest,

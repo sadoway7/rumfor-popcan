@@ -45,8 +45,11 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
     isVoting,
   } = useHashtags(marketId)
 
-  // Filter and sort hashtags
-  const sortedHashtags = sortHashtags(sortBy).slice(0, maxDisplayCount)
+  // Filter and sort hashtags - hide low-signal tags (less than 3 votes net)
+  const filteredSortedHashtags = sortHashtags(sortBy).filter(hashtag => {
+    const voteCount = getVoteCount(hashtag.id)
+    return voteCount >= -2 && (voteCount > 0 || voteCount === 0) // Hide negative/zero vote tags
+  }).slice(0, maxDisplayCount)
   const suggestedHashtags = getSuggestedHashtags()
 
   const handleCreateHashtag = async () => {
@@ -131,7 +134,7 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
           />
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant={sortBy === 'votes' ? 'primary' : 'outline'}
             size="sm"
@@ -208,7 +211,7 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
       )}
 
       {/* Hashtags List */}
-      {sortedHashtags.length === 0 ? (
+      {filteredSortedHashtags.length === 0 ? (
         <EmptyState
           icon={
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +230,7 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
         />
       ) : (
         <div className="space-y-3">
-          {sortedHashtags.map((hashtag: any) => {
+          {filteredSortedHashtags.map((hashtag: any) => {
             const userVote = getUserVote(hashtag.id)
             const voteCount = getVoteCount(hashtag.id)
             const voteCounts = getVoteCounts(hashtag.id)
@@ -251,9 +254,9 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
                           size="sm"
                           onClick={() => handleVote(hashtag.id, userVote?.value === 1 ? 0 : 1)}
                           disabled={isVoting || !user}
-                          className="h-6 w-6 p-0"
+                          className="h-11 w-11 p-0"
                         >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                           </svg>
                         </Button>
@@ -263,9 +266,9 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
                           size="sm"
                           onClick={() => handleVote(hashtag.id, userVote?.value === -1 ? 0 : -1)}
                           disabled={isVoting || !user}
-                          className="h-6 w-6 p-0"
+                          className="h-11 w-11 p-0"
                         >
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </Button>

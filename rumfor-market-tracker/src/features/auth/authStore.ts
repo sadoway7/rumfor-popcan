@@ -18,7 +18,7 @@ interface AuthStore extends AuthState {
   resendVerification: (request: ResendVerificationRequest) => Promise<void>
   
   // Token management
-  refreshToken: () => Promise<void>
+  refreshTokens: () => Promise<void>
   
   // Utility methods
   updateUser: (user: Partial<User>) => void
@@ -39,6 +39,7 @@ export const useAuthStore = create<AuthStore>()(
       // Initial state
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -63,11 +64,12 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null })
           
-          const { user, token } = await authApi.login(credentials)
+          const { user, tokens } = await authApi.login(credentials)
           
           set({
             user,
-            token,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isEmailVerified: user.isEmailVerified,
             isLoading: false,
@@ -86,11 +88,12 @@ export const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null })
           
-          const { user, token } = await authApi.register(data)
+          const { user, tokens } = await authApi.register(data)
           
           set({
             user,
-            token,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             isAuthenticated: true,
             isEmailVerified: user.isEmailVerified,
             isLoading: false,
@@ -114,6 +117,7 @@ export const useAuthStore = create<AuthStore>()(
           set({
             user: null,
             token: null,
+            refreshToken: null,
             isAuthenticated: false,
             isEmailVerified: false,
             error: null,
@@ -242,22 +246,23 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       // Token refresh method
-      refreshToken: async () => {
-        const { token } = get()
-        if (!token) {
+       refreshTokens: async () => {
+        const { refreshToken } = get()
+        if (!refreshToken) {
           throw new Error('No token available to refresh')
         }
 
         try {
           set({ isTokenRefreshing: true, tokenRefreshError: null })
           
-          const { user, token: newToken } = await authApi.refreshToken(token)
+          const { tokens, user } = await authApi.refreshToken(refreshToken)
           
           set({
             user,
-            token: newToken,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             isAuthenticated: true,
-            isEmailVerified: user.isEmailVerified,
+            isEmailVerified: user?.isEmailVerified ?? false,
             isTokenRefreshing: false,
             tokenRefreshError: null,
           })
@@ -319,6 +324,7 @@ export const useAuthStore = create<AuthStore>()(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         isEmailVerified: state.isEmailVerified,
       }),

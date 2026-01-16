@@ -4,6 +4,6 @@ digraph WorldModel {
   "Community.Hashtags" [
     label="Hashtag Voting",
     type="card",
-    prompt="Refine hashtag voting: limit noise, surface top tags, and align with market categories and accessibility filters."
+    prompt="Refine hashtag voting: limit noise, surface trending tags for discovery, and align with market categories and accessibility filters."
   ];
 }

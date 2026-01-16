@@ -152,7 +152,7 @@ export const ApplicationActions: React.FC<ApplicationActionsProps> = ({
             size={buttonSize}
             variant="outline"
             onClick={() => setShowRejectModal(true)}
-            disabled={true}
+            disabled={isPromoterUpdating}
             className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
           >
             Reject

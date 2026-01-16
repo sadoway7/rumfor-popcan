@@ -17,6 +17,7 @@ interface PhotoUploaderProps {
 interface FileWithPreview extends File {
   preview?: string
   id: string
+  uploadProgress?: number
 }
 
 export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
@@ -202,7 +203,7 @@ export const PhotoUploader: React.FC<PhotoUploaderProps> = ({
         className={cn(
           'border-2 border-dashed transition-colors cursor-pointer',
           dragActive ? 'border-accent bg-accent/5' : 'border-border hover:border-accent/50',
-          'p-8 text-center'
+          'p-6 sm:p-8 text-center'
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}

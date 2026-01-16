@@ -61,7 +61,7 @@ rumfor-market-tracker/
 - Leave comments and reactions
 
 ### For Vendors
-- Apply to markets with customizable forms
+- Apply to markets with multi-step forms, pre-filled profiles, and auto-saved drafts
 - Track application status
 - Manage vendor todo lists
 - Track expenses and profits
@@ -71,6 +71,7 @@ rumfor-market-tracker/
 - Create and manage markets
 - Set custom application requirements
 - Review vendor applications
+- Guide promoter claiming with clear CTAs, eligibility checks, and verification steps
 - Communicate with applicants
 - Analytics and insights
 
@@ -229,6 +230,8 @@ Role-based access control with four user types:
 - **Vendor**: Apply to markets, manage applications
 - **Promoter**: Create and manage markets
 - **Admin**: Full system administration
+
+Promoter claiming UX is designed around clear eligibility checks, a verification timeline, and prominent CTAs on market detail pages.
 
 ## 🚀 Deployment
 

@@ -29,6 +29,14 @@ The Vendor Market Detail page uses a tabbed interface with 6 main sections:
 - **Location & Directions**: Address with integrated map (when available)
 - **Application Status**: Current status (draft, submitted, approved, rejected)
 
+### Application Flow (Mobile-First)
+- **Guided, multi-step form**: Shorter steps with a progress indicator on mobile
+- **Pre-filled contact details**: Profile data auto-populates where available
+- **Draft auto-save**: Save & continue later with a visible “last saved” timestamp
+- **Status timeline**: Track progress from submitted → under review → approved/rejected
+- **Submission confirmation**: Dedicated confirmation screen with next steps
+- **Validation summary**: Top-of-form summary for incomplete or missing fields
+
 ### Quick Actions Panel
 - **Apply Now**: Submit your vendor application (if not yet submitted)
 - **Edit Application**: Modify your existing application

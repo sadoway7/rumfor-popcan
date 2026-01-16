@@ -85,6 +85,32 @@ The application addresses several key challenges faced by artisan vendors:
 - Support local handmade businesses
 - Share market experiences and photos
 
+### Persona Alignment with Current UX Cards
+
+#### Markets.Discovery
+- **Primary personas:** Artisan Vendor, Artisan Community Member
+- **Goals supported:** Fast local market discovery, confident decision-making, and low-friction exploration.
+- **Pain points to guard against:** Filter overload for first-time users, slow mobile results, and unclear empty states.
+- **UX alignment:** Progressive filters and location-first results keep new vendors and community visitors moving toward “Track Market” within a short time window.
+
+#### Applications.Flow
+- **Primary personas:** Artisan Vendor
+- **Goals supported:** Submit applications quickly, reuse profile data, and track submission status.
+- **Pain points to guard against:** Form fatigue, data re-entry, and unclear status updates after submission.
+- **UX alignment:** Pre-fill, progress indicators, and save/continue preserve momentum and reduce abandonment.
+
+#### Auth Cards (Login, Registration, Roles & Permissions)
+- **Primary personas:** Artisan Vendor, Market Promoter, Artisan Community Member
+- **Goals supported:** Secure access with minimal friction while preserving role-based access.
+- **Pain points to guard against:** Account creation barriers before value is visible, and confusion about role-specific access (e.g., promoter claiming).
+- **UX alignment:** Clear role labeling, error messaging, and consistent login/registration flows help all personas access the right features at the right time.
+
+#### Data.UserSchemaIntegrity
+- **Primary personas:** All (Artisan Vendor, Market Promoter, Artisan Community Member)
+- **Goals supported:** Trust in saved profiles, accurate application pre-fill, and reliable personalization.
+- **Pain points to guard against:** Missing defaults, inconsistent identifiers, and duplicate accounts that create confusion in applications or market management.
+- **UX alignment:** Schema enforcement and normalization ensures cross-flow consistency (discovery → application → community activity).
+
 ### Primary Use Cases
 
 #### Market Discovery & Browsing

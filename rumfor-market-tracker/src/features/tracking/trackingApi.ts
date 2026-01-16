@@ -122,7 +122,6 @@ const todoTemplates = {
 }
 
 export const trackingApi = {
-  // TODO API
   async getTodos(marketId?: string): Promise<PaginatedResponse<Todo>> {
     const queryParams = new URLSearchParams()
     if (marketId) queryParams.append('marketId', marketId)

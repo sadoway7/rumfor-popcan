@@ -54,7 +54,10 @@ const categoryLabels = {
   'food-festival': 'Food Festival',
   'holiday-market': 'Holiday Market',
   'craft-show': 'Craft Show',
-  'community-event': 'Community Event'
+  'community-event': 'Community Event',
+  'night-market': 'Night Market',
+  'street-fair': 'Street Fair',
+  'vintage-antique': 'Vintage & Antique'
 }
 
 const statusColors = {

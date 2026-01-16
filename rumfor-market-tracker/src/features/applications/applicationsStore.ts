@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { Application, ApplicationStatus, ApplicationFilters } from '@/types'
+import { assertValidApplicationStatusTransition } from '@/utils/applicationStatus'
 
 interface ApplicationsState {
   // Data
@@ -170,26 +171,30 @@ export const useApplicationsStore = create<ApplicationsState>()(
 
       // Status management
       updateApplicationStatus: (id, status, notes) => set((state) => ({
-        applications: state.applications.map(app => 
-          app.id === id ? { 
-            ...app, 
-            status, 
+        applications: state.applications.map(app => {
+          if (app.id !== id) return app
+          assertValidApplicationStatusTransition(app.status, status)
+          return {
+            ...app,
+            status,
             notes: notes || app.notes,
-            reviewedAt: status === 'under-review' || status === 'approved' || status === 'rejected' 
-              ? new Date().toISOString() 
+            reviewedAt: status === 'under-review' || status === 'approved' || status === 'rejected'
+              ? new Date().toISOString()
               : app.reviewedAt
-          } : app
-        ),
-        myApplications: state.myApplications.map(app => 
-          app.id === id ? { 
-            ...app, 
-            status, 
+          }
+        }),
+        myApplications: state.myApplications.map(app => {
+          if (app.id !== id) return app
+          assertValidApplicationStatusTransition(app.status, status)
+          return {
+            ...app,
+            status,
             notes: notes || app.notes,
-            reviewedAt: status === 'under-review' || status === 'approved' || status === 'rejected' 
-              ? new Date().toISOString() 
+            reviewedAt: status === 'under-review' || status === 'approved' || status === 'rejected'
+              ? new Date().toISOString()
               : app.reviewedAt
-          } : app
-        )
+          }
+        })
       })),
 
       // Pagination actions

@@ -10,7 +10,6 @@ import { useVendorApplications } from '@/features/applications/hooks/useApplicat
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import { HashtagVoting } from '@/components/HashtagVoting'
-import { MarketLifespan } from '@/components/MarketLifespan'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
@@ -22,7 +21,10 @@ const categoryLabels = {
   'food-festival': 'Food Festival',
   'holiday-market': 'Holiday Market',
   'craft-show': 'Craft Show',
-  'community-event': 'Community Event'
+  'community-event': 'Community Event',
+  'night-market': 'Night Market',
+  'street-fair': 'Street Fair',
+  'vintage-antique': 'Vintage & Antique'
 }
 
 const categoryColors = {
@@ -32,7 +34,10 @@ const categoryColors = {
   'food-festival': 'bg-orange-100 text-orange-800 border-orange-200',
   'holiday-market': 'bg-red-100 text-red-800 border-red-200',
   'craft-show': 'bg-pink-100 text-pink-800 border-pink-200',
-  'community-event': 'bg-gray-100 text-gray-800 border-gray-200'
+  'community-event': 'bg-gray-100 text-gray-800 border-gray-200',
+  'night-market': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'street-fair': 'bg-amber-100 text-amber-800 border-amber-200',
+  'vintage-antique': 'bg-slate-100 text-slate-800 border-slate-200'
 }
 
 const statusColors = {
@@ -470,7 +475,11 @@ export const MarketDetailPage: React.FC = () => {
                     Add to Favorites
                   </Button>
                   
-                  <Button className="w-full" variant="outline">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => setShowReportModal(true)}
+                  >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v4m-4-4h.01M16 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -482,6 +491,13 @@ export const MarketDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ReportIssueModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        marketId={market.id}
+        marketName={market.name}
+      />
     </div>
   )
 }

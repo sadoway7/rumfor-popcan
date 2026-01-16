@@ -52,7 +52,7 @@ const mockMarkets: Market[] = [
       'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800',
       'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800'
     ],
-    tags: ['organic', 'local', 'fresh-produce', 'handmade'],
+    tags: ['local-produce', 'fresh-produce', 'organic', 'handmade'],
     accessibility: {
       wheelchairAccessible: true,
       parkingAvailable: true,
@@ -116,7 +116,7 @@ const mockMarkets: Market[] = [
       'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
       'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800'
     ],
-    tags: ['handmade', 'art', 'crafts', 'local-artists'],
+    tags: ['handmade', 'local-artisans', 'crafts', 'fine-art'],
     accessibility: {
       wheelchairAccessible: true,
       parkingAvailable: false,
@@ -186,7 +186,7 @@ const mockMarkets: Market[] = [
     images: [
       'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800'
     ],
-    tags: ['vintage', 'antiques', 'collectibles', 'second-hand'],
+    tags: ['vintage', 'antiques', 'collectibles', 'secondhand'],
     accessibility: {
       wheelchairAccessible: false,
       parkingAvailable: true,

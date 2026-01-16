@@ -99,7 +99,10 @@ export function AdminMarketsPage() {
       'food-festival': 'Food Festival',
       'holiday-market': 'Holiday Market',
       'craft-show': 'Craft Show',
-      'community-event': 'Community Event'
+      'community-event': 'Community Event',
+      'night-market': 'Night Market',
+      'street-fair': 'Street Fair',
+      'vintage-antique': 'Vintage & Antique'
     }
     
     return <Badge variant="outline">{categoryLabels[category]}</Badge>
@@ -332,7 +335,10 @@ export function AdminMarketsPage() {
               { value: 'food-festival', label: 'Food Festival' },
               { value: 'holiday-market', label: 'Holiday Market' },
               { value: 'craft-show', label: 'Craft Show' },
-              { value: 'community-event', label: 'Community Event' }
+              { value: 'community-event', label: 'Community Event' },
+              { value: 'night-market', label: 'Night Market' },
+              { value: 'street-fair', label: 'Street Fair' },
+              { value: 'vintage-antique', label: 'Vintage & Antique' }
             ]}
           />
         </div>

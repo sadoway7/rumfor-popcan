@@ -19,6 +19,8 @@ export default function LoginPage() {
   const { login, isLoading, error, clearError } = useAuthStore()
   const [showPassword, setShowPassword] = React.useState(false)
 
+  const [rememberMe, setRememberMe] = React.useState(false)
+
   const {
     register,
     handleSubmit,
@@ -30,7 +32,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       clearError()
-      await login(data)
+      await login({ ...data, rememberMe })
       navigate('/dashboard')
     } catch (error) {
       // Error is handled by the auth store
@@ -47,13 +49,44 @@ export default function LoginPage() {
           
           <CardContent>
             {error && (
-              <Alert 
-                variant="destructive" 
+              <Alert
+                variant="destructive"
                 className="mb-6"
                 title="Sign In Failed"
                 description={error}
               />
             )}
+
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled
+              >
+                Continue with Google (Coming Soon)
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled
+              >
+                Continue with Facebook (Coming Soon)
+              </Button>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with email
+                </span>
+              </div>
+            </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
@@ -94,7 +127,12 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2">
-                  <input type="checkbox" className="rounded border-border" />
+                  <input
+                    type="checkbox"
+                    className="rounded border-border"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
                   <span className="text-sm text-muted-foreground">Remember me</span>
                 </label>
                 <Link 

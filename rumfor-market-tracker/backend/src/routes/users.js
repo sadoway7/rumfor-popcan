@@ -13,13 +13,13 @@ const {
 } = require('../controllers/usersController')
 
 const { verifyToken, requireAdmin } = require('../middleware/auth')
-const { validateMongoId, validatePagination } = require('../middleware/validation')
+const { validateMongoId, validatePagination, validateUserUpdate } = require('../middleware/validation')
 
 // Get user profile (protected)
 router.get('/profile', verifyToken, getProfile)
 
 // Update user profile (protected)
-router.patch('/profile', verifyToken, updateProfile)
+router.patch('/profile', verifyToken, validateUserUpdate, updateProfile)
 
 // Market tracking (protected)
 router.post('/track', verifyToken, trackMarket)

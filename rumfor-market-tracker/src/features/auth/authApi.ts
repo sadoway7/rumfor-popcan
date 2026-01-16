@@ -1,4 +1,4 @@
-import { ApiResponse, User, LoginCredentials, RegisterData } from '@/types'
+import { ApiResponse, User, LoginCredentials, RegisterData, AuthTokens } from '@/types'
 
 // Environment configuration
 const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
@@ -148,9 +148,21 @@ class HttpClient {
 
 const httpClient = new HttpClient(API_BASE_URL)
 
+type AuthApi = {
+  login: (credentials: LoginCredentials) => Promise<{ user: User; tokens: AuthTokens }>
+  register: (data: RegisterData) => Promise<{ user: User; tokens: AuthTokens }>
+  refreshToken: (refreshToken: string) => Promise<{ user: User; tokens: AuthTokens }>
+  forgotPassword: (email: string) => Promise<{ message: string }>
+  resetPassword: (token: string, newPassword: string) => Promise<{ message: string; user?: User; tokens?: AuthTokens }>
+  verifyEmail: (token: string) => Promise<{ message: string }>
+  resendVerification: (email: string) => Promise<{ message: string }>
+  logout: () => Promise<void>
+  getCurrentUser: () => Promise<User>
+}
+
 // Mock API functions for development
-const mockApi = {
-  login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
+const mockApi: AuthApi = {
+  login: async (credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -166,15 +178,19 @@ const mockApi = {
       throw new AuthApiError('Invalid email or password', 'INVALID_CREDENTIALS', 401)
     }
 
-    const token = `mock-jwt-token-${user.id}-${Date.now()}`
+    const tokens = {
+      accessToken: `mock-jwt-token-${user.id}-${Date.now()}`,
+      refreshToken: `mock-refresh-token-${user.id}-${Date.now()}`,
+      expiresIn: '24h'
+    }
 
     // Store token in localStorage
-    localStorage.setItem('auth-token', token)
+    localStorage.setItem('auth-token', tokens.accessToken)
 
-    return { user, token }
+    return { user, tokens }
   },
 
-  register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
+  register: async (data: RegisterData): Promise<{ user: User; tokens: AuthTokens }> => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -196,28 +212,32 @@ const mockApi = {
       isActive: true,
     }
 
-    const token = `mock-jwt-token-${newUser.id}-${Date.now()}`
+    const tokens = {
+      accessToken: `mock-jwt-token-${newUser.id}-${Date.now()}`,
+      refreshToken: `mock-refresh-token-${newUser.id}-${Date.now()}`,
+      expiresIn: '24h'
+    }
 
     // Add to mock users and store password
     mockUsers.push(newUser)
     mockPasswords[newUser.id] = data.password
 
     // Store token in localStorage
-    localStorage.setItem('auth-token', token)
+    localStorage.setItem('auth-token', tokens.accessToken)
 
-    return { user: newUser, token }
+    return { user: newUser, tokens }
   },
 
-  refreshToken: async (token: string): Promise<{ user: User; token: string }> => {
+  refreshToken: async (refreshToken: string): Promise<{ user: User; tokens: AuthTokens }> => {
     await new Promise(resolve => setTimeout(resolve, 500))
 
     // Mock token validation
-    if (!token || !token.startsWith('mock-jwt-token-')) {
+    if (!refreshToken || !refreshToken.startsWith('mock-refresh-token-')) {
       throw new AuthApiError('Invalid token', 'INVALID_TOKEN', 401)
     }
 
     // Extract user ID from token
-    const tokenParts = token.split('-')
+    const tokenParts = refreshToken.split('-')
     const userId = tokenParts[tokenParts.length - 2]
 
     const user = mockUsers.find(u => u.id === userId)
@@ -225,11 +245,15 @@ const mockApi = {
       throw new AuthApiError('User not found', 'USER_NOT_FOUND', 404)
     }
 
-    const newToken = `mock-jwt-token-${user.id}-${Date.now()}`
+    const tokens = {
+      accessToken: `mock-jwt-token-${user.id}-${Date.now()}`,
+      refreshToken: `mock-refresh-token-${user.id}-${Date.now()}`,
+      expiresIn: '24h'
+    }
 
-    localStorage.setItem('auth-token', newToken)
+    localStorage.setItem('auth-token', tokens.accessToken)
 
-    return { user, token: newToken }
+    return { user, tokens }
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
@@ -244,7 +268,7 @@ const mockApi = {
     return { message: 'Password reset link sent to your email.' }
   },
 
-  resetPassword: async (_token: string, _newPassword: string): Promise<{ message: string }> => {
+  resetPassword: async (_token: string, _newPassword: string): Promise<{ message: string; user?: User; tokens?: AuthTokens }> => {
     await new Promise(resolve => setTimeout(resolve, 1000))
     
     // Mock password reset
@@ -289,9 +313,9 @@ const mockApi = {
 }
 
 // Real API functions for production
-const realApi = {
-  login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/login', credentials)
+const realApi: AuthApi = {
+  login: async (credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> => {
+    const response = await httpClient.post<ApiResponse<{ user: User; tokens: AuthTokens }>>('/auth/login', credentials)
     
     if (!response.success || !response.data) {
       throw new AuthApiError(
@@ -303,8 +327,8 @@ const realApi = {
     return response.data
   },
 
-  register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/register', data)
+  register: async (data: RegisterData): Promise<{ user: User; tokens: AuthTokens }> => {
+    const response = await httpClient.post<ApiResponse<{ user: User; tokens: AuthTokens }>>('/auth/register', data)
     
     if (!response.success || !response.data) {
       throw new AuthApiError(
@@ -316,8 +340,8 @@ const realApi = {
     return response.data
   },
 
-  refreshToken: async (token: string): Promise<{ user: User; token: string }> => {
-    const response = await httpClient.post<ApiResponse<{ user: User; token: string }>>('/auth/refresh', { token })
+  refreshToken: async (refreshToken: string): Promise<{ user: User; tokens: AuthTokens }> => {
+    const response = await httpClient.post<ApiResponse<{ tokens: AuthTokens }>>('/auth/refresh-token', { refreshToken })
     
     if (!response.success || !response.data) {
       throw new AuthApiError(
@@ -325,8 +349,16 @@ const realApi = {
         'REFRESH_FAILED'
       )
     }
-    
-    return response.data
+
+    const currentUser = await httpClient.get<ApiResponse<User>>('/auth/me')
+    if (!currentUser.success || !currentUser.data) {
+      throw new AuthApiError(
+        currentUser.error || 'Failed to get current user',
+        'GET_CURRENT_USER_FAILED'
+      )
+    }
+
+    return { user: currentUser.data, tokens: response.data.tokens }
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {
@@ -342,8 +374,8 @@ const realApi = {
     return response.data || { message: response.message || 'Password reset email sent.' }
   },
 
-  resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
-    const response = await httpClient.post<ApiResponse<{ message: string }>>('/auth/reset-password', { token, newPassword })
+  resetPassword: async (token: string, newPassword: string): Promise<{ message: string; user?: User; tokens?: AuthTokens }> => {
+    const response = await httpClient.post<ApiResponse<{ user?: User; tokens?: AuthTokens; message?: string }>>('/auth/reset-password', { token, password: newPassword })
     
     if (!response.success) {
       throw new AuthApiError(
@@ -352,7 +384,11 @@ const realApi = {
       )
     }
     
-    return response.data || { message: response.message || 'Password reset successfully.' }
+    return {
+      message: response.data?.message || response.message || 'Password reset successfully.',
+      user: response.data?.user,
+      tokens: response.data?.tokens
+    }
   },
 
   verifyEmail: async (token: string): Promise<{ message: string }> => {
@@ -383,7 +419,10 @@ const realApi = {
 
   logout: async (): Promise<void> => {
     try {
-      await httpClient.post('/auth/logout')
+      const refreshToken = localStorage.getItem('auth-storage')
+        ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.refreshToken
+        : null
+      await httpClient.post('/auth/logout', refreshToken ? { refreshToken } : undefined)
     } catch (error) {
       // Even if the server request fails, we should clear local storage
       console.warn('Logout API call failed, clearing local storage anyway')

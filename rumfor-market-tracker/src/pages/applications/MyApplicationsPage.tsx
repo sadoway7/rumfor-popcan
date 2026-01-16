@@ -129,22 +129,22 @@ export const MyApplicationsPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Applications</h1>
           <p className="text-muted-foreground mt-1">
             Track and manage your vendor applications
           </p>
         </div>
-        <Link to="/markets">
-          <Button>
+        <Link to="/markets" className="w-full sm:w-auto">
+          <Button className="w-full sm:w-auto">
             Browse Markets
           </Button>
         </Link>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card border rounded-lg p-4">
           <div className="text-2xl font-bold">{stats.total}</div>
           <div className="text-sm text-muted-foreground">Total Applications</div>
@@ -164,11 +164,13 @@ export const MyApplicationsPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <ApplicationFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        markets={marketOptions}
-      />
+      <div className="rounded-lg border bg-card p-4 sm:p-6">
+        <ApplicationFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          markets={marketOptions}
+        />
+      </div>
 
       {/* Applications List */}
       <div className="space-y-6">
@@ -203,28 +205,28 @@ export const MyApplicationsPage: React.FC = () => {
         ) : (
           <>
             {/* Results Summary */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between rounded-lg border bg-card px-4 py-3">
               <p className="text-sm text-muted-foreground">
                 Showing {filteredApplications.length} of {myApplications.length} applications
               </p>
-              
+
               {/* Quick Status Filter */}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-muted-foreground">Quick filter:</span>
                 {Object.entries(applicationsByStatus).map(([status, apps]) => (
                   <Link
                     key={status}
                     to={`?status=${status}`}
-                    className="text-xs"
+                    className="inline-flex items-center gap-2 rounded-full border border-transparent bg-surface px-2.5 py-1 text-xs hover:bg-surface-2"
                   >
-                    <StatusBadge 
+                    <StatusBadge
                       status={status as ApplicationStatus}
                       className={cn(
                         'cursor-pointer hover:opacity-80',
                         filters.status === status && 'ring-2 ring-accent'
                       )}
                     />
-                    <span className="ml-1 text-muted-foreground">({apps.length})</span>
+                    <span className="text-muted-foreground">({apps.length})</span>
                   </Link>
                 ))}
               </div>

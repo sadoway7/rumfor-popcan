@@ -5,7 +5,7 @@ import { MarketGrid } from '@/components/MarketGrid'
 import { Button, Input } from '@/components/ui'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useSidebarStore } from '@/features/theme/themeStore'
-import type { MarketFilters as MarketFilterType } from '@/types'
+import type { MarketCategory, MarketFilters as MarketFilterType } from '@/types'
 
 import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar } from 'lucide-react'
 
@@ -15,6 +15,14 @@ export const MarketSearchPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
   const { isSidebarOpen } = useSidebarStore()
+  const trendingHashtags = [
+    'handmade',
+    'fresh-produce',
+    'vintage',
+    'crafts',
+    'family-friendly',
+    'wheelchair-accessible'
+  ]
   
   const {
     markets,
@@ -50,7 +58,8 @@ export const MarketSearchPage: React.FC = () => {
       status: searchParams.get('status')?.split(',') as MarketFilterType['status'],
       accessibility: {
         wheelchairAccessible: searchParams.get('wheelchair') === 'true',
-        parkingAvailable: searchParams.get('parking') === 'true'
+        parkingAvailable: searchParams.get('parking') === 'true',
+        restroomsAvailable: searchParams.get('restrooms') === 'true'
       }
     }
     
@@ -79,6 +88,7 @@ export const MarketSearchPage: React.FC = () => {
     if (newFilters.status?.length) params.set('status', newFilters.status.join(','))
     if (newFilters.accessibility?.wheelchairAccessible) params.set('wheelchair', 'true')
     if (newFilters.accessibility?.parkingAvailable) params.set('parking', 'true')
+    if (newFilters.accessibility?.restroomsAvailable) params.set('restrooms', 'true')
     
     setSearchParams(params)
   }
@@ -92,6 +102,10 @@ export const MarketSearchPage: React.FC = () => {
     searchMarkets(query)
     const newFilters = { ...filters, search: query }
     updateUrlParams(newFilters)
+  }
+
+  const handleTrendingTagClick = (tag: string) => {
+    handleSearch(tag)
   }
 
   const handleTrackMarket = async (marketId: string) => {
@@ -129,24 +143,22 @@ export const MarketSearchPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <>
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <aside className={`${isSidebarOpen ? 'w-full md:w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-surface`}>
-            <div className="p-6 w-full md:w-72">
+          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0'} transition-all duration-300 overflow-hidden bg-surface border-b lg:border-b-0 lg:border-r border-border`}>
+            <div className="p-4 sm:p-6 w-full lg:w-80 space-y-6">
 
               {/* Search */}
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Search Markets</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-foreground">Start with location</h2>
+                  {getActiveFilterCount() > 0 && (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {getActiveFilterCount()} active
+                    </span>
+                  )}
+                </div>
                 <div className="space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
-                    <Input
-                      placeholder="Search markets..."
-                      value={searchQuery}
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10 border-0 bg-surface/50 focus:bg-surface/80"
-                    />
-                  </div>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
                     <Input
@@ -156,14 +168,50 @@ export const MarketSearchPage: React.FC = () => {
                         ...filters,
                         location: { ...filters.location, city: e.target.value }
                       })}
-                      className="pl-10 border-0 bg-surface/50 focus:bg-surface/80"
+                      className="pl-10 border border-border bg-surface/50 focus:bg-surface/80"
                     />
                   </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
+                    <Input
+                      placeholder="Search markets or keywords..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="pl-10 border border-border bg-surface/50 focus:bg-surface/80"
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Location filters narrow results first, then keywords refine.
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Trending hashtags</div>
+                    <div className="flex flex-wrap gap-2">
+                      {trendingHashtags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => handleTrendingTagClick(tag)}
+                          className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] bg-surface-2 hover:bg-surface text-foreground"
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {getActiveFilterCount() > 0 && (
+                    <Button
+                      onClick={handleClearFilters}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      Clear All Filters ({getActiveFilterCount()})
+                    </Button>
+                  )}
                 </div>
               </div>
 
               {/* Sort Options */}
-              <div className="mb-6">
+              <div>
                 <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
                   <ArrowUpDown className="h-4 w-4" />
                   Sort By
@@ -171,8 +219,10 @@ export const MarketSearchPage: React.FC = () => {
                 <div className="space-y-2">
                   <button
                     onClick={() => setSortBy('date')}
-                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
-                      sortBy === 'date' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
+                      sortBy === 'date'
+                        ? 'bg-accent/10 text-accent border-accent/30'
+                        : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -180,8 +230,10 @@ export const MarketSearchPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setSortBy('name')}
-                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
-                      sortBy === 'name' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
+                      sortBy === 'name'
+                        ? 'bg-accent/10 text-accent border-accent/30'
+                        : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
                     <Search className="h-4 w-4 text-muted-foreground" />
@@ -189,8 +241,10 @@ export const MarketSearchPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setSortBy('distance')}
-                    className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors ${
-                      sortBy === 'distance' ? 'bg-accent/10 text-accent' : 'hover:bg-surface-2'
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
+                      sortBy === 'distance'
+                        ? 'bg-accent/10 text-accent border-accent/30'
+                        : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
                     <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -200,7 +254,7 @@ export const MarketSearchPage: React.FC = () => {
               </div>
 
               {/* Quick Filters */}
-              <div className="mb-6">
+              <div>
                 <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
                   <SlidersHorizontal className="h-4 w-4" />
                   Filters
@@ -220,7 +274,7 @@ export const MarketSearchPage: React.FC = () => {
                             : [...currentStatuses, status as any]
                           handleFiltersChange({ ...filters, status: newStatuses })
                         }}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
                           filters.status?.includes(status as any)
                             ? 'bg-accent text-accent-foreground'
                             : 'bg-surface-2 hover:bg-surface text-foreground'
@@ -236,7 +290,7 @@ export const MarketSearchPage: React.FC = () => {
                 <div className="mb-4">
                   <div className="text-xs font-medium text-muted-foreground mb-2">Accessibility</div>
                   <div className="space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
                       <input
                         type="checkbox"
                         checked={filters.accessibility?.wheelchairAccessible || false}
@@ -244,11 +298,11 @@ export const MarketSearchPage: React.FC = () => {
                           ...filters,
                           accessibility: { ...filters.accessibility, wheelchairAccessible: e.target.checked }
                         })}
-                        className="rounded border-border"
+                        className="h-4 w-4 rounded border-border"
                       />
                       <span className="text-sm">Wheelchair Accessible</span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
                       <input
                         type="checkbox"
                         checked={filters.accessibility?.parkingAvailable || false}
@@ -256,9 +310,21 @@ export const MarketSearchPage: React.FC = () => {
                           ...filters,
                           accessibility: { ...filters.accessibility, parkingAvailable: e.target.checked }
                         })}
-                        className="rounded border-border"
+                        className="h-4 w-4 rounded border-border"
                       />
                       <span className="text-sm">Parking Available</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
+                      <input
+                        type="checkbox"
+                        checked={filters.accessibility?.restroomsAvailable || false}
+                        onChange={(e) => handleFiltersChange({
+                          ...filters,
+                          accessibility: { ...filters.accessibility, restroomsAvailable: e.target.checked }
+                        })}
+                        className="h-4 w-4 rounded border-border"
+                      />
+                      <span className="text-sm">Restrooms Available</span>
                     </label>
                   </div>
                 </div>
@@ -267,7 +333,7 @@ export const MarketSearchPage: React.FC = () => {
                 <div className="mt-4">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="w-full flex items-center justify-between p-2 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
                   >
                     <span className="text-sm font-medium flex items-center gap-2">
                       <SlidersHorizontal className="h-4 w-4" />
@@ -284,26 +350,34 @@ export const MarketSearchPage: React.FC = () => {
                       <div>
                         <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
                         <div className="flex flex-wrap gap-2">
-                          {[
-                            'Farmers Markets', 'Arts & Crafts', 'Flea Markets', 'Food Festivals',
-                            'Antique Shows', 'Craft Fairs', 'Street Fairs', 'Holiday Markets', 'Community Events'
-                          ].map((category) => (
+                          {([
+                            { label: 'Farmers Markets', value: 'farmers-market' },
+                            { label: 'Arts & Crafts', value: 'arts-crafts' },
+                            { label: 'Flea Markets', value: 'flea-market' },
+                            { label: 'Food Festivals', value: 'food-festival' },
+                            { label: 'Vintage & Antique', value: 'vintage-antique' },
+                            { label: 'Craft Shows', value: 'craft-show' },
+                            { label: 'Night Markets', value: 'night-market' },
+                            { label: 'Street Fairs', value: 'street-fair' },
+                            { label: 'Holiday Markets', value: 'holiday-market' },
+                            { label: 'Community Events', value: 'community-event' }
+                          ] satisfies { label: string; value: MarketCategory }[]).map((category) => (
                             <button
-                              key={category}
+                              key={category.value}
                               onClick={() => {
                                 const currentCategories = filters.category || []
-                                const newCategories = currentCategories.includes(category as any)
-                                  ? currentCategories.filter(c => c !== category)
-                                  : [...currentCategories, category as any]
+                                const newCategories = currentCategories.includes(category.value)
+                                  ? currentCategories.filter(c => c !== category.value)
+                                  : [...currentCategories, category.value]
                                 handleFiltersChange({ ...filters, category: newCategories })
                               }}
-                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                filters.category?.includes(category as any)
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
+                                filters.category?.includes(category.value)
                                   ? 'bg-accent text-accent-foreground'
                                   : 'bg-surface-2 hover:bg-surface text-foreground'
                               }`}
                             >
-                              {category}
+                              {category.label}
                             </button>
                           ))}
                         </div>
@@ -316,7 +390,7 @@ export const MarketSearchPage: React.FC = () => {
                           <input
                             type="date"
                             placeholder="From date"
-                            className="w-full px-3 py-2 text-sm border-0 bg-surface/50 rounded-md focus:bg-surface/80"
+                            className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
                             onChange={(e) => {
                               // Handle date range - this would need backend support
                               console.log('Date from:', e.target.value)
@@ -325,7 +399,7 @@ export const MarketSearchPage: React.FC = () => {
                           <input
                             type="date"
                             placeholder="To date"
-                            className="w-full px-3 py-2 text-sm border-0 bg-surface/50 rounded-md focus:bg-surface/80"
+                            className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
                             onChange={(e) => {
                               // Handle date range - this would need backend support
                               console.log('Date to:', e.target.value)
@@ -348,7 +422,7 @@ export const MarketSearchPage: React.FC = () => {
                                   : [...currentStatuses, status as any]
                                 handleFiltersChange({ ...filters, status: newStatuses })
                               }}
-                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
                                 filters.status?.includes(status as any)
                                   ? 'bg-accent text-accent-foreground'
                                   : 'bg-surface-2 hover:bg-surface text-foreground'
@@ -359,17 +433,6 @@ export const MarketSearchPage: React.FC = () => {
                           ))}
                         </div>
                       </div>
-
-                      {getActiveFilterCount() > 0 && (
-                        <Button
-                          onClick={handleClearFilters}
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                        >
-                          Clear All Filters ({getActiveFilterCount()})
-                        </Button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -381,9 +444,9 @@ export const MarketSearchPage: React.FC = () => {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4 sm:p-6">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">Search Markets</h1>
                 <p className="text-muted-foreground">
@@ -391,12 +454,12 @@ export const MarketSearchPage: React.FC = () => {
                 </p>
               </div>
               {/* View Mode Toggle */}
-              <div className="flex rounded-lg bg-surface/50">
+              <div className="flex rounded-lg bg-surface/50 border border-border w-full md:w-auto">
                 <Button
                   variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="rounded-r-none px-3"
+                  className="rounded-r-none px-3 flex-1 md:flex-none"
                 >
                   Grid
                 </Button>
@@ -404,7 +467,7 @@ export const MarketSearchPage: React.FC = () => {
                   variant={viewMode === 'list' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="rounded-l-none px-3"
+                  className="rounded-l-none px-3 flex-1 md:flex-none"
                 >
                   List
                 </Button>

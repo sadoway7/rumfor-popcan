@@ -22,7 +22,10 @@ const categories: { value: MarketCategory; label: string }[] = [
   { value: 'food-festival', label: 'Food Festival' },
   { value: 'holiday-market', label: 'Holiday Market' },
   { value: 'craft-show', label: 'Craft Show' },
-  { value: 'community-event', label: 'Community Event' }
+  { value: 'community-event', label: 'Community Event' },
+  { value: 'night-market', label: 'Night Market' },
+  { value: 'street-fair', label: 'Street Fair' },
+  { value: 'vintage-antique', label: 'Vintage & Antique' }
 ]
 
 const statuses: { value: MarketStatus; label: string }[] = [
@@ -31,6 +34,8 @@ const statuses: { value: MarketStatus; label: string }[] = [
   { value: 'cancelled', label: 'Cancelled' },
   { value: 'completed', label: 'Completed' }
 ]
+
+
 
 export const MarketFilters: React.FC<MarketFiltersProps> = ({
   filters,
@@ -143,6 +148,20 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
             Arts & Crafts
           </Badge>
           <Badge
+            variant={localFilters.category?.includes('night-market') ? 'default' : 'outline'}
+            className="cursor-pointer"
+            onClick={() => handleCategoryToggle('night-market')}
+          >
+            Night Markets
+          </Badge>
+          <Badge
+            variant={localFilters.category?.includes('street-fair') ? 'default' : 'outline'}
+            className="cursor-pointer"
+            onClick={() => handleCategoryToggle('street-fair')}
+          >
+            Street Fairs
+          </Badge>
+          <Badge
             variant={localFilters.accessibility?.wheelchairAccessible ? 'default' : 'outline'}
             className="cursor-pointer"
             onClick={() => handleFilterChange('accessibility', {
@@ -161,6 +180,16 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
             })}
           >
             🅿️ Parking
+          </Badge>
+          <Badge
+            variant={localFilters.accessibility?.restroomsAvailable ? 'default' : 'outline'}
+            className="cursor-pointer"
+            onClick={() => handleFilterChange('accessibility', {
+              ...localFilters.accessibility,
+              restroomsAvailable: !localFilters.accessibility?.restroomsAvailable
+            })}
+          >
+            🚻 Restrooms
           </Badge>
         </div>
       </div>
@@ -284,5 +313,4 @@ export const MarketFilters: React.FC<MarketFiltersProps> = ({
     </Card>
   )
 }
-
 

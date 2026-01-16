@@ -34,11 +34,22 @@ VendorMarketDetailPage (Main Container)
 │   ├── SetupInformation
 │   ├── TimelineComponent
 │   └── WeatherWidget
-└── CommunicationTab
-    ├── MessageInbox
-    ├── MessageComposer
-    └── PromoterDirectory
+    └── CommunicationTab
+        ├── MessageInbox
+        ├── MessageComposer
+        └── PromoterDirectory
 ```
+
+## Application Flow UX Notes
+
+Keep the vendor application journey mobile-first and low-friction:
+
+- Multi-step application form with visible progress indicator
+- Profile-based prefill for contact info and business details
+- Draft auto-save with “last saved” timestamp and resume CTA
+- Submission confirmation screen with next steps
+- Status timeline surfaced in the application detail view
+- Validation summary at the top of the form (in addition to field errors)
 
 ### State Management
 

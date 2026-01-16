@@ -35,18 +35,28 @@ const getProfile = catchAsync(async (req, res, next) => {
 
 // Update user profile
 const updateProfile = catchAsync(async (req, res, next) => {
-  const { profile, preferences } = req.body
+  const {
+    firstName,
+    lastName,
+    displayName,
+    bio,
+    phone,
+    preferences
+  } = req.body
 
   const updateData = {}
 
-  if (profile) {
-    updateData.profile = profile
-  }
+  if (firstName !== undefined) updateData.firstName = firstName
+  if (lastName !== undefined) updateData.lastName = lastName
+  if (displayName !== undefined) updateData.displayName = displayName
+  if (bio !== undefined) updateData.bio = bio
+  if (phone !== undefined) updateData.phone = phone
 
   if (preferences) {
     updateData.preferences = preferences
-    updateData.updatedAt = new Date()
   }
+
+  updateData.updatedAt = new Date()
 
   const user = await User.findByIdAndUpdate(req.user.id, updateData, {
     new: true,

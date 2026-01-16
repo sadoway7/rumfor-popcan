@@ -29,18 +29,43 @@ const register = catchAsync(async (req, res, next) => {
     lastLogin: new Date()
   }
 
+  const emailVerificationToken = crypto.randomBytes(32).toString('hex')
+  const hashedVerificationToken = crypto.createHash('sha256').update(emailVerificationToken).digest('hex')
+
   // Check if user already exists
-  const existingUser = await User.findOne({ email })
+  const normalizedEmail = email?.toLowerCase().trim()
+  const existingUser = await User.findOne({ email: normalizedEmail })
 
   if (existingUser) {
     return next(new AppError('Email already registered', 400))
   }
 
-  // Create user
-  const user = await User.create(userData)
+  // Create user with duplicate key error handling
+  let user
+  try {
+    user = await User.create({
+      ...userData,
+      email: normalizedEmail,
+      emailVerificationToken: hashedVerificationToken,
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000
+    })
+  } catch (error) {
+    // Handle MongoDB duplicate key error (code 11000)
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      return next(new AppError('Email already registered', 400))
+    }
+    throw error // Re-throw other errors
+  }
+
+  // Send email verification
+  try {
+    await sendEmailVerification(user.email, emailVerificationToken)
+  } catch (emailError) {
+    console.error('Failed to send verification email:', emailError)
+  }
 
   // Generate tokens
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   // Remove password from response
   user.password = undefined
@@ -48,7 +73,7 @@ const register = catchAsync(async (req, res, next) => {
   sendSuccess(res, {
     user,
     tokens
-  }, 'User registered successfully', 201)
+  }, 'User registered successfully. Please verify your email.', 201)
 })
 
 // Login user
@@ -56,10 +81,15 @@ const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body
 
   // Find user and include password for comparison
-  const user = await User.findOne({ email }).select('+password')
+  const normalizedEmail = email?.toLowerCase().trim()
+  const user = await User.findOne({ email: normalizedEmail, isActive: true }).select('+password')
 
   if (!user) {
     return next(new AppError('Invalid email or password', 401))
+  }
+
+  if (!user.isActive) {
+    return next(new AppError('Account is inactive. Please contact support.', 401))
   }
 
   // Check if account is locked
@@ -86,7 +116,7 @@ const login = catchAsync(async (req, res, next) => {
   await user.save()
 
   // Generate tokens
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   // Remove password from response
   user.password = undefined
@@ -112,7 +142,7 @@ const refreshToken = catchAsync(async (req, res, next) => {
   addRefreshTokenToBlacklist(refreshToken, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
 
   // Generate new tokens
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   sendSuccess(res, {
     tokens
@@ -180,10 +210,11 @@ const changePassword = catchAsync(async (req, res, next) => {
 
   // Update password
   user.password = newPassword
+  user.tokenVersion += 1
   await user.save()
 
   // Generate new tokens
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   sendSuccess(res, { tokens }, 'Password changed successfully')
 })
@@ -196,7 +227,8 @@ const forgotPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Email is required', 400))
   }
 
-  const user = await User.findOne({ email })
+  const normalizedEmail = email?.toLowerCase().trim()
+  const user = await User.findOne({ email: normalizedEmail })
 
   if (!user) {
     // Don't reveal if user exists or not for security
@@ -245,15 +277,20 @@ const resetPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('Token is invalid or has expired', 400))
   }
 
+  if (!user.isActive) {
+    return next(new AppError('Account is inactive. Please contact support.', 401))
+  }
+
   // Update password
   user.password = password
   user.passwordResetToken = undefined
   user.passwordResetExpires = undefined
+  user.tokenVersion += 1
 
   await user.save()
 
   // Generate tokens
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   sendSuccess(res, {
     user,
@@ -269,8 +306,10 @@ const verifyEmail = catchAsync(async (req, res, next) => {
     return next(new AppError('Verification token is required', 400))
   }
 
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
   const user = await User.findOne({
-    emailVerificationToken: token
+    emailVerificationToken: hashedToken,
+    emailVerificationExpires: { $gt: Date.now() }
   })
 
   if (!user) {
@@ -280,6 +319,7 @@ const verifyEmail = catchAsync(async (req, res, next) => {
   // Mark email as verified
   user.isEmailVerified = true
   user.emailVerificationToken = undefined
+  user.emailVerificationExpires = undefined
   await user.save()
 
   sendSuccess(res, null, 'Email verified successfully')
@@ -296,6 +336,7 @@ const resendVerification = catchAsync(async (req, res, next) => {
   // Generate new verification token
   const verificationToken = crypto.randomBytes(32).toString('hex')
   user.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex')
+  user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000
   await user.save({ validateBeforeSave: false })
 
   // Send email verification
@@ -368,7 +409,8 @@ const getResetToken = catchAsync(async (req, res, next) => {
     return next(new AppError('Email is required', 400))
   }
 
-  const user = await User.findOne({ email })
+  const normalizedEmail = email?.toLowerCase().trim()
+  const user = await User.findOne({ email: normalizedEmail })
 
   if (!user) {
     return next(new AppError('User not found', 404))
@@ -480,7 +522,7 @@ const verifyTwoFactorLogin = catchAsync(async (req, res, next) => {
   }
 
   // Generate tokens and complete login
-  const tokens = generateTokens(user._id)
+  const tokens = generateTokens(user._id, user.tokenVersion)
 
   // Update last login
   user.lastLogin = new Date()

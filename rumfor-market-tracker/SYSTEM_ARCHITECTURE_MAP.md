@@ -222,7 +222,11 @@ App.tsx
 | `resetPassword(token, password)` | `/api/auth/reset-password` | POST |
 | `verifyEmail(token)` | `/api/auth/verify-email` | POST |
 | `resendVerification(email)` | `/api/auth/resend-verification` | POST |
-| `refreshToken(token)` | `/api/auth/refresh-token` | POST |
+| `refreshToken(refreshToken)` | `/api/auth/refresh-token` | POST |
+
+Notes:
+- Auth responses return `{ user, tokens }` where `tokens = { accessToken, refreshToken, expiresIn }`.
+- `refreshToken` requests send `{ refreshToken }` in the body and return `tokens` (client refetches `/auth/me`).
 
 #### marketsApi.ts
 | Function | Endpoint | Method |

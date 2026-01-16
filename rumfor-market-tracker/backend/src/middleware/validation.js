@@ -123,6 +123,13 @@ const validateUserUpdate = [
     .trim()
     .escape(),
 
+  body('displayName')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Display name must be less than 100 characters')
+    .trim()
+    .escape(),
+
   body('bio')
     .optional()
     .isLength({ max: 500 })

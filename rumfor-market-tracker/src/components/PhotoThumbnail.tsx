@@ -49,10 +49,18 @@ export const PhotoThumbnail: React.FC<PhotoThumbnailProps> = ({
   return (
     <Card 
       className={cn(
-        'group cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-lg',
+        'group cursor-pointer overflow-hidden transition-all duration-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         className
       )}
       onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          handleClick()
+        }
+      }}
     >
       {/* Image Container */}
       <div className="relative aspect-video bg-muted overflow-hidden">
@@ -93,7 +101,7 @@ export const PhotoThumbnail: React.FC<PhotoThumbnailProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleClick}
-                className="bg-background/90"
+                className="bg-background/90 min-w-[44px]"
               >
                 View
               </Button>
@@ -102,7 +110,7 @@ export const PhotoThumbnail: React.FC<PhotoThumbnailProps> = ({
                   variant="destructive"
                   size="sm"
                   onClick={handleDelete}
-                  className="bg-background/90"
+                  className="bg-background/90 min-w-[44px]"
                 >
                   Delete
                 </Button>

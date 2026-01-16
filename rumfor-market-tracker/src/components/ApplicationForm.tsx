@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,8 +9,10 @@ import { Select } from '@/components/ui/Select'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
+import { Progress } from '@/components/ui/Progress'
 import { Market, CustomField, Application } from '@/types'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
+import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
 import { Upload, X, FileText, Image, AlertCircle } from 'lucide-react'
 
@@ -60,13 +62,46 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
   onCancel,
   className
 }) => {
-  const [isDraft, setIsDraft] = useState(false)
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({})
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [uploadErrors, setUploadErrors] = useState<string[]>([])
+  const [currentStep, setCurrentStep] = useState(0)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const [autoSaveError, setAutoSaveError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+  const autoSaveTimeoutRef = useRef<number | null>(null)
+  const isInitialLoad = useRef(true)
+
+  const { user } = useAuthStore()
   const { createApplication, updateApplication, submitApplication, isSubmitting } = useVendorApplications()
+
+  const customFieldNames = useMemo(() => {
+    return (market.applicationFields || [])
+      .map(field => field.name)
+      .filter(name => !['businessName', 'businessDescription', 'experience', 'contactEmail', 'contactPhone', 'website'].includes(name))
+  }, [market.applicationFields])
+
+  const steps = useMemo(() => ([
+    {
+      id: 'business',
+      label: 'Business Info',
+      description: 'Tell us about your business and experience.',
+      fields: ['businessName', 'businessDescription', 'experience']
+    },
+    {
+      id: 'contact',
+      label: 'Contact Details',
+      description: 'Provide the best way to reach you.',
+      fields: ['contactEmail', 'contactPhone', 'website']
+    },
+    {
+      id: 'additional',
+      label: 'Additional Details',
+      description: 'Share supporting details and documents.',
+      fields: ['certifications', ...customFieldNames]
+    }
+  ]), [customFieldNames])
 
   // Create dynamic schema based on market's custom fields
   const createDynamicSchema = (): z.ZodSchema<FormData> => {
@@ -124,13 +159,21 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors, isValid, isDirty },
     setValue,
     watch,
+    trigger,
+    getValues,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: 'onChange',
   })
+
+  const watchedValues = watch()
+  const storageKey = useMemo(() => {
+    const userId = user?.id || 'guest'
+    return `application-draft-${market.id}-${userId}`
+  }, [market.id, user?.id])
 
   // Initialize form with existing data or defaults
   useEffect(() => {
@@ -138,13 +181,11 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
       // Populate form with existing application data
       const data = existingApplication.submittedData || {}
       setCustomFieldValues(existingApplication.customFields || {})
-      
-      // Set form values
+
       Object.keys(data).forEach(key => {
         setValue(key as string, data[key])
       })
-      
-      // Set custom field values
+
       if (existingApplication.customFields) {
         Object.keys(existingApplication.customFields).forEach(key => {
           setCustomFieldValues(prev => ({
@@ -153,14 +194,91 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           }))
         })
       }
+
+      if (existingApplication.updatedAt) {
+        setLastSavedAt(existingApplication.updatedAt)
+      }
     } else {
-      // Set default values
-      setValue('contactEmail', '')
+      setValue('contactEmail', user?.email || '')
       setValue('contactPhone', '')
       setValue('website', '')
       setValue('certifications', [])
     }
-  }, [existingApplication, setValue])
+  }, [existingApplication, setValue, user?.email])
+
+  useEffect(() => {
+    if (existingApplication) return
+
+    try {
+      const storedDraft = localStorage.getItem(storageKey)
+      if (!storedDraft) return
+
+      const parsedDraft = JSON.parse(storedDraft) as {
+        submittedData?: Record<string, any>
+        customFields?: Record<string, any>
+        savedAt?: string
+      }
+
+      if (parsedDraft.submittedData) {
+        Object.entries(parsedDraft.submittedData).forEach(([key, value]) => {
+          setValue(key as string, value)
+        })
+      }
+
+      if (parsedDraft.customFields) {
+        setCustomFieldValues(parsedDraft.customFields)
+      }
+
+      if (parsedDraft.savedAt) {
+        setLastSavedAt(parsedDraft.savedAt)
+      }
+    } catch (error) {
+      console.warn('Failed to load saved draft', error)
+    }
+  }, [existingApplication, setValue, storageKey])
+
+  useEffect(() => {
+    if (existingApplication) return
+    if (!isDirty) return
+
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false
+      return
+    }
+
+    if (autoSaveTimeoutRef.current) {
+      window.clearTimeout(autoSaveTimeoutRef.current)
+    }
+
+    setIsAutoSaving(true)
+    setAutoSaveError(null)
+
+    autoSaveTimeoutRef.current = window.setTimeout(() => {
+      try {
+        const savedAt = new Date().toISOString()
+        const draftPayload = {
+          submittedData: {
+            ...watchedValues,
+            ...customFieldValues
+          },
+          customFields: customFieldValues,
+          savedAt
+        }
+        localStorage.setItem(storageKey, JSON.stringify(draftPayload))
+        setLastSavedAt(savedAt)
+      } catch (error) {
+        setAutoSaveError('Auto-save failed. Please use Save Draft.')
+      } finally {
+        setIsAutoSaving(false)
+      }
+    }, 900)
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        window.clearTimeout(autoSaveTimeoutRef.current)
+      }
+    }
+  }, [customFieldValues, existingApplication, isDirty, storageKey, watchedValues])
 
   // Handle custom field changes
   const handleCustomFieldChange = (fieldName: string, value: any) => {
@@ -421,7 +539,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
     }
   }
 
-  const onSubmit = async (data: FormData) => {
+  const saveApplication = async (data: FormData, draft: boolean) => {
     try {
       const applicationData = {
         marketId: market.id,
@@ -431,7 +549,7 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
           ...customFieldValues
         },
         customFields: customFieldValues,
-        status: isDraft ? 'draft' as const : 'submitted' as const,
+        status: draft ? 'draft' as const : 'submitted' as const,
       }
 
       let result: Application | null = null
@@ -441,8 +559,11 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         const success = await updateApplication(existingApplication.id, applicationData)
         if (success && onSuccess) {
           // If updating draft, might need to submit
-          if (!isDraft && existingApplication.status === 'draft') {
+          if (!draft && existingApplication.status === 'draft') {
             await submitApplication(existingApplication.id)
+          }
+          if (!draft) {
+            localStorage.removeItem(storageKey)
           }
           onSuccess(existingApplication)
         }
@@ -450,174 +571,230 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
         // Create new application
         result = await createApplication(applicationData)
         if (result && onSuccess) {
-          if (!isDraft) {
+          if (!draft) {
             await submitApplication(result.id)
+            localStorage.removeItem(storageKey)
           }
           onSuccess(result)
         }
+      }
+      if (draft) {
+        const savedAt = new Date().toISOString()
+        setLastSavedAt(savedAt)
       }
     } catch (error) {
       console.error('Error submitting application:', error)
     }
   }
 
-  const handleSaveDraft = () => {
-    setIsDraft(true)
-    handleSubmit(onSubmit)()
+  const onSubmit = async (data: FormData) => {
+    await saveApplication(data, false)
+  }
+
+  const handleSaveDraft = async () => {
+    const data = getValues()
+    await saveApplication(data, true)
   }
 
   const handleSubmitForm = () => {
-    setIsDraft(false)
     handleSubmit(onSubmit)()
   }
+
+  const handleNextStep = async () => {
+    const fields = (steps[currentStep]?.fields || []) as string[]
+    const isStepValid = await trigger(fields)
+    if (!isStepValid) return
+    setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))
+  }
+
+  const handlePreviousStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 0))
+  }
+
+  const progressValue = Math.round(((currentStep + 1) / steps.length) * 100)
 
   return (
     <div className={cn('max-w-2xl mx-auto', className)}>
       <Card className="p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-2">Apply to {market.name}</h2>
-          <p className="text-muted-foreground">
-            Complete the application form below. Fields marked with * are required.
-          </p>
+        <div className="mb-6 space-y-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Apply to {market.name}</h2>
+            <p className="text-muted-foreground">
+              Complete the application form below. Fields marked with * are required.
+            </p>
+          </div>
+
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span className="text-sm font-medium">
+                Step {currentStep + 1} of {steps.length} · {steps[currentStep]?.label}
+              </span>
+              <span className="text-xs text-muted-foreground">{progressValue}% complete</span>
+            </div>
+            <Progress value={progressValue} className="h-2" />
+            <p className="text-xs text-muted-foreground">{steps[currentStep]?.description}</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {isAutoSaving && <span>Saving draft...</span>}
+              {!isAutoSaving && lastSavedAt && (
+                <span>Last saved {new Date(lastSavedAt).toLocaleTimeString()}</span>
+              )}
+              {autoSaveError && <span className="text-destructive">{autoSaveError}</span>}
+            </div>
+          </div>
         </div>
 
+        {Object.keys(errors).length > 0 && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
+            <p className="font-medium text-destructive">Please review the highlighted fields:</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-destructive">
+              {Object.entries(errors).map(([field, error]) => (
+                <li key={field}>{error?.message as string}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Basic Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Business Name <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  {...register('businessName')}
-                  placeholder="Enter your business name"
-                  className={errors.businessName ? 'border-destructive' : ''}
-                />
-                {errors.businessName && (
-                  <p className="text-sm text-destructive">{errors.businessName.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Experience Level <span className="text-destructive">*</span>
-                </label>
-                <Select
-                  {...register('experience')}
-                  className={errors.experience ? 'border-destructive' : ''}
-                  options={[
-                    { value: '', label: 'Select experience level' },
-                    { value: '1-2 years', label: '1-2 years' },
-                    { value: '3-5 years', label: '3-5 years' },
-                    { value: '5-10 years', label: '5-10 years' },
-                    { value: '10+ years', label: '10+ years' },
-                  ]}
-                />
-                {errors.experience && (
-                  <p className="text-sm text-destructive">{errors.experience.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Business Description <span className="text-destructive">*</span>
-              </label>
-              <Textarea
-                {...register('businessDescription')}
-                placeholder="Describe your business, products, and services"
-                rows={4}
-                className={errors.businessDescription ? 'border-destructive' : ''}
-              />
-              {errors.businessDescription && (
-                <p className="text-sm text-destructive">{errors.businessDescription.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Contact Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Information</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Email <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  {...register('contactEmail')}
-                  type="email"
-                  placeholder="your@email.com"
-                  className={errors.contactEmail ? 'border-destructive' : ''}
-                />
-                {errors.contactEmail && (
-                  <p className="text-sm text-destructive">{errors.contactEmail.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Phone <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  {...register('contactPhone')}
-                  type="tel"
-                  placeholder="(555) 123-4567"
-                  className={errors.contactPhone ? 'border-destructive' : ''}
-                />
-                {errors.contactPhone && (
-                  <p className="text-sm text-destructive">{errors.contactPhone.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Website</label>
-              <Input
-                {...register('website')}
-                type="url"
-                placeholder="https://your-website.com"
-              />
-            </div>
-          </div>
-
-          {/* Custom Fields */}
-          {market.applicationFields && market.applicationFields.length > 0 && (
+          {currentStep === 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Additional Information</h3>
-              <div className="space-y-4">
-                {market.applicationFields.map(renderCustomField)}
+              <h3 className="text-lg font-semibold">Basic Information</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Business Name <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    {...register('businessName')}
+                    placeholder="Enter your business name"
+                    className={errors.businessName ? 'border-destructive' : ''}
+                  />
+                  {errors.businessName && (
+                    <p className="text-sm text-destructive">{errors.businessName.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Experience Level <span className="text-destructive">*</span>
+                  </label>
+                  <Select
+                    {...register('experience')}
+                    className={errors.experience ? 'border-destructive' : ''}
+                    options={[
+                      { value: '', label: 'Select experience level' },
+                      { value: '1-2 years', label: '1-2 years' },
+                      { value: '3-5 years', label: '3-5 years' },
+                      { value: '5-10 years', label: '5-10 years' },
+                      { value: '10+ years', label: '10+ years' },
+                    ]}
+                  />
+                  {errors.experience && (
+                    <p className="text-sm text-destructive">{errors.experience.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Business Description <span className="text-destructive">*</span>
+                </label>
+                <Textarea
+                  {...register('businessDescription')}
+                  placeholder="Describe your business, products, and services"
+                  rows={4}
+                  className={errors.businessDescription ? 'border-destructive' : ''}
+                />
+                {errors.businessDescription && (
+                  <p className="text-sm text-destructive">{errors.businessDescription.message}</p>
+                )}
               </div>
             </div>
           )}
 
-          {/* Certifications */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Certifications</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {['Organic Certified', 'FDA Approved', 'Local Producer', 'Vegan', 'Gluten-Free', 'Fair Trade'].map(cert => (
-                <Checkbox
-                  key={cert}
-                  checked={watch('certifications')?.includes(cert) || false}
-                  onValueChange={(checked: boolean) => {
-                    const current = watch('certifications') || []
-                    if (checked) {
-                      setValue('certifications', [...current, cert])
-                    } else {
-                      setValue('certifications', current.filter(c => c !== cert))
-                    }
-                  }}
-                  label={cert}
+          {currentStep === 1 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Contact Information</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Email <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    {...register('contactEmail')}
+                    type="email"
+                    placeholder="your@email.com"
+                    className={errors.contactEmail ? 'border-destructive' : ''}
+                  />
+                  {errors.contactEmail && (
+                    <p className="text-sm text-destructive">{errors.contactEmail.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Phone <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    {...register('contactPhone')}
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    className={errors.contactPhone ? 'border-destructive' : ''}
+                  />
+                  {errors.contactPhone && (
+                    <p className="text-sm text-destructive">{errors.contactPhone.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Website</label>
+                <Input
+                  {...register('website')}
+                  type="url"
+                  placeholder="https://your-website.com"
                 />
-              ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {currentStep === 2 && (
+            <>
+              {market.applicationFields && market.applicationFields.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Additional Information</h3>
+                  <div className="space-y-4">
+                    {market.applicationFields.map(renderCustomField)}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Certifications</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['Organic Certified', 'FDA Approved', 'Local Producer', 'Vegan', 'Gluten-Free', 'Fair Trade'].map(cert => (
+                    <Checkbox
+                      key={cert}
+                      checked={watch('certifications')?.includes(cert) || false}
+                      onValueChange={(checked: boolean) => {
+                        const current = watch('certifications') || []
+                        if (checked) {
+                          setValue('certifications', [...current, cert])
+                        } else {
+                          setValue('certifications', current.filter(c => c !== cert))
+                        }
+                      }}
+                      label={cert}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Actions */}
-          <div className="flex justify-between pt-6 border-t">
+          <div className="flex flex-col gap-4 pt-6 border-t sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
               variant="outline"
@@ -626,8 +803,19 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
             >
               Cancel
             </Button>
-            
-            <div className="space-x-2">
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {currentStep > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePreviousStep}
+                  disabled={isSubmitting}
+                >
+                  Back
+                </Button>
+              )}
+
               <Button
                 type="button"
                 variant="outline"
@@ -640,17 +828,27 @@ export const ApplicationForm: React.FC<ApplicationFormProps> = ({
                   'Save Draft'
                 )}
               </Button>
-              
-              <Button
-                type="button"
-                onClick={handleSubmitForm}
-                disabled={isSubmitting || !isValid}
-              >
-                {isSubmitting ? (
-                  <Spinner className="h-4 w-4 mr-2" />
-                ) : null}
-                Submit Application
-              </Button>
+
+              {currentStep < steps.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={isSubmitting}
+                >
+                  Continue
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleSubmitForm}
+                  disabled={isSubmitting || !isValid}
+                >
+                  {isSubmitting ? (
+                    <Spinner className="h-4 w-4 mr-2" />
+                  ) : null}
+                  Submit Application
+                </Button>
+              )}
             </div>
           </div>
         </form>

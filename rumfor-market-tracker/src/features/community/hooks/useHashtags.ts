@@ -74,18 +74,17 @@ export const useHashtags = (marketId: string) => {
     mutationFn: ({ hashtagId, value }: { hashtagId: string; value: number }) =>
       communityApi.voteOnHashtag(hashtagId, value),
     onSuccess: (response, { hashtagId, value }) => {
-      // Update the hashtag in the store
       const hashtag = hashtags.find(h => h.id === hashtagId)
       if (hashtag) {
-        // Remove existing vote from current user
         const filteredVotes = hashtag.votes.filter(v => v.userId !== 'user-1')
-        
-        // Add new vote if value is not 0
+
         if (value !== 0 && response.success && response.data) {
-          filteredVotes.push(response.data)
+          if ('votes' in response.data) {
+            updateHashtag(hashtagId, { votes: response.data.votes })
+          }
+        } else if (value === 0) {
+          updateHashtag(hashtagId, { votes: filteredVotes })
         }
-        
-        updateHashtag(hashtagId, { votes: filteredVotes })
       }
       queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
     },

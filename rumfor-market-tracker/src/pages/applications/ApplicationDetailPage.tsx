@@ -59,14 +59,20 @@ export const ApplicationDetailPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{application.market.name}</h1>
-          <p className="text-muted-foreground mt-1">
-            Application submitted on {formatDate(application.createdAt)}
-          </p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
+            <span className="h-2 w-2 rounded-full bg-accent" />
+            Status Timeline
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">{application.market.name}</h1>
+            <p className="text-muted-foreground mt-1">
+              Application submitted on {formatDate(application.createdAt)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           <ApplicationStatus status={application.status} showProgress={true} />
           <Button variant="outline" onClick={() => navigate('/applications')}>
             Back to Applications

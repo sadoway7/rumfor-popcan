@@ -35,9 +35,9 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
     }
 
     const sizes = {
-      sm: 'px-2 py-0.5 text-xs',
-      md: 'px-2.5 py-0.5 text-xs',
-      lg: 'px-3 py-1 text-sm',
+      sm: 'min-h-[24px] px-2 py-0.5 text-xs',
+      md: 'min-h-[24px] px-2.5 py-0.5 text-xs',
+      lg: 'min-h-[28px] px-3 py-1 text-sm',
     }
 
     return (

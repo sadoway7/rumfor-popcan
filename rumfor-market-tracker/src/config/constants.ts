@@ -23,6 +23,9 @@ export const MARKET_CATEGORIES = {
   HOLIDAY_MARKET: 'holiday-market',
   CRAFT_SHOW: 'craft-show',
   COMMUNITY_EVENT: 'community-event',
+  NIGHT_MARKET: 'night-market',
+  STREET_FAIR: 'street-fair',
+  VINTAGE_ANTIQUE: 'vintage-antique',
 } as const
 
 // Application statuses
@@ -32,6 +35,7 @@ export const APPLICATION_STATUSES = {
   UNDER_REVIEW: 'under-review',
   APPROVED: 'approved',
   REJECTED: 'rejected',
+  WITHDRAWN: 'withdrawn',
 } as const
 
 // Pagination

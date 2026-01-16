@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useId, useRef } from 'react'
 import { cn } from '@/utils/cn'
 import { Button } from './Button'
 
@@ -28,6 +28,9 @@ const Modal: React.FC<ModalProps> = ({
   ...props
 }) => {
   const modalRef = useRef<HTMLDivElement>(null)
+  const lastFocusedRef = useRef<HTMLElement | null>(null)
+  const titleId = useId()
+  const descriptionId = useId()
 
   // Handle escape key
   useEffect(() => {
@@ -51,8 +54,51 @@ const Modal: React.FC<ModalProps> = ({
 
   // Focus management
   useEffect(() => {
-    if (isOpen && modalRef.current) {
-      modalRef.current.focus()
+    if (isOpen) {
+      lastFocusedRef.current = document.activeElement as HTMLElement | null
+    }
+
+    return () => {
+      lastFocusedRef.current?.focus()
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return
+
+    const modalNode = modalRef.current
+    const focusable = modalNode.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+
+    const first = focusable[0] ?? modalNode
+    const last = focusable[focusable.length - 1] ?? modalNode
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+
+      if (focusable.length === 0) {
+        event.preventDefault()
+        modalNode.focus()
+        return
+      }
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    modalNode.addEventListener('keydown', handleKeyDown)
+    requestAnimationFrame(() => {
+      first.focus()
+    })
+
+    return () => {
+      modalNode.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen])
 
@@ -74,18 +120,22 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-background/80 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
       <div
         ref={modalRef}
         className={cn(
-          'relative w-full rounded-lg bg-surface border border-border shadow-lg',
-          'focus:outline-none',
+          'relative flex w-full max-h-[90vh] flex-col rounded-lg bg-surface border border-border shadow-lg',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           sizes[size],
           'animate-in fade-in-0 zoom-in-95 duration-200',
           className
         )}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         {...props}
       >
@@ -93,12 +143,12 @@ const Modal: React.FC<ModalProps> = ({
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
               {title && (
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 id={titleId} className="text-lg font-semibold text-foreground">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p id={descriptionId} className="mt-1 text-sm text-muted-foreground">
                   {description}
                 </p>
               )}
@@ -108,11 +158,11 @@ const Modal: React.FC<ModalProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="h-8 w-8 p-0"
+                className="h-11 w-11 p-0"
                 aria-label="Close modal"
               >
                 <svg
-                  className="h-4 w-4"
+                  className="h-5 w-5"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -124,7 +174,7 @@ const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {children}
         </div>
       </div>

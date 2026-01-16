@@ -63,7 +63,10 @@ const categoryLabels = {
   'food-festival': 'Food Festival',
   'holiday-market': 'Holiday Market',
   'craft-show': 'Craft Show',
-  'community-event': 'Community Event'
+  'community-event': 'Community Event',
+  'night-market': 'Night Market',
+  'street-fair': 'Street Fair',
+  'vintage-antique': 'Vintage & Antique'
 }
 
 const categoryColors: Record<string, string> = {
@@ -73,7 +76,10 @@ const categoryColors: Record<string, string> = {
   'food-festival': 'bg-orange-100 text-orange-800 border-orange-200',
   'holiday-market': 'bg-red-100 text-red-800 border-red-200',
   'craft-show': 'bg-pink-100 text-pink-800 border-pink-200',
-  'community-event': 'bg-gray-100 text-gray-800 border-gray-200'
+  'community-event': 'bg-gray-100 text-gray-800 border-gray-200',
+  'night-market': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'street-fair': 'bg-amber-100 text-amber-800 border-amber-200',
+  'vintage-antique': 'bg-slate-100 text-slate-800 border-slate-200'
 }
 
 const statusColors: Record<string, string> = {

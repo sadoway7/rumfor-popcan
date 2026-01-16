@@ -431,14 +431,12 @@ const photoController = {
   }
 }
 
+// Public routes
+router.get('/market/:marketId', validateMongoId('marketId'), getPhotos)
+router.get('/market/:marketId/hero', validateMongoId('marketId'), getHeroPhoto)
+
 // Protected routes
 router.use(verifyToken)
-
-// Get photos for a market
-router.get('/market/:marketId', validateMongoId('marketId'), getPhotos)
-
-// Get hero photo for a market
-router.get('/market/:marketId/hero', validateMongoId('marketId'), getHeroPhoto)
 
 // Upload photos (with file upload)
 router.post('/market/:marketId', validateMongoId('marketId'), upload.array('photos', 10), uploadPhotos)

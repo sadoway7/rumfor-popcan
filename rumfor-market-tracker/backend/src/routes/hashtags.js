@@ -89,6 +89,25 @@ const hashtagController = {
         })
       }
 
+      // Rate limiting: Check user's hashtag creation rate (max 5 per day per market)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      const marketDoc = await Market.findById(marketId)
+      const userHashtagsToday = marketDoc.hashtags.filter(hashtag =>
+        hashtag.suggestedBy && hashtag.suggestedBy.toString() === userId &&
+        hashtag.createdAt && hashtag.createdAt >= today && hashtag.createdAt < tomorrow
+      ).length
+
+      if (userHashtagsToday >= 5) {
+        return res.status(429).json({
+          success: false,
+          message: 'Rate limit exceeded: Maximum 5 hashtags per day per market allowed'
+        })
+      }
+
       // Validate marketId
       if (!mongoose.Types.ObjectId.isValid(marketId)) {
         return res.status(400).json({
@@ -121,7 +140,8 @@ const hashtagController = {
         text: cleanText,
         votes: { up: 0, down: 0 },
         suggestedBy: userId,
-        voters: []
+        voters: [],
+        createdAt: new Date()
       })
 
       await market.save()
@@ -447,31 +467,9 @@ const hashtagController = {
   }
 }
 
-// Protected routes
-router.use(verifyToken)
-
-// Get hashtags for a market
+// Public routes
 router.get('/market/:marketId', hashtagController.getMarketHashtags)
-
-// Get trending hashtags
 router.get('/trending', hashtagController.getTrendingHashtags)
-
-// Create new hashtag
-router.post('/', hashtagController.createHashtag)
-
-// Update hashtag
-router.patch('/:hashtagId', hashtagController.updateHashtag)
-
-// Delete hashtag
-router.delete('/:hashtagId', hashtagController.deleteHashtag)
-
-// Vote on hashtag
-router.post('/:hashtagId/vote', hashtagController.voteHashtag)
-
-// Remove vote from hashtag
-router.delete('/:hashtagId/vote', hashtagController.removeHashtagVote)
-
-// Get predefined hashtags (public route - no verifyToken)
 router.get('/predefined', (req, res) => {
   const predefinedHashtags = [
     'organic', 'local', 'fresh', 'handmade', 'artisan', 'seasonal',
@@ -488,5 +486,24 @@ router.get('/predefined', (req, res) => {
     message: 'Predefined hashtags retrieved successfully'
   })
 })
+
+// Protected routes
+router.use(verifyToken)
+
+// Create new hashtag
+router.post('/', hashtagController.createHashtag)
+
+// Update hashtag
+router.patch('/:hashtagId', hashtagController.updateHashtag)
+
+// Delete hashtag
+router.delete('/:hashtagId', hashtagController.deleteHashtag)
+
+// Vote on hashtag
+router.post('/:hashtagId/vote', hashtagController.voteHashtag)
+
+// Remove vote from hashtag
+router.delete('/:hashtagId/vote', hashtagController.removeHashtagVote)
+
 
 module.exports = router

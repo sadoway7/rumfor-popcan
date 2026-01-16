@@ -3,6 +3,7 @@ import { useApplicationsStore } from '@/features/applications/applicationsStore'
 import { applicationsApi } from '@/features/applications/applicationsApi'
 import { Application, ApplicationStatus, ApplicationFilters } from '@/types'
 import { useAuthStore } from '@/features/auth/authStore'
+import { isValidApplicationStatusTransition } from '@/utils/applicationStatus'
 
 export const useApplications = () => {
   const {
@@ -174,6 +175,12 @@ export const useApplications = () => {
   // Submit application
   const submitApplication = useCallback(async (id: string) => {
     if (isSubmitting) return false
+
+    const current = getApplicationById(id)
+    if (current && !isValidApplicationStatusTransition(current.status, 'submitted')) {
+      setError(`Invalid status transition: ${current.status} -> submitted`)
+      return false
+    }
     
     setSubmitting(true)
     clearError()
@@ -199,6 +206,12 @@ export const useApplications = () => {
   // Update application status
   const updateStatus = useCallback(async (id: string, status: ApplicationStatus, notes?: string) => {
     if (isUpdating) return false
+
+    const current = getApplicationById(id)
+    if (current && !isValidApplicationStatusTransition(current.status, status)) {
+      setError(`Invalid status transition: ${current.status} -> ${status}`)
+      return false
+    }
     
     setUpdating(true)
     clearError()
@@ -224,6 +237,12 @@ export const useApplications = () => {
   // Withdraw application
   const withdrawApplication = useCallback(async (id: string) => {
     if (isUpdating) return false
+
+    const current = getApplicationById(id)
+    if (current && !isValidApplicationStatusTransition(current.status, 'withdrawn')) {
+      setError(`Invalid status transition: ${current.status} -> withdrawn`)
+      return false
+    }
     
     setUpdating(true)
     clearError()

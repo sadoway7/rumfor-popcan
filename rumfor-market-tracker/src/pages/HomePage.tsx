@@ -5,7 +5,7 @@ import { useAuthStore } from '@/features/auth/authStore'
 import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
 import { MarketGrid } from '@/components/MarketGrid'
 import { marketsApi } from '@/features/markets/marketsApi'
-import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Hammer, Clock, Zap, X } from 'lucide-react'
+import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Hammer, X, Moon, MapPin, Archive } from 'lucide-react'
 
 // Market categories for browsing - matching example layout
 const marketCategories = [
@@ -13,9 +13,10 @@ const marketCategories = [
   { name: 'Arts & Crafts', icon: Palette },
   { name: 'Flea Markets', icon: ShoppingBag },
   { name: 'Food Festivals', icon: UtensilsCrossed },
-  { name: 'Antique Shows', icon: Clock },
-  { name: 'Craft Fairs', icon: Hammer },
-  { name: 'Street Fairs', icon: Zap },
+  { name: 'Vintage & Antique', icon: Archive },
+  { name: 'Craft Shows', icon: Hammer },
+  { name: 'Night Markets', icon: Moon },
+  { name: 'Street Fairs', icon: MapPin },
   { name: 'Holiday Markets', icon: Gift },
   { name: 'Community Events', icon: Users }
 ]

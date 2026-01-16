@@ -48,6 +48,19 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
     return tags
   }, [])
 
+  // Calculate top-voted photo for hero selection transparency
+  const getTopVotedPhoto = () => {
+    if (photos.length === 0) return null
+    // Mock vote calculation - in real app this would come from API
+    const photosWithVotes = photos.map(photo => ({
+      ...photo,
+      mockVotes: Math.floor(Math.random() * 50) + 1 // Mock data
+    }))
+    return photosWithVotes.sort((a, b) => b.mockVotes - a.mockVotes)[0]
+  }
+
+  const topVotedPhoto = getTopVotedPhoto()
+
   // Filter photos by selected tag
   const filteredPhotos = selectedTag 
     ? photos.filter(photo => photo.tags?.includes(selectedTag))
@@ -225,15 +238,24 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           
           {/* Photo Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredPhotos.map((photo) => (
-              <PhotoThumbnail
-                key={photo.id}
-                photo={photo}
-                onClick={() => handlePhotoClick(photo.id)}
-                onDelete={photo.userId === user?.id ? () => handleDeletePhoto(photo.id) : undefined}
-                showActions={true}
-              />
-            ))}
+            {filteredPhotos.map((photo) => {
+              const isHeroPhoto = topVotedPhoto && photo.id === topVotedPhoto.id
+              return (
+                <div key={photo.id} className="relative">
+                  <PhotoThumbnail
+                    photo={photo}
+                    onClick={() => handlePhotoClick(photo.id)}
+                    onDelete={photo.userId === user?.id ? () => handleDeletePhoto(photo.id) : undefined}
+                    showActions={true}
+                  />
+                  {isHeroPhoto && (
+                    <div className="absolute top-2 right-2 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-medium">
+                      🏆 Top Voted
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
           
           {/* Load More Button */}

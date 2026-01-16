@@ -12,6 +12,9 @@ const marketCategories = [
   { value: 'craft-show', label: 'Craft Show' },
   { value: 'community-event', label: 'Community Event' },
   { value: 'holiday-market', label: 'Holiday Market' },
+  { value: 'night-market', label: 'Night Market' },
+  { value: 'street-fair', label: 'Street Fair' },
+  { value: 'vintage-antique', label: 'Vintage & Antique' },
 ]
 
 const vendorAttendanceOptions = [

@@ -36,9 +36,10 @@ const getComments = catchAsync(async (req, res, next) => {
 
 // Create a new comment
 const createComment = catchAsync(async (req, res, next) => {
-  const { marketId } = req.params
+  const { marketId: marketIdParam } = req.params
   const { content, parentId } = req.body
   const userId = req.user.id
+  const marketId = marketIdParam || req.body.marketId
 
   // Verify market exists
   const market = await Market.findById(marketId)
@@ -47,6 +48,10 @@ const createComment = catchAsync(async (req, res, next) => {
   }
 
   // Validate input
+  if (!marketId) {
+    return next(new AppError('Market ID is required', 400))
+  }
+
   if (!content || content.trim().length === 0) {
     return next(new AppError('Comment content is required', 400))
   }
@@ -187,7 +192,7 @@ const addReaction = catchAsync(async (req, res, next) => {
   const { type } = req.body
   const userId = req.user.id
 
-  if (!type || !['like', 'love', 'laugh', 'angry', 'sad'].includes(type)) {
+  if (!type || !['like', 'dislike', 'love', 'laugh', 'angry', 'sad'].includes(type)) {
     return next(new AppError('Valid reaction type is required', 400))
   }
 
@@ -268,11 +273,29 @@ const reportComment = catchAsync(async (req, res, next) => {
   sendSuccess(res, null, 'Comment reported successfully')
 })
 
+// Remove reaction from comment
+const removeReaction = catchAsync(async (req, res, next) => {
+  const { commentId } = req.params
+  const userId = req.user.id
+
+  const comment = await Comment.findById(commentId)
+  if (!comment) {
+    return next(new AppError('Comment not found', 404))
+  }
+
+  await Comment.findByIdAndUpdate(commentId, {
+    $pull: { reactions: { user: userId } }
+  })
+
+  sendSuccess(res, null, 'Reaction removed successfully')
+})
+
 module.exports = {
   getComments,
   createComment,
   updateComment,
   deleteComment,
   addReaction,
+  removeReaction,
   reportComment
 }

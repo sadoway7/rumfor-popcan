@@ -115,6 +115,13 @@ const verifyToken = async (req, res, next) => {
       })
     }
     
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is inactive. Please contact support.'
+      })
+    }
+
     // Check if account is locked
     if (user.isLocked) {
       return res.status(423).json({
@@ -123,6 +130,13 @@ const verifyToken = async (req, res, next) => {
       })
     }
     
+    if (decoded.tv !== user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token has been revoked. Please log in again.'
+      })
+    }
+
     // Attach user to request
     req.user = user
     next()
@@ -183,6 +197,13 @@ const verifyRefreshToken = async (req, res, next) => {
       })
     }
     
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is inactive. Please contact support.'
+      })
+    }
+
     // Check if account is locked
     if (user.isLocked) {
       return res.status(423).json({
@@ -191,6 +212,13 @@ const verifyRefreshToken = async (req, res, next) => {
       })
     }
     
+    if (decoded.tv !== user.tokenVersion) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token has been revoked. Please log in again.'
+      })
+    }
+
     // Attach user to request
     req.user = user
     next()
@@ -376,12 +404,27 @@ const verifyTwoFactorToken = async (req, res, next) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email }).select('+twoFactorEnabled +twoFactorSecret +twoFactorBackupCodes')
+    const normalizedEmail = email?.toLowerCase().trim()
+    const user = await User.findOne({ email: normalizedEmail }).select('+twoFactorEnabled +twoFactorSecret +twoFactorBackupCodes')
 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials.'
+      })
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account is inactive. Please contact support.'
+      })
+    }
+
+    if (user.isLocked) {
+      return res.status(423).json({
+        success: false,
+        message: 'Account is temporarily locked.'
       })
     }
 
@@ -424,8 +467,8 @@ const optionalAuth = async (req, res, next) => {
     // Try to verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id).select('-password')
-    
-    if (user && !user.isLocked) {
+
+    if (user && user.isActive && !user.isLocked && decoded.tv === user.tokenVersion) {
       req.user = user
     }
     
@@ -457,27 +500,27 @@ const requireEmailVerification = (req, res, next) => {
 }
 
 // Generate JWT token
-const generateToken = (userId, expiresIn = '24h') => {
+const generateToken = (userId, tokenVersion = 0, expiresIn = '24h') => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, tv: tokenVersion },
     process.env.JWT_SECRET,
     { expiresIn }
   )
 }
 
 // Generate refresh token
-const generateRefreshToken = (userId, expiresIn = '7d') => {
+const generateRefreshToken = (userId, tokenVersion = 0, expiresIn = '7d') => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, tv: tokenVersion },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn }
   )
 }
 
 // Generate tokens pair
-const generateTokens = (userId) => {
-  const accessToken = generateToken(userId, process.env.JWT_EXPIRES_IN || '24h')
-  const refreshToken = generateRefreshToken(userId, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
+const generateTokens = (userId, tokenVersion = 0) => {
+  const accessToken = generateToken(userId, tokenVersion, process.env.JWT_EXPIRES_IN || '24h')
+  const refreshToken = generateRefreshToken(userId, tokenVersion, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
   
   return {
     accessToken,

@@ -40,8 +40,6 @@ const PromoterCalendarPage = React.lazy(() => import('@/pages/promoter/PromoterC
 const PromoterCreateMarketPage = React.lazy(() => import('@/pages/promoter/PromoterCreateMarketPage').then(module => ({ default: module.PromoterCreateMarketPage })))
 const BusinessPlanningPage = React.lazy(() => import('@/pages/promoter/BusinessPlanningPage').then(module => ({ default: module.BusinessPlanningPage })))
 
-// Vendor Market Creation - lazy loaded
-const VendorCreateMarketPage = React.lazy(() => import('@/pages/vendors/VendorCreateMarketPage').then(module => ({ default: module.VendorCreateMarketPage })))
 
 // Admin pages - lazy loaded
 const AdminDashboardPage = React.lazy(() => import('@/pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
