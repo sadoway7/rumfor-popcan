@@ -103,7 +103,7 @@ export type MarketCategory =
 
 export type MarketStatus = 'draft' | 'active' | 'cancelled' | 'completed'
 
-export type MarketType = 'user-created' | 'promoter-managed'
+export type MarketType = 'vendor-created' | 'promoter-managed'
 
 // User Market Tracking relationship
 export interface UserMarketTracking {
@@ -562,4 +562,30 @@ export interface BulkOperation {
   createdBy: string
   createdAt: string
   completedAt?: string
+}
+
+// Market Conversion Types
+export interface MarketConversionRequest {
+  id: string
+  marketId: string
+  market: Market
+  requesterId: string
+  requester: User
+  reason: string
+  status: 'pending' | 'approved' | 'rejected'
+  reviewedBy?: string
+  reviewedAt?: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// Honor System Tracking Types
+export interface VendorAttendance {
+  id: string
+  userId: string
+  marketId: string
+  status: 'attending' | 'interested' | 'not-attending' | 'maybe'
+  notes?: string
+  lastUpdated: string
 }

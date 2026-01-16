@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Community.Photos";
+  "Community.Photos" [
+    label="Community Photos",
+    type="card",
+    prompt="Improve photo sharing: mobile upload flow, lightweight compression, and top-voted hero selection transparency."
+  ];
+}

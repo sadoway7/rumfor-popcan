@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Promoters.Claim";
+  "Promoters.Claim" [
+    label="Promoter Claiming",
+    type="card",
+    prompt="Clarify promoter claiming: eligibility criteria, verification steps, and clear CTA placement on market detail."
+  ];
+}

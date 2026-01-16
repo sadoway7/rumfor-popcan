@@ -46,6 +46,16 @@ const statusColors = {
   'completed': 'bg-muted text-muted-foreground border-muted'
 }
 
+const marketTypeColors = {
+  'vendor-created': 'bg-blue-100 text-blue-800 border-blue-200',
+  'promoter-managed': 'bg-purple-100 text-purple-800 border-purple-200'
+}
+
+const marketTypeLabels = {
+  'vendor-created': 'Community Market',
+  'promoter-managed': 'Managed Market'
+}
+
 export const MarketCard: React.FC<MarketCardProps> = ({
   market,
   className,
@@ -108,7 +118,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   if (variant === 'compact') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('p-4 hover:shadow-md transition-shadow cursor-pointer', className)}>
+        <Card className={cn('p-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer', className)}>
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{market.name}</h3>
@@ -141,7 +151,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   if (variant === 'featured') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('overflow-hidden hover:shadow-lg transition-shadow cursor-pointer', className)}>
+        <Card className={cn('overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
           {market.images && market.images.length > 0 && (
             <div className="relative h-48">
               <img
@@ -338,7 +348,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   // Default variant
   return (
     <Link to={detailPath || `/markets/${market.id}`} className="block">
-      <Card className={cn('overflow-hidden hover:shadow-md transition-shadow cursor-pointer', className)}>
+      <Card className={cn('overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
         {market.images && market.images.length > 0 && (
           <div className="relative h-40">
             <img
@@ -364,9 +374,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         <div className="p-4">
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-semibold text-lg line-clamp-2 flex-1">{market.name}</h3>
-            <Badge variant="outline" className={cn('ml-2 flex-shrink-0', statusColors[market.status])}>
-              {market.status}
-            </Badge>
+            <div className="flex flex-col sm:flex-row gap-1 ml-2 flex-shrink-0">
+              <Badge variant="outline" className={cn('text-xs', marketTypeColors[market.marketType])}>
+                {marketTypeLabels[market.marketType]}
+              </Badge>
+              <Badge variant="outline" className={cn('text-xs', statusColors[market.status])}>
+                {market.status}
+              </Badge>
+            </div>
           </div>
           
           <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{market.description}</p>

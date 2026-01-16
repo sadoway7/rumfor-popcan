@@ -14,6 +14,7 @@ const {
   resendVerification,
   logout,
   deleteAccount,
+  getResetToken,
   // Two-factor authentication
   setupTwoFactor,
   verifyTwoFactorSetup,
@@ -33,6 +34,11 @@ router.post('/refresh-token', verifyRefreshToken, refreshToken)
 router.post('/forgot-password', forgotPassword)
 router.post('/reset-password', resetPassword)
 router.post('/verify-email', verifyEmail)
+
+// Development helper - never expose in production!
+if (process.env.NODE_ENV === 'development') {
+  router.post('/reset-token', getResetToken)
+}
 
 // Two-factor authentication routes (some public, some protected)
 const { verifyTwoFactorToken } = require('../middleware/auth') // We'll need to implement this

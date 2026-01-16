@@ -1,0 +1,164 @@
+{
+  "cards": [
+    {
+      "id": "Markets.Discovery",
+      "label": "Market Discovery",
+      "type": "card",
+      "prompt": "Improve market discovery UX: simplify filters, prioritize location-first results, and surface trending hashtags without overwhelming new users.",
+      "file": "market_discovery.dot",
+      "notes": "market_discovery.md"
+    },
+    {
+      "id": "Applications.Flow",
+      "label": "Application Flow",
+      "type": "card",
+      "prompt": "Reduce friction in the application flow: multi-step form, pre-fill from profile, auto-save drafts, and clear status timeline.",
+      "file": "application_flow.dot",
+      "notes": "application_flow.md"
+    },
+    {
+      "id": "Promoters.Claim",
+      "label": "Promoter Claiming",
+      "type": "card",
+      "prompt": "Clarify promoter claiming: eligibility criteria, verification steps, and clear CTA placement on market detail.",
+      "file": "promoter_claiming.dot",
+      "notes": "promoter_claiming.md"
+    },
+    {
+      "id": "Community.Photos",
+      "label": "Community Photos",
+      "type": "card",
+      "prompt": "Improve photo sharing: mobile upload flow, lightweight compression, and top-voted hero selection transparency.",
+      "file": "community_photos.dot",
+      "notes": "community_photos.md"
+    },
+    {
+      "id": "Community.Hashtags",
+      "label": "Hashtag Voting",
+      "type": "card",
+      "prompt": "Refine hashtag voting: limit noise, surface top tags, and align with market categories and accessibility filters.",
+      "file": "hashtag_voting.dot",
+      "notes": "hashtag_voting.md"
+    },
+    {
+      "id": "Tracking.Statuses",
+      "label": "Tracking Statuses",
+      "type": "card",
+      "prompt": "Clarify status progression (interested → applied → booked → completed) with UI cues and timeline messaging.",
+      "file": "tracking_statuses.dot",
+      "notes": "tracking_statuses.md"
+    },
+    {
+      "id": "Notifications.System",
+      "label": "Notifications",
+      "type": "card",
+      "prompt": "Tune notifications: prioritize application updates, reduce noise, and ensure mobile-friendly delivery and settings.",
+      "file": "notifications.dot",
+      "notes": "notifications.md"
+    },
+    {
+      "id": "Tracking.Expenses",
+      "label": "Expense Tracking",
+      "type": "card",
+      "prompt": "Simplify expense tracking for market events: quick-entry form, category presets, and profit summary.",
+      "file": "expense_tracking.dot",
+      "notes": "expense_tracking.md"
+    },
+    {
+      "id": "UX.MobileAccessibility",
+      "label": "Mobile Accessibility",
+      "type": "card",
+      "prompt": "Audit mobile accessibility: 44px touch targets, contrast ratios, and keyboard navigation for modal flows.",
+      "file": "mobile_accessibility.dot",
+      "notes": "mobile_accessibility.md"
+    },
+    {
+      "id": "Onboarding.Friction",
+      "label": "Onboarding Friction",
+      "type": "card",
+      "prompt": "Reduce onboarding friction: progressive registration, social login options, and value before signup.",
+      "file": "onboarding_friction.dot",
+      "notes": "onboarding_friction.md"
+    },
+    {
+      "id": "Auth.MongoConnection",
+      "label": "MongoDB Connection Health",
+      "type": "card",
+      "prompt": "Verify live MongoDB connectivity: ensure Mongoose uses the correct env var, add startup health checks, connection retry/backoff, and clear logs for connection failures.",
+      "file": "auth_mongo_connection.dot",
+      "notes": "auth_mongo_connection.md"
+    },
+    {
+      "id": "Auth.UserLogin",
+      "label": "User Login API",
+      "type": "card",
+      "prompt": "Harden the login flow: validate inputs, confirm password hashing/compare, standardize error responses, and ensure auth tokens are issued consistently.",
+      "file": "auth_user_login.dot",
+      "notes": "auth_user_login.md"
+    },
+    {
+      "id": "Auth.UserRegistration",
+      "label": "User Registration",
+      "type": "card",
+      "prompt": "Fix user creation with live MongoDB: validate payloads, enforce unique email/username, hash passwords, set default roles, and handle duplicate errors cleanly.",
+      "file": "auth_user_registration.dot",
+      "notes": "auth_user_registration.md"
+    },
+    {
+      "id": "Auth.UserManagement",
+      "label": "User Management",
+      "type": "card",
+      "prompt": "Audit user management endpoints: list/update/deactivate users with proper RBAC, input validation, and audit logging.",
+      "file": "auth_user_management.dot",
+      "notes": "auth_user_management.md"
+    },
+    {
+      "id": "Auth.RolesPermissions",
+      "label": "Roles & Permissions",
+      "type": "card",
+      "prompt": "Align role-based access control with API routes: confirm role checks in middleware and ensure admin-only paths are protected.",
+      "file": "auth_roles_permissions.dot",
+      "notes": "auth_roles_permissions.md"
+    },
+    {
+      "id": "Auth.EmailVerification",
+      "label": "Email Verification",
+      "type": "card",
+      "prompt": "Stabilize email verification: generate tokens, store expiry, mark verified, and handle re-send flow for unverified users.",
+      "file": "auth_email_verification.dot",
+      "notes": "auth_email_verification.md"
+    },
+    {
+      "id": "Auth.PasswordReset",
+      "label": "Password Reset",
+      "type": "card",
+      "prompt": "Review password reset flow: secure token generation, expiry validation, and forced logout of old sessions after reset.",
+      "file": "auth_password_reset.dot",
+      "notes": "auth_password_reset.md"
+    },
+    {
+      "id": "Auth.RefreshTokens",
+      "label": "Refresh Tokens",
+      "type": "card",
+      "prompt": "Implement/verify refresh token rotation and reuse detection; ensure token storage and invalidation are correct.",
+      "file": "auth_refresh_tokens.dot",
+      "notes": "auth_refresh_tokens.md"
+    },
+    {
+      "id": "Auth.SessionSecurity",
+      "label": "Session Security",
+      "type": "card",
+      "prompt": "Add session hardening: rate limit login, lockout on repeated failures, and optional device/session tracking.",
+      "file": "auth_session_security.dot",
+      "notes": "auth_session_security.md"
+    },
+    {
+      "id": "Data.UserSchemaIntegrity",
+      "label": "User Schema Integrity",
+      "type": "card",
+      "prompt": "Validate user schema integrity in MongoDB: required fields, indexes, normalization, and safe defaults for new users.",
+      "file": "data_user_schema_integrity.dot",
+      "notes": "data_user_schema_integrity.md"
+    }
+  ]
+}

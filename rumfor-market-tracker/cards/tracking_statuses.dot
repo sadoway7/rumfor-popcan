@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Tracking.Statuses";
+  "Tracking.Statuses" [
+    label="Tracking Statuses",
+    type="card",
+    prompt="Clarify status progression (interested → applied → booked → completed) with UI cues and timeline messaging."
+  ];
+}

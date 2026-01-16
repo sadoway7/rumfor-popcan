@@ -10,6 +10,8 @@ import { useVendorApplications } from '@/features/applications/hooks/useApplicat
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import { HashtagVoting } from '@/components/HashtagVoting'
+import { MarketLifespan } from '@/components/MarketLifespan'
+import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
 
@@ -45,6 +47,7 @@ export const MarketDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showFullDescription, setShowFullDescription] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
   
   const { market, isLoading, error, refetch } = useMarket(id!)
   const {

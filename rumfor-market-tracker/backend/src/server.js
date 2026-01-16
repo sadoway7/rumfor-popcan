@@ -1,4 +1,4 @@
-require('dotenv').config()
+ to require('dotenv').config()
 const express = require('express')
 const path = require('path')
 const cors = require('cors')
@@ -17,6 +17,7 @@ const { extractVersionFromPath, addVersionHeaders, handleDeprecation } = require
 // Import routes
 const authRoutes = require('./routes/auth')
 const marketRoutes = require('./routes/markets')
+const marketConversionsRoutes = require('./routes/marketConversions')
 const applicationRoutes = require('./routes/applications')
 const userRoutes = require('./routes/users')
 const todoRoutes = require('./routes/todos')
@@ -26,6 +27,7 @@ const photoRoutes = require('./routes/photos')
 const hashtagRoutes = require('./routes/hashtags')
 const adminRoutes = require('./routes/admin')
 const notificationRoutes = require('./routes/notifications')
+const ralphCardsRoutes = require('./routes/ralphCards')
 
 const app = express()
 
@@ -82,8 +84,26 @@ const csrfProtection = csrf({
 app.use('/api/', userRateLimiter('general'))
 
 // CORS configuration
+const allowedOrigins = new Set([
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
+  'http://localhost:4173',
+  'http://127.0.0.1:4173'
+].filter(Boolean))
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, origin || true)
+    }
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, origin || true)
+    }
+    return callback(new Error('Not allowed by CORS'))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
@@ -156,6 +176,7 @@ app.use('/api/auth/reset-password', passwordResetLimiter)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/markets', marketRoutes)
+app.use('/api/market-conversions', marketConversionsRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/todos', todoRoutes)
@@ -165,6 +186,7 @@ app.use('/api/photos', uploadRateLimiter, photoRoutes)
 app.use('/api/hashtags', hashtagRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/ralph/cards', ralphCardsRoutes)
 
 // Versioned routes (v1)
 app.use('/api/v1/auth/login', authRateLimiter)
@@ -174,6 +196,7 @@ app.use('/api/v1/auth/reset-password', passwordResetLimiter)
 
 app.use('/api/v1/auth', authRoutes)
 app.use('/api/v1/markets', marketRoutes)
+app.use('/api/v1/market-conversions', marketConversionsRoutes)
 app.use('/api/v1/applications', applicationRoutes)
 app.use('/api/v1/users', userRoutes)
 app.use('/api/v1/todos', todoRoutes)
@@ -183,6 +206,7 @@ app.use('/api/v1/photos', uploadRateLimiter, photoRoutes)
 app.use('/api/v1/hashtags', hashtagRoutes)
 app.use('/api/v1/admin', adminRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
+app.use('/api/v1/ralph/cards', ralphCardsRoutes)
 
 // CSRF error handler
 app.use(csrfErrorHandler)

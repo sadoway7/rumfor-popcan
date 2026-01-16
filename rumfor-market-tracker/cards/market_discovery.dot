@@ -1,0 +1,5 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Markets.Discovery";
+  "Markets.Discovery" [label="Market Discovery", type="card", prompt="Improve market discovery UX: simplify filters, prioritize location-first results, and surface trending hashtags without overwhelming new users."];
+}

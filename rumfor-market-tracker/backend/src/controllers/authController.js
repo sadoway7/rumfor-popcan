@@ -349,10 +349,36 @@ const deleteAccount = catchAsync(async (req, res, next) => {
   // 1. Soft delete the user
   // 2. Anonymize their data
   // 3. Remove personal information
-  
+
   await User.findByIdAndDelete(req.user.id)
 
   sendSuccess(res, null, 'Account deleted successfully')
+})
+
+// Development helper endpoint - get password reset token (never expose in production!)
+const getResetToken = catchAsync(async (req, res, next) => {
+  // Only available in development
+  if (process.env.NODE_ENV !== 'development') {
+    return next(new AppError('Endpoint not available in production', 404))
+  }
+
+  const { email } = req.body
+
+  if (!email) {
+    return next(new AppError('Email is required', 400))
+  }
+
+  const user = await User.findOne({ email })
+
+  if (!user) {
+    return next(new AppError('User not found', 404))
+  }
+
+  sendSuccess(res, {
+    hasResetToken: !!user.passwordResetToken,
+    resetExpires: user.passwordResetExpires,
+    email: user.email
+  }, 'Reset token status retrieved')
 })
 
 // Two-Factor Authentication
@@ -553,6 +579,7 @@ module.exports = {
   resendVerification,
   logout,
   deleteAccount,
+  getResetToken,
   // Two-factor authentication
   setupTwoFactor,
   verifyTwoFactorSetup,

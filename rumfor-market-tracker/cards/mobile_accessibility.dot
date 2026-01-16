@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "UX.MobileAccessibility";
+  "UX.MobileAccessibility" [
+    label="Mobile Accessibility",
+    type="card",
+    prompt="Audit mobile accessibility: 44px touch targets, contrast ratios, and keyboard navigation for modal flows."
+  ];
+}

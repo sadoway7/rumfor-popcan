@@ -232,7 +232,8 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = React.m
           <Button
             variant="outline"
             onClick={() => setShowCharts(!showCharts)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-10 touch-manipulation"
+            size="md"
           >
             <Filter className="w-4 h-4" />
             {showCharts ? 'Hide Charts' : 'Show Charts'}
@@ -240,14 +241,16 @@ export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = React.m
           <Button
             variant="outline"
             onClick={handleExport}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-10 touch-manipulation"
+            size="md"
           >
             <Download className="w-4 h-4" />
             Export
           </Button>
           <Button
             onClick={() => setIsFormOpen(true)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-11 touch-manipulation"
+            size="lg"
           >
             <Plus className="w-4 h-4" />
             Add Expense

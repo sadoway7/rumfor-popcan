@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Notifications.System";
+  "Notifications.System" [
+    label="Notifications",
+    type="card",
+    prompt="Tune notifications: prioritize application updates, reduce noise, and ensure mobile-friendly delivery and settings."
+  ];
+}

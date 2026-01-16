@@ -193,7 +193,7 @@ export function VendorAddMarketForm() {
           id: `schedule-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
         })),
         status: 'draft',
-        marketType: 'user-created',
+        marketType: 'vendor-created',
         images: [],
         tags: formData.additionalInfo.tags,
         accessibility: formData.accessibility,

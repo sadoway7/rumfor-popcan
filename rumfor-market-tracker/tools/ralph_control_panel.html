@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ralph Control Panel - Rumfor Market Tracker</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        background: #0f172a;
+        color: #f8fafc;
+        padding: 24px;
+      }
+      .card {
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      button {
+        background: #60a5fa;
+        color: #0f172a;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .muted { color: #94a3b8; }
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #1f2937;
+        padding: 10px 14px;
+        border-radius: 10px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .toast.show { opacity: 1; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Ralph Orchestrator</h2>
+      <p class="muted">Run a full cycle or copy individual prompts.</p>
+      <button id="run-all">Copy Run-All Prompt</button>
+    </div>
+
+    <div class="card">
+      <h3>Agents</h3>
+      <div id="agent-grid" class="grid"></div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const agents = [
+        {
+          id: 'user_types',
+          name: 'User Types',
+          icon: '🧑‍🤝‍🧑',
+          slug: 'agent1-user-types',
+          responsibility: 'Persona updates, UX alignment with user goals'
+        },
+        {
+          id: 'market_types',
+          name: 'Market Types',
+          icon: '🏷️',
+          slug: 'agent2-market-types',
+          responsibility: 'Market category and tagging updates'
+        },
+        {
+          id: 'user_flows',
+          name: 'User Flows',
+          icon: '🧭',
+          slug: 'agent3-user-flows',
+          responsibility: 'User flow design and validation'
+        },
+        {
+          id: 'ui_styles',
+          name: 'UI Styles',
+          icon: '🎨',
+          slug: 'agent4-ui-styles',
+          responsibility: 'UI styling, layout, and accessibility updates'
+        },
+        {
+          id: 'community',
+          name: 'Community',
+          icon: '💬',
+          slug: 'agent5-community',
+          responsibility: 'Community feature updates'
+        },
+        {
+          id: 'applications',
+          name: 'Applications',
+          icon: '📝',
+          slug: 'agent6-applications',
+          responsibility: 'Application workflow updates'
+        },
+        {
+          id: 'backend',
+          name: 'Backend',
+          icon: '🧩',
+          slug: 'agent7-backend',
+          responsibility: 'Backend logic and API changes'
+        },
+        {
+          id: 'api',
+          name: 'API',
+          icon: '🔌',
+          slug: 'agent8-api',
+          responsibility: 'API design and contract updates'
+        },
+        {
+          id: 'documentation',
+          name: 'Docs',
+          icon: '📚',
+          slug: 'agent9-docs',
+          responsibility: 'Documentation updates'
+        },
+        {
+          id: 'research',
+          name: 'Research',
+          icon: '🔎',
+          slug: 'agent10-research',
+          responsibility: 'Investigations, technical research, root-cause analysis, evidence gathering'
+        },
+        {
+          id: 'simple_solution',
+          name: 'Simple Solution',
+          icon: '🩹',
+          slug: 'agent11-simple-solution',
+          responsibility: 'Quick fixes, minimal changes, reducing scope, unblocking issues'
+        },
+        {
+          id: 'logic',
+          name: 'Logic',
+          icon: '🧠',
+          slug: 'agent12-logic',
+          responsibility: 'Business logic fixes, workflow rule alignment, edge-case analysis'
+        },
+      ];
+
+      const toast = document.getElementById('toast');
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1600);
+      }
+
+      function buildPrompt(agent) {
+        return `I want to run the ${agent.name} Agent for Rumfor Market Tracker.\n\n` +
+          `Switch to the ${agent.slug} mode and complete the ${agent.name} Agent's responsibilities.`;
+      }
+
+      function buildRunAllPrompt() {
+        const lines = agents
+          .map((agent, index) =>
+            `${index + 1}. ${agent.name} Agent (${agent.slug}) - ${agent.responsibility}`
+          )
+          .join('\n');
+        return `I want to run the Ralph Orchestrator for Rumfor Market Tracker.\n\n` +
+          `Please run a complete development cycle with all specialist agents:\n` +
+          `${lines}\n\n` +
+          `Switch to the ralph-orchestrator mode and run a full cycle with all agents.`;
+      }
+
+      document.getElementById('run-all').addEventListener('click', () => {
+        navigator.clipboard.writeText(buildRunAllPrompt());
+        showToast('Run-all prompt copied');
+      });
+
+      const grid = document.getElementById('agent-grid');
+      agents.forEach(agent => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <strong>${agent.icon} ${agent.name}</strong>
+          <p class="muted">Copy prompt for ${agent.slug}</p>
+          <button>Copy Prompt</button>
+        `;
+        card.querySelector('button').addEventListener('click', () => {
+          navigator.clipboard.writeText(buildPrompt(agent));
+          showToast(`${agent.name} prompt copied`);
+        });
+        grid.appendChild(card);
+      });
+    </script>
+  </body>
+</html>

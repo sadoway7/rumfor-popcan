@@ -25,6 +25,14 @@ const marketSchema = new mongoose.Schema({
     required: true
   },
 
+  // Who created this market (vendor, promoter, admin)
+  createdByType: {
+    type: String,
+    enum: ['vendor', 'promoter', 'admin'],
+    required: true,
+    default: 'promoter'
+  },
+
   // Location information
   location: {
     address: {
@@ -43,15 +51,15 @@ const marketSchema = new mongoose.Schema({
   },
 
   // Market details
-  marketType: {
-    type: String,
-    enum: ['farmers', 'flea', 'artisan', 'food_truck', 'craft', 'antique', 'specialty'],
-    required: true
-  },
   category: {
     type: String,
-    enum: ['produce', 'baked_goods', 'meat', 'dairy', 'crafts', 'art', 'jewelry', 'clothing', 'books', 'antiques', 'food_trucks', 'plants', 'mixed'],
+    enum: ['farmers-market', 'arts-crafts', 'flea-market', 'food-festival', 'craft-show', 'antique-market', 'specialty'],
     required: true
+  },
+  subcategory: {
+    type: String,
+    enum: ['produce', 'baked_goods', 'meat', 'dairy', 'crafts', 'art', 'jewelry', 'clothing', 'books', 'antiques', 'food_trucks', 'plants', 'mixed'],
+    required: false
   },
 
   // Schedule information
@@ -167,16 +175,19 @@ const marketSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Indexes for performance
 marketSchema.index({ 'location.coordinates': '2dsphere' }); // Geospatial index
-marketSchema.index({ marketType: 1 });
 marketSchema.index({ category: 1 });
+marketSchema.index({ createdByType: 1 }); // For marketType filtering via virtual
 marketSchema.index({ status: 1 });
 marketSchema.index({ isPublic: 1 });
 marketSchema.index({ promoter: 1 });
+marketSchema.index({ createdByType: 1 });
 marketSchema.index({ 'location.address.city': 1 });
 marketSchema.index({ 'location.address.state': 1 });
 marketSchema.index({ name: 'text', description: 'text', tags: 'text' }); // Text search
@@ -188,6 +199,12 @@ marketSchema.index({ 'stats.favoriteCount': -1 });
 marketSchema.virtual('fullAddress').get(function() {
   const addr = this.location.address;
   return `${addr.street}, ${addr.city}, ${addr.state} ${addr.zipCode}`;
+});
+
+// Virtual for marketType based on createdByType
+// Maps 'vendor' -> 'vendor-created', others -> 'promoter-managed'
+marketSchema.virtual('marketType').get(function() {
+  return this.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed';
 });
 
 // Virtual for next market date

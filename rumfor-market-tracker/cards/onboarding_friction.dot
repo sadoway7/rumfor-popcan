@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Onboarding.Friction";
+  "Onboarding.Friction" [
+    label="Onboarding Friction",
+    type="card",
+    prompt="Reduce onboarding friction: progressive registration, social login options, and value before signup."
+  ];
+}

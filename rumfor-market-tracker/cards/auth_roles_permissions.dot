@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Auth";
+    "Auth" [label="Auth", type="category"];
+
+    "Auth" -> "Auth.RolesPermissions";
+    "Auth.RolesPermissions" [
+        label="Roles & Permissions",
+        type="card",
+        prompt="Align role-based access control with API routes: confirm role checks in middleware and ensure admin-only paths are protected.",
+        agents="backend,api",
+        priority="high",
+        status="pending"
+    ];
+}

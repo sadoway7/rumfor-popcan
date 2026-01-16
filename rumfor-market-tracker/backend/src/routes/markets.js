@@ -12,6 +12,7 @@ const {
   searchMarkets,
   getPopularMarkets,
   getMarketsByCategory,
+  getMarketsByType,
   verifyMarket,
   getVendorView,
   trackVendorInteraction,
@@ -29,13 +30,14 @@ const {
 } = require('../controllers/marketsController')
 
 const { verifyToken, optionalAuth, requireVerifiedPromoter, requireAdmin, requireVendor, requireVendorOwnershipOrAdmin } = require('../middleware/auth')
-const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch, validateMessageCreation } = require('../middleware/validation')
+const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch, validateMessageCreation, validateMarketTypeParam } = require('../middleware/validation')
 
 // Public routes
 router.get('/', validatePagination, validateSearch, getMarkets)
 router.get('/search', validateSearch, validatePagination, searchMarkets)
 router.get('/popular', validatePagination, getPopularMarkets)
 router.get('/category/:category', validatePagination, getMarketsByCategory)
+router.get('/type/:marketType', validateMarketTypeParam, validatePagination, getMarketsByType)
 router.get('/:id', validateMongoId('id'), getMarket)
 
 // Protected routes

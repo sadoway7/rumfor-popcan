@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Applications.Flow";
+  "Applications.Flow" [
+    label="Application Flow",
+    type="card",
+    prompt="Reduce friction in the application flow: multi-step form, pre-fill from profile, auto-save drafts, and clear status timeline."
+  ];
+}

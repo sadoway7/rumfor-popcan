@@ -1,0 +1,9 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Tracking.Expenses";
+  "Tracking.Expenses" [
+    label="Expense Tracking",
+    type="card",
+    prompt="Simplify expense tracking for market events: quick-entry form, category presets, and profit summary."
+  ];
+}

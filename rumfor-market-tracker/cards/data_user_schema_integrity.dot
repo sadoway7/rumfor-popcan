@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Data";
+    "Data" [label="Data", type="category"];
+
+    "Data" -> "Data.UserSchemaIntegrity";
+    "Data.UserSchemaIntegrity" [
+        label="User Schema Integrity",
+        type="card",
+        prompt="Validate user schema integrity in MongoDB: required fields, indexes, normalization, and safe defaults for new users.",
+        agents="backend,api",
+        priority="high",
+        status="pending"
+    ];
+}

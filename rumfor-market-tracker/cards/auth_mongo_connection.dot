@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Auth";
+    "Auth" [label="Auth", type="category"];
+
+    "Auth" -> "Auth.MongoConnection";
+    "Auth.MongoConnection" [
+        label="MongoDB Connection Health",
+        type="card",
+        prompt="Verify live MongoDB connectivity: ensure Mongoose uses the correct env var, add startup health checks, connection retry/backoff, and clear logs for connection failures.",
+        agents="backend,api",
+        priority="high",
+        status="pending"
+    ];
+}

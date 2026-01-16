@@ -170,6 +170,262 @@ PATCH /api/auth/me
 PATCH /api/auth/change-password
 ```
 
+### Market Conversions
+
+Market conversion allows vendors to request converting their vendor-created markets to promoter-managed markets, or promoters to request converting markets to different management types. All conversions require admin approval.
+
+#### Request Market Conversion
+```
+POST /api/market-conversions/:marketId/request
+```
+**Role Required:** promoter (market owner)
+
+**Description:** Submit a request to convert a market's management type (vendor-created to promoter-managed, or promoter-managed to vendor-created).
+
+**Request Body:**
+```json
+{
+  "toType": "promoter",
+  "reason": "I want to expand this market and focus on promotion rather than direct vendor management",
+  "details": "The market has grown significantly and needs dedicated promotion efforts. I'd like to convert it to promoter-managed status to better serve our vendors and attract more participants.",
+  "conversionData": {
+    "businessLicense": "BL123456789",
+    "insuranceCertificate": "INS87654321",
+    "contactEmail": "promotions@market.com",
+    "contactPhone": "+1234567890"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Market conversion request submitted successfully",
+  "data": {
+    "conversion": {
+      "_id": "507f1f77bcf86cd799439011",
+      "market": {
+        "_id": "507f1f77bcf86cd799439012",
+        "name": "Downtown Farmers Market"
+      },
+      "fromType": "vendor",
+      "toType": "promoter",
+      "reason": "I want to expand this market...",
+      "status": "pending",
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
+#### Get User's Conversion Requests
+```
+GET /api/market-conversions/my-requests
+```
+**Role Required:** Authenticated user
+
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 20)
+- `status` (string): Filter by status (pending, approved, rejected)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "conversions": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "market": {
+          "name": "Downtown Farmers Market",
+          "createdByType": "vendor"
+        },
+        "fromType": "vendor",
+        "toType": "promoter",
+        "status": "pending",
+        "daysPending": 3,
+        "createdAt": "2024-01-01T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "current": 1,
+      "total": 1,
+      "count": 20,
+      "hasMore": false
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
+#### Get Single Conversion Request
+```
+GET /api/market-conversions/:id
+```
+**Role Required:** Request owner, reviewer, or admin
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "conversion": {
+      "_id": "507f1f77bcf86cd799439011",
+      "market": {
+        "name": "Downtown Farmers Market",
+        "description": "Fresh local produce",
+        "createdByType": "vendor"
+      },
+      "requestedBy": {
+        "username": "johndoe",
+        "profile": {
+          "firstName": "John",
+          "lastName": "Doe"
+        }
+      },
+      "fromType": "vendor",
+      "toType": "promoter",
+      "reason": "I want to expand this market...",
+      "details": "...",
+      "conversionData": {
+        "businessLicense": "BL123456789",
+        "contactEmail": "promotions@market.com"
+      },
+      "status": "pending",
+      "reviewedBy": null,
+      "reviewNotes": null,
+      "daysPending": 3,
+      "createdAt": "2024-01-01T10:00:00.000Z"
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
+#### Cancel Conversion Request
+```
+PATCH /api/market-conversions/:id/cancel
+```
+**Role Required:** Request owner or admin
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Conversion request cancelled successfully",
+  "data": {
+    "conversion": {
+      "status": "cancelled",
+      "updatedAt": "2024-01-01T10:00:00.000Z"
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
+#### Get Pending Conversion Requests (Admin)
+```
+GET /api/market-conversions/admin/pending
+```
+**Role Required:** admin
+
+**Query Parameters:**
+- `page` (number): Page number (default: 1)
+- `limit` (number): Items per page (default: 20)
+- `status` (string): Filter by status (default: "pending", options: pending, under_review, all)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "conversions": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "market": {
+          "name": "Downtown Farmers Market",
+          "createdByType": "vendor",
+          "location": {
+            "city": "Anytown",
+            "state": "CA"
+          }
+        },
+        "requestedBy": {
+          "username": "johndoe",
+          "email": "john@example.com",
+          "profile": {
+            "firstName": "John",
+            "lastName": "Doe"
+          }
+        },
+        "fromType": "vendor",
+        "toType": "promoter",
+        "reason": "I want to expand this market...",
+        "status": "pending",
+        "daysPending": 3,
+        "createdAt": "2024-01-01T10:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "current": 1,
+      "total": 1,
+      "count": 20,
+      "hasMore": false
+    },
+    "stats": {
+      "pending": 1,
+      "under_review": 0,
+      "approved": 0,
+      "rejected": 0
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
+#### Review Conversion Request (Admin)
+```
+PATCH /api/market-conversions/:id/review
+```
+**Role Required:** admin
+
+**Request Body:**
+```json
+{
+  "action": "approve",
+  "reviewNotes": "Conversion approved. Market will be converted to promoter-managed status.",
+  "rejectionReason": null
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Conversion request approved successfully",
+  "data": {
+    "conversion": {
+      "_id": "507f1f77bcf86cd799439011",
+      "status": "approved",
+      "reviewedBy": {
+        "username": "admin",
+        "profile": {
+          "firstName": "System",
+          "lastName": "Administrator"
+        }
+      },
+      "reviewedAt": "2024-01-01T10:00:00.000Z",
+      "reviewNotes": "Conversion approved...",
+      "updatedAt": "2024-01-01T10:00:00.000Z"
+    }
+  },
+  "timestamp": "2024-01-01T10:00:00.000Z"
+}
+```
+
 ### Markets
 
 #### Get All Markets

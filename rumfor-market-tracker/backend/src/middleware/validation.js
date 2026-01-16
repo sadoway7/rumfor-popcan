@@ -1,4 +1,4 @@
-prconst { body, param, query, validationResult } = require('express-validator')
+const { body, param, query, validationResult } = require('express-validator')
 const validator = require('validator')
 
 // Enhanced sanitization functions
@@ -150,21 +150,25 @@ const validateUserUpdate = [
   handleValidationErrors
 ]
 
-// Market validation
+// Market validation with enhanced security and business rules
 const validateMarketCreation = [
   body('name')
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Market name must be between 1 and 100 characters')
-    .trim()
-    .escape(),
-  
+    .isLength({ min: 3, max: 100 })
+    .withMessage('Market name must be between 3 and 100 characters')
+    .customSanitizer(sanitizeString)
+    .custom((value) => {
+      // Prevent potentially malicious patterns
+      if (/<script/i.test(value) || /javascript:/i.test(value)) {
+        throw new Error('Market name contains invalid content')
+      }
+      return value
+    }),
+
   body('description')
-    .optional()
-    .isLength({ max: 1000 })
-    .withMessage('Description must be less than 1000 characters')
-    .trim()
-    .escape(),
-  
+    .isLength({ min: 10, max: 2000 })
+    .withMessage('Description must be between 10 and 2000 characters')
+    .customSanitizer(sanitizeString),
+
   body('category')
     .isIn([
       'farmers-market',
@@ -179,46 +183,85 @@ const validateMarketCreation = [
       'other'
     ])
     .withMessage('Invalid market category'),
-  
-  body('location.address')
-    .isLength({ min: 1 })
-    .withMessage('Address is required')
-    .trim()
-    .escape(),
-  
-  body('location.city')
-    .isLength({ min: 1 })
-    .withMessage('City is required')
-    .trim()
-    .escape(),
-  
-  body('location.state')
-    .isLength({ min: 1 })
-    .withMessage('State is required')
-    .trim()
-    .escape(),
-  
-  body('location.country')
+
+  // Enhanced location validation
+  body('location.address.street')
+    .isLength({ min: 5, max: 100 })
+    .withMessage('Street address must be between 5 and 100 characters')
+    .customSanitizer(sanitizeString),
+
+  body('location.address.city')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('City must be between 2 and 50 characters')
+    .customSanitizer(sanitizeString),
+
+  body('location.address.state')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('State must be between 2 and 50 characters')
+    .customSanitizer(sanitizeString),
+
+  body('location.address.zipCode')
+    .isLength({ min: 5, max: 10 })
+    .withMessage('ZIP code must be between 5 and 10 characters')
+    .customSanitizer(sanitizeAlphanumeric),
+
+  body('location.coordinates.lat')
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be between -90 and 90'),
+
+  body('location.coordinates.lng')
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be between -180 and 180'),
+
+  // Schedule validation
+  body('schedule.startTime')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Start time must be in HH:MM format'),
+
+  body('schedule.endTime')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('End time must be in HH:MM format')
+    .custom((endTime, { req }) => {
+      if (req.body.schedule?.startTime && endTime <= req.body.schedule.startTime) {
+        throw new Error('End time must be after start time')
+      }
+      return true
+    }),
+
+  // Application settings validation with business rules
+  body('applicationSettings.maxVendors')
     .optional()
-    .isLength({ max: 100 })
-    .withMessage('Country must be less than 100 characters')
-    .trim()
-    .escape(),
-  
-  body('dates.type')
-    .isIn(['recurring', 'one-time', 'seasonal'])
-    .withMessage('Invalid date type'),
-  
-  body('vendorInfo.capacity')
+    .isInt({ min: 1, max: 1000 })
+    .withMessage('Maximum vendors must be between 1 and 1000'),
+
+  body('applicationSettings.applicationFee')
     .optional()
-    .isInt({ min: 1 })
-    .withMessage('Capacity must be a positive integer'),
-  
-  body('vendorInfo.applicationFee.amount')
+    .isFloat({ min: 0, max: 1000 })
+    .withMessage('Application fee must be between 0 and $1000'),
+
+  body('applicationSettings.boothFee')
     .optional()
-    .isFloat({ min: 0 })
-    .withMessage('Application fee must be a positive number'),
-  
+    .isFloat({ min: 0, max: 10000 })
+    .withMessage('Booth fee must be between 0 and $10,000'),
+
+  // Contact information validation
+  body('contact.email')
+    .optional()
+    .isEmail()
+    .withMessage('Contact email must be valid')
+    .normalizeEmail(),
+
+  body('contact.phone')
+    .optional()
+    .isLength({ max: 20 })
+    .withMessage('Phone number must be less than 20 characters')
+    .customSanitizer(sanitizeString),
+
+  body('contact.website')
+    .optional()
+    .isURL()
+    .withMessage('Website must be a valid URL'),
+
   handleValidationErrors
 ]
 
@@ -500,7 +543,16 @@ const validateMongoId = (paramName = 'id') => [
   param(paramName)
     .isMongoId()
     .withMessage(`Invalid ${paramName} format`),
-  
+
+  handleValidationErrors
+]
+
+// Market type parameter validation
+const validateMarketTypeParam = [
+  param('marketType')
+    .isIn(['vendor-created', 'promoter-managed'])
+    .withMessage('Market type must be either vendor-created or promoter-managed'),
+
   handleValidationErrors
 ]
 
@@ -549,6 +601,11 @@ const validateSearch = [
     .withMessage('Location must be less than 100 characters')
     .trim()
     .escape(),
+
+  query('marketType')
+    .optional()
+    .isIn(['vendor-created', 'promoter-managed'])
+    .withMessage('Market type must be either vendor-created or promoter-managed'),
   
   handleValidationErrors
 ]
@@ -588,6 +645,73 @@ const validateMessageCreation = [
   handleValidationErrors
 ]
 
+// Market conversion validation
+const validateMarketConversionRequest = [
+  body('toType')
+    .isIn(['vendor', 'promoter', 'admin'])
+    .withMessage('Target conversion type must be vendor, promoter, or admin'),
+
+  body('reason')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('Reason must be between 10 and 1000 characters')
+    .customSanitizer(sanitizeString),
+
+  body('details')
+    .optional()
+    .isLength({ max: 2000 })
+    .withMessage('Details must be less than 2000 characters')
+    .customSanitizer(sanitizeString),
+
+  body('conversionData.businessLicense')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Business license must be less than 100 characters')
+    .trim()
+    .escape(),
+
+  body('conversionData.insuranceCertificate')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Insurance certificate must be less than 100 characters')
+    .trim()
+    .escape(),
+
+  body('conversionData.contactEmail')
+    .optional()
+    .isEmail()
+    .withMessage('Contact email must be valid')
+    .normalizeEmail(),
+
+  body('conversionData.contactPhone')
+    .optional()
+    .isLength({ max: 20 })
+    .withMessage('Contact phone must be less than 20 characters')
+    .trim()
+    .escape(),
+
+  handleValidationErrors
+]
+
+const validateConversionReview = [
+  body('action')
+    .isIn(['approve', 'reject', 'review'])
+    .withMessage('Action must be approve, reject, or review'),
+
+  body('reviewNotes')
+    .optional()
+    .isLength({ max: 1000 })
+    .withMessage('Review notes must be less than 1000 characters')
+    .customSanitizer(sanitizeString),
+
+  body('rejectionReason')
+    .if(body('action').equals('reject'))
+    .isLength({ min: 10, max: 500 })
+    .withMessage('Rejection reason must be between 10 and 500 characters')
+    .customSanitizer(sanitizeString),
+
+  handleValidationErrors
+]
+
 module.exports = {
   handleValidationErrors,
   validateUserRegistration,
@@ -603,5 +727,8 @@ module.exports = {
   validateApplicationCreation,
   validateMongoId,
   validatePagination,
-  validateSearch
+  validateSearch,
+  validateMarketTypeParam,
+  validateMarketConversionRequest,
+  validateConversionReview
 }

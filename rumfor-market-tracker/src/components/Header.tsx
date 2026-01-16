@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useThemeStore, useSidebarStore, useLocationStore } from '@/features/theme/themeStore'
@@ -19,15 +19,9 @@ export function Header() {
   const { toggleSidebar } = useSidebarStore()
   const { setLocationModalOpen } = useLocationStore()
   const location = useLocation()
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
-
   const isHomePage = location.pathname === '/'
   const isMarketsPage = location.pathname === '/markets'
   const showSidebarToggle = isHomePage || isMarketsPage
-
-  const handleMenuItemClick = () => {
-    setIsMenuOpen(false)
-  }
 
   return (
     <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl">
@@ -224,7 +218,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={() => setLocationModalOpen(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300 min-h-11 min-w-11"
               title="Set location"
             >
               <Navigation className="h-4 w-4" />
@@ -235,19 +229,78 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300 min-h-11 min-w-11"
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
 
             {/* Mobile menu */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-muted-foreground hover:text-foreground p-2"
-              aria-label="Toggle menu"
-            >
-              <MoreHorizontal className="h-5 w-5" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-muted-foreground hover:text-foreground p-2 min-h-11 min-w-11" aria-label="Open menu">
+                  <MoreHorizontal className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                {isAuthenticated ? (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to={`/${user?.role}/dashboard`} className="flex items-center">
+                        <MapPin className="h-4 w-4 mr-3 text-accent" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    {user?.role === 'promoter' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/promoter/markets/create" className="flex items-center">
+                          <Plus className="h-4 w-4 mr-3 text-accent" />
+                          List Market
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {user?.role === 'vendor' && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/vendor/applications" className="flex items-center">
+                          <FileText className="h-4 w-4 mr-3 text-accent" />
+                          Applications
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex items-center">
+                        <User className="h-4 w-4 mr-3 text-muted-foreground" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-3 text-muted-foreground" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={logout} className="flex items-center text-foreground focus:text-foreground">
+                      <LogOut className="h-4 w-4 mr-3 text-muted-foreground" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth/login" className="flex items-center">
+                        Sign In
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/auth/register" className="flex items-center">
+                        Sign Up
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Logo */}
             <Link to="/" className="ml-2">
@@ -258,114 +311,7 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation - Full Width on Mobile */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-background w-full">
-            <div className="py-4 space-y-1">
-              {/* Search Bar for Mobile */}
-              <div className="mb-4 px-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Search markets..."
-                    className="w-full pl-10 pr-4 py-3 text-sm bg-surface/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent backdrop-blur-sm transition-all duration-300"
-                  />
-                </div>
-              </div>
-              
-              {/* Mobile Role-specific actions */}
-              {isAuthenticated ? (
-                <>
-                  {/* Dashboard - Always First */}
-                  <Link
-                    to={`/${user?.role}/dashboard`}
-                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors font-medium"
-                    onClick={handleMenuItemClick}
-                  >
-                    <MapPin className="h-5 w-5 mr-3 text-accent" />
-                    Dashboard
-                  </Link>
-                  
-                  {user?.role === 'promoter' && (
-                    <Link
-                      to="/promoter/markets/create"
-                      className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
-                      onClick={handleMenuItemClick}
-                    >
-                      <Plus className="h-5 w-5 mr-3 text-accent" />
-                      List New Market
-                    </Link>
-                  )}
 
-                  {user?.role === 'vendor' && (
-                    <Link
-                      to="/vendor/applications"
-                      className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
-                      onClick={handleMenuItemClick}
-                    >
-                      <FileText className="h-5 w-5 mr-3 text-accent" />
-                      My Applications
-                    </Link>
-                  )}
-
-                  <div className="border-t border-muted my-3 mx-4"></div>
-
-                  {/* User section */}
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    {user?.firstName} {user?.lastName} • {user?.role}
-                  </div>
-
-                  <Link
-                    to="/profile"
-                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
-                    onClick={handleMenuItemClick}
-                  >
-                    <User className="h-5 w-5 mr-3 text-muted-foreground" />
-                    Profile
-                  </Link>
-
-                  <Link
-                    to="/settings"
-                    className="flex items-center px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
-                    onClick={handleMenuItemClick}
-                  >
-                    <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
-                    Settings
-                  </Link>
-
-                  <button
-                    onClick={() => {
-                      logout()
-                      handleMenuItemClick()
-                    }}
-                    className="flex items-center w-full px-4 py-3 text-foreground hover:bg-surface/50 transition-colors text-left"
-                  >
-                    <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/auth/login"
-                    className="block px-4 py-3 text-foreground hover:bg-surface/50 transition-colors"
-                    onClick={handleMenuItemClick}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/auth/register"
-                    className="block px-4 py-3 text-foreground hover:bg-surface/50 transition-colors font-medium"
-                    onClick={handleMenuItemClick}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

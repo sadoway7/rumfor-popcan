@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Auth";
+    "Auth" [label="Auth", type="category"];
+
+    "Auth" -> "Auth.UserLogin";
+    "Auth.UserLogin" [
+        label="User Login API",
+        type="card",
+        prompt="Harden the login flow: validate inputs, confirm password hashing/compare, standardize error responses, and ensure auth tokens are issued consistently.",
+        agents="backend,api",
+        priority="high",
+        status="pending"
+    ];
+}

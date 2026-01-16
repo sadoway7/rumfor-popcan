@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Auth";
+    "Auth" [label="Auth", type="category"];
+
+    "Auth" -> "Auth.UserManagement";
+    "Auth.UserManagement" [
+        label="User Management",
+        type="card",
+        prompt="Audit user management endpoints: list/update/deactivate users with proper RBAC, input validation, and audit logging.",
+        agents="backend,api",
+        priority="medium",
+        status="pending"
+    ];
+}

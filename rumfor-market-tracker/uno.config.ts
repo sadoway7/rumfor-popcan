@@ -60,6 +60,7 @@ export default defineConfig({
     'mobile-stack': 'flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4',
     'mobile-padding': 'px-4 py-6 sm:px-6 lg:px-8',
     'mobile-text': 'text-sm sm:text-base',
+    'hide-scrollbar': 'scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
     
     // Shadows & Effects - Minimal & Subtle
     'surface-shadow': 'shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_0_rgba(0,0,0,0.06)]',

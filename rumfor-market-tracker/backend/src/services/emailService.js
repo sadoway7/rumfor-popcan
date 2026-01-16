@@ -7,7 +7,7 @@ const createTransporter = () => {
 
   if (process.env.NODE_ENV === 'production') {
     // Production configuration (e.g., SendGrid, SES, etc.)
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
       secure: true,
@@ -18,7 +18,7 @@ const createTransporter = () => {
     })
   } else {
     // Development configuration using Gmail or other service
-    return nodemailer.createTransporter({
+    return nodemailer.createTransport({
       service: process.env.EMAIL_SERVICE || 'gmail',
       auth: {
         user: process.env.EMAIL_USER,

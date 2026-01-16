@@ -17,7 +17,8 @@ const getMarkets = catchAsync(async (req, res, next) => {
     category,
     location,
     dates,
-    search
+    search,
+    marketType
   } = req.query
 
   // Build query
@@ -42,6 +43,15 @@ const getMarkets = catchAsync(async (req, res, next) => {
     query.$text = { $search: search }
   }
 
+  if (marketType) {
+    // Map frontend marketType to createdByType
+    const createdByTypeMap = {
+      'vendor-created': 'vendor',
+      'promoter-managed': { $in: ['promoter', 'admin'] }
+    };
+    query.createdByType = createdByTypeMap[marketType];
+  }
+
   // Execute query
   const markets = await Market.find(query)
     .populate('promoter', 'username profile.firstName profile.lastName')
@@ -60,6 +70,25 @@ const getMarkets = catchAsync(async (req, res, next) => {
     { $limit: 10 }
   ])
 
+  // Get popular marketTypes for sidebar
+  const popularMarketTypes = await Market.aggregate([
+    { $match: { isActive: true } },
+    {
+      $group: {
+        _id: {
+          $cond: {
+            if: { $eq: ['$createdByType', 'vendor'] },
+            then: 'vendor-created',
+            else: 'promoter-managed'
+          }
+        },
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { count: -1 } },
+    { $limit: 10 }
+  ])
+
   sendSuccess(res, {
     markets,
     pagination: {
@@ -69,7 +98,8 @@ const getMarkets = catchAsync(async (req, res, next) => {
       limit: parseInt(limit)
     },
     filters: {
-      categories: popularCategories
+      categories: popularCategories,
+      marketTypes: popularMarketTypes
     }
   }, 'Markets retrieved successfully')
 })
@@ -107,10 +137,32 @@ const getMarket = catchAsync(async (req, res, next) => {
 
 // Create new market
 const createMarket = catchAsync(async (req, res, next) => {
-  // Add promoter to market data
+  // Determine who created this market
+  let createdByType = req.user.role;
+  if (req.user.role === 'promoter' || req.user.role === 'admin') {
+    createdByType = req.user.role;
+  } else if (req.user.role === 'vendor') {
+    createdByType = 'vendor';
+  }
+
+  // Add promoter and creator type to market data
   const marketData = {
     ...req.body,
-    promoter: req.user.id
+    promoter: req.user.id,
+    createdByType
+  }
+
+  // For vendor-created markets, use generic images
+  if (createdByType === 'vendor' && (!marketData.images || marketData.images.length === 0)) {
+    // Import the generic images function
+    const getGenericMarketImage = require('../utils/genericImages');
+    const tempId = Date.now().toString();
+    marketData.images = [{
+      url: getGenericMarketImage(tempId),
+      alt: 'Community market',
+      isHero: true,
+      uploadedBy: req.user.id
+    }];
   }
 
   const market = await Market.create(marketData)
@@ -134,9 +186,14 @@ const updateMarket = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
+  // Check if market is vendor-created (immutable)
+  if (market.createdByType === 'vendor') {
+    return next(new AppError('Vendor-created markets cannot be modified after creation to ensure data integrity', 403))
+  }
+
   // Check if user owns this market or is admin
   if (market.promoter.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new AppError('You can only update markets you own', 403))
+    return next(new AppError('You can only update markets you created', 403))
   }
 
   const updatedMarket = await Market.findByIdAndUpdate(
@@ -160,9 +217,14 @@ const deleteMarket = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
+  // Check if market is vendor-created (immutable)
+  if (market.createdByType === 'vendor') {
+    return next(new AppError('Vendor-created markets cannot be deleted to maintain data integrity and vendor accountability', 403))
+  }
+
   // Check if user owns this market or is admin
   if (market.promoter.toString() !== req.user.id && req.user.role !== 'admin') {
-    return next(new AppError('You can only delete markets you own', 403))
+    return next(new AppError('You can only delete markets you created', 403))
   }
 
   // Soft delete
@@ -270,6 +332,7 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     category,
     location,
     dates,
+    marketType,
     page = 1,
     limit = 20,
     sortBy = 'score',
@@ -302,6 +365,15 @@ const searchMarkets = catchAsync(async (req, res, next) => {
 
   if (dates) {
     query['dates.type'] = dates
+  }
+
+  if (marketType) {
+    // Map frontend marketType to createdByType
+    const createdByTypeMap = {
+      'vendor-created': 'vendor',
+      'promoter-managed': { $in: ['promoter', 'admin'] }
+    };
+    query.createdByType = createdByTypeMap[marketType];
   }
 
   if (searchConditions.length > 0) {
@@ -410,6 +482,47 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
     },
     category
   }, 'Markets by category retrieved successfully')
+})
+
+// Get markets by marketType
+const getMarketsByType = catchAsync(async (req, res, next) => {
+  const { marketType } = req.params
+  const {
+    page = 1,
+    limit = 20,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query
+
+  // Map frontend marketType to createdByType
+  const createdByTypeMap = {
+    'vendor-created': 'vendor',
+    'promoter-managed': { $in: ['promoter', 'admin'] }
+  };
+
+  const query = {
+    createdByType: createdByTypeMap[marketType],
+    isActive: true
+  };
+
+  const markets = await Market.find(query)
+    .populate('promoter', 'username profile.firstName profile.lastName')
+    .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+
+  const total = await Market.countDocuments(query)
+
+  sendSuccess(res, {
+    markets,
+    pagination: {
+      current: parseInt(page),
+      pages: Math.ceil(total / limit),
+      total,
+      limit: parseInt(limit)
+    },
+    marketType
+  }, 'Markets by type retrieved successfully')
 })
 
 // Verify market (admin only)
@@ -1046,6 +1159,7 @@ module.exports = {
   searchMarkets,
   getPopularMarkets,
   getMarketsByCategory,
+  getMarketsByType,
   verifyMarket,
   getVendorView,
   trackVendorInteraction,

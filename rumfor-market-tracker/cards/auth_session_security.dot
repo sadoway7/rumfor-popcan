@@ -1,0 +1,15 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root"];
+    "ROOT" -> "Auth";
+    "Auth" [label="Auth", type="category"];
+
+    "Auth" -> "Auth.SessionSecurity";
+    "Auth.SessionSecurity" [
+        label="Session Security",
+        type="card",
+        prompt="Add session hardening: rate limit login, lockout on repeated failures, and optional device/session tracking.",
+        agents="backend,api",
+        priority="medium",
+        status="pending"
+    ];
+}
