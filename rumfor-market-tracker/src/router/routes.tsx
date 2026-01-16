@@ -1,4 +1,5 @@
 
+import React, { Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { MainLayout } from '@/layouts/MainLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
@@ -6,68 +7,80 @@ import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
 
-// Page imports
-import LoginPage from '@/pages/auth/LoginPage'
-import { RegisterPage } from '@/pages/auth/RegisterPage'
-import { PasswordRecoveryPage } from '@/pages/auth/PasswordRecoveryPage'
-import { EmailVerificationPage } from '@/pages/auth/EmailVerificationPage'
-import { HomePage } from '@/pages/HomePage'
-import { AboutPage } from '@/pages/AboutPage'
-import { ContactPage } from '@/pages/ContactPage'
-import { ProfilePage } from '@/pages/ProfilePage'
-import { SettingsPage } from '@/pages/SettingsPage'
-import { NotificationsPage } from '@/pages/NotificationsPage'
-import { NotFoundPage } from '@/pages/NotFoundPage'
+// Lazy-loaded page imports for better performance
+const LoginPage = React.lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.default })))
+const RegisterPage = React.lazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })))
+const PasswordRecoveryPage = React.lazy(() => import('@/pages/auth/PasswordRecoveryPage').then(module => ({ default: module.PasswordRecoveryPage })))
+const EmailVerificationPage = React.lazy(() => import('@/pages/auth/EmailVerificationPage').then(module => ({ default: module.EmailVerificationPage })))
+const HomePage = React.lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
+const AboutPage = React.lazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
+const ContactPage = React.lazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
+const ProfilePage = React.lazy(() => import('@/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
+const SettingsPage = React.lazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
+const NotificationsPage = React.lazy(() => import('@/pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })))
+const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })))
 
-// Vendor pages
-import { VendorDashboardPage } from '@/pages/vendor/VendorDashboardPage'
-import { FinancialReportsPage } from '@/pages/vendor/FinancialReportsPage'
-import { MarketCalendarPage } from '@/pages/vendor/MarketCalendarPage'
-import { AddMarketPage } from '@/pages/vendor/AddMarketPage'
-import { VendorAddMarketForm } from '@/pages/vendor/VendorAddMarketForm'
-import { VendorTrackedMarketsPage } from '@/pages/vendor/VendorTrackedMarketsPage'
-import { VendorTodosPage } from '@/pages/vendor/VendorTodosPage'
-import { VendorMarketDetailPage } from '@/pages/vendor/VendorMarketDetailPage'
+// Vendor pages - lazy loaded
+const VendorDashboardPage = React.lazy(() => import('@/pages/vendor/VendorDashboardPage').then(module => ({ default: module.VendorDashboardPage })))
+const FinancialReportsPage = React.lazy(() => import('@/pages/vendor/FinancialReportsPage').then(module => ({ default: module.FinancialReportsPage })))
+const MarketCalendarPage = React.lazy(() => import('@/pages/vendor/MarketCalendarPage').then(module => ({ default: module.MarketCalendarPage })))
+const AddMarketPage = React.lazy(() => import('@/pages/vendor/AddMarketPage').then(module => ({ default: module.AddMarketPage })))
+const VendorAddMarketForm = React.lazy(() => import('@/pages/vendor/VendorAddMarketForm').then(module => ({ default: module.VendorAddMarketForm })))
+const VendorTrackedMarketsPage = React.lazy(() => import('@/pages/vendor/VendorTrackedMarketsPage').then(module => ({ default: module.VendorTrackedMarketsPage })))
+const VendorTodosPage = React.lazy(() => import('@/pages/vendor/VendorTodosPage').then(module => ({ default: module.VendorTodosPage })))
+const VendorMarketDetailPage = React.lazy(() => import('@/pages/vendor/VendorMarketDetailPage').then(module => ({ default: module.VendorMarketDetailPage })))
 
-// Promoter pages
-import { PromoterDashboardPage } from '@/pages/promoter/PromoterDashboardPage'
-import { PromoterMarketsPage } from '@/pages/promoter/PromoterMarketsPage'
-import { PromoterApplicationsPage } from '@/pages/promoter/PromoterApplicationsPage'
-import { PromoterVendorsPage } from '@/pages/promoter/PromoterVendorsPage'
-import { PromoterAnalyticsPage } from '@/pages/promoter/PromoterAnalyticsPage'
-import { PromoterCalendarPage } from '@/pages/promoter/PromoterCalendarPage'
-import { PromoterCreateMarketPage } from '@/pages/promoter/PromoterCreateMarketPage'
-import { BusinessPlanningPage } from '@/pages/promoter/BusinessPlanningPage'
+// Promoter pages - lazy loaded
+const PromoterDashboardPage = React.lazy(() => import('@/pages/promoter/PromoterDashboardPage').then(module => ({ default: module.PromoterDashboardPage })))
+const PromoterMarketsPage = React.lazy(() => import('@/pages/promoter/PromoterMarketsPage').then(module => ({ default: module.PromoterMarketsPage })))
+const PromoterApplicationsPage = React.lazy(() => import('@/pages/promoter/PromoterApplicationsPage').then(module => ({ default: module.PromoterApplicationsPage })))
+const PromoterVendorsPage = React.lazy(() => import('@/pages/promoter/PromoterVendorsPage').then(module => ({ default: module.PromoterVendorsPage })))
+const PromoterAnalyticsPage = React.lazy(() => import('@/pages/promoter/PromoterAnalyticsPage').then(module => ({ default: module.PromoterAnalyticsPage })))
+const PromoterCalendarPage = React.lazy(() => import('@/pages/promoter/PromoterCalendarPage').then(module => ({ default: module.PromoterCalendarPage })))
+const PromoterCreateMarketPage = React.lazy(() => import('@/pages/promoter/PromoterCreateMarketPage').then(module => ({ default: module.PromoterCreateMarketPage })))
+const BusinessPlanningPage = React.lazy(() => import('@/pages/promoter/BusinessPlanningPage').then(module => ({ default: module.BusinessPlanningPage })))
 
-// Admin pages
-import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
-import { AdminModerationPage } from '@/pages/admin/AdminModerationPage'
-import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
-import { AdminAnalyticsPage } from '@/pages/admin/AdminAnalyticsPage'
-import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
-import { AdminMarketsPage } from '@/pages/admin/AdminMarketsPage'
-import { AdminApplicationsPage } from '@/pages/admin/AdminApplicationsPage'
-import { AdminSupportPage } from '@/pages/admin/AdminSupportPage'
+// Admin pages - lazy loaded
+const AdminDashboardPage = React.lazy(() => import('@/pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
+const AdminModerationPage = React.lazy(() => import('@/pages/admin/AdminModerationPage').then(module => ({ default: module.AdminModerationPage })))
+const AdminUsersPage = React.lazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
+const AdminAnalyticsPage = React.lazy(() => import('@/pages/admin/AdminAnalyticsPage').then(module => ({ default: module.AdminAnalyticsPage })))
+const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPage').then(module => ({ default: module.AdminSettingsPage })))
+const AdminMarketsPage = React.lazy(() => import('@/pages/admin/AdminMarketsPage').then(module => ({ default: module.AdminMarketsPage })))
+const AdminApplicationsPage = React.lazy(() => import('@/pages/admin/AdminApplicationsPage').then(module => ({ default: module.AdminApplicationsPage })))
+const AdminSupportPage = React.lazy(() => import('@/pages/admin/AdminSupportPage').then(module => ({ default: module.AdminSupportPage })))
 
-// Market pages
-import { MarketSearchPage } from '@/pages/markets/MarketSearchPage'
-import { MarketDetailPage } from '@/pages/markets/MarketDetailPage'
+// Market pages - lazy loaded
+const MarketSearchPage = React.lazy(() => import('@/pages/markets/MarketSearchPage').then(module => ({ default: module.MarketSearchPage })))
+const MarketDetailPage = React.lazy(() => import('@/pages/markets/MarketDetailPage').then(module => ({ default: module.MarketDetailPage })))
 
-// Application pages
-import { MyApplicationsPage, ApplicationDetailPage, ApplicationFormPage } from '@/pages/applications'
+// Application pages - lazy loaded
+const MyApplicationsPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.MyApplicationsPage })))
+const ApplicationDetailPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationDetailPage })))
+const ApplicationFormPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationFormPage })))
 
-// Dashboard redirect
-import { DashboardRedirectPage } from '@/pages/DashboardRedirectPage'
+// Dashboard redirect - lazy loaded
+const DashboardRedirectPage = React.lazy(() => import('@/pages/DashboardRedirectPage').then(module => ({ default: module.DashboardRedirectPage })))
+
+// Loading component for Suspense
+const PageLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="text-center">
+      <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p className="text-muted-foreground">Loading page...</p>
+    </div>
+  </div>
+)
 
 export function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
-      <Route path="/markets" element={<MainLayout><MarketSearchPage /></MainLayout>} />
-      <Route path="/markets/:id" element={<MainLayout><MarketDetailPage /></MainLayout>} />
-      <Route path="/about" element={<MainLayout><AboutPage /></MainLayout>} />
-      <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
+      <Route path="/" element={<MainLayout><Suspense fallback={<PageLoader />}><HomePage /></Suspense></MainLayout>} />
+      <Route path="/markets" element={<MainLayout><Suspense fallback={<PageLoader />}><MarketSearchPage /></Suspense></MainLayout>} />
+      <Route path="/markets/:id" element={<MainLayout><Suspense fallback={<PageLoader />}><MarketDetailPage /></Suspense></MainLayout>} />
+      <Route path="/about" element={<MainLayout><Suspense fallback={<PageLoader />}><AboutPage /></Suspense></MainLayout>} />
+      <Route path="/contact" element={<MainLayout><Suspense fallback={<PageLoader />}><ContactPage /></Suspense></MainLayout>} />
 
       {/* Auth Routes */}
       <Route path="/auth/login" element={<AuthLayout><LoginPage /></AuthLayout>} />

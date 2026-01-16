@@ -6,13 +6,12 @@ dotenv.config()
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
+      maxPoolSize: 20, // Increased connection pool for better performance
+      minPoolSize: 5, // Minimum connections to maintain
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
       serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0, // Disable mongoose buffering
-      bufferCommands: false, // Disable mongoose buffering
+      family: 4, // Use IPv4, skip trying IPv6
     })
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`)

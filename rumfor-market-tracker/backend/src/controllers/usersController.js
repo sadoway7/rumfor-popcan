@@ -8,7 +8,6 @@ const { validateMongoId } = require('../middleware/validation')
 const getProfile = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id)
     .select('-password')
-    .populate('verifiedPromoter', 'verificationDate verifiedBy')
 
   if (!user) {
     return sendError(res, 'User not found', 404)
@@ -154,7 +153,6 @@ const getUser = catchAsync(async (req, res, next) => {
 
   const user = await User.findById(id)
     .select('-password')
-    .populate('verifiedPromoter', 'verificationDate verifiedBy')
 
   if (!user) {
     return sendError(res, 'User not found', 404)
@@ -220,7 +218,6 @@ const getUsers = catchAsync(async (req, res, next) => {
 
   const users = await User.find(query)
     .select('-password')
-    .populate('verifiedPromoter', 'verificationDate verifiedBy')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -241,14 +238,14 @@ const getUsers = catchAsync(async (req, res, next) => {
 // Update user (admin only)
 const updateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params
-  const { role, isActive, profile, verifiedPromoter } = req.body
+  const { role, isActive, bio, phone } = req.body
 
   const updateData = { updatedAt: new Date() }
 
   if (role !== undefined) updateData.role = role
   if (isActive !== undefined) updateData.isActive = isActive
-  if (profile) updateData.profile = profile
-  if (verifiedPromoter) updateData.verifiedPromoter = verifiedPromoter
+  if (bio !== undefined) updateData.bio = bio
+  if (phone !== undefined) updateData.phone = phone
 
   const user = await User.findByIdAndUpdate(id, updateData, {
     new: true,

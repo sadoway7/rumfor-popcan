@@ -427,15 +427,15 @@ export const VendorMarketDetailPage: React.FC = () => {
                   label: 'Analytics',
                   icon: <TrendingUp className="w-4 h-4" />,
                   content: (
-                    <Card className="p-8">
-                      <div className="text-center">
-                        <TrendingUp className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                        <h3 className="text-lg font-semibold mb-2">Analytics Coming Soon</h3>
-                        <p className="text-muted-foreground">
-                          Performance analytics and market insights will be available here.
-                        </p>
-                      </div>
-                    </Card>
+                    <ErrorBoundary fallback={<TabErrorFallback />}>
+                      <Suspense fallback={<TabContentLoader />}>
+                        <VendorAnalyticsDashboard
+                          marketId={market.id}
+                          marketData={market}
+                          applicationData={existingApplication}
+                        />
+                      </Suspense>
+                    </ErrorBoundary>
                   )
                 },
                 {

@@ -1,4 +1,4 @@
-const { body, param, query, validationResult } = require('express-validator')
+prconst { body, param, query, validationResult } = require('express-validator')
 const validator = require('validator')
 
 // Enhanced sanitization functions
@@ -69,13 +69,6 @@ const handleValidationErrors = (req, res, next) => {
 
 // Enhanced user validation with improved sanitization
 const validateUserRegistration = [
-  body('username')
-    .isLength({ min: 3, max: 50 })
-    .withMessage('Username must be between 3 and 50 characters')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Username can only contain letters, numbers, and underscores')
-    .customSanitizer(sanitizeAlphanumeric),
-
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email address')
@@ -89,14 +82,12 @@ const validateUserRegistration = [
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
 
-  body('profile.firstName')
-    .optional()
+  body('firstName')
     .isLength({ min: 1, max: 50 })
     .withMessage('First name must be between 1 and 50 characters')
     .customSanitizer(sanitizeString),
 
-  body('profile.lastName')
-    .optional()
+  body('lastName')
     .isLength({ min: 1, max: 50 })
     .withMessage('Last name must be between 1 and 50 characters')
     .customSanitizer(sanitizeString),
@@ -118,62 +109,44 @@ const validateUserLogin = [
 ]
 
 const validateUserUpdate = [
-  body('username')
-    .optional()
-    .isLength({ min: 3, max: 50 })
-    .withMessage('Username must be between 3 and 50 characters')
-    .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage('Username can only contain letters, numbers, and underscores')
-    .trim()
-    .escape(),
-  
-  body('profile.firstName')
+  body('firstName')
     .optional()
     .isLength({ max: 50 })
     .withMessage('First name must be less than 50 characters')
     .trim()
     .escape(),
-  
-  body('profile.lastName')
+
+  body('lastName')
     .optional()
     .isLength({ max: 50 })
     .withMessage('Last name must be less than 50 characters')
     .trim()
     .escape(),
-  
-  body('profile.bio')
+
+  body('bio')
     .optional()
     .isLength({ max: 500 })
     .withMessage('Bio must be less than 500 characters')
     .trim()
     .escape(),
-  
-  body('profile.location.city')
+
+  body('phone')
     .optional()
-    .isLength({ max: 100 })
-    .withMessage('City must be less than 100 characters')
+    .isLength({ max: 20 })
+    .withMessage('Phone number must be less than 20 characters')
     .trim()
     .escape(),
-  
-  body('profile.location.state')
-    .optional()
-    .isLength({ max: 100 })
-    .withMessage('State must be less than 100 characters')
-    .trim()
-    .escape(),
-  
-  body('profile.business.name')
-    .optional()
-    .isLength({ max: 100 })
-    .withMessage('Business name must be less than 100 characters')
-    .trim()
-    .escape(),
-  
+
   body('preferences.emailNotifications')
     .optional()
     .isBoolean()
     .withMessage('Email notifications preference must be a boolean'),
-  
+
+  body('preferences.smsNotifications')
+    .optional()
+    .isBoolean()
+    .withMessage('SMS notifications preference must be a boolean'),
+
   handleValidationErrors
 ]
 

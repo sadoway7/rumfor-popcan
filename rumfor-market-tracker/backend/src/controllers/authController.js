@@ -4,49 +4,46 @@ const User = require('../models/User')
 const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
 const twoFactorService = require('../services/twoFactorService')
+const { sendPasswordResetEmail, sendEmailVerification } = require('../services/emailService')
 
 // Register new user
 const register = catchAsync(async (req, res, next) => {
   const {
-    username,
     email,
     password,
-    profile = {},
+    firstName,
+    lastName,
+    bio,
+    phone,
     preferences = {}
   } = req.body
 
+  const userData = {
+    email,
+    password,
+    firstName,
+    lastName,
+    bio,
+    phone,
+    preferences,
+    lastLogin: new Date()
+  }
+
   // Check if user already exists
-  const existingUser = await User.findOne({
-    $or: [{ email }, { username }]
-  })
+  const existingUser = await User.findOne({ email })
 
   if (existingUser) {
-    if (existingUser.email === email) {
-      return next(new AppError('Email already registered', 400))
-    }
-    if (existingUser.username === username) {
-      return next(new AppError('Username already taken', 400))
-    }
+    return next(new AppError('Email already registered', 400))
   }
 
   // Create user
-  const user = await User.create({
-    username,
-    email,
-    password,
-    profile,
-    preferences
-  })
+  const user = await User.create(userData)
 
   // Generate tokens
   const tokens = generateTokens(user._id)
 
   // Remove password from response
   user.password = undefined
-
-  // Update last login
-  user.lastLogin = new Date()
-  await user.save()
 
   sendSuccess(res, {
     user,
@@ -94,12 +91,6 @@ const login = catchAsync(async (req, res, next) => {
   // Remove password from response
   user.password = undefined
 
-  // Auto-verify user if not already verified (development mode)
-  if (!user.isEmailVerified) {
-    user.isEmailVerified = true
-    await user.save()
-  }
-
   sendSuccess(res, {
     user,
     tokens
@@ -142,8 +133,10 @@ const getMe = catchAsync(async (req, res, next) => {
 // Update current user
 const updateMe = catchAsync(async (req, res, next) => {
   const allowedUpdates = [
-    'username',
-    'profile',
+    'firstName',
+    'lastName',
+    'bio',
+    'phone',
     'preferences'
   ]
 
@@ -153,18 +146,6 @@ const updateMe = catchAsync(async (req, res, next) => {
       updates[field] = req.body[field]
     }
   })
-
-  // If updating username, check uniqueness
-  if (updates.username) {
-    const existingUser = await User.findOne({
-      username: updates.username,
-      _id: { $ne: req.user.id }
-    })
-
-    if (existingUser) {
-      return next(new AppError('Username already taken', 400))
-    }
-  }
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
@@ -229,9 +210,13 @@ const forgotPassword = catchAsync(async (req, res, next) => {
 
   await user.save({ validateBeforeSave: false })
 
-  // In a real application, you would send an email here
-  // For now, we'll just return success
-  // await sendPasswordResetEmail(user.email, resetToken)
+  // Send password reset email
+  try {
+    await sendPasswordResetEmail(user.email, resetToken)
+  } catch (emailError) {
+    console.error('Failed to send password reset email:', emailError)
+    // Don't fail the request if email fails, but log it
+  }
 
   sendSuccess(res, null, 'Password reset link sent to your email')
 })
@@ -313,8 +298,13 @@ const resendVerification = catchAsync(async (req, res, next) => {
   user.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex')
   await user.save({ validateBeforeSave: false })
 
-  // In a real application, send email here
-  // await sendVerificationEmail(user.email, verificationToken)
+  // Send email verification
+  try {
+    await sendEmailVerification(user.email, verificationToken)
+  } catch (emailError) {
+    console.error('Failed to send email verification:', emailError)
+    // Don't fail the request if email fails, but log it
+  }
 
   sendSuccess(res, null, 'Verification email sent')
 })

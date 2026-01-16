@@ -582,41 +582,130 @@ const getApplicationStatus = catchAsync(async (req, res, next) => {
 const getVendorAnalytics = catchAsync(async (req, res, next) => {
   const { id } = req.params
 
-  // Get expense data for analytics
-  const expenses = await Expense.find({
-    vendor: req.user.id,
-    market: id,
-    isDeleted: false
-  })
+  // Add pagination limits to prevent memory issues with large datasets
+  const expenseLimit = 10000 // Maximum 10,000 expense records for performance
 
-  // Calculate analytics
-  const analytics = {
-    expenses: {
-      total: expenses.reduce((sum, exp) => sum + (exp.category === 'revenue' ? 0 : exp.amount), 0),
-      byCategory: expenses.reduce((acc, exp) => {
-        if (exp.category !== 'revenue') {
-          acc[exp.category] = (acc[exp.category] || 0) + exp.amount
-        }
-        return acc
-      }, {})
+  // MongoDB aggregation for efficient analytics calculation
+  const analyticsResult = await Expense.aggregate([
+    {
+      $match: {
+        vendor: mongoose.Types.ObjectId(req.user.id),
+        market: mongoose.Types.ObjectId(id),
+        isDeleted: false
+      }
     },
-    revenue: {
-      total: expenses.reduce((sum, exp) => sum + (exp.category === 'revenue' ? exp.amount : 0), 0),
-      byCategory: expenses.reduce((acc, exp) => {
-        if (exp.category === 'revenue') {
-          acc[exp.category] = (acc[exp.category] || 0) + exp.amount
-        }
-        return acc
-      }, {})
+    {
+      $limit: expenseLimit
     },
-    profit: expenses.reduce((sum, exp) =>
-      sum + (exp.category === 'revenue' ? exp.amount : -exp.amount), 0
-    ),
-    expenseCount: expenses.filter(e => e.category !== 'revenue').length,
-    transactionCount: expenses.length
+    {
+      $match: {
+        vendor: mongoose.Types.ObjectId(req.user.id),
+        market: mongoose.Types.ObjectId(id),
+        isDeleted: false
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalExpenses: {
+          $sum: {
+            $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount']
+          }
+        },
+        totalRevenue: {
+          $sum: {
+            $cond: [{ $eq: ['$category', 'revenue'] }, '$amount', 0]
+          }
+        },
+        expensesByCategory: {
+          $push: {
+            $cond: [
+              { $ne: ['$category', 'revenue'] },
+              { category: '$category', amount: '$amount' },
+              null
+            ]
+          }
+        },
+        revenueByCategory: {
+          $push: {
+            $cond: [
+              { $eq: ['$category', 'revenue'] },
+              { category: '$category', amount: '$amount' },
+              null
+            ]
+          }
+        },
+        totalCount: { $sum: 1 },
+        expenseCount: {
+          $sum: {
+            $cond: [{ $eq: ['$category', 'revenue'] }, 0, 1]
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        totalExpenses: 1,
+        totalRevenue: 1,
+        profit: { $subtract: ['$totalRevenue', '$totalExpenses'] },
+        expensesByCategory: {
+          $filter: {
+            input: '$expensesByCategory',
+            as: 'expense',
+            cond: { $ne: ['$expense', null] }
+          }
+        },
+        revenueByCategory: {
+          $filter: {
+            input: '$revenueByCategory',
+            as: 'revenue',
+            cond: { $ne: ['$revenue', null] }
+          }
+        },
+        totalTransactions: '$totalCount',
+        expenseCount: 1
+      }
+    }
+  ])
+
+  // Process category aggregations
+  const analytics = analyticsResult[0] || {
+    totalExpenses: 0,
+    totalRevenue: 0,
+    profit: 0,
+    expensesByCategory: [],
+    revenueByCategory: [],
+    totalTransactions: 0,
+    expenseCount: 0
   }
 
-  sendSuccess(res, analytics, 'Vendor analytics retrieved successfully')
+  // Convert arrays to objects for easier client consumption
+  const expensesByCategory = analytics.expensesByCategory.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + item.amount
+    return acc
+  }, {})
+
+  const revenueByCategory = analytics.revenueByCategory.reduce((acc, item) => {
+    acc[item.category] = (acc[item.category] || 0) + item.amount
+    return acc
+  }, {})
+
+  const responseAnalytics = {
+    expenses: {
+      total: analytics.totalExpenses,
+      byCategory: expensesByCategory
+    },
+    revenue: {
+      total: analytics.totalRevenue,
+      byCategory: revenueByCategory
+    },
+    profit: analytics.profit,
+    expenseCount: analytics.expenseCount,
+    transactionCount: analytics.totalTransactions
+  }
+
+  sendSuccess(res, responseAnalytics, 'Vendor analytics retrieved successfully')
 })
 
 // How vendor performs at this vs other markets - comparison data
