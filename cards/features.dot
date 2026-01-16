@@ -1,0 +1,103 @@
+digraph Features {
+    // Core Application Features
+    "ROOT" [label="Core Features\nMarket Tracker Functions", type="root"];
+
+    "ROOT" -> "MarketDiscovery";
+    "ROOT" -> "VendorParticipation";
+    "ROOT" -> "PromoterTools";
+    "ROOT" -> "AdminFeatures";
+    "ROOT" -> "CommunityFeatures";
+    "ROOT" -> "BusinessTools";
+
+    "MarketDiscovery" [
+        label="Market Discovery\nBrowse & Search",
+        type="category",
+        prompt="Core market browsing, search, filtering, and discovery functionality."
+    ];
+
+    "MarketDiscovery" -> "Search";
+    "MarketDiscovery" -> "Categories";
+    "MarketDiscovery" -> "Filters";
+    "MarketDiscovery" -> "Details";
+
+    "Search" [label="Text Search", type="card", prompt="Implement market search with debouncing, highlighting, and relevance scoring."];
+    "Categories" [label="Market Categories", type="card", prompt="Support 9 categories: Farmers Markets, Arts & Crafts, Flea Markets, Food Festivals, Antique Shows, Craft Fairs, Street Fairs, Holiday Markets, Community Events."];
+    "Filters" [label="Advanced Filters", type="card", prompt="Location, date, accessibility, parking, pricing, vendor type filters."];
+    "Details" [label="Market Details", type="card", prompt="Rich market pages with photos, vendor lists, schedules, directions, reviews."];
+
+    "VendorParticipation" [
+        label="Vendor Participation\nApplication System",
+        type="category",
+        prompt="Complete vendor onboarding and participation in markets."
+    ];
+
+    "VendorParticipation" -> "Applications";
+    "VendorParticipation" -> "Tracking";
+    "VendorParticipation" -> "Documents";
+
+    "Applications" [label="Market Applications", type="card", prompt="Multi-step application forms with business info, validation, and submission."];
+    "Tracking" [label="Status Tracking", type="card", prompt="Real-time application status, notifications, and approval workflow."];
+    "Documents" [label="File Management", type="card", prompt="Secure document upload for licenses, photos, and business documents."];
+
+    "PromoterTools" [
+        label="Promoter Tools\nEvent Management",
+        type="category",
+        prompt="Comprehensive tools for market organizers and event managers."
+    ];
+
+    "PromoterTools" -> "Creation";
+    "PromoterTools" -> "Management";
+    "PromoterTools" -> "Analytics";
+
+    "Creation" [label="Market Creation", type="card", prompt="Intuitive market setup with details, scheduling, requirements, and customization."];
+    "Management" [label="Vendor Management", type="card", prompt="Applicant review, approval workflow, communication tools, and vendor coordination."];
+    "Analytics" [label="Performance Analytics", type="card", prompt="Attendee tracking, vendor performance, revenue analytics, and market insights."];
+
+    "AdminFeatures" [
+        label="Admin Features\nPlatform Management",
+        type="category",
+        prompt="Administrative tools for platform oversight and user management."
+    ];
+
+    "AdminFeatures" -> "Users";
+    "AdminFeatures" -> "Markets";
+    "AdminFeatures" -> "Monitoring";
+    "AdminFeatures" -> "Support";
+
+    "Users" [label="User Administration", type="card", prompt="User management, role assignment, account controls, and verification."];
+    "Markets" [label="Market Oversight", type="card", prompt="Market monitoring, quality control, promoter support, and compliance."];
+    "Monitoring" [label="Platform Monitoring", type="card", prompt="System analytics, performance metrics, error tracking, and health monitoring."];
+    "Support" [label="Support System", type="card", prompt="User support tickets, issue resolution, help resources, and communication."];
+
+    "CommunityFeatures" [
+        label="Community Features\nSocial Engagement",
+        type="category",
+        prompt="Social features for user engagement and community building."
+    ];
+
+    "CommunityFeatures" -> "Reviews";
+    "CommunityFeatures" -> "Photos";
+    "CommunityFeatures" -> "Comments";
+    "CommunityFeatures" -> "Interactions";
+
+    "Reviews" [label="Market Reviews", type="card", prompt="Star ratings, written reviews, and aggregate market ratings."];
+    "Photos" [label="Photo Sharing", type="card", prompt="User photo uploads, galleries, and market experience sharing."];
+    "Comments" [label="Comments & Discussion", type="card", prompt="Threaded comments, discussions, and community interaction."];
+    "Interactions" [label="Social Features", type="card", prompt="Following, favorites, hashtags, and trending content."];
+
+    "BusinessTools" [
+        label="Business Tools\nVendor Productivity",
+        type="category",
+        prompt="Productivity tools for vendors to manage their market business."
+    ];
+
+    "BusinessTools" -> "Tasks";
+    "BusinessTools" -> "Expenses";
+    "BusinessTools" -> "Calendar";
+    "BusinessTools" -> "Analytics";
+
+    "Tasks" [label="Task Management", type="card", prompt="Todo lists, checklists, reminders, and task templates for market preparation."];
+    "Expenses" [label="Expense Tracking", type="card", prompt="Expense logging, categorization, receipt management, and profit/loss analysis."];
+    "Calendar" [label="Market Calendar", type="card", prompt="Personal market calendar, scheduling, and event planning tools."];
+    "Analytics" [label="Vendor Analytics", type="card", prompt="Sales tracking, visitor analytics, and market performance insights."];
+}

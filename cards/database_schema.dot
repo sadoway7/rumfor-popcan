@@ -1,0 +1,107 @@
+digraph DatabaseSchema {
+    // Database Schema and Data Models
+    "ROOT" [label="Database Schema\nMongoDB Collections\n8 Core Models", type="root"];
+
+    "ROOT" -> "UserModel";
+    "ROOT" -> "MarketModel";
+    "ROOT" -> "ApplicationModel";
+    "ROOT" -> "ContentModels";
+    "ROOT" -> "BusinessModels";
+    "ROOT" -> "SystemModels";
+
+    // User Management
+    "UserModel" [
+        label="User Collection\nAuthentication & Profiles\nMulti-role Support",
+        type="category",
+        prompt="Design user schema supporting visitor/vendor/promoter/admin roles with authentication and profile data."
+    ];
+
+    "UserModel" -> "UserAuth";
+    "UserModel" -> "UserProfile";
+    "UserModel" -> "UserRoles";
+    "UserModel" -> "UserPreferences";
+
+    "UserAuth" [label="Authentication Fields", type="card", prompt="email, passwordHash, jwtTokens, refreshTokens, lastLogin, accountStatus."];
+    "UserProfile" [label="Profile Data", type="card", prompt="firstName, lastName, avatar, bio, location, website, phone, social links."];
+    "UserRoles" [label="Role Management", type="card", prompt="role enum (visitor/vendor/promoter/admin), permissions array, verified status."];
+    "UserPreferences" [label="User Preferences", type="card", prompt="theme, notifications, privacy, language, marketing preferences."];
+
+    // Market Data
+    "MarketModel" [
+        label="Market Collection\nEvent Management\nGeospatial Data",
+        type="category",
+        prompt="Create comprehensive market schema with event details, location data, and vendor relationships."
+    ];
+
+    "MarketModel" -> "MarketBasic";
+    "MarketModel" -> "MarketLocation";
+    "MarketModel" -> "MarketSchedule";
+    "MarketModel" -> "MarketMetadata";
+
+    "MarketBasic" [label="Basic Information", type="card", prompt="name, description, category, organizer (promoter ID), status, images array."];
+    "MarketLocation" [label="Location Data", type="card", prompt="address, city, state, zip, coordinates (GeoJSON), parking, accessibility."];
+    "MarketSchedule" [label="Schedule Information", type="card", prompt="startDate, endDate, hours, recurring, timezone, seasonal dates."];
+    "MarketMetadata" [label="Market Metadata", type="card", prompt="maxVendors, applicationFee, requirements, amenities, tags, featured."];
+
+    // Application System
+    "ApplicationModel" [
+        label="Application Collection\nVendor Applications\nWorkflow States",
+        type="category",
+        prompt="Design application schema for vendor submissions, file uploads, and review workflow."
+    ];
+
+    "ApplicationModel" -> "ApplicationCore";
+    "ApplicationModel" -> "ApplicationStatus";
+    "ApplicationModel" -> "ApplicationFiles";
+    "ApplicationModel" -> "ApplicationReview";
+
+    "ApplicationCore" [label="Core Application", type="card", prompt="marketId, vendorId, businessName, contactInfo, productCategories."];
+    "ApplicationStatus" [label="Status Tracking", type="card", prompt="status enum, submittedAt, reviewedAt, approvedAt, rejectedAt."];
+    "ApplicationFiles" [label="Document Storage", type="card", prompt="licenseFiles array, photoFiles array, documentMetadata, file validation."];
+    "ApplicationReview" [label="Review Workflow", type="card", prompt="reviewerId, reviewNotes, approvalComments, followUp required."];
+
+    // Content and Social Features
+    "ContentModels" [
+        label="Content Collections\nComments & Photos\nSocial Features",
+        type="category",
+        prompt="Design content collections for comments, photos, and social engagement features."
+    ];
+
+    "ContentModels" -> "CommentModel";
+    "ContentModels" -> "PhotoModel";
+    "ContentModels" -> "HashtagModel";
+
+    "CommentModel" [label="Comments Collection", type="card", prompt="marketId, userId, content, parentId (threading), likes, reports, moderated."];
+    "PhotoModel" [label="Photos Collection", type="card", prompt="marketId, userId, filename, url, caption, tags, uploadDate, dimensions."];
+    "HashtagModel" [label="Hashtags Collection", type="card", prompt="tag, count, trending, createdBy, lastUsed, category."];
+
+    // Business Logic Models
+    "BusinessModels" [
+        label="Business Collections\nVendor Tools\nAnalytics Data",
+        type="category",
+        prompt="Create collections for vendor business tools, expense tracking, and analytics."
+    ];
+
+    "BusinessModels" -> "TodoModel";
+    "BusinessModels" -> "ExpenseModel";
+    "BusinessModels" -> "AnalyticsModel";
+
+    "TodoModel" [label="Todos Collection", type="card", prompt="vendorId, marketId, title, description, dueDate, completed, priority, category."];
+    "ExpenseModel" [label="Expenses Collection", type="card", prompt="vendorId, marketId, amount, category, description, date, receipt files."];
+    "AnalyticsModel" [label="Vendor Analytics", type="card", prompt="vendorId, marketId, metrics (sales, visitors, ratings), dateRange, performance scores."];
+
+    // System and Admin Models
+    "SystemModels" [
+        label="System Collections\nAdmin & Config\nAudit Logs",
+        type="category",
+        prompt="Design system collections for administration, configuration, and audit trails."
+    ];
+
+    "SystemModels" -> "AdminModel";
+    "SystemModels" -> "NotificationModel";
+    "SystemModels" -> "AuditModel";
+
+    "AdminModel" [label="Admin Actions", type="card", prompt="adminId, action, targetType, targetId, timestamp, details, ipAddress."];
+    "NotificationModel" [label="Notifications", type="card", prompt="userId, type, title, message, read, createdAt, expiresAt."];
+    "AuditModel" [label="Audit Logs", type="card", prompt="userId, action, collection, documentId, changes, timestamp, source."];
+}
