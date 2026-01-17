@@ -27,11 +27,11 @@ docker run -d \
   --name rumfor-backend \
   -p 3001:3001 \
   -e MONGODB_URI=mongodb+srv://sadoway_db_user:Oswald1986!@popcan.yd4d9hs.mongodb.net/?appName=popcan \
-  -e JWT_SECRET=your-secure-jwt-secret-here \
-  -e JWT_REFRESH_SECRET=your-secure-refresh-secret-here \
+  -e JWT_SECRET=rumfor-jwt-secret-2024-secure-key-change-this-in-production \
+  -e JWT_REFRESH_SECRET=rumfor-refresh-secret-2024-secure-key-change-this-in-production \
   -e NODE_ENV=production \
-  -e FRONTEND_URL=https://your-gitlab-pages-url.gitlab.io \
-  -e SESSION_SECRET=your-session-secret \
+  -e FRONTEND_URL=https://rumfor.sadoway.ca \
+  -e SESSION_SECRET=rumfor-session-secret-2024-secure-key-change-this-in-production \
   rumfor-backend:latest
 ```
 
@@ -53,15 +53,15 @@ Replace `your-server-ip` with your Docker host's IP address or domain name.
 3. Test sign up from one computer
 4. Test sign in from a different computer
 
-## Environment Variables Reference
+## Environment Variables Used
 
-Required for backend:
-- `MONGODB_URI`: Your MongoDB Atlas connection string
-- `JWT_SECRET`: Secure random string for JWT tokens
-- `JWT_REFRESH_SECRET`: Different secure string for refresh tokens
-- `NODE_ENV`: Set to "production"
-- `FRONTEND_URL`: Your GitLab Pages URL for CORS
-- `SESSION_SECRET`: Secure string for sessions
+Backend configured with:
+- `MONGODB_URI`: mongodb+srv://sadoway_db_user:Oswald1986!@popcan.yd4d9hs.mongodb.net/?appName=popcan
+- `JWT_SECRET`: rumfor-jwt-secret-2024-secure-key-change-this-in-production
+- `JWT_REFRESH_SECRET`: rumfor-refresh-secret-2024-secure-key-change-this-in-production
+- `NODE_ENV`: production
+- `FRONTEND_URL`: https://rumfor.sadoway.ca
+- `SESSION_SECRET`: rumfor-session-secret-2024-secure-key-change-this-in-production
 
 ## Troubleshooting
 

@@ -1,11 +1,11 @@
 import { ApiResponse, User, LoginCredentials, RegisterData, AuthTokens } from '@/types'
 
 // Environment configuration
-const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
-const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_AUTH === 'true' : true
+const isDevelopment = import.meta.env.DEV || false
+const isMockMode = import.meta.env.VITE_USE_MOCK_AUTH === 'true' || false
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 // API Error handling
 class AuthApiError extends Error {
