@@ -23,7 +23,7 @@ services:
   rumfor-app:
     image: rumfor-vpopcan-rumfor-app:latest
     ports:
-      - "80:80"
+      - "8080:80"
     environment:
       - NODE_ENV=production
     volumes:
