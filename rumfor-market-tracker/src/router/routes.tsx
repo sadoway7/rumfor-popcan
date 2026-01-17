@@ -84,10 +84,10 @@ export function AppRoutes() {
       <Route path="/contact" element={<MainLayout><Suspense fallback={<PageLoader />}><ContactPage /></Suspense></MainLayout>} />
 
       {/* Auth Routes */}
-      <Route path="/auth/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
-      <Route path="/auth/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
-      <Route path="/auth/forgot-password" element={<AuthLayout><PasswordRecoveryPage /></AuthLayout>} />
-      <Route path="/auth/verify-email" element={<AuthLayout><EmailVerificationPage /></AuthLayout>} />
+      <Route path="/auth/login" element={<AuthLayout><Suspense fallback={<PageLoader />}><LoginPage /></Suspense></AuthLayout>} />
+      <Route path="/auth/register" element={<AuthLayout><Suspense fallback={<PageLoader />}><RegisterPage /></Suspense></AuthLayout>} />
+      <Route path="/auth/forgot-password" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordRecoveryPage /></Suspense></AuthLayout>} />
+      <Route path="/auth/verify-email" element={<AuthLayout><Suspense fallback={<PageLoader />}><EmailVerificationPage /></Suspense></AuthLayout>} />
 
       {/* Protected Routes */}
       <Route path="/profile" element={
