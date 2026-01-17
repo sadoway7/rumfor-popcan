@@ -167,6 +167,9 @@ userSchema.pre('save', async function(next) {
 // Remove password from JSON output
 userSchema.methods.toJSON = function() {
   const userObject = this.toObject();
+  userObject.id = userObject._id.toString();
+  delete userObject._id;
+  delete userObject.__v;
   delete userObject.password;
   delete userObject.passwordResetToken;
   delete userObject.passwordResetExpires;
