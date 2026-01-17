@@ -15,7 +15,28 @@ const connectDB = async () => {
     })
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`)
-    
+
+    // Fix username index to be sparse
+    try {
+      const User = require('../src/models/User')
+      const collection = conn.connection.db.collection('users')
+
+      // Check if the old non-sparse username index exists
+      const indexes = await collection.indexes()
+      const usernameIndex = indexes.find(idx => idx.name === 'username_1')
+
+      if (usernameIndex && !usernameIndex.sparse) {
+        console.log('🔧 Dropping old non-sparse username index...')
+        await collection.dropIndex('username_1')
+        console.log('✅ Old username index dropped')
+      }
+
+      // The schema will create the new sparse index
+      console.log('✅ Username index check completed')
+    } catch (error) {
+      console.warn('⚠️  Could not fix username index:', error.message)
+    }
+
     // Handle connection events
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err)
