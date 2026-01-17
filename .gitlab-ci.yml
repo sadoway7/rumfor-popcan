@@ -39,9 +39,9 @@ build:
   timeout: 1h
   script:
     - cd rumfor-market-tracker
-    - docker build -t rumfor-vpopcan-rumfor-app:latest .
+    - docker build --no-cache -t rumfor-vpopcan-rumfor-app:latest .
     - cd backend
-    - docker build -t rumfor-vpopcan-backend:latest .
+    - docker build --no-cache -t rumfor-vpopcan-backend:latest .
     - cd ..
     - docker save rumfor-vpopcan-rumfor-app:latest > ../frontend.tar
     - docker save rumfor-vpopcan-backend:latest > ../backend.tar
