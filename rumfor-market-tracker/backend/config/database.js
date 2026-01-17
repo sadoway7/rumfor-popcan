@@ -39,7 +39,11 @@ const connectDB = async () => {
 
   } catch (error) {
     console.error('❌ Error connecting to MongoDB:', error.message)
-    process.exit(1)
+    console.error('MongoDB URI:', process.env.MONGODB_URI ? 'set' : 'not set')
+    // Don't exit in production, let the app start and handle errors gracefully
+    if (process.env.NODE_ENV === 'development') {
+      process.exit(1)
+    }
   }
 }
 

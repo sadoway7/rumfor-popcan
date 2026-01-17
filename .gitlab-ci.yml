@@ -68,6 +68,6 @@ deploy:
     - scp frontend.tar backend.tar root@$UNRAID_IP:$DEPLOY_PATH/
     - scp rumfor-market-tracker/docker-compose.prod.yml rumfor-market-tracker/nginx.conf root@$UNRAID_IP:$DEPLOY_PATH/rumfor-market-tracker/
     - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && docker load < frontend.tar && docker load < backend.tar"
-    - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && MONGODB_URI='$MONGODB_URI' docker compose -f rumfor-market-tracker/docker-compose.prod.yml up -d"
+    - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && MONGODB_URI='$MONGODB_URI' JWT_SECRET='$JWT_SECRET' JWT_REFRESH_SECRET='$JWT_REFRESH_SECRET' SESSION_SECRET='$SESSION_SECRET' FRONTEND_URL='$FRONTEND_URL' docker compose -f rumfor-market-tracker/docker-compose.prod.yml up -d"
   only:
     - master

@@ -12,12 +12,19 @@ const csrf = require('csurf')
 
 // Validate required environment variables
 const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGODB_URI']
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName])
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName] || process.env[varName].trim() === '')
 
 if (missingEnvVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '))
-  console.error('Please set these environment variables in your deployment platform.')
-  process.exit(1)
+  console.warn('⚠️  Missing or empty required environment variables:', missingEnvVars.join(', '))
+  console.warn('This may cause authentication to fail. Please set these in your deployment platform.')
+  console.warn('Current values:')
+  requiredEnvVars.forEach(varName => {
+    const value = process.env[varName]
+    const status = !value ? 'not set' : value.trim() === '' ? 'empty' : 'set'
+    console.warn(`  ${varName}: ${status}`)
+  })
+} else {
+  console.log('✅ All required environment variables are set')
 }
 const connectDB = require('../config/database')
 
