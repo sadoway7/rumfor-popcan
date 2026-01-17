@@ -100,39 +100,9 @@ const csrfProtection = csrf({
 // Enhanced Rate Limiting - User-based limits
 app.use('/api/', userRateLimiter('general'))
 
-// CORS configuration
-const allowedOrigins = new Set([
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:5174',
-  'http://localhost:4173',
-  'http://127.0.0.1:4173',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:8080',
-  'http://127.0.0.1:8080',
-  'http://localhost:4000',
-  'http://127.0.0.1:4000',
-  'http://localhost:5000',
-  'http://127.0.0.1:5000',
-  'http://localhost:8000',
-  'http://127.0.0.1:8000',
-  'https://rumfor.sadoway.ca',
-  'https://www.rumfor.sadoway.ca'
-].filter(Boolean))
-
+// CORS configuration - simplified for development
 app.use(cors({
-  origin: (origin, callback) => {
-    if (process.env.NODE_ENV !== 'production') {
-      return callback(null, origin || true)
-    }
-    if (!origin || allowedOrigins.has(origin)) {
-      return callback(null, origin || true)
-    }
-    return callback(new Error('Not allowed by CORS'))
-  },
+  origin: true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']

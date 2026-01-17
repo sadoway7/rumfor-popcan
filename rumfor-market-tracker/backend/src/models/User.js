@@ -33,8 +33,6 @@ const userSchema = new mongoose.Schema({
   // Profile information
   username: {
     type: String,
-    unique: true,
-    sparse: true,
     trim: true,
     lowercase: true
   },
@@ -107,7 +105,6 @@ const userSchema = new mongoose.Schema({
 
 // Indexes
 userSchema.index({ email: 1 });
-userSchema.index({ username: 1 }, { unique: true, sparse: true });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ 'preferences.emailNotifications': 1 });

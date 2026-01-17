@@ -18,7 +18,6 @@ const connectDB = async () => {
 
     // Fix username index to be sparse
     try {
-      const User = require('../src/models/User')
       const collection = conn.connection.db.collection('users')
 
       // Check if the old non-sparse username index exists
