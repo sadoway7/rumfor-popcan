@@ -1,0 +1,26 @@
+digraph WorldModel {
+  "ROOT" [label="Rumfor Market Tracker", type="root"];
+  "ROOT" -> "Deployment.GitLab";
+  "Deployment.GitLab" [
+    label="GitLab + Unraid Deployment",
+    type="card",
+    prompt="Optimize GitLab CI/CD pipeline for Unraid deployment: streamline Docker builds, improve caching, reduce image size, fix environment variables, ensure smooth container deployment. Keep changes minimal to avoid breaking existing GitLab CI/CD and Unraid Docker flow.",
+    agents="simple-solution,backend",
+    priority="medium",
+    status="pending"
+  ];
+
+  "Deployment.GitLab" -> "CI.Pipeline";
+  "CI.Pipeline" [
+    label="CI Pipeline Optimization",
+    type="card",
+    prompt="Review .gitlab-ci.yml for efficiency: optimize build stages, improve caching strategies, reduce pipeline duration, ensure proper artifact handling for Unraid deployment."
+  ];
+
+  "Deployment.GitLab" -> "Docker.Unraid";
+  "Docker.Unraid" [
+    label="Unraid Docker Deployment",
+    type="card",
+    prompt="Ensure Docker configuration works seamlessly with Unraid: validate docker-compose.yml, check environment variables, confirm volume mappings, test container startup on Unraid."
+  ];
+}

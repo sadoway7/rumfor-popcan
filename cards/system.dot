@@ -1,0 +1,42 @@
+digraph WorldModel {
+    "ROOT" [label="Rumfor Market Tracker", type="root", prompt="Mobile-first market tracking platform for vendors and promoters"];
+
+    "ROOT" -> "System";
+    "System" [label="System Architecture", type="category", prompt="Review core system components and infrastructure"];
+
+    "System" -> "Frontend";
+    "Frontend" [label="Frontend", type="category", prompt="React/TypeScript mobile-first application"];
+
+    "System" -> "Backend";
+    "Backend" [label="Backend", type="category", prompt="Node.js/Express API with MongoDB"];
+
+    "System" -> "Database";
+    "Database" [label="Database", type="category", prompt="MongoDB data models and schemas"];
+
+    "ROOT" -> "Users";
+    "Users" [label="User Management", type="category", prompt="Authentication, roles, and user workflows"];
+
+    "Users" -> "Auth";
+    "Auth" [label="Authentication", type="card", prompt="Implement OAuth2 authentication with Google and GitHub providers. Store tokens securely. Handle token refresh and revocation.", agents="backend,api"];
+
+    "Users" -> "Roles";
+    "Roles" [label="User Roles", type="card", prompt="Define Artisan Vendor, Market Promoter, Community Member roles with appropriate permissions", agents="backend,user-types"];
+
+    "ROOT" -> "Markets";
+    "Markets" [label="Market Features", type="category", prompt="Market discovery, tracking, and management"];
+
+    "Markets" -> "Discovery";
+    "Discovery" [label="Market Discovery", type="card", prompt="Optimize market search and filtering for mobile users", agents="market-types,user-flows"];
+
+    "Markets" -> "Tracking";
+    "Tracking" [label="Market Tracking", type="card", prompt="Implement market tracking functionality with notifications", agents="applications,backend"];
+
+    "ROOT" -> "Community";
+    "Community" [label="Community Features", type="category", prompt="Social features and engagement"];
+
+    "Community" -> "Photos";
+    "Photos" [label="Photo Sharing", type="card", prompt="Add photo upload and display functionality for market reviews", agents="community,backend"];
+
+    "Community" -> "Comments";
+    "Comments" [label="Comments System", type="card", prompt="Implement threaded comments and moderation", agents="community,backend"];
+}

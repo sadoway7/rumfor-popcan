@@ -3,7 +3,7 @@
  * Centralized HTTP client with auth interceptor, error handling, and response parsing
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 /**
  * Get auth token from localStorage

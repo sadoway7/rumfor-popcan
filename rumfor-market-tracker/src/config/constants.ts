@@ -3,7 +3,7 @@ export const APP_NAME = 'Rumfor Market Tracker'
 export const APP_VERSION = '1.0.0'
 
 // API endpoints
-export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api'
+export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api/v1'
 export const API_TIMEOUT = 10000
 
 // User roles

@@ -19,7 +19,7 @@ import {
 const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3001/api'
+const API_BASE_URL = 'http://localhost:3001/api/v1'
 
 // Mock data for development
 

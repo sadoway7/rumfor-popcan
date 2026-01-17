@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ralph's Infinity List - Rumfor Market Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/@hpcc-js/wasm@1.23.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+    <style>
+        :root {
+            --bg-deep: #050810;
+            --bg-card: #0a0f1c;
+            --bg-panel: #111827;
+            --accent: #667eea;
+            --gold: #ffd700;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #ef4444;
+            --border: #1a1f2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Sidebar - World Model Navigation */
+        .left-sidebar {
+            width: 300px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            color: var(--gold);
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent);
+        }
+
+        .control-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .tree-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .tree-node {
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tree-node:hover {
+            background: var(--bg-panel);
+        }
+
+        .tree-node.selected {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .tree-node.root { margin-left: 0; }
+        .tree-node.category { margin-left: 20px; }
+        .tree-node.card { margin-left: 40px; }
+
+        .node-icon {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        .node-label {
+            font-weight: 500;
+        }
+
+        /* Center - GraphViz Visualization */
+        .center-panel {
+            flex: 1;
+            background: var(--bg-deep);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viz-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .graph-viz {
+            max-width: 100%;
+            max-height: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .loading {
+            color: var(--text-dim);
+            font-size: 1.2em;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .zoom-btn:hover {
+            border-color: var(--accent);
+            background: var(--bg-panel);
+        }
+
+        /* Right Sidebar - Ralph Panel */
+        .right-sidebar {
+            width: 350px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .right-sidebar.hidden {
+            transform: translateX(100%);
+        }
+
+        .ralph-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ralph-title {
+            color: var(--gold);
+            font-size: 1.3em;
+        }
+
+        .toggle-btn {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: #5a67d8;
+        }
+
+        .ralph-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agents-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .agent-group {
+            margin-bottom: 25px;
+        }
+
+        .agent-group-title {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .agent-button {
+            display: block;
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .agent-button:hover {
+            border-color: var(--accent);
+            background: var(--bg-deep);
+            transform: translateX(5px);
+        }
+
+        .agent-button:active {
+            transform: translateX(2px);
+        }
+
+        .agent-name {
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 4px;
+        }
+
+        .agent-desc {
+            font-size: 0.85em;
+            color: var(--text-dim);
+            line-height: 1.3;
+        }
+
+        .status-bar {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-panel);
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .status-label {
+            color: var(--text-dim);
+            font-size: 0.9em;
+        }
+
+        .status-value {
+            font-weight: bold;
+        }
+
+        .status-idle { color: var(--text); }
+        .status-running { color: var(--accent); }
+        .status-complete { color: var(--success); }
+
+        /* Card Details Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .modal-title {
+            color: var(--gold);
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .modal-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-prompt {
+            color: var(--text);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .agent-suggestion {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .agent-suggestion:hover {
+            border-color: var(--accent);
+            background: var(--bg-deep);
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--error);
+        }
+
+        .toast-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .toast-message {
+            font-size: 0.9em;
+            color: var(--text-dim);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-sidebar {
+                width: 100%;
+                height: 30vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .center-panel {
+                height: 40vh;
+            }
+
+            .right-sidebar {
+                width: 100%;
+                height: 30vh;
+                border-left: none;
+                border-top: 1px solid var(--border);
+                transform: translateY(0);
+            }
+
+            .right-sidebar.hidden {
+                transform: translateY(100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- World Model Panel -->
+        <div class="world-panel">
+            <div class="world-header">
+                <div class="world-title">🗺️ World Model</div>
+                <div style="color: var(--text-dim); font-size: 0.9em;">
+                    Project context and task cards
+                </div>
+            </div>
+
+            <div class="cards-container" id="cards-container">
+                <!-- Cards will be loaded here -->
+                <div class="card" data-card-id="welcome">
+                    <div class="card-title">Welcome to Ralph's Infinity</div>
+                    <div class="card-type type-root">System</div>
+                    <div class="card-prompt">
+                        Welcome to the Ralph's Infinity autonomous development system for Rumfor Market Tracker.
+                        Click agent buttons in the Ralph panel to generate specialized prompts and switch modes.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ralph Panel -->
+        <div class="ralph-panel">
+            <div class="ralph-header">
+                <div class="ralph-title">🤖 Ralph's Infinity</div>
+                <div class="ralph-subtitle">Autonomous Development System</div>
+            </div>
+
+            <div class="agents-container">
+                <div class="agent-group">
+                    <div class="agent-group-title">🎯 Core Agents</div>
+
+                    <button class="agent-button" data-agent="ralph-orchestrator">
+                        <div class="agent-name">Ralph Orchestrator</div>
+                        <div class="agent-desc">Run full development cycles across all specialist agents</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent10-research">
+                        <div class="agent-name">Research Agent</div>
+                        <div class="agent-desc">Investigate unknowns and gather evidence from codebase</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent11-simple-solution">
+                        <div class="agent-name">Simple Solution Agent</div>
+                        <div class="agent-desc">Find the smallest viable fix for problems</div>
+                    </button>
+                </div>
+
+                <div class="agent-group">
+                    <div class="agent-group-title">👥 User Experience</div>
+
+                    <button class="agent-button" data-agent="agent1-user-types">
+                        <div class="agent-name">User Types Agent</div>
+                        <div class="agent-desc">Define personas and validate user goals</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent3-user-flows">
+                        <div class="agent-name">User Flows Agent</div>
+                        <div class="agent-desc">Map discovery, tracking, and application flows</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent4-ui-styles">
+                        <div class="agent-name">UI Styles Agent</div>
+                        <div class="agent-desc">Maintain mobile-first UI styling system</div>
+                    </button>
+                </div>
+
+                <div class="agent-group">
+                    <div class="agent-group-title">🏪 Market & Community</div>
+
+                    <button class="agent-button" data-agent="agent2-market-types">
+                        <div class="agent-name">Market Types Agent</div>
+                        <div class="agent-desc">Define market categories and tagging taxonomy</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent5-community">
+                        <div class="agent-name">Community Agent</div>
+                        <div class="agent-desc">Handle comments, photos, hashtags, and reactions</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent6-applications">
+                        <div class="agent-name">Applications Agent</div>
+                        <div class="agent-desc">Application forms, workflows, and notifications</div>
+                    </button>
+                </div>
+
+                <div class="agent-group">
+                    <div class="agent-group-title">⚙️ Backend & API</div>
+
+                    <button class="agent-button" data-agent="agent7-backend">
+                        <div class="agent-name">Backend Agent</div>
+                        <div class="agent-desc">Review controllers, services, and workflows</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent8-api">
+                        <div class="agent-name">API Agent</div>
+                        <div class="agent-desc">REST endpoints, validation, and contracts</div>
+                    </button>
+
+                    <button class="agent-button" data-agent="agent12-logic">
+                        <div class="agent-name">Logic Agent</div>
+                        <div class="agent-desc">Validate business logic and rule consistency</div>
+                    </button>
+                </div>
+
+                <div class="agent-group">
+                    <div class="agent-group-title">📚 Documentation</div>
+
+                    <button class="agent-button" data-agent="agent9-docs">
+                        <div class="agent-name">Documentation Agent</div>
+                        <div class="agent-desc">Keep documentation current and aligned</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-bar" id="status-bar">
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value status-idle" id="orchestrator-status">LOADING...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Cycle:</span>
+                    <span class="status-value" id="current-cycle">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Agent:</span>
+                    <span class="status-value" id="current-agent">None</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div class="toast" id="toast">
+        <div class="toast-title" id="toast-title"></div>
+        <div class="toast-message" id="toast-message"></div>
+    </div>
+
+    <script src="ralph_status.js"></script>
+    <script>
+        // Agent mode definitions (matching .roomodes)
+        const agentModes = {
+            "ralph-orchestrator": {
+                name: "Ralph Orchestrator",
+                mode: "ralph-orchestrator",
+                prompt: `You are the Ralph Orchestrator for Rumfor Market Tracker.
+
+Your responsibilities:
+- Run a full development cycle across all specialist agents
+- Keep agent status updated in .ralph/status.json
+- Maintain scratchpads for persistent memory
+- Create checkpoints when progress is made
+
+Always:
+- Update .ralph/status.json for orchestrator state
+- Call compile_ralph_status.py after status updates
+
+You are currently in orchestrator mode. Begin by assessing the current project state and determining which agents should run in this cycle.`
+            },
+
+            "agent1-user-types": {
+                name: "User Types Agent",
+                mode: "agent1-user-types",
+                prompt: `You are the User Types specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Define personas (Artisan Vendor, Market Promoter, Community Member)
+- Validate user goals and pain points
+- Keep flows aligned to user needs
+
+When to use: Persona updates, UX alignment with user goals
+
+Analyze the current user personas and identify any gaps or improvements needed for the user experience.`
+            },
+
+            "agent2-market-types": {
+                name: "Market Types Agent",
+                mode: "agent2-market-types",
+                prompt: `You are the Market Types specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Define and maintain market categories
+- Ensure filters match real market types
+- Keep tagging taxonomy consistent
+
+When to use: Market category and tagging updates
+
+Review the market categorization system and ensure it properly represents real-world market types that vendors would use.`
+            },
+
+            "agent3-user-flows": {
+                name: "User Flows Agent",
+                mode: "agent3-user-flows",
+                prompt: `You are the User Flows specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Map discovery, tracking, application, and community flows
+- Validate success/error states
+- Reduce friction in critical workflows
+
+When to use: User flow design and validation
+
+Examine the key user journeys and identify opportunities to reduce friction and improve success rates.`
+            },
+
+            "agent4-ui-styles": {
+                name: "UI Styles Agent",
+                mode: "agent4-ui-styles",
+                prompt: `You are the UI Styles specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Maintain mobile-first UI styling system
+- Enforce spacing, typography, and component consistency
+- Ensure accessibility and touch targets
+
+When to use: UI styling, layout, and accessibility updates
+
+Audit the current UI components and ensure they follow the mobile-first design system and accessibility guidelines.`
+            },
+
+            "agent5-community": {
+                name: "Community Agent",
+                mode: "agent5-community",
+                prompt: `You are the Community specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Comments, photos, hashtags, and reactions flows
+- Moderation and reporting considerations
+- Community engagement UX
+
+When to use: Community feature updates
+
+Design and validate the community interaction features, ensuring they encourage positive engagement while providing necessary moderation tools.`
+            },
+
+            "agent6-applications": {
+                name: "Applications Agent",
+                mode: "agent6-applications",
+                prompt: `You are the Applications specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Application form UX and validation
+- Promoter review workflows and statuses
+- Email notification requirements
+
+When to use: Application workflow updates
+
+Streamline the application process for vendors while ensuring promoters have effective review tools.`
+            },
+
+            "agent7-backend": {
+                name: "Backend Agent",
+                mode: "agent7-backend",
+                prompt: `You are the Backend specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Review backend controllers, services, and middleware
+- Validate auth, notifications, and application workflows
+- Keep backend aligned with user flows
+
+When to use: Backend logic and API changes
+
+Audit the backend implementation and ensure it properly supports the user flows and business requirements.`
+            },
+
+            "agent8-api": {
+                name: "API Agent",
+                mode: "agent8-api",
+                prompt: `You are the API specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- REST endpoint consistency and DTOs
+- Validation, error handling, and versioning
+- Ensure API supports mobile-first flows
+
+When to use: API design and contract updates
+
+Review the API design and ensure it provides a consistent, well-validated interface for mobile clients.`
+            },
+
+            "agent9-docs": {
+                name: "Documentation Agent",
+                mode: "agent9-docs",
+                prompt: `You are the Documentation specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Keep documentation current
+- Summarize changes and new features
+- Align docs with mobile-first rebuild goals
+
+When to use: Documentation updates
+
+Update project documentation to reflect recent changes and ensure it's accessible for all team members.`
+            },
+
+            "agent10-research": {
+                name: "Research Agent",
+                mode: "agent10-research",
+                prompt: `You are the Research specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Investigate unknowns and gather evidence from the codebase
+- Trace API flows end-to-end and identify mismatches
+- Propose options with tradeoffs and references
+- Summarize findings with clear next steps
+
+When to use: Investigations, technical research, root-cause analysis, evidence gathering
+
+Always:
+- Cite exact files and line locations
+- Separate findings, hypotheses, and recommendations
+- Avoid speculative fixes without evidence
+
+Identify areas of the codebase that need investigation and gather evidence-based insights.`
+            },
+
+            "agent11-simple-solution": {
+                name: "Simple Solution Agent",
+                mode: "agent11-simple-solution",
+                prompt: `You are the Simple Solution specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Find the smallest viable fix for a problem
+- Reduce complexity and avoid over-engineering
+- Prefer configuration or minimal code edits when possible
+- Provide a short implementation plan and quick verification steps
+
+When to use: Quick fixes, minimal changes, reducing scope, unblocking issues
+
+Always:
+- Keep changes minimal and localized
+- Avoid new dependencies unless required
+- Provide a quick rollback path
+
+Identify the simplest possible solution to unblock current development or fix immediate issues.`
+            },
+
+            "agent12-logic": {
+                name: "Logic Agent",
+                mode: "agent12-logic",
+                prompt: `You are the Logic specialist for Rumfor Market Tracker.
+
+Your responsibilities:
+- Validate business logic across backend and frontend
+- Ensure state transitions and rules are consistent
+- Detect edge cases in workflows and data processing
+- Propose fixes that keep logic centralized and testable
+
+When to use: Business logic fixes, workflow rule alignment, edge-case analysis
+
+Always:
+- Document assumptions and invariants
+- Prefer single source of truth for rules
+- Add validation for state transitions
+
+Audit the business logic implementation and identify inconsistencies or edge cases that need addressing.`
+            }
+        };
+
+        // Toast notification system
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            toast.className = `toast ${type}`;
+
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Hide after 4 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // Copy to clipboard function
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return true;
+                } catch (fallbackErr) {
+                    document.body.removeChild(textArea);
+                    return false;
+                }
+            }
+        }
+
+        // Agent button click handler
+        document.querySelectorAll('.agent-button').forEach(button => {
+            button.addEventListener('click', async function() {
+                const agentId = this.dataset.agent;
+                const agent = agentModes[agentId];
+
+                if (!agent) {
+                    showToast('Error', 'Agent configuration not found', 'error');
+                    return;
+                }
+
+                // Generate prompt with current context
+                const prompt = `${agent.prompt}
+
+Current Project Context:
+- Project: Rumfor Market Tracker
+- Mode: ${agent.mode}
+- Time: ${new Date().toISOString()}
+
+Please analyze the codebase and provide specific, actionable recommendations for your area of specialization.`;
+
+                // Copy to clipboard
+                const success = await copyToClipboard(prompt);
+
+                if (success) {
+                    showToast('Prompt Copied! 🔨', `Paste this prompt into Roo Code to switch to ${agent.name} mode`, 'success');
+
+                    // Highlight button briefly
+                    this.style.background = 'var(--accent)';
+                    this.style.color = '#fff';
+                    setTimeout(() => {
+                        this.style.background = '';
+                        this.style.color = '';
+                    }, 1000);
+                } else {
+                    showToast('Copy Failed', 'Unable to copy to clipboard. Please copy manually.', 'error');
+                }
+            });
+        });
+
+        // Load cards from cards/ directory (if exists)
+        async function loadCards() {
+            try {
+                // This would load DOT files from cards/ directory in a real implementation
+                // For now, we'll keep the welcome card
+                console.log('Cards system ready - add DOT files to cards/ directory');
+            } catch (error) {
+                console.log('Cards directory not found or no DOT files');
+            }
+        }
+
+        // Update status display
+        function updateStatus() {
+            try {
+                const status = ralphStatus;
+                const orch = status.orchestrator;
+
+                document.getElementById('orchestrator-status').textContent = orch.status.toUpperCase();
+                document.getElementById('orchestrator-status').className = `status-value status-${orch.status}`;
+
+                document.getElementById('current-cycle').textContent = orch.current_cycle;
+                document.getElementById('current-agent').textContent = orch.current_agent || 'None';
+            } catch (error) {
+                console.log('Status not available yet');
+            }
+        }
+
+        // Initialize
+        loadCards();
+        updateStatus();
+
+        // Refresh status every 10 seconds
+        setInterval(updateStatus, 10000);
+
+        // Instructions for users
+        console.log("🤖 Ralph's Infinity loaded!");
+        console.log("📋 Click agent buttons to copy prompts to clipboard");
+        console.log("🔄 Paste prompts into Roo Code to switch modes");
+        console.log("📊 Status updates automatically from .ralph/status.json");
+    </script>
+</body>
+</html>
