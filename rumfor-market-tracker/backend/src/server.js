@@ -9,6 +9,16 @@ const morgan = require('morgan')
 const session = require('express-session')
 const MongoStore = require('connect-mongo')
 const csrf = require('csurf')
+
+// Validate required environment variables
+const requiredEnvVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGODB_URI']
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName])
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingEnvVars.join(', '))
+  console.error('Please set these environment variables in your deployment platform.')
+  process.exit(1)
+}
 const connectDB = require('../config/database')
 
 // Import middleware

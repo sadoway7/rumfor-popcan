@@ -103,6 +103,9 @@ const verifyToken = async (req, res, next) => {
     }
     
     // Verify token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is not set')
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     
     // Get user from database
@@ -185,6 +188,9 @@ const verifyRefreshToken = async (req, res, next) => {
     }
     
     // Verify refresh token
+    if (!process.env.JWT_REFRESH_SECRET) {
+      throw new Error('JWT_REFRESH_SECRET environment variable is not set')
+    }
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
     
     // Get user from database
@@ -465,6 +471,9 @@ const optionalAuth = async (req, res, next) => {
     }
     
     // Try to verify token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is not set')
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id).select('-password')
 
@@ -501,6 +510,9 @@ const requireEmailVerification = (req, res, next) => {
 
 // Generate JWT token
 const generateToken = (userId, tokenVersion = 0, expiresIn = '24h') => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is not set')
+  }
   return jwt.sign(
     { id: userId, tv: tokenVersion },
     process.env.JWT_SECRET,
@@ -510,6 +522,9 @@ const generateToken = (userId, tokenVersion = 0, expiresIn = '24h') => {
 
 // Generate refresh token
 const generateRefreshToken = (userId, tokenVersion = 0, expiresIn = '7d') => {
+  if (!process.env.JWT_REFRESH_SECRET) {
+    throw new Error('JWT_REFRESH_SECRET environment variable is not set')
+  }
   return jwt.sign(
     { id: userId, tv: tokenVersion },
     process.env.JWT_REFRESH_SECRET,
