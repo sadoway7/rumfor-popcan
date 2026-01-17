@@ -100,13 +100,31 @@ const csrfProtection = csrf({
 // Enhanced Rate Limiting - User-based limits
 app.use('/api/', userRateLimiter('general'))
 
-// CORS configuration - simplified for development
-app.use(cors({
-  origin: true, // Allow all origins in development
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
-}))
+// CORS configuration - manual headers for reliability
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200)
+    return
+  }
+  next()
+})
+
+// Ensure CORS headers on all responses
+app.use((req, res, next) => {
+  const originalSend = res.send
+  res.send = function(data) {
+    res.header('Access-Control-Allow-Origin', '*')
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
+    res.header('Access-Control-Allow-Credentials', 'true')
+    originalSend.call(this, data)
+  }
+  next()
+})
 
 // Version extraction and headers middleware
 app.use('/api', extractVersionFromPath)
