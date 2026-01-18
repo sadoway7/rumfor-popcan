@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useNotificationsStore } from '@/features/notifications/notificationsStore'
+import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { useApplications } from '@/features/applications/hooks/useApplications'
 import { UserRole } from '@/types'
 
 export function SubHeader() {
   const { user } = useAuthStore()
-  const { unreadCount } = useNotificationsStore()
+  const { unreadCount } = useNotifications()
   const { trackedMarkets } = useTrackedMarkets()
   const { applications } = useApplications()
 

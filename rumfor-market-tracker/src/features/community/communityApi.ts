@@ -1,84 +1,5 @@
 import { ApiResponse, Comment, CommentReaction, Photo, Hashtag, HashtagVote, User } from '@/types'
-import { useAuthStore } from '@/features/auth/authStore'
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
-
-// HTTP client with interceptors
-class HttpClient {
-  private baseURL: string
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`
-
-    // Add auth token if available (from auth store)
-    const authState = useAuthStore.getState()
-    const token = authState.isHydrated ? authState.token : null
-
-    console.log('[DEBUG] API Request:', endpoint, {
-      hasToken: !!token,
-      tokenLength: token ? token.length : 0,
-      tokenStart: token ? token.substring(0, 20) + '...' : 'none'
-    })
-
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    }
-
-    try {
-      const response = await fetch(url, config)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(
-          errorData.message || 'Request failed'
-        )
-      }
-
-      return await response.json()
-    } catch (error) {
-      throw error
-    }
-  }
-
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
-  }
-
-  post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  patch<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
-  }
-}
-
-const httpClient = new HttpClient(API_BASE_URL)
+import httpClient from '@/utils/httpClient'
 
 const mapUser = (user: any): User => ({
   id: user?._id || user?.id || '',
@@ -234,17 +155,8 @@ export const communityApi = {
     if (photo.caption) formData.append('caption', photo.caption)
     if (photo.tags?.length) formData.append('tags', JSON.stringify(photo.tags))
 
-    const authState = useAuthStore.getState()
-    const token = authState.isHydrated ? authState.token : null
-
-    const headers: Record<string, string> = {}
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
-
-    const response = await fetch(`${API_BASE_URL}/photos/market/${photo.marketId}`, {
+    const response = await httpClient.raw(`/photos/market/${photo.marketId}`, {
       method: 'POST',
-      headers,
       body: formData,
     })
 

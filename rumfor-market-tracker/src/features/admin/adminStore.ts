@@ -1,78 +1,85 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
-import { 
-  AdminStats, 
-  UserWithStats, 
-  ModerationItem, 
-  PromoterVerification, 
-  AdminFilters, 
-  SystemSettings, 
-  EmailTemplate, 
-  AuditLog, 
-  BulkOperation 
+import {
+  AdminStats,
+  UserWithStats,
+  ModerationItem,
+  PromoterVerification,
+  SystemSettings,
+  BulkOperation,
+  EmailTemplate,
+  AuditLog,
+  AdminFilters
 } from '@/types'
 import { adminApi } from './adminApi'
 
-interface AdminState {
-  // Dashboard stats
+interface AdminStoreState {
+  // Stats
   stats: AdminStats | null
   isLoadingStats: boolean
 
-  // Recent activities
+  // Recent Activities
   recentActivities: any[]
   isLoadingActivities: boolean
-  
+
   // Users
   users: UserWithStats[]
-  usersPagination: { page: number; limit: number; total: number; totalPages: number } | null
+  usersPagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
   isLoadingUsers: boolean
-  userFilters: AdminFilters['userFilters'] | null
-  
+  selectedUsers: string[]
+  userFilters: AdminFilters['userFilters']
+
   // Moderation
   moderationItems: ModerationItem[]
-  moderationPagination: { page: number; limit: number; total: number; totalPages: number } | null
+  moderationPagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
   isLoadingModeration: boolean
-  moderationFilters: AdminFilters['moderationFilters'] | null
-  
+  selectedModerationItems: string[]
+  moderationFilters: AdminFilters['moderationFilters']
+
   // Promoter Verifications
   promoterVerifications: PromoterVerification[]
   isLoadingVerifications: boolean
-  
-  // Applications
-  applications: any[]
-  applicationsPagination: { page: number; limit: number; total: number; totalPages: number } | null
-  isLoadingApplications: boolean
-  applicationFilters: AdminFilters['applicationFilters'] | null
-  
+
   // System Settings
   systemSettings: SystemSettings[]
   isLoadingSettings: boolean
-  
+
   // Email Templates
   emailTemplates: EmailTemplate[]
   isLoadingTemplates: boolean
-  
+
   // Audit Logs
   auditLogs: AuditLog[]
-  auditPagination: { page: number; limit: number; total: number; totalPages: number } | null
+  auditPagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
   isLoadingAudit: boolean
-  
+
   // Bulk Operations
   bulkOperations: BulkOperation[]
-  
-  // UI State
-  selectedUsers: string[]
-  selectedModerationItems: string[]
-  selectedApplications: string[]
-  bulkOperationProgress: Record<string, number>
+  bulkOperationProgress: { [key: string]: number }
 }
 
-interface AdminActions {
-  // Dashboard
+interface AdminStore extends AdminStoreState {
+  // Stats methods
   fetchAdminStats: () => Promise<void>
+
+  // Activities methods
   fetchRecentActivities: () => Promise<void>
-  
-  // Users
+
+  // User management methods
   fetchUsers: (filters?: AdminFilters['userFilters']) => Promise<void>
   updateUserRole: (userId: string, role: any) => Promise<void>
   suspendUser: (userId: string, suspended: boolean) => Promise<void>
@@ -82,8 +89,8 @@ interface AdminActions {
   selectUser: (userId: string) => void
   selectUsers: (userIds: string[]) => void
   clearUserSelection: () => void
-  
-  // Moderation
+
+  // Moderation methods
   fetchModerationQueue: (filters?: AdminFilters['moderationFilters']) => Promise<void>
   moderateContent: (itemId: string, action: 'approve' | 'reject' | 'resolve', reason?: string) => Promise<void>
   assignModerationItem: (itemId: string, assignedTo: string) => Promise<void>
@@ -91,476 +98,348 @@ interface AdminActions {
   selectModerationItem: (itemId: string) => void
   selectModerationItems: (itemIds: string[]) => void
   clearModerationSelection: () => void
-  
-  // Promoter Verifications
+
+  // Promoter verification methods
   fetchPromoterVerifications: () => Promise<void>
   reviewPromoterVerification: (verificationId: string, status: 'verified' | 'rejected', notes?: string) => Promise<void>
-  
-  // Applications
-  fetchAllApplications: (filters?: AdminFilters['applicationFilters']) => Promise<void>
-  bulkReviewApplications: (applicationIds: string[], action: 'approve' | 'reject', reason?: string) => Promise<void>
-  setApplicationFilters: (filters: AdminFilters['applicationFilters']) => void
-  selectApplication: (applicationId: string) => void
-  selectApplications: (applicationIds: string[]) => void
-  clearApplicationSelection: () => void
-  
-  // System Settings
+
+  // System settings methods
   fetchSystemSettings: () => Promise<void>
   updateSystemSetting: (key: string, value: string) => Promise<void>
-  
-  // Email Templates
+
+  // Email templates methods
   fetchEmailTemplates: () => Promise<void>
-  
-  // Audit Logs
+
+  // Audit logs methods
   fetchAuditLogs: (filters?: any) => Promise<void>
-  
-  // Bulk Operations
+
+  // Bulk operations methods
   addBulkOperation: (operation: BulkOperation) => void
   updateBulkOperationProgress: (operationId: string, progress: number) => void
-  
-  // Analytics
+
+  // Analytics methods
   fetchUserAnalytics: (dateRange: { start: string; end: string }) => Promise<any>
   fetchMarketAnalytics: (dateRange: { start: string; end: string }) => Promise<any>
 }
 
-type AdminStore = AdminState & AdminActions
-
-const initialState: AdminState = {
+export const useAdminStore = create<AdminStore>((set, get) => ({
+  // Initial state
   stats: null,
   isLoadingStats: false,
+
   recentActivities: [],
   isLoadingActivities: false,
+
   users: [],
-  usersPagination: null,
+  usersPagination: {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0
+  },
   isLoadingUsers: false,
-  userFilters: null,
+  selectedUsers: [],
+  userFilters: {},
+
   moderationItems: [],
-  moderationPagination: null,
+  moderationPagination: {
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0
+  },
   isLoadingModeration: false,
-  moderationFilters: null,
+  selectedModerationItems: [],
+  moderationFilters: {},
+
   promoterVerifications: [],
   isLoadingVerifications: false,
-  applications: [],
-  applicationsPagination: null,
-  isLoadingApplications: false,
-  applicationFilters: null,
+
   systemSettings: [],
   isLoadingSettings: false,
+
   emailTemplates: [],
   isLoadingTemplates: false,
+
   auditLogs: [],
-  auditPagination: null,
+  auditPagination: {
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0
+  },
   isLoadingAudit: false,
+
   bulkOperations: [],
-  selectedUsers: [],
-  selectedModerationItems: [],
-  selectedApplications: [],
-  bulkOperationProgress: {}
-}
+  bulkOperationProgress: {},
 
-export const useAdminStore = create<AdminStore>()(
-  devtools(
-    (set, get) => ({
-      ...initialState,
-      
-      // Dashboard
-      fetchAdminStats: async () => {
-        if (get().isLoadingStats) return; // Prevent concurrent calls
-        set({ isLoadingStats: true })
-        try {
-          const response = await adminApi.getAdminStats()
-          if (response.success && response.data) {
-            set({ stats: response.data })
-          }
-        } catch (error) {
-          console.error('Failed to fetch admin stats:', error)
-        } finally {
-          set({ isLoadingStats: false })
-        }
-      },
-
-      fetchRecentActivities: async () => {
-        set({ isLoadingActivities: true })
-        try {
-          const response = await adminApi.getRecentActivities()
-          if (response.success && response.data) {
-            set({ recentActivities: response.data })
-          }
-        } catch (error) {
-          console.error('Failed to fetch recent activities:', error)
-        } finally {
-          set({ isLoadingActivities: false })
-        }
-      },
-      
-      // Users
-      fetchUsers: async (filters) => {
-        set({ isLoadingUsers: true })
-        try {
-          const response = await adminApi.getUsers(filters)
-          set({ 
-            users: response.data, 
-            usersPagination: response.pagination,
-            userFilters: filters || null
-          })
-        } catch (error) {
-          console.error('Failed to fetch users:', error)
-        } finally {
-          set({ isLoadingUsers: false })
-        }
-      },
-      
-      updateUserRole: async (userId, role) => {
-        try {
-          const response = await adminApi.updateUserRole(userId, role)
-          if (response.success && response.data) {
-            set((state) => ({
-              users: state.users.map(user => 
-                user.id === userId ? { ...user, role } : user
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to update user role:', error)
-        }
-      },
-      
-      suspendUser: async (userId, suspended) => {
-        try {
-          const response = await adminApi.suspendUser(userId, suspended)
-          if (response.success && response.data) {
-            set((state) => ({
-              users: state.users.map(user => 
-                user.id === userId ? { ...user, isActive: !suspended } : user
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to suspend user:', error)
-        }
-      },
-      
-      verifyUser: async (userId, verified) => {
-        try {
-          const response = await adminApi.verifyUser(userId, verified)
-          if (response.success && response.data) {
-            set((state) => ({
-              users: state.users.map(user => 
-                user.id === userId ? { ...user, isEmailVerified: verified } : user
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to verify user:', error)
-        }
-      },
-      
-      bulkUpdateUsers: async (userIds, operation, value) => {
-        try {
-          const response = await adminApi.bulkUpdateUsers(userIds, operation, value)
-          if (response.success && response.data) {
-            get().addBulkOperation(response.data)
-            
-            // Start tracking progress
-            const operationId = response.data.id
-            const interval = setInterval(() => {
-              const progress = get().bulkOperationProgress[operationId] || 0
-              if (progress < 100) {
-                const newProgress = Math.min(progress + 10, 100)
-                get().updateBulkOperationProgress(operationId, newProgress)
-                
-                if (newProgress >= 100) {
-                  clearInterval(interval)
-                  // Refresh users list after bulk operation
-                  get().fetchUsers(get().userFilters || undefined)
-                }
-              }
-            }, 200)
-          }
-        } catch (error) {
-          console.error('Failed to bulk update users:', error)
-        }
-      },
-      
-      setUserFilters: (filters) => {
-        set({ userFilters: filters })
-      },
-      
-      selectUser: (userId) => {
-        set((state) => ({
-          selectedUsers: state.selectedUsers.includes(userId)
-            ? state.selectedUsers.filter(id => id !== userId)
-            : [...state.selectedUsers, userId]
-        }))
-      },
-      
-      selectUsers: (userIds) => {
-        set({ selectedUsers: userIds })
-      },
-      
-      clearUserSelection: () => {
-        set({ selectedUsers: [] })
-      },
-      
-      // Moderation
-      fetchModerationQueue: async (filters) => {
-        set({ isLoadingModeration: true })
-        try {
-          const response = await adminApi.getModerationQueue(filters)
-          set({ 
-            moderationItems: response.data, 
-            moderationPagination: response.pagination,
-            moderationFilters: filters || null
-          })
-        } catch (error) {
-          console.error('Failed to fetch moderation queue:', error)
-        } finally {
-          set({ isLoadingModeration: false })
-        }
-      },
-      
-      moderateContent: async (itemId, action, reason) => {
-        try {
-          const response = await adminApi.moderateContent(itemId, action, reason)
-          if (response.success && response.data) {
-            set((state) => ({
-              moderationItems: state.moderationItems.map(item => 
-                item.id === itemId ? response.data! : item
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to moderate content:', error)
-        }
-      },
-      
-      assignModerationItem: async (itemId, assignedTo) => {
-        try {
-          const response = await adminApi.assignModerationItem(itemId, assignedTo)
-          if (response.success && response.data) {
-            set((state) => ({
-              moderationItems: state.moderationItems.map(item => 
-                item.id === itemId ? { ...item, assignedTo } : item
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to assign moderation item:', error)
-        }
-      },
-      
-      setModerationFilters: (filters) => {
-        set({ moderationFilters: filters })
-      },
-      
-      selectModerationItem: (itemId) => {
-        set((state) => ({
-          selectedModerationItems: state.selectedModerationItems.includes(itemId)
-            ? state.selectedModerationItems.filter(id => id !== itemId)
-            : [...state.selectedModerationItems, itemId]
-        }))
-      },
-      
-      selectModerationItems: (itemIds) => {
-        set({ selectedModerationItems: itemIds })
-      },
-      
-      clearModerationSelection: () => {
-        set({ selectedModerationItems: [] })
-      },
-      
-      // Promoter Verifications
-      fetchPromoterVerifications: async () => {
-        set({ isLoadingVerifications: true })
-        try {
-          const response = await adminApi.getPromoterVerifications()
-          if (response.success && response.data) {
-            set({ promoterVerifications: response.data })
-          }
-        } catch (error) {
-          console.error('Failed to fetch promoter verifications:', error)
-        } finally {
-          set({ isLoadingVerifications: false })
-        }
-      },
-      
-      reviewPromoterVerification: async (verificationId, status, notes) => {
-        try {
-          const response = await adminApi.reviewPromoterVerification(verificationId, status, notes)
-          if (response.success && response.data) {
-            set((state) => ({
-              promoterVerifications: state.promoterVerifications.map(v => 
-                v.id === verificationId ? response.data! : v
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to review promoter verification:', error)
-        }
-      },
-      
-      // Applications
-      fetchAllApplications: async (filters) => {
-        set({ isLoadingApplications: true })
-        try {
-          const response = await adminApi.getAllApplications(filters)
-          set({ 
-            applications: response.data, 
-            applicationsPagination: response.pagination,
-            applicationFilters: filters || null
-          })
-        } catch (error) {
-          console.error('Failed to fetch applications:', error)
-        } finally {
-          set({ isLoadingApplications: false })
-        }
-      },
-      
-      bulkReviewApplications: async (applicationIds, action, reason) => {
-        try {
-          const response = await adminApi.bulkReviewApplications(applicationIds, action, reason)
-          if (response.success && response.data) {
-            get().addBulkOperation(response.data)
-            
-            const operationId = response.data.id
-            const interval = setInterval(() => {
-              const progress = get().bulkOperationProgress[operationId] || 0
-              if (progress < 100) {
-                const newProgress = Math.min(progress + 15, 100)
-                get().updateBulkOperationProgress(operationId, newProgress)
-                
-                if (newProgress >= 100) {
-                  clearInterval(interval)
-                  get().fetchAllApplications(get().applicationFilters || undefined)
-                }
-              }
-            }, 300)
-          }
-        } catch (error) {
-          console.error('Failed to bulk review applications:', error)
-        }
-      },
-      
-      setApplicationFilters: (filters) => {
-        set({ applicationFilters: filters })
-      },
-      
-      selectApplication: (applicationId) => {
-        set((state) => ({
-          selectedApplications: state.selectedApplications.includes(applicationId)
-            ? state.selectedApplications.filter(id => id !== applicationId)
-            : [...state.selectedApplications, applicationId]
-        }))
-      },
-      
-      selectApplications: (applicationIds) => {
-        set({ selectedApplications: applicationIds })
-      },
-      
-      clearApplicationSelection: () => {
-        set({ selectedApplications: [] })
-      },
-      
-      // System Settings
-      fetchSystemSettings: async () => {
-        set({ isLoadingSettings: true })
-        try {
-          const response = await adminApi.getSystemSettings()
-          if (response.success && response.data) {
-            set({ systemSettings: response.data })
-          }
-        } catch (error) {
-          console.error('Failed to fetch system settings:', error)
-        } finally {
-          set({ isLoadingSettings: false })
-        }
-      },
-      
-      updateSystemSetting: async (key, value) => {
-        try {
-          const response = await adminApi.updateSystemSetting(key, value)
-          if (response.success && response.data) {
-            set((state) => ({
-              systemSettings: state.systemSettings.map(setting => 
-                setting.key === key ? response.data! : setting
-              )
-            }))
-          }
-        } catch (error) {
-          console.error('Failed to update system setting:', error)
-        }
-      },
-      
-      // Email Templates
-      fetchEmailTemplates: async () => {
-        set({ isLoadingTemplates: true })
-        try {
-          const response = await adminApi.getEmailTemplates()
-          if (response.success && response.data) {
-            set({ emailTemplates: response.data })
-          }
-        } catch (error) {
-          console.error('Failed to fetch email templates:', error)
-        } finally {
-          set({ isLoadingTemplates: false })
-        }
-      },
-      
-      // Audit Logs
-      fetchAuditLogs: async (filters) => {
-        set({ isLoadingAudit: true })
-        try {
-          const response = await adminApi.getAuditLogs(filters)
-          set({ 
-            auditLogs: response.data, 
-            auditPagination: response.pagination
-          })
-        } catch (error) {
-          console.error('Failed to fetch audit logs:', error)
-        } finally {
-          set({ isLoadingAudit: false })
-        }
-      },
-      
-      // Bulk Operations
-      addBulkOperation: (operation) => {
-        set((state) => ({
-          bulkOperations: [operation, ...state.bulkOperations]
-        }))
-      },
-      
-      updateBulkOperationProgress: (operationId, progress) => {
-        set((state) => ({
-          bulkOperationProgress: {
-            ...state.bulkOperationProgress,
-            [operationId]: progress
-          }
-        }))
-      },
-      
-      // Analytics
-      fetchUserAnalytics: async (dateRange) => {
-        try {
-          const response = await adminApi.getUserAnalytics(dateRange)
-          return response.data
-        } catch (error) {
-          console.error('Failed to fetch user analytics:', error)
-          return null
-        }
-      },
-      
-      fetchMarketAnalytics: async (dateRange) => {
-        try {
-          const response = await adminApi.getMarketAnalytics(dateRange)
-          return response.data
-        } catch (error) {
-          console.error('Failed to fetch market analytics:', error)
-          return null
-        }
+  // Stats methods
+  fetchAdminStats: async () => {
+    try {
+      set({ isLoadingStats: true })
+      const response = await adminApi.getAdminStats()
+      if (response.success) {
+        set({ stats: response.data, isLoadingStats: false })
       }
-    }),
-    {
-      name: 'admin-store'
+    } catch (error) {
+      set({ isLoadingStats: false })
+      throw error
     }
-  )
-)
+  },
+
+  // Activities methods
+  fetchRecentActivities: async () => {
+    try {
+      set({ isLoadingActivities: true })
+      const response = await adminApi.getRecentActivities()
+      if (response.success) {
+        set({ recentActivities: response.data, isLoadingActivities: false })
+      }
+    } catch (error) {
+      set({ isLoadingActivities: false })
+      throw error
+    }
+  },
+
+  // User management methods
+  fetchUsers: async (filters) => {
+    try {
+      set({ isLoadingUsers: true, userFilters: filters })
+      const response = await adminApi.getUsers(filters)
+      set({
+        users: response.data,
+        usersPagination: response.pagination,
+        isLoadingUsers: false
+      })
+    } catch (error) {
+      set({ isLoadingUsers: false })
+      throw error
+    }
+  },
+
+  updateUserRole: async (userId, role) => {
+    const response = await adminApi.updateUserRole(userId, role)
+    if (response.success) {
+      // Update the user in the list
+      const { users } = get()
+      const updatedUsers = users.map(user =>
+        user.id === userId ? { ...user, role } : user
+      )
+      set({ users: updatedUsers })
+    }
+  },
+
+  suspendUser: async (userId, suspended) => {
+    const response = await adminApi.suspendUser(userId, suspended)
+    if (response.success) {
+      const { users } = get()
+      const updatedUsers = users.map(user =>
+        user.id === userId ? { ...user, isActive: !suspended } : user
+      )
+      set({ users: updatedUsers })
+    }
+  },
+
+  verifyUser: async (userId, verified) => {
+    const response = await adminApi.verifyUser(userId, verified)
+    if (response.success) {
+      const { users } = get()
+      const updatedUsers = users.map(user =>
+        user.id === userId ? { ...user, isEmailVerified: verified } : user
+      )
+      set({ users: updatedUsers })
+    }
+  },
+
+  bulkUpdateUsers: async (userIds, operation, value) => {
+    const response = await adminApi.bulkUpdateUsers(userIds, operation, value)
+    if (response.success && response.data) {
+      get().addBulkOperation(response.data)
+    }
+  },
+
+  setUserFilters: (filters) => {
+    set({ userFilters: filters })
+  },
+
+  selectUser: (userId) => {
+    const { selectedUsers } = get()
+    const isSelected = selectedUsers.includes(userId)
+    if (isSelected) {
+      set({ selectedUsers: selectedUsers.filter(id => id !== userId) })
+    } else {
+      set({ selectedUsers: [...selectedUsers, userId] })
+    }
+  },
+
+  selectUsers: (userIds) => {
+    set({ selectedUsers: userIds })
+  },
+
+  clearUserSelection: () => {
+    set({ selectedUsers: [] })
+  },
+
+  // Moderation methods
+  fetchModerationQueue: async (filters) => {
+    try {
+      set({ isLoadingModeration: true, moderationFilters: filters })
+      const response = await adminApi.getModerationQueue(filters)
+      set({
+        moderationItems: response.data,
+        moderationPagination: response.pagination,
+        isLoadingModeration: false
+      })
+    } catch (error) {
+      set({ isLoadingModeration: false })
+      throw error
+    }
+  },
+
+  moderateContent: async (itemId, action, reason) => {
+    const response = await adminApi.moderateContent(itemId, action, reason)
+    if (response.success) {
+      const { moderationItems } = get()
+      const newStatus = action === 'approve' ? 'approved' as const : action === 'reject' ? 'rejected' as const : 'resolved' as const
+      const updatedItems = moderationItems.map(item =>
+        item.id === itemId ? { ...item, status: newStatus, resolution: reason, resolvedAt: new Date().toISOString(), resolvedBy: 'current-admin' } : item
+      )
+      set({ moderationItems: updatedItems })
+    }
+  },
+
+  assignModerationItem: async (itemId, assignedTo) => {
+    const response = await adminApi.assignModerationItem(itemId, assignedTo)
+    if (response.success) {
+      const { moderationItems } = get()
+      const updatedItems = moderationItems.map(item =>
+        item.id === itemId ? { ...item, assignedTo } : item
+      )
+      set({ moderationItems: updatedItems })
+    }
+  },
+
+  setModerationFilters: (filters) => {
+    set({ moderationFilters: filters })
+  },
+
+  selectModerationItem: (itemId) => {
+    const { selectedModerationItems } = get()
+    const isSelected = selectedModerationItems.includes(itemId)
+    if (isSelected) {
+      set({ selectedModerationItems: selectedModerationItems.filter(id => id !== itemId) })
+    } else {
+      set({ selectedModerationItems: [...selectedModerationItems, itemId] })
+    }
+  },
+
+  selectModerationItems: (itemIds) => {
+    set({ selectedModerationItems: itemIds })
+  },
+
+  clearModerationSelection: () => {
+    set({ selectedModerationItems: [] })
+  },
+
+  // Promoter verification methods
+  fetchPromoterVerifications: async () => {
+    try {
+      set({ isLoadingVerifications: true })
+      const response = await adminApi.getPromoterVerifications()
+      if (response.success) {
+        set({ promoterVerifications: response.data, isLoadingVerifications: false })
+      }
+    } catch (error) {
+      set({ isLoadingVerifications: false })
+      throw error
+    }
+  },
+
+  reviewPromoterVerification: async (verificationId, status, notes) => {
+    const response = await adminApi.reviewPromoterVerification(verificationId, status, notes)
+    if (response.success) {
+      const { promoterVerifications } = get()
+      const updatedVerifications = promoterVerifications.map(v =>
+        v.id === verificationId ? { ...v, status, reviewedAt: new Date().toISOString(), reviewedBy: 'current-admin', notes } : v
+      )
+      set({ promoterVerifications: updatedVerifications })
+    }
+  },
+
+  // System settings methods
+  fetchSystemSettings: async () => {
+    try {
+      set({ isLoadingSettings: true })
+      const response = await adminApi.getSystemSettings()
+      if (response.success) {
+        set({ systemSettings: response.data, isLoadingSettings: false })
+      }
+    } catch (error) {
+      set({ isLoadingSettings: false })
+      throw error
+    }
+  },
+
+  updateSystemSetting: async (key, value) => {
+    const response = await adminApi.updateSystemSetting(key, value)
+    if (response.success) {
+      const { systemSettings } = get()
+      const updatedSettings = systemSettings.map(setting =>
+        setting.key === key ? { ...setting, value, updatedAt: new Date().toISOString(), updatedBy: 'current-admin' } : setting
+      )
+      set({ systemSettings: updatedSettings })
+    }
+  },
+
+  // Email templates methods
+  fetchEmailTemplates: async () => {
+    try {
+      set({ isLoadingTemplates: true })
+      const response = await adminApi.getEmailTemplates()
+      if (response.success) {
+        set({ emailTemplates: response.data, isLoadingTemplates: false })
+      }
+    } catch (error) {
+      set({ isLoadingTemplates: false })
+      throw error
+    }
+  },
+
+  // Audit logs methods
+  fetchAuditLogs: async (filters) => {
+    try {
+      set({ isLoadingAudit: true })
+      const response = await adminApi.getAuditLogs(filters)
+      set({
+        auditLogs: response.data,
+        auditPagination: response.pagination,
+        isLoadingAudit: false
+      })
+    } catch (error) {
+      set({ isLoadingAudit: false })
+      throw error
+    }
+  },
+
+  // Bulk operations methods
+  addBulkOperation: (operation) => {
+    const { bulkOperations } = get()
+    set({ bulkOperations: [...bulkOperations, operation] })
+  },
+
+  updateBulkOperationProgress: (operationId, progress) => {
+    const { bulkOperationProgress } = get()
+    set({ bulkOperationProgress: { ...bulkOperationProgress, [operationId]: progress } })
+  },
+
+  // Analytics methods
+  fetchUserAnalytics: async (dateRange) => {
+    const response = await adminApi.getUserAnalytics(dateRange)
+    return response.data
+  },
+
+  fetchMarketAnalytics: async (dateRange) => {
+    const response = await adminApi.getMarketAnalytics(dateRange)
+    return response.data
+  }
+}))

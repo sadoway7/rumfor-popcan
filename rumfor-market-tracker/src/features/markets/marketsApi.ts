@@ -288,13 +288,13 @@ function mapBackendMarketToFrontend(backendMarket: any): Market {
     promoterId: backendMarket.promoter?._id || backendMarket.promoter,
     promoter: backendMarket.promoter,
     location: {
-      address: backendMarket.location?.address?.street || backendMarket.location?.address || '',
+      address: backendMarket.location?.address?.street || '',
       city: backendMarket.location?.address?.city || '',
       state: backendMarket.location?.address?.state || '',
       zipCode: backendMarket.location?.address?.zipCode || '',
-      country: backendMarket.location?.address?.country || '',
-      latitude: backendMarket.location?.coordinates?.[1] || backendMarket.location?.coordinates?.lat,
-      longitude: backendMarket.location?.coordinates?.[0] || backendMarket.location?.coordinates?.lng
+      country: backendMarket.location?.address?.country || 'USA',
+      latitude: backendMarket.location?.coordinates?.[1],
+      longitude: backendMarket.location?.coordinates?.[0]
     },
     schedule: backendMarket.schedule ? [{
       id: '1',

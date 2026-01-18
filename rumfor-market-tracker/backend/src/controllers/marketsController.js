@@ -55,7 +55,7 @@ const getMarkets = catchAsync(async (req, res, next) => {
 
   // Execute query
   const markets = await Market.find(query)
-    .populate('promoter', 'username profile.firstName profile.lastName')
+    .populate('promoter', 'username firstName lastName')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)
@@ -110,8 +110,8 @@ const getMarket = catchAsync(async (req, res, next) => {
   const { id } = req.params
 
   const market = await Market.findById(id)
-    .populate('promoter', 'username profile.firstName profile.lastName profile.business')
-    .populate('images.uploadedBy', 'username profile.firstName profile.lastName')
+    .populate('promoter', 'username firstName lastName email')
+    .populate('images.uploadedBy', 'username firstName lastName')
 
   if (!market) {
     return next(new AppError('Market not found', 404))
@@ -170,7 +170,7 @@ const createMarket = catchAsync(async (req, res, next) => {
   const market = await Market.create(marketData)
 
   const populatedMarket = await Market.findById(market._id)
-    .populate('promoter', 'username profile.firstName profile.lastName')
+    .populate('promoter', 'username firstName lastName')
 
   sendSuccess(res, {
     market: populatedMarket
@@ -202,7 +202,7 @@ const updateMarket = catchAsync(async (req, res, next) => {
     id,
     req.body,
     { new: true, runValidators: true }
-  ).populate('promoter', 'username profile.firstName profile.lastName')
+  ).populate('promoter', 'username firstName lastName')
 
   sendSuccess(res, {
     market: updatedMarket
@@ -285,38 +285,88 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
     sortOrder = 'desc'
   } = req.query
 
-  // Build query
-  let query = { user: req.user.id }
-
-  if (status) {
-    query.status = status
+  // Build match conditions
+  const matchConditions = {
+    user: new mongoose.Types.ObjectId(req.user.id),
+    isArchived: false
   }
 
-  // Get user's tracked markets with market details
-  const tracking = await UserMarketTracking.find(query)
-    .populate({
-      path: 'market',
-      match: { status: 'active', isPublic: true },
-      populate: {
-        path: 'promoter',
-        select: 'username profile.firstName profile.lastName'
-      }
-    })
-    .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit)
+  if (status) {
+    matchConditions.status = status
+  }
 
-  // Filter out markets that might have been deleted
-  const validTracking = tracking.filter(t => t.market)
+  // Use aggregation to get tracking with joined market and promoter data
+  const tracking = await UserMarketTracking.aggregate([
+    { $match: matchConditions },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'market',
+        pipeline: [
+          {
+            $match: {
+              status: 'active',
+              isPublic: true
+            }
+          },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'promoter',
+              foreignField: '_id',
+              as: 'promoter',
+              pipeline: [
+                {
+                  $project: {
+                    username: 1,
+                    'profile.firstName': 1,
+                    'profile.lastName': 1
+                  }
+                }
+              ]
+            }
+          },
+          {
+            $unwind: {
+              path: '$promoter',
+              preserveNullAndEmptyArrays: true
+            }
+          }
+        ]
+      }
+    },
+    {
+      $unwind: {
+        path: '$market',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $match: {
+        market: { $exists: true, $ne: null }
+      }
+    },
+    {
+      $sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
+    },
+    {
+      $skip: (page - 1) * limit
+    },
+    {
+      $limit: limit
+    }
+  ])
 
   // Get total count
-  const total = await UserMarketTracking.countDocuments(query)
+  const total = await UserMarketTracking.countDocuments(matchConditions)
 
-  // Get status counts
+  // Get status counts (this is already efficient with aggregation)
   const statusCounts = await UserMarketTracking.getUserStatusCounts(req.user.id)
 
   sendSuccess(res, {
-    tracking: validTracking,
+    tracking,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -392,7 +442,7 @@ const searchMarkets = catchAsync(async (req, res, next) => {
 
   // Execute search
   const markets = await Market.find(query)
-    .populate('promoter', 'username profile.firstName profile.lastName')
+    .populate('promoter', 'username firstName lastName')
     .sort(sort)
     .limit(limit * 1)
     .skip((page - 1) * limit)
@@ -440,7 +490,7 @@ const getPopularMarkets = catchAsync(async (req, res, next) => {
     isPublic: true,
     ...dateFilter
   })
-  .populate('promoter', 'username profile.firstName profile.lastName')
+  .populate('promoter', 'username firstName lastName')
   .sort({
     'statistics.totalTrackers': -1,
     'statistics.totalComments': -1,
@@ -469,7 +519,7 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
     status: 'active',
     isPublic: true
   })
-  .populate('promoter', 'username profile.firstName profile.lastName')
+  .populate('promoter', 'username firstName lastName')
   .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
   .limit(limit * 1)
   .skip((page - 1) * limit)
@@ -511,7 +561,7 @@ const getMarketsByType = catchAsync(async (req, res, next) => {
   };
 
   const markets = await Market.find(query)
-    .populate('promoter', 'username profile.firstName profile.lastName')
+    .populate('promoter', 'username firstName lastName')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)

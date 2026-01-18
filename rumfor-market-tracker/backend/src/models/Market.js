@@ -213,6 +213,54 @@ marketSchema.virtual('marketType').get(function() {
   return this.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed';
 });
 
+// Virtual for accessibility features based on amenities
+marketSchema.virtual('accessibility').get(function() {
+  return {
+    wheelchairAccessible: this.amenities?.includes('accessible') || false,
+    parkingAvailable: this.amenities?.includes('parking') || false,
+    restroomsAvailable: this.amenities?.includes('restrooms') || false,
+    familyFriendly: this.amenities?.includes('playground') || false, // Assuming playground means family friendly
+    petFriendly: this.amenities?.includes('pet_friendly') || false
+  };
+});
+
+// Virtual for schedule as array of MarketSchedule objects
+marketSchema.virtual('schedules').get(function() {
+  const schedules = [];
+  if (this.schedule) {
+    if (this.schedule.recurring && this.schedule.daysOfWeek && this.schedule.daysOfWeek.length > 0) {
+      this.schedule.daysOfWeek.forEach(day => {
+        const dayMap = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+        const dayOfWeek = dayMap[day.toLowerCase()];
+        if (dayOfWeek !== undefined) {
+          schedules.push({
+            id: `${this._id}_${day}`,
+            dayOfWeek,
+            startTime: this.schedule.startTime,
+            endTime: this.schedule.endTime,
+            startDate: this.schedule.seasonStart || new Date().toISOString(),
+            endDate: this.schedule.seasonEnd || new Date().toISOString(),
+            isRecurring: true
+          });
+        }
+      });
+    } else if (this.schedule.specialDates && this.schedule.specialDates.length > 0) {
+      this.schedule.specialDates.forEach(date => {
+        schedules.push({
+          id: `${this._id}_${date.date.getTime()}`,
+          dayOfWeek: date.date.getDay(),
+          startTime: date.startTime || this.schedule.startTime,
+          endTime: date.endTime || this.schedule.endTime,
+          startDate: date.date.toISOString(),
+          endDate: date.date.toISOString(),
+          isRecurring: false
+        });
+      });
+    }
+  }
+  return schedules;
+});
+
 // Virtual for next market date
 marketSchema.virtual('nextMarketDate').get(function() {
   if (!this.schedule.recurring) return null;

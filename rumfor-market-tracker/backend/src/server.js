@@ -51,7 +51,7 @@ const app = express()
 // Import enhanced rate limiting middleware
 const { userRateLimiter, authRateLimiter, passwordResetLimiter, uploadRateLimiter } = require('./middleware/rateLimiter')
 
-// Security middleware - Enhanced helmet configuration
+// Security middleware - Production-grade helmet configuration
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -59,16 +59,39 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.unsplash.com"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
     },
   },
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  permissionsPolicy: {
+    policy: "camera=(), microphone=(), geolocation=(), payment=()"
   }
 }))
+
+// Additional security headers
+app.use((req, res, next) => {
+  // Remove server information
+  res.removeHeader('X-Powered-By')
+
+  // Strict transport security for HTTPS
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+  }
+
+  next()
+})
 
 // Session middleware for CSRF token storage
 app.use(session({
@@ -97,9 +120,9 @@ const csrfProtection = csrf({
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 })
 
-// CORS configuration - Simplified and more reliable
+// CORS configuration - Production hardened
 
-// CORS options
+// CORS options with strict origin control
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -118,19 +141,23 @@ const corsOptions = {
       'http://127.0.0.1:5176',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:8080',
-      'https://rumfor.sadoway.ca'  // Explicitly allow production domain
     ]
 
-    // In production, allow the configured frontend URL or any request
+    // Production: Strict origin validation
     if (process.env.NODE_ENV === 'production') {
-      // Allow production domain explicitly or if FRONTEND_URL matches
-      if (origin === process.env.FRONTEND_URL || origin === 'https://rumfor.sadoway.ca') {
+      const productionOrigins = [
+        'https://rumfor.sadoway.ca',
+        'https://www.rumfor.sadoway.ca',
+        process.env.FRONTEND_URL
+      ].filter(Boolean) // Remove undefined values
+
+      if (productionOrigins.includes(origin)) {
         return callback(null, true)
       }
-      // Allow all in production for now (can be restricted later)
-      return callback(null, true)
+      return callback(new Error(`CORS policy violation: Origin ${origin} not allowed in production`))
     }
 
+    // Development: Allow configured origins
     if (allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
@@ -146,8 +173,19 @@ const corsOptions = {
 // Apply CORS before other middleware
 app.use(cors(corsOptions))
 
-// Enhanced Rate Limiting - Temporarily disabled for development testing
-// app.use('/api/', userRateLimiter('general'))
+// HTTPS enforcement middleware
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`)
+    } else {
+      next()
+    }
+  })
+}
+
+// Enhanced Rate Limiting - Enabled to prevent spam
+app.use('/api/', userRateLimiter('general'))
 
 // Version extraction and headers middleware
 app.use('/api', extractVersionFromPath)

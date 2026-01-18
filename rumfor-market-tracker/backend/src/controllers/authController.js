@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const User = require('../models/User')
-const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist } = require('../middleware/auth')
+const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist, clearUserCache } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
 const twoFactorService = require('../services/twoFactorService')
 const { sendPasswordResetEmail, sendEmailVerification } = require('../services/emailService')
@@ -183,6 +183,9 @@ const updateMe = catchAsync(async (req, res, next) => {
     { new: true, runValidators: true }
   )
 
+  // Clear user cache since profile was updated
+  await clearUserCache(req.user.id)
+
   sendSuccess(res, { user }, 'Profile updated successfully')
 })
 
@@ -212,6 +215,9 @@ const changePassword = catchAsync(async (req, res, next) => {
   user.password = newPassword
   user.tokenVersion += 1
   await user.save()
+
+  // Clear user cache since token version changed
+  await clearUserCache(req.user.id)
 
   // Generate new tokens
   const tokens = generateTokens(user._id, user.tokenVersion)
@@ -358,13 +364,16 @@ const logout = catchAsync(async (req, res, next) => {
     const accessToken = authHeader.substring(7)
     addAccessTokenToBlacklist(accessToken, process.env.JWT_EXPIRES_IN || '24h')
   }
-  
+
   // Get the refresh token from body (client should send it)
   const { refreshToken } = req.body
   if (refreshToken) {
     addRefreshTokenToBlacklist(refreshToken, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
   }
-  
+
+  // Clear user cache
+  await clearUserCache(req.user.id)
+
   sendSuccess(res, null, 'Logged out successfully')
 })
 

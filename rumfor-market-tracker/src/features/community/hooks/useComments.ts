@@ -1,22 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCommunityStore } from '../communityStore'
 import { communityApi } from '../communityApi'
 
 export const useComments = (marketId: string) => {
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
-  
-  const {
-    comments,
-    isLoadingComments,
-    commentsError,
-    setComments,
-    addComment,
-    updateComment,
-    removeComment,
-    setCommentsError,
-  } = useCommunityStore()
 
   // Query for fetching comments
   const {
@@ -31,55 +19,40 @@ export const useComments = (marketId: string) => {
     staleTime: 30000, // 30 seconds
   })
 
-  // Update store when data changes
-  useEffect(() => {
-    if (commentsResponse?.success && commentsResponse.data) {
-      if (page === 1) {
-        setComments(commentsResponse.data)
-      } else {
-        // Append new comments for pagination
-        setComments([...comments, ...commentsResponse.data])
-      }
-    }
-  }, [commentsResponse, page, comments])
+  // Get comments from response, handling pagination
+  const comments = commentsResponse?.success ? commentsResponse.data || [] : []
 
   // Mutations
   const createCommentMutation = useMutation({
     mutationFn: (commentData: { content: string; parentId?: string }) =>
       communityApi.createComment({ ...commentData, marketId }),
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        addComment(response.data)
-        queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
+      setPage(1) // Reset to first page after creating
     },
     onError: (error: any) => {
-      setCommentsError(error.message || 'Failed to create comment')
+      console.error('Failed to create comment:', error)
     },
   })
 
   const updateCommentMutation = useMutation({
     mutationFn: ({ commentId, content }: { commentId: string; content: string }) =>
       communityApi.updateComment(commentId, content),
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        updateComment(response.data.id, response.data)
-        queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
     },
     onError: (error: any) => {
-      setCommentsError(error.message || 'Failed to update comment')
+      console.error('Failed to update comment:', error)
     },
   })
 
   const deleteCommentMutation = useMutation({
     mutationFn: (commentId: string) => communityApi.deleteComment(commentId),
-    onSuccess: (_, commentId) => {
-      removeComment(commentId)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
     },
     onError: (error: any) => {
-      setCommentsError(error.message || 'Failed to delete comment')
+      console.error('Failed to delete comment:', error)
     },
   })
 
@@ -90,7 +63,7 @@ export const useComments = (marketId: string) => {
       queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
     },
     onError: (error: any) => {
-      setCommentsError(error.message || 'Failed to add reaction')
+      console.error('Failed to add reaction:', error)
     },
   })
 
@@ -100,7 +73,7 @@ export const useComments = (marketId: string) => {
       queryClient.invalidateQueries({ queryKey: ['comments', marketId] })
     },
     onError: (error: any) => {
-      setCommentsError(error.message || 'Failed to remove reaction')
+      console.error('Failed to remove reaction:', error)
     },
   })
 
@@ -136,13 +109,13 @@ export const useComments = (marketId: string) => {
 
   const getUserReaction = (commentId: string) => {
     const comment = comments.find(c => c.id === commentId)
-    return comment?.reactions.find(r => r.userId === 'user-1')
+    return comment?.reactions.find(r => r.userId === 'user-1') // TODO: Use actual user ID
   }
 
   const getReactionCounts = (commentId: string) => {
     const comment = comments.find(c => c.id === commentId)
     if (!comment) return { like: 0, dislike: 0, love: 0, laugh: 0 }
-    
+
     return comment.reactions.reduce(
       (acc, reaction) => {
         acc[reaction.type]++
@@ -155,9 +128,9 @@ export const useComments = (marketId: string) => {
   return {
     // Data
     comments,
-    isLoading: isLoading || isLoadingComments,
-    error: error || commentsError,
-    
+    isLoading,
+    error: error ? (error as Error).message : null,
+
     // Actions
     createComment,
     editComment,
@@ -166,17 +139,17 @@ export const useComments = (marketId: string) => {
     removeReaction,
     loadMoreComments,
     refreshComments,
-    
+
     // Helpers
     getUserReaction,
     getReactionCounts,
-    
+
     // States
     isCreating: createCommentMutation.isPending,
     isUpdating: updateCommentMutation.isPending,
     isDeleting: deleteCommentMutation.isPending,
     isReacting: addReactionMutation.isPending || removeReactionMutation.isPending,
-    
+
     // Errors
     createError: createCommentMutation.error?.message,
     updateError: updateCommentMutation.error?.message,

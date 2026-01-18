@@ -1,20 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCommunityStore } from '../communityStore'
 import { communityApi } from '../communityApi'
 
 export const useHashtags = (marketId: string) => {
   const queryClient = useQueryClient()
-  
-  const {
-    hashtags,
-    isLoadingHashtags,
-    hashtagsError,
-    setHashtags,
-    addHashtag,
-    updateHashtag,
-    removeHashtag,
-    setHashtagsError,
-  } = useCommunityStore()
 
   // Query for fetching hashtags
   const {
@@ -39,57 +27,39 @@ export const useHashtags = (marketId: string) => {
     staleTime: 300000, // 5 minutes
   })
 
-  // Update store when data changes
-  if (hashtagsResponse?.success && hashtagsResponse.data) {
-    setHashtags(hashtagsResponse.data)
-  }
+  // Get hashtags from response
+  const hashtags = hashtagsResponse?.success ? hashtagsResponse.data || [] : []
 
   // Mutations
   const createHashtagMutation = useMutation({
     mutationFn: (hashtagData: { name: string }) =>
       communityApi.createHashtag({ ...hashtagData, marketId }),
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        addHashtag(response.data)
-        queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
     },
     onError: (error: any) => {
-      setHashtagsError(error.message || 'Failed to create hashtag')
+      console.error('Failed to create hashtag:', error)
     },
   })
 
   const deleteHashtagMutation = useMutation({
     mutationFn: (hashtagId: string) => communityApi.deleteHashtag(hashtagId),
-    onSuccess: (_, hashtagId) => {
-      removeHashtag(hashtagId)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
     },
     onError: (error: any) => {
-      setHashtagsError(error.message || 'Failed to delete hashtag')
+      console.error('Failed to delete hashtag:', error)
     },
   })
 
   const voteOnHashtagMutation = useMutation({
     mutationFn: ({ hashtagId, value }: { hashtagId: string; value: number }) =>
       communityApi.voteOnHashtag(hashtagId, value),
-    onSuccess: (response, { hashtagId, value }) => {
-      const hashtag = hashtags.find(h => h.id === hashtagId)
-      if (hashtag) {
-        const filteredVotes = hashtag.votes.filter(v => v.userId !== 'user-1')
-
-        if (value !== 0 && response.success && response.data) {
-          if ('votes' in response.data) {
-            updateHashtag(hashtagId, { votes: response.data.votes })
-          }
-        } else if (value === 0) {
-          updateHashtag(hashtagId, { votes: filteredVotes })
-        }
-      }
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
     },
     onError: (error: any) => {
-      setHashtagsError(error.message || 'Failed to vote on hashtag')
+      console.error('Failed to vote on hashtag:', error)
     },
   })
 
@@ -219,9 +189,9 @@ export const useHashtags = (marketId: string) => {
     // Data
     hashtags,
     predefinedHashtags: predefinedResponse?.data || [],
-    isLoading: isLoading || isLoadingHashtags,
+    isLoading,
     isLoadingPredefined,
-    error: error || hashtagsError,
+    error: error ? (error as Error).message : null,
     
     // Actions
     createHashtag,

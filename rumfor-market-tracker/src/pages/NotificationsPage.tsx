@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
-import { useNotificationsStore } from '@/features/notifications/notificationsStore'
+import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 import { NotificationType } from '@/types'
 import { cn } from '@/utils/cn'
 
@@ -56,7 +56,7 @@ const notificationConfig = {
 }
 
 export function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification } = useNotificationsStore()
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState<NotificationType | 'all'>('all')
   const [filterStatus, setFilterStatus] = useState<'all' | 'read' | 'unread'>('all')
@@ -109,7 +109,7 @@ export function NotificationsPage() {
   }
 
   const handleDeleteNotification = (id: string) => {
-    removeNotification(id)
+    deleteNotification(id)
   }
 
   const clearFilters = () => {

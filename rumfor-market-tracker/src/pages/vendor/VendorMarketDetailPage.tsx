@@ -127,7 +127,7 @@ export const VendorMarketDetailPage: React.FC = () => {
             <Button onClick={() => navigate('/vendor/tracked-markets')} className="w-full">
               Back to Tracked Markets
             </Button>
-            <Button onClick={refetch} variant="outline" className="w-full">
+            <Button onClick={() => refetch()} variant="outline" className="w-full">
               Try Again
             </Button>
           </div>
@@ -150,7 +150,10 @@ export const VendorMarketDetailPage: React.FC = () => {
   }
 
   const formatLocation = (location: any) => {
-    return `${location.address}, ${location.city}, ${location.state} ${location.zipCode}`
+    if (!location || !location.address) {
+      return 'Address not available'
+    }
+    return `${location.address?.street || ''}, ${location.address?.city || ''}, ${location.address?.state || ''} ${location.address?.zipCode || ''}`.trim()
   }
 
   const getNextMarketDate = () => {

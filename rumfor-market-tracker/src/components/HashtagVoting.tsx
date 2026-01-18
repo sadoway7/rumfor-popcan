@@ -324,7 +324,7 @@ export const HashtagVoting: React.FC<HashtagVotingProps> = ({
       {/* Error Message */}
       {error && (
         <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-3">
-          {typeof error === 'string' ? error : error.message}
+          {error}
         </div>
       )}
 

@@ -95,7 +95,7 @@ export const MarketDetailPage: React.FC = () => {
             <Button onClick={() => navigate('/markets')} className="w-full">
               Browse All Markets
             </Button>
-            <Button onClick={refetch} variant="outline" className="w-full">
+            <Button onClick={() => refetch()} variant="outline" className="w-full">
               Try Again
             </Button>
           </div>
@@ -112,21 +112,52 @@ export const MarketDetailPage: React.FC = () => {
     }
   }
 
-  const formatSchedule = (schedule: any[]) => {
-    if (!schedule || schedule.length === 0) return 'Schedule TBD'
-    
+  const formatSchedule = (schedule: any) => {
+    if (!schedule) return 'Schedule TBD'
+
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    const days = schedule
-      .map((s: any) => dayNames[s.dayOfWeek])
-      .filter((day: string, index: number, arr: string[]) => arr.indexOf(day) === index) // Remove duplicates
-      .join(', ')
-    
-    const time = schedule[0]
-    return `${days} ${time.startTime}-${time.endTime}`
+
+    let days: string[] = []
+    let startTime: string = ''
+    let endTime: string = ''
+
+    if (Array.isArray(schedule)) {
+      // Handle array format
+      if (schedule.length === 0) return 'Schedule TBD'
+      days = schedule
+        .map((s: any) => dayNames[s.dayOfWeek])
+        .filter((day: string, index: number, arr: string[]) => arr.indexOf(day) === index)
+      const time = schedule[0]
+      startTime = time.startTime
+      endTime = time.endTime
+    } else if (schedule.daysOfWeek && schedule.daysOfWeek.length > 0) {
+      // Handle object format from backend
+      days = schedule.daysOfWeek.map((day: string) => {
+        const dayMap: { [key: string]: string } = {
+          'monday': 'Monday',
+          'tuesday': 'Tuesday',
+          'wednesday': 'Wednesday',
+          'thursday': 'Thursday',
+          'friday': 'Friday',
+          'saturday': 'Saturday',
+          'sunday': 'Sunday'
+        }
+        return dayMap[day.toLowerCase()] || day
+      })
+      startTime = schedule.startTime
+      endTime = schedule.endTime
+    } else {
+      return 'Schedule TBD'
+    }
+
+    return `${days.join(', ')} ${startTime}-${endTime}`
   }
 
   const formatLocation = (location: any) => {
-    return `${location.address}, ${location.city}, ${location.state} ${location.zipCode}`
+    if (!location) {
+      return 'Address not available'
+    }
+    return `${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.zipCode || ''}`.trim()
   }
 
   return (
@@ -251,7 +282,7 @@ export const MarketDetailPage: React.FC = () => {
                 )}>
                   {market.description}
                 </p>
-                {market.description.length > 200 && (
+                {market.description && market.description.length > 200 && (
                   <Button
                     variant="ghost"
                     onClick={() => setShowFullDescription(!showFullDescription)}
@@ -271,7 +302,7 @@ export const MarketDetailPage: React.FC = () => {
                   <h3 className="font-medium">Accessibility</h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
-                      {market.accessibility.wheelchairAccessible ? (
+                      {market.accessibility?.wheelchairAccessible ? (
                         <span className="text-success mr-2">✓</span>
                       ) : (
                         <span className="text-muted-foreground mr-2">✗</span>
@@ -279,7 +310,7 @@ export const MarketDetailPage: React.FC = () => {
                       <span className="text-sm">Wheelchair Accessible</span>
                     </div>
                     <div className="flex items-center">
-                      {market.accessibility.parkingAvailable ? (
+                      {market.accessibility?.parkingAvailable ? (
                         <span className="text-success mr-2">✓</span>
                       ) : (
                         <span className="text-muted-foreground mr-2">✗</span>
@@ -287,7 +318,7 @@ export const MarketDetailPage: React.FC = () => {
                       <span className="text-sm">Parking Available</span>
                     </div>
                     <div className="flex items-center">
-                      {market.accessibility.restroomsAvailable ? (
+                      {market.accessibility?.restroomsAvailable ? (
                         <span className="text-success mr-2">✓</span>
                       ) : (
                         <span className="text-muted-foreground mr-2">✗</span>
@@ -301,7 +332,7 @@ export const MarketDetailPage: React.FC = () => {
                   <h3 className="font-medium">Family Features</h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
-                      {market.accessibility.familyFriendly ? (
+                      {market.accessibility?.familyFriendly ? (
                         <span className="text-success mr-2">✓</span>
                       ) : (
                         <span className="text-muted-foreground mr-2">✗</span>
@@ -309,7 +340,7 @@ export const MarketDetailPage: React.FC = () => {
                       <span className="text-sm">Family Friendly</span>
                     </div>
                     <div className="flex items-center">
-                      {market.accessibility.petFriendly ? (
+                      {market.accessibility?.petFriendly ? (
                         <span className="text-success mr-2">✓</span>
                       ) : (
                         <span className="text-muted-foreground mr-2">✗</span>
@@ -378,32 +409,32 @@ export const MarketDetailPage: React.FC = () => {
               <Card className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
                 <div className="space-y-3">
-                  {market.contact.phone && (
+                  {market.contact?.phone && (
                     <div className="flex items-center">
                       <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
-                      <span className="text-sm">{market.contact.phone}</span>
+                      <span className="text-sm">{market.contact?.phone}</span>
                     </div>
                   )}
                   
-                  {market.contact.email && (
+                  {market.contact?.email && (
                     <div className="flex items-center">
                       <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                      <a href={`mailto:${market.contact.email}`} className="text-sm text-accent hover:underline">
-                        {market.contact.email}
+                      <a href={`mailto:${market.contact?.email}`} className="text-sm text-accent hover:underline">
+                        {market.contact?.email}
                       </a>
                     </div>
                   )}
                   
-                  {market.contact.website && (
+                  {market.contact?.website && (
                     <div className="flex items-center">
                       <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                       </svg>
-                      <a href={market.contact.website} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline">
+                      <a href={market.contact?.website} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline">
                         Visit Website
                       </a>
                     </div>
@@ -418,11 +449,11 @@ export const MarketDetailPage: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
                       <span className="text-sm font-medium">
-                        {market.promoter.firstName[0]}{market.promoter.lastName[0]}
+                        {market.promoter.firstName?.[0]}{market.promoter.lastName?.[0]}
                       </span>
                     </div>
                     <div>
-                      <p className="font-medium">{market.promoter.firstName} {market.promoter.lastName}</p>
+                      <p className="font-medium">{market.promoter.firstName || ''} {market.promoter.lastName || ''}</p>
                       <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
                     </div>
                   </div>

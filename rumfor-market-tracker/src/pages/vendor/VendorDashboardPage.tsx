@@ -18,7 +18,7 @@ import { useAuthStore } from '@/features/auth/authStore'
 import { useApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
-import { useNotificationsStore } from '@/features/notifications/notificationsStore'
+import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { cn } from '@/utils/cn'
 
@@ -27,7 +27,7 @@ export function VendorDashboardPage() {
   const { applications, isLoading: applicationsLoading } = useApplications()
   const { todos, isLoading: todosLoading } = useTodos()
   const { expenses, isLoading: expensesLoading } = useExpenses()
-  const { notifications, unreadCount } = useNotificationsStore()
+  const { notifications, unreadCount } = useNotifications()
   
   // Real API data - replace mock data with real hooks
   const { trackedMarkets, isLoading: marketsLoading } = useTrackedMarkets()

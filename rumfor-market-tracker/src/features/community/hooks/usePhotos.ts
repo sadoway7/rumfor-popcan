@@ -1,21 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useCommunityStore } from '../communityStore'
 import { communityApi } from '../communityApi'
 
 export const usePhotos = (marketId: string) => {
   const [page, setPage] = useState(1)
   const queryClient = useQueryClient()
-  
-  const {
-    photos,
-    isLoadingPhotos,
-    photosError,
-    setPhotos,
-    addPhoto,
-    removePhoto,
-    setPhotosError,
-  } = useCommunityStore()
 
   // Query for fetching photos
   const {
@@ -30,41 +19,29 @@ export const usePhotos = (marketId: string) => {
     staleTime: 30000, // 30 seconds
   })
 
-  // Update store when data changes
-  useEffect(() => {
-    if (photosResponse?.success && photosResponse.data) {
-      if (page === 1) {
-        setPhotos(photosResponse.data)
-      } else {
-        // Append new photos for pagination
-        setPhotos([...photos, ...photosResponse.data])
-      }
-    }
-  }, [photosResponse, page, photos])
+  // Get photos from response
+  const photos = photosResponse?.success ? photosResponse.data || [] : []
 
   // Mutations
   const uploadPhotoMutation = useMutation({
     mutationFn: (photoData: { file: File; caption?: string; tags?: string[] }) =>
       communityApi.uploadPhoto({ ...photoData, marketId }),
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        addPhoto(response.data)
-        queryClient.invalidateQueries({ queryKey: ['photos', marketId] })
-      }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['photos', marketId] })
+      setPage(1) // Reset to first page after uploading
     },
     onError: (error: any) => {
-      setPhotosError(error.message || 'Failed to upload photo')
+      console.error('Failed to upload photo:', error)
     },
   })
 
   const deletePhotoMutation = useMutation({
     mutationFn: (photoId: string) => communityApi.deletePhoto(photoId),
-    onSuccess: (_, photoId) => {
-      removePhoto(photoId)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photos', marketId] })
     },
     onError: (error: any) => {
-      setPhotosError(error.message || 'Failed to delete photo')
+      console.error('Failed to delete photo:', error)
     },
   })
 
@@ -151,8 +128,8 @@ export const usePhotos = (marketId: string) => {
   return {
     // Data
     photos,
-    isLoading: isLoading || isLoadingPhotos,
-    error: error || photosError,
+    isLoading,
+    error: error ? (error as Error).message : null,
     
     // Actions
     uploadPhoto,

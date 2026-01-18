@@ -1,53 +1,93 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const redisClient = require('../../config/redis')
 
 // ============================================
-// Token Blacklist for Logout
+// Token Blacklist for Logout (Redis-based)
 // ============================================
-const accessTokenBlacklist = new Map() // token -> expiration timestamp
-const refreshTokenBlacklist = new Map() // token -> expiration timestamp
 
-// Clean up expired tokens periodically (every 5 minutes)
-const cleanupInterval = setInterval(() => {
-  const now = Date.now()
-  for (const [token, expiration] of accessTokenBlacklist) {
-    if (expiration < now) accessTokenBlacklist.delete(token)
-  }
-  for (const [token, expiration] of refreshTokenBlacklist) {
-    if (expiration < now) refreshTokenBlacklist.delete(token)
-  }
-}, 5 * 60 * 1000)
+// Redis key prefixes
+const ACCESS_TOKEN_BLACKLIST_PREFIX = 'blacklist:access:'
+const REFRESH_TOKEN_BLACKLIST_PREFIX = 'blacklist:refresh:'
+const USER_CACHE_PREFIX = 'user:'
 
 // Add access token to blacklist
-const addAccessTokenToBlacklist = (token, expiresIn = '24h') => {
-  const expiration = Date.now() + parseExpiresIn(expiresIn)
-  accessTokenBlacklist.set(token, expiration)
+const addAccessTokenToBlacklist = async (token, expiresIn = '24h') => {
+  try {
+    const ttl = Math.floor(parseExpiresIn(expiresIn) / 1000) // Convert to seconds for Redis
+    await redisClient.setEx(`${ACCESS_TOKEN_BLACKLIST_PREFIX}${token}`, ttl, '1')
+  } catch (error) {
+    console.error('Error adding access token to blacklist:', error)
+    // Fallback to in-memory if Redis fails (for development)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Redis unavailable, using in-memory blacklist')
+    }
+  }
 }
 
 // Add refresh token to blacklist
-const addRefreshTokenToBlacklist = (token, expiresIn = '7d') => {
-  const expiration = Date.now() + parseExpiresIn(expiresIn)
-  refreshTokenBlacklist.set(token, expiration)
+const addRefreshTokenToBlacklist = async (token, expiresIn = '7d') => {
+  try {
+    const ttl = Math.floor(parseExpiresIn(expiresIn) / 1000) // Convert to seconds for Redis
+    await redisClient.setEx(`${REFRESH_TOKEN_BLACKLIST_PREFIX}${token}`, ttl, '1')
+  } catch (error) {
+    console.error('Error adding refresh token to blacklist:', error)
+    // Fallback to in-memory if Redis fails (for development)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Redis unavailable, using in-memory blacklist')
+    }
+  }
 }
 
 // Check if access token is blacklisted
-const isAccessTokenBlacklisted = (token) => {
-  if (!accessTokenBlacklist.has(token)) return false
-  if (accessTokenBlacklist.get(token) < Date.now()) {
-    accessTokenBlacklist.delete(token)
-    return false
+const isAccessTokenBlacklisted = async (token) => {
+  try {
+    const exists = await redisClient.exists(`${ACCESS_TOKEN_BLACKLIST_PREFIX}${token}`)
+    return exists === 1
+  } catch (error) {
+    console.error('Error checking access token blacklist:', error)
+    return false // Allow token if Redis fails
   }
-  return true
 }
 
 // Check if refresh token is blacklisted
-const isRefreshTokenBlacklisted = (token) => {
-  if (!refreshTokenBlacklist.has(token)) return false
-  if (refreshTokenBlacklist.get(token) < Date.now()) {
-    refreshTokenBlacklist.delete(token)
-    return false
+const isRefreshTokenBlacklisted = async (token) => {
+  try {
+    const exists = await redisClient.exists(`${REFRESH_TOKEN_BLACKLIST_PREFIX}${token}`)
+    return exists === 1
+  } catch (error) {
+    console.error('Error checking refresh token blacklist:', error)
+    return false // Allow token if Redis fails
   }
-  return true
+}
+
+// Cache user data in Redis
+const cacheUser = async (userId, userData, ttl = 300) => { // 5 minutes default
+  try {
+    await redisClient.setEx(`${USER_CACHE_PREFIX}${userId}`, ttl, JSON.stringify(userData))
+  } catch (error) {
+    console.error('Error caching user:', error)
+  }
+}
+
+// Get cached user data
+const getCachedUser = async (userId) => {
+  try {
+    const cached = await redisClient.get(`${USER_CACHE_PREFIX}${userId}`)
+    return cached ? JSON.parse(cached) : null
+  } catch (error) {
+    console.error('Error getting cached user:', error)
+    return null
+  }
+}
+
+// Clear user cache
+const clearUserCache = async (userId) => {
+  try {
+    await redisClient.del(`${USER_CACHE_PREFIX}${userId}`)
+  } catch (error) {
+    console.error('Error clearing user cache:', error)
+  }
 }
 
 // Helper to parse expiresIn string to milliseconds
@@ -78,7 +118,7 @@ const verifyToken = async (req, res, next) => {
         message: 'Access denied. No token provided.'
       })
     }
-    
+
     // Check if token starts with 'Bearer '
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
@@ -86,7 +126,7 @@ const verifyToken = async (req, res, next) => {
         message: 'Invalid token format. Expected Bearer token.'
       })
     }
-    
+
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
     console.log('[DEBUG BACKEND] token extracted, length:', token.length)
 
@@ -98,7 +138,8 @@ const verifyToken = async (req, res, next) => {
     }
 
     // Check if token is blacklisted
-    if (isAccessTokenBlacklisted(token)) {
+    const isBlacklisted = await isAccessTokenBlacklisted(token)
+    if (isBlacklisted) {
       console.log('[DEBUG BACKEND] token is blacklisted')
       return res.status(401).json({
         success: false,
@@ -129,17 +170,29 @@ const verifyToken = async (req, res, next) => {
       console.log('[DEBUG BACKEND] JWT decoded:', { id: decoded.id, tv: decoded.tv })
     }
 
-    // Get user from database
-    const user = await User.findById(decoded.id).select('-password')
-    console.log('[DEBUG BACKEND] user found:', !!user, user ? { id: user._id, active: user.isActive, locked: user.isLocked } : null)
-    
+    // Try to get user from cache first
+    let user = await getCachedUser(decoded.id)
+
+    if (!user) {
+      // Get user from database
+      user = await User.findById(decoded.id).select('-password').lean()
+      console.log('[DEBUG BACKEND] user found in DB:', !!user, user ? { id: user._id, active: user.isActive, locked: user.isLocked } : null)
+
+      if (user) {
+        // Cache the user for 5 minutes
+        await cacheUser(decoded.id, user, 300)
+      }
+    } else {
+      console.log('[DEBUG BACKEND] user found in cache:', { id: user._id, active: user.isActive, locked: user.isLocked })
+    }
+
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Token is valid but user no longer exists.'
       })
     }
-    
+
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -154,7 +207,7 @@ const verifyToken = async (req, res, next) => {
         message: 'Account is temporarily locked due to too many failed login attempts.'
       })
     }
-    
+
     if (decoded.tv !== user.tokenVersion) {
       return res.status(401).json({
         success: false,
@@ -162,7 +215,7 @@ const verifyToken = async (req, res, next) => {
       })
     }
 
-    // Attach user to request
+    // Attach user to request (convert back to mongoose doc if needed, but since we use lean(), it's a plain object)
     req.user = user
     next()
     
@@ -193,38 +246,49 @@ const verifyToken = async (req, res, next) => {
 const verifyRefreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body
-    
+
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
         message: 'Refresh token is required.'
       })
     }
-    
+
     // Check if refresh token is blacklisted
-    if (isRefreshTokenBlacklisted(refreshToken)) {
+    const isBlacklisted = await isRefreshTokenBlacklisted(refreshToken)
+    if (isBlacklisted) {
       return res.status(401).json({
         success: false,
         message: 'Refresh token has been revoked. Please log in again.'
       })
     }
-    
+
     // Verify refresh token
     if (!process.env.JWT_REFRESH_SECRET) {
       throw new Error('JWT_REFRESH_SECRET environment variable is not set')
     }
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET)
-    
-    // Get user from database
-    const user = await User.findById(decoded.id).select('-password')
-    
+
+    // Try to get user from cache first
+    let user = await getCachedUser(decoded.id)
+
+    if (!user) {
+      // Get user from database
+      user = await User.findById(decoded.id).select('-password').lean()
+
+      if (user) {
+        // Cache the user for 5 minutes
+        await cacheUser(decoded.id, user, 300)
+      }
+    }
+
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid refresh token - user not found.'
       })
     }
-    
+
     if (!user.isActive) {
       return res.status(401).json({
         success: false,
@@ -239,7 +303,7 @@ const verifyRefreshToken = async (req, res, next) => {
         message: 'Account is temporarily locked.'
       })
     }
-    
+
     if (decoded.tv !== user.tokenVersion) {
       return res.status(401).json({
         success: false,
@@ -250,7 +314,7 @@ const verifyRefreshToken = async (req, res, next) => {
     // Attach user to request
     req.user = user
     next()
-    
+
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({
@@ -258,14 +322,14 @@ const verifyRefreshToken = async (req, res, next) => {
         message: 'Invalid refresh token.'
       })
     }
-    
+
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
         message: 'Refresh token has expired.'
       })
     }
-    
+
     console.error('Refresh token verification error:', error)
     return res.status(500).json({
       success: false,
@@ -480,31 +544,49 @@ const verifyTwoFactorToken = async (req, res, next) => {
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.header('Authorization')
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // No token provided, continue without authentication
       return next()
     }
-    
+
     const token = authHeader.substring(7)
-    
+
     if (!token) {
       return next()
     }
-    
+
+    // Check if token is blacklisted
+    const isBlacklisted = await isAccessTokenBlacklisted(token)
+    if (isBlacklisted) {
+      return next() // Continue without authentication
+    }
+
     // Try to verify token
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET environment variable is not set')
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    const user = await User.findById(decoded.id).select('-password')
+
+    // Try to get user from cache first
+    let user = await getCachedUser(decoded.id)
+
+    if (!user) {
+      // Get user from database
+      user = await User.findById(decoded.id).select('-password').lean()
+
+      if (user) {
+        // Cache the user for 5 minutes
+        await cacheUser(decoded.id, user, 300)
+      }
+    }
 
     if (user && user.isActive && !user.isLocked && decoded.tv === user.tokenVersion) {
       req.user = user
     }
-    
+
     next()
-    
+
   } catch (error) {
     // Token verification failed, but continue without authentication
     next()
@@ -585,5 +667,8 @@ module.exports = {
   addAccessTokenToBlacklist,
   addRefreshTokenToBlacklist,
   isAccessTokenBlacklisted,
-  isRefreshTokenBlacklisted
+  isRefreshTokenBlacklisted,
+  cacheUser,
+  getCachedUser,
+  clearUserCache
 }

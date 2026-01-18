@@ -32,7 +32,7 @@ export const MyMarketsPage: React.FC = () => {
     trackMarket,
     untrackMarket,
     isMarketTracked,
-    refreshTracked
+    refetch
   } = useTrackedMarkets()
 
   const handleTrackToggle = async (marketId: string) => {
@@ -44,7 +44,7 @@ export const MyMarketsPage: React.FC = () => {
   }
 
   const handleRefresh = async () => {
-    await refreshTracked()
+    await refetch()
   }
 
   const handleMarketSelect = (market: Market) => {
