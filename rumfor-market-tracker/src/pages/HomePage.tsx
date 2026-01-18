@@ -135,23 +135,13 @@ export function HomePage() {
 
             {/* Hero Section */}
             <div className="px-4">
-              <Link to="/markets" className="block w-full max-w-2xl">
-                <section className="relative bg-gradient-to-r from-accent/10 to-accent/5 dark:from-accent/15 dark:to-accent/10 rounded-xl p-4 hover:from-accent/15 hover:to-accent/10 dark:hover:from-accent/20 dark:hover:to-accent/15 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md border border-accent/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent mb-0.5">
-                        Find & Track Markets
-                      </h1>
-                      <p className="text-muted-foreground/80 text-sm">
-                        Discover markets & plan your market strategy
-                      </p>
-                    </div>
-                    <div className="ml-4 flex items-center text-accent font-medium text-sm">
-                      Explore
-                      <span className="ml-1 text-base">→</span>
-                    </div>
-                  </div>
-                </section>
+              <Link to="/markets" className="block">
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  Rumfor Market Tracker
+                </h1>
+                <p className="text-muted-foreground text-lg">
+                  Discover and track markets with ease
+                </p>
               </Link>
             </div>
 

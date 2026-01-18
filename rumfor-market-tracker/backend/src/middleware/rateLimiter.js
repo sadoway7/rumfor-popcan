@@ -22,10 +22,10 @@ const getUserRateLimit = (userRole, endpoint) => {
   const limits = {
     // Standard API endpoints
     general: {
-      visitor: { windowMs: 15 * 60 * 1000, max: 50 * devMultiplier },   // 50/500 requests per 15 min
-      vendor: { windowMs: 15 * 60 * 1000, max: 200 * devMultiplier },    // 200/2000 requests per 15 min
-      promoter: { windowMs: 15 * 60 * 1000, max: 500 * devMultiplier },  // 500/5000 requests per 15 min
-      admin: { windowMs: 15 * 60 * 1000, max: 1000 * devMultiplier },    // 1000/10000 requests per 15 min
+      visitor: { windowMs: 15 * 60 * 1000, max: 100 * devMultiplier },   // 100/1000 requests per 15 min
+      vendor: { windowMs: 15 * 60 * 1000, max: 500 * devMultiplier },    // 500/5000 requests per 15 min
+      promoter: { windowMs: 15 * 60 * 1000, max: 1000 * devMultiplier },  // 1000/10000 requests per 15 min
+      admin: { windowMs: 15 * 60 * 1000, max: 2000 * devMultiplier },    // 2000/20000 requests per 15 min
     },
     // Authentication endpoints
     auth: {

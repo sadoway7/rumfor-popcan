@@ -98,7 +98,6 @@ const csrfProtection = csrf({
 })
 
 // CORS configuration - Simplified and more reliable
-const cors = require('cors')
 
 // CORS options
 const corsOptions = {
@@ -109,10 +108,14 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:5176',
       'http://localhost:3000',
       'http://localhost:8080',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
+      'http://127.0.0.1:5175',
+      'http://127.0.0.1:5176',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:8080'
     ]
@@ -132,8 +135,8 @@ const corsOptions = {
 // Apply CORS before other middleware
 app.use(cors(corsOptions))
 
-// Enhanced Rate Limiting - User-based limits
-app.use('/api/', userRateLimiter('general'))
+// Enhanced Rate Limiting - Temporarily disabled for development testing
+// app.use('/api/', userRateLimiter('general'))
 
 // Version extraction and headers middleware
 app.use('/api', extractVersionFromPath)
