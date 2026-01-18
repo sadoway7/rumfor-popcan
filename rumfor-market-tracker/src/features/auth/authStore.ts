@@ -4,6 +4,9 @@ import { AuthState, User, LoginCredentials, RegisterData, PasswordResetRequest, 
 import { authApi } from './authApi'
 
 interface AuthStore extends AuthState {
+  // Hydration state
+  isHydrated: boolean
+
   // Core auth methods
   login: (credentials: LoginCredentials) => Promise<void>
   register: (data: RegisterData) => Promise<void>
@@ -37,6 +40,7 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       // Initial state
+      isHydrated: false,
       user: null,
       token: null,
       refreshToken: null,
@@ -109,11 +113,13 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: async () => {
+        console.log('[DEBUG] Logout called')
         try {
           await authApi.logout()
         } catch (error) {
           console.warn('Logout API call failed:', error)
         } finally {
+          console.log('[DEBUG] Clearing auth state')
           set({
             user: null,
             token: null,
@@ -328,6 +334,13 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: state.isAuthenticated,
         isEmailVerified: state.isEmailVerified,
       }),
+      onRehydrateStorage: () => (state) => {
+        console.log('[DEBUG] Auth store rehydrating:', { hasState: !!state, hasToken: !!(state?.token), isAuthenticated: state?.isAuthenticated })
+        if (state) {
+          state.isHydrated = true
+        }
+        console.log('[DEBUG] Auth store hydrated:', { isHydrated: true, hasToken: !!(state?.token) })
+      },
     }
   )
 )

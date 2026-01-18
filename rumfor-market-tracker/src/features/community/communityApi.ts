@@ -2,7 +2,7 @@ import { ApiResponse, Comment, CommentReaction, Photo, Hashtag, HashtagVote, Use
 import { useAuthStore } from '@/features/auth/authStore'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 // HTTP client with interceptors
 class HttpClient {
@@ -18,8 +18,15 @@ class HttpClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
-    // Add auth token if available (using auth store for consistency)
-    const token = useAuthStore.getState().token
+    // Add auth token if available (from auth store)
+    const authState = useAuthStore.getState()
+    const token = authState.isHydrated ? authState.token : null
+
+    console.log('[DEBUG] API Request:', endpoint, {
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      tokenStart: token ? token.substring(0, 20) + '...' : 'none'
+    })
 
     const config: RequestInit = {
       headers: {
@@ -227,7 +234,8 @@ export const communityApi = {
     if (photo.caption) formData.append('caption', photo.caption)
     if (photo.tags?.length) formData.append('tags', JSON.stringify(photo.tags))
 
-    const token = useAuthStore.getState().token
+    const authState = useAuthStore.getState()
+    const token = authState.isHydrated ? authState.token : null
 
     const headers: Record<string, string> = {}
     if (token) {

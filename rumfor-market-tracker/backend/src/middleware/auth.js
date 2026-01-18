@@ -68,8 +68,10 @@ const parseExpiresIn = (expiresIn) => {
 // Middleware to verify JWT token
 const verifyToken = async (req, res, next) => {
   try {
+    console.log('[DEBUG BACKEND] verifyToken called for:', req.path, req.method)
     const authHeader = req.header('Authorization')
-    
+    console.log('[DEBUG BACKEND] authHeader:', authHeader ? authHeader.substring(0, 20) + '...' : 'none')
+
     if (!authHeader) {
       return res.status(401).json({
         success: false,
@@ -86,16 +88,18 @@ const verifyToken = async (req, res, next) => {
     }
     
     const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-    
+    console.log('[DEBUG BACKEND] token extracted, length:', token.length)
+
     if (!token) {
       return res.status(401).json({
         success: false,
         message: 'Access denied. No token provided.'
       })
     }
-    
+
     // Check if token is blacklisted
     if (isAccessTokenBlacklisted(token)) {
+      console.log('[DEBUG BACKEND] token is blacklisted')
       return res.status(401).json({
         success: false,
         message: 'Token has been revoked. Please log in again.'
@@ -122,10 +126,12 @@ const verifyToken = async (req, res, next) => {
         throw new Error('JWT_SECRET environment variable is not set')
       }
       decoded = jwt.verify(token, process.env.JWT_SECRET)
+      console.log('[DEBUG BACKEND] JWT decoded:', { id: decoded.id, tv: decoded.tv })
     }
-    
+
     // Get user from database
     const user = await User.findById(decoded.id).select('-password')
+    console.log('[DEBUG BACKEND] user found:', !!user, user ? { id: user._id, active: user.isActive, locked: user.isLocked } : null)
     
     if (!user) {
       return res.status(401).json({
