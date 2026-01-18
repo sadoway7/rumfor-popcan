@@ -88,15 +88,24 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       return response.data
     },
     enabled: autoLoad && !searchQuery,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 15 * 60 * 1000, // 15 minutes (optimized cache duration)
+    gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
+    refetchOnWindowFocus: false, // Don't refetch on tab focus
+    refetchOnMount: false, // Use cache on mount
+    refetchOnReconnect: true, // DO refetch when internet reconnects
+    retry: 1 // Only retry once on failure
   })
 
-  // Search query
+  // Search query (shorter cache for dynamic search results)
   const searchQueryResult = useQuery({
     queryKey: SEARCH_QUERY_KEY(searchQuery),
     queryFn: () => marketsApi.searchMarkets(searchQuery),
     enabled: !!searchQuery,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes (search results can be cached longer)
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1
   })
 
   // Load markets function

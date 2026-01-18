@@ -1,93 +1,109 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
-const redisClient = require('../../config/redis')
 
 // ============================================
-// Token Blacklist for Logout (Redis-based)
+// Token Blacklist for Logout (In-Memory Map-based)
 // ============================================
 
-// Redis key prefixes
-const ACCESS_TOKEN_BLACKLIST_PREFIX = 'blacklist:access:'
-const REFRESH_TOKEN_BLACKLIST_PREFIX = 'blacklist:refresh:'
-const USER_CACHE_PREFIX = 'user:'
+// In-memory storage with TTL (Time To Live) support
+const accessTokenBlacklist = new Map() // Map<token, expiryTime>
+const refreshTokenBlacklist = new Map() // Map<token, expiryTime>
+const userCache = new Map() // Map<userId, {data, expiryTime}>
+
+// Cleanup interval - runs every 5 minutes to remove expired entries
+setInterval(() => {
+  const now = Date.now()
+  
+  // Clean access token blacklist
+  for (const [token, expiryTime] of accessTokenBlacklist.entries()) {
+    if (expiryTime < now) {
+      accessTokenBlacklist.delete(token)
+    }
+  }
+  
+  // Clean refresh token blacklist
+  for (const [token, expiryTime] of refreshTokenBlacklist.entries()) {
+    if (expiryTime < now) {
+      refreshTokenBlacklist.delete(token)
+    }
+  }
+  
+  // Clean user cache
+  for (const [userId, entry] of userCache.entries()) {
+    if (entry.expiryTime < now) {
+      userCache.delete(userId)
+    }
+  }
+}, 5 * 60 * 1000) // Run every 5 minutes
 
 // Add access token to blacklist
 const addAccessTokenToBlacklist = async (token, expiresIn = '24h') => {
-  try {
-    const ttl = Math.floor(parseExpiresIn(expiresIn) / 1000) // Convert to seconds for Redis
-    await redisClient.setEx(`${ACCESS_TOKEN_BLACKLIST_PREFIX}${token}`, ttl, '1')
-  } catch (error) {
-    console.error('Error adding access token to blacklist:', error)
-    // Fallback to in-memory if Redis fails (for development)
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Redis unavailable, using in-memory blacklist')
-    }
-  }
+  const ttl = parseExpiresIn(expiresIn)
+  const expiryTime = Date.now() + ttl
+  accessTokenBlacklist.set(token, expiryTime)
 }
 
 // Add refresh token to blacklist
 const addRefreshTokenToBlacklist = async (token, expiresIn = '7d') => {
-  try {
-    const ttl = Math.floor(parseExpiresIn(expiresIn) / 1000) // Convert to seconds for Redis
-    await redisClient.setEx(`${REFRESH_TOKEN_BLACKLIST_PREFIX}${token}`, ttl, '1')
-  } catch (error) {
-    console.error('Error adding refresh token to blacklist:', error)
-    // Fallback to in-memory if Redis fails (for development)
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Redis unavailable, using in-memory blacklist')
-    }
-  }
+  const ttl = parseExpiresIn(expiresIn)
+  const expiryTime = Date.now() + ttl
+  refreshTokenBlacklist.set(token, expiryTime)
 }
 
 // Check if access token is blacklisted
 const isAccessTokenBlacklisted = async (token) => {
-  try {
-    const exists = await redisClient.exists(`${ACCESS_TOKEN_BLACKLIST_PREFIX}${token}`)
-    return exists === 1
-  } catch (error) {
-    console.error('Error checking access token blacklist:', error)
-    return false // Allow token if Redis fails
+  const expiryTime = accessTokenBlacklist.get(token)
+  if (!expiryTime) return false
+  
+  // Check if expired
+  if (expiryTime < Date.now()) {
+    accessTokenBlacklist.delete(token)
+    return false
   }
+  
+  return true
 }
 
 // Check if refresh token is blacklisted
 const isRefreshTokenBlacklisted = async (token) => {
-  try {
-    const exists = await redisClient.exists(`${REFRESH_TOKEN_BLACKLIST_PREFIX}${token}`)
-    return exists === 1
-  } catch (error) {
-    console.error('Error checking refresh token blacklist:', error)
-    return false // Allow token if Redis fails
+  const expiryTime = refreshTokenBlacklist.get(token)
+  if (!expiryTime) return false
+  
+  // Check if expired
+  if (expiryTime < Date.now()) {
+    refreshTokenBlacklist.delete(token)
+    return false
   }
+  
+  return true
 }
 
-// Cache user data in Redis
+// Cache user data in memory
 const cacheUser = async (userId, userData, ttl = 300) => { // 5 minutes default
-  try {
-    await redisClient.setEx(`${USER_CACHE_PREFIX}${userId}`, ttl, JSON.stringify(userData))
-  } catch (error) {
-    console.error('Error caching user:', error)
-  }
+  const expiryTime = Date.now() + (ttl * 1000)
+  userCache.set(userId.toString(), {
+    data: userData,
+    expiryTime
+  })
 }
 
 // Get cached user data
 const getCachedUser = async (userId) => {
-  try {
-    const cached = await redisClient.get(`${USER_CACHE_PREFIX}${userId}`)
-    return cached ? JSON.parse(cached) : null
-  } catch (error) {
-    console.error('Error getting cached user:', error)
+  const entry = userCache.get(userId.toString())
+  if (!entry) return null
+  
+  // Check if expired
+  if (entry.expiryTime < Date.now()) {
+    userCache.delete(userId.toString())
     return null
   }
+  
+  return entry.data
 }
 
 // Clear user cache
 const clearUserCache = async (userId) => {
-  try {
-    await redisClient.del(`${USER_CACHE_PREFIX}${userId}`)
-  } catch (error) {
-    console.error('Error clearing user cache:', error)
-  }
+  userCache.delete(userId.toString())
 }
 
 // Helper to parse expiresIn string to milliseconds

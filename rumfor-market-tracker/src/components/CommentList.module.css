@@ -1,43 +1,48 @@
-/* Simplified Reddit-style comment nesting */
+/* Modern comment system with curved SVG connectors */
 
 .comment-list {
-  --indent-size: 24px;
+  position: relative;
 }
 
-/* Comment nesting with simple left margin */
-.comment-item {
-  margin-left: calc(var(--depth, 0) * var(--indent-size));
-  border-left: 2px solid transparent;
-  padding-left: 8px;
+/* Smooth animations for interactions */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.comment-item[data-depth="0"] {
-  border-left-color: transparent;
+@keyframes zoom-in-95 {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.comment-item[data-depth="1"] {
-  border-left-color: hsl(var(--border));
+.animate-in {
+  animation-fill-mode: both;
 }
 
-.comment-item[data-depth="2"] {
-  border-left-color: hsl(var(--border));
+.fade-in {
+  animation-name: fade-in;
 }
 
-/* Avatar sizing based on depth */
-.comment-item[data-depth="1"] .avatar,
-.comment-item[data-depth="2"] .avatar {
-  width: 24px;
-  height: 24px;
+.zoom-in-95 {
+  animation-name: zoom-in-95;
 }
 
-/* Clean spacing */
-.comment-content {
-  margin-top: 4px;
+.duration-200 {
+  animation-duration: 200ms;
 }
 
-/* Emoji-only comment styling */
-.emoji-only {
-  font-size: 1.5rem;
-  text-align: center;
-  margin: 8px 0;
+.duration-300 {
+  animation-duration: 300ms;
 }

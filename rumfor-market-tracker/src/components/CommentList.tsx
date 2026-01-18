@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
-import { EmptyState } from '@/components/ui/EmptyState'
 import { CommentForm } from './CommentForm'
 import { CommentItem } from './CommentItem'
 import { useComments } from '@/features/community/hooks/useComments'
@@ -78,56 +77,34 @@ export const CommentList: React.FC<CommentListProps> = ({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">
-            Comments ({comments.length})
-          </h2>
-        </div>
-
-        <Button
-          onClick={handleRefresh}
-          variant="ghost"
-          size="sm"
-          disabled={isLoading}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          {isLoading ? (
-            <Spinner className="h-3 w-3" />
-          ) : (
-            'Refresh'
-          )}
-        </Button>
+    <div className={cn('p-6', className)}>
+      {/* Modern Comment Form */}
+      <div className="mb-16">
+        <CommentForm
+          marketId={marketId}
+          placeholder="Share your perspective..."
+          onSubmit={handleRefresh}
+        />
       </div>
-
-      {/* Comment Form */}
-      <CommentForm
-        marketId={marketId}
-        placeholder="Share your thoughts about this market..."
-        onSubmit={handleRefresh}
-      />
 
       {/* Comments List */}
       {comments.length === 0 ? (
-        <EmptyState
-          icon={
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        <div className="flex flex-col items-center justify-center py-8 px-4">
+          <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
+            <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-          }
-          title="No comments yet"
-          description="Be the first to share your thoughts about this market!"
-          action={
-            <Button onClick={() => document.querySelector('textarea')?.focus()}>
-              Write First Comment
-            </Button>
-          }
-        />
+          </div>
+          <p className="text-sm font-medium text-zinc-700">
+            No comments yet
+          </p>
+          <p className="text-xs text-zinc-400 mt-1">
+            Be the first to share your thoughts!
+          </p>
+        </div>
       ) : (
         <div>
-          <ul style={{ '--depth': 0, '--lines': 'true', '--size': '2rem' } as React.CSSProperties} className={cn('space-y-4', styles.commentList)}>
+          <ul style={{ '--depth': 0 } as React.CSSProperties} className={cn('space-y-16', styles.commentList)}>
             {visibleTopLevelComments.map((comment) => (
               <CommentItem
                 key={comment.id}

@@ -1,11 +1,9 @@
 import { Market, MarketFilters, PaginatedResponse, ApiResponse } from '@/types'
+import { httpClient } from '@/lib/httpClient'
 
 // Environment configuration
 const isDevelopment = import.meta.env.DEV
 const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
-
-// API Configuration - Versioned API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 // Mock data for development
 const mockMarkets: Market[] = [
@@ -207,78 +205,7 @@ const mockMarkets: Market[] = [
 // API simulation delay (reduced for better UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-// HTTP client with interceptors
-class HttpClient {
-  private baseURL: string
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`
-
-    // Add auth token if available
-    const token = localStorage.getItem('auth-storage')
-      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
-      : null
-
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
-        ...options.headers,
-      },
-      ...options,
-    }
-
-    try {
-      const response = await fetch(url, config)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(
-          errorData.message || 'Request failed'
-        )
-      }
-
-      return await response.json()
-    } catch (error) {
-      throw error
-    }
-  }
-
-  get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
-  }
-
-  post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
-  }
-}
-
-const httpClient = new HttpClient(API_BASE_URL)
-
-// Map backend market format to frontend format
+// Map backend market format to frontend format (RESTORED - serializer had issues)
 function mapBackendMarketToFrontend(backendMarket: any): Market {
   return {
     id: backendMarket._id || backendMarket.id,
@@ -298,7 +225,7 @@ function mapBackendMarketToFrontend(backendMarket: any): Market {
     },
     schedule: backendMarket.schedule ? [{
       id: '1',
-      dayOfWeek: backendMarket.schedule.daysOfWeek?.[0] ? (backendMarket.schedule.daysOfWeek[0] === 'monday' ? 1 : 6) : 6, // Simple mapping
+      dayOfWeek: backendMarket.schedule.daysOfWeek?.[0] ? (backendMarket.schedule.daysOfWeek[0] === 'monday' ? 1 : 6) : 6,
       startTime: backendMarket.schedule.startTime,
       endTime: backendMarket.schedule.endTime,
       startDate: backendMarket.schedule.seasonStart || '2024-01-01',
@@ -307,7 +234,7 @@ function mapBackendMarketToFrontend(backendMarket: any): Market {
     }] : [],
     status: backendMarket.status === 'active' ? 'active' : 'draft',
     marketType: backendMarket.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
-    images: backendMarket.images?.map((img: any) => img.url) || [],
+    images: backendMarket.images?.map((img: any) => img.url || img) || [],
     tags: backendMarket.tags || [],
     accessibility: {
       wheelchairAccessible: backendMarket.amenities?.includes('accessible') || false,
@@ -413,10 +340,9 @@ export const marketsApi = {
       const response = await httpClient.get<ApiResponse<any>>(`/markets?${queryParams}`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch markets')
 
-      // Map backend format to frontend format
-      const mappedData = response.data!.markets.map(mapBackendMarketToFrontend)
+      // Backend serializer now handles transformation
       return {
-        data: mappedData as Market[],
+        data: response.data!.markets as Market[],
         pagination: response.data!.pagination
       }
     }
@@ -441,9 +367,14 @@ export const marketsApi = {
         data: market
       }
     } else {
-      const response = await httpClient.get<ApiResponse<Market>>(`/markets/${id}`)
+      const response = await httpClient.get<ApiResponse<any>>(`/markets/${id}`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch market')
-      return response
+      
+      // Backend serializer now handles transformation
+      return {
+        success: true,
+        data: response.data.market as Market
+      }
     }
   },
 
@@ -603,11 +534,11 @@ export const marketsApi = {
       const response = await httpClient.get<ApiResponse<any>>(`/markets/my/markets`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch tracked markets')
 
-      // Transform backend response to match frontend expectations
+      // Backend serializer now handles transformation
       const backendData = response.data!
       const markets = backendData.tracking
         .filter((tracking: any) => tracking.market) // Filter out deleted markets
-        .map((tracking: any) => mapBackendMarketToFrontend(tracking.market))
+        .map((tracking: any) => tracking.market as Market)
 
       return {
         data: markets,

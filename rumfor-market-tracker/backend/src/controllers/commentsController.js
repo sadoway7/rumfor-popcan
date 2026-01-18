@@ -72,8 +72,17 @@ const getComments = catchAsync(async (req, res, next) => {
 const createComment = catchAsync(async (req, res, next) => {
   const { marketId: marketIdParam } = req.params
   const { content, parentId } = req.body
-  const userId = req.user.id
+  
+  // Auth middleware uses .lean() which returns plain objects with _id field
+  // Convert to string in case it's an ObjectId
+  const userId = (req.user._id?.toString?.() || req.user._id) || (req.user.id?.toString?.() || req.user.id)
   const marketId = marketIdParam || req.body.marketId
+
+  console.log('[DEBUG COMMENTS] createComment called')
+  console.log('[DEBUG COMMENTS] req.user keys:', Object.keys(req.user))
+  console.log('[DEBUG COMMENTS] req.user._id:', req.user._id)
+  console.log('[DEBUG COMMENTS] req.user.id:', req.user.id)
+  console.log('[DEBUG COMMENTS] userId final:', userId)
 
   // Verify market exists
   const market = await Market.findById(marketId)
@@ -92,6 +101,11 @@ const createComment = catchAsync(async (req, res, next) => {
 
   if (content.length > 2000) {
     return next(new AppError('Comment content must be less than 2000 characters', 400))
+  }
+
+  if (!userId) {
+    console.error('[DEBUG COMMENTS] userId is undefined! req.user:', req.user)
+    return next(new AppError('User authentication failed - userId is undefined', 401))
   }
 
   const commentData = {
@@ -144,7 +158,7 @@ const createComment = catchAsync(async (req, res, next) => {
 const updateComment = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
   const { content } = req.body
-  const userId = req.user.id
+  const userId = req.user._id || req.user.id
 
   if (!content || content.trim().length === 0) {
     return next(new AppError('Comment content is required', 400))
@@ -183,7 +197,7 @@ const updateComment = catchAsync(async (req, res, next) => {
 // Delete a comment
 const deleteComment = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
-  const userId = req.user.id
+  const userId = req.user._id || req.user.id
   const userRole = req.user.role
 
   const comment = await Comment.findById(commentId)
@@ -224,7 +238,7 @@ const deleteComment = catchAsync(async (req, res, next) => {
 const addReaction = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
   const { type } = req.body
-  const userId = req.user.id
+  const userId = req.user._id || req.user.id
 
   if (!type || !['like', 'dislike', 'love', 'laugh', 'angry', 'sad'].includes(type)) {
     return next(new AppError('Valid reaction type is required', 400))
