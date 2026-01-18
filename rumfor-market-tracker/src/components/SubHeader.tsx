@@ -8,7 +8,7 @@ import { UserRole } from '@/types'
 export function SubHeader() {
   const { user } = useAuthStore()
   const { unreadCount } = useNotifications()
-  const { trackedMarkets } = useTrackedMarkets()
+  const { trackedMarketIds } = useTrackedMarkets()
   const { applications } = useApplications()
 
   if (!user) return null
@@ -18,7 +18,7 @@ export function SubHeader() {
       case 'vendor':
         return {
           stats: [
-            { label: 'Saved Markets', value: trackedMarkets.length },
+            { label: 'Saved Markets', value: trackedMarketIds.length },
             { label: 'Following', value: 8 }, // TODO: implement following count
             { label: 'Notifications', value: `${unreadCount} new` },
           ],
@@ -54,7 +54,7 @@ export function SubHeader() {
       default:
         return {
           stats: [
-            { label: 'Saved Markets', value: trackedMarkets.length },
+            { label: 'Saved Markets', value: trackedMarketIds.length },
             { label: 'Following', value: 8 },
             { label: 'Notifications', value: `${unreadCount} new` },
           ],

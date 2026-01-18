@@ -1,4 +1,4 @@
-rontimport { useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'

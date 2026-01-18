@@ -1,0 +1,31 @@
+📋 Available Test Users:
+==================================================
+👤 ADMIN
+   Email: sadoway@gmail.com
+   Password: Oswald1986!
+   Role: admin
+
+👤 ADMIN
+   Email: admin@rumfor.com
+   Password: admin123
+   Role: admin
+
+👤 VENDOR
+   Email: vendor@rumfor.com
+   Password: vendor123
+   Role: vendor
+
+👤 PROMOTER
+   Email: promoter@rumfor.com
+   Password: promoter123
+   Role: promoter
+
+👤 VISITOR
+   Email: user@rumfor.com
+   Password: user12345
+   Role: visitor
+
+👤 VENDOR
+   Email: artisan@rumfor.com
+   Password: artisan123
+   Role: vendor
