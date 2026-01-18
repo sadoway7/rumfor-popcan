@@ -135,14 +135,8 @@ export function HomePage() {
             {/* Hero Section */}
             <div className="w-full">
               <Link to="/markets" className="block">
-                <h1 className="text-xl md:text-3xl text-foreground">
-                  <span className="inline-block bg-accent/40 px-3 py-1 md:px-4 md:py-2 transform -skew-x-3 mr-2">
-                    <span className="font-black normal-case text-2xl md:text-4xl" style={{WebkitTextStroke: '1px #000'}}>Rumfor</span>
-                  </span>
-                  -
-                  <span className="inline-block bg-yellow-300/40 px-3 py-1 md:px-4 md:py-2 transform -skew-x-2 ml-2">
-                    <span className="font-serif font-bold tracking-wider">Track and discover markets</span>
-                  </span>
+                <h1 className="text-2xl md:text-4xl font-bold text-foreground hover:text-accent transition-colors">
+                  Rumfor - Track and discover markets
                 </h1>
               </Link>
             </div>
