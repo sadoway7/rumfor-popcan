@@ -42,8 +42,7 @@ export function HomePage() {
         {isSidebarOpen && (
           <div className="fixed inset-0 z-50 md:relative md:inset-auto md:flex-shrink-0 md:w-80 bg-surface">
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <h2 className="text-lg font-semibold text-foreground">Browse Categories</h2>
+              <div className="flex items-center justify-end p-4 pt-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -53,7 +52,7 @@ export function HomePage() {
                   <X className="h-5 w-5" />
                 </Button>
               </div>
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto pt-0 pb-6 px-6">
 
             {/* Call-to-Action Buttons - Top of sidebar */}
             {!isAuthenticated && (

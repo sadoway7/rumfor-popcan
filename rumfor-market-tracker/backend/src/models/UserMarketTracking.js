@@ -123,7 +123,7 @@ userMarketTrackingSchema.methods.reviewApplication = function(decision, reviewed
 // Static method to get user's market counts by status
 userMarketTrackingSchema.statics.getUserStatusCounts = function(userId) {
   return this.aggregate([
-    { $match: { user: new mongoose.Types.ObjectId(userId), isArchived: false } },
+    { $match: { user: new mongoose.mongo.ObjectId(userId), isArchived: false } },
     { $group: { _id: '$status', count: { $sum: 1 } } }
   ])
 }
@@ -131,7 +131,7 @@ userMarketTrackingSchema.statics.getUserStatusCounts = function(userId) {
 // Static method to get market's application statistics
 userMarketTrackingSchema.statics.getMarketApplicationStats = function(marketId) {
   return this.aggregate([
-    { $match: { market: new mongoose.Types.ObjectId(marketId) } },
+    { $match: { market: new mongoose.mongo.ObjectId(marketId) } },
     {
       $group: {
         _id: '$status',
