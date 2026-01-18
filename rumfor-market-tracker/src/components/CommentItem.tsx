@@ -116,7 +116,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const canDelete = comment.userId === 'user-1' // Assuming current user ID
 
   return (
-    <li style={{ '--depth': depth, '--nested': depth > 0 ? 'true' : 'false' } as React.CSSProperties} className={cn('comment-item', className)}>
+    <li className={cn('comment-item', className)} data-depth={depth}>
       <div className="flex gap-3">
         {/* Avatar */}
         <Avatar
@@ -275,7 +275,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         
         {/* Replies */}
         {comment.replies && comment.replies.length > 0 && (
-          <ul style={{ '--depth': depth + 1, '--nested': 'true' } as React.CSSProperties} className="mt-4 space-y-4">
+          <ul className="mt-4 space-y-2">
             {comment.replies.map((reply) => (
               <li key={reply.id}>
                 <CommentItem

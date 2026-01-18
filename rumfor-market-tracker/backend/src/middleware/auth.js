@@ -102,11 +102,27 @@ const verifyToken = async (req, res, next) => {
       })
     }
     
-    // Verify token
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET environment variable is not set')
+    // In development, accept mock tokens
+    let decoded
+    if (process.env.NODE_ENV === 'development' && token.startsWith('mock-jwt-token-')) {
+      // Extract user ID from mock token format: mock-jwt-token-{userId}-{timestamp}
+      const parts = token.split('-')
+      if (parts.length >= 4) {
+        const userId = parts[3] // user ID is at index 3
+        decoded = { id: userId, tv: 0 }
+      } else {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid mock token format.'
+        })
+      }
+    } else {
+      // Verify real JWT token
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable is not set')
+      }
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
     }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
     
     // Get user from database
     const user = await User.findById(decoded.id).select('-password')

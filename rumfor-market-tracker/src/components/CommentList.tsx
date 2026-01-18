@@ -78,30 +78,26 @@ export const CommentList: React.FC<CommentListProps> = ({
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-4', className)}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-lg font-semibold">
             Comments ({comments.length})
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Join the conversation about this market
-          </p>
         </div>
-        
+
         <Button
           onClick={handleRefresh}
-          variant="outline"
+          variant="ghost"
           size="sm"
           disabled={isLoading}
+          className="text-xs text-muted-foreground hover:text-foreground"
         >
           {isLoading ? (
-            <Spinner className="h-4 w-4" />
+            <Spinner className="h-3 w-3" />
           ) : (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            'Refresh'
           )}
         </Button>
       </div>
@@ -190,31 +186,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         </div>
       )}
 
-      {/* Community Stats */}
-      {comments.length > 0 && (
-        <div className="pt-6 border-t border-border">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-accent">
-                {comments.filter(c => !c.parentId).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Top-level comments</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-accent">
-                {comments.filter(c => c.parentId).length}
-              </div>
-              <div className="text-sm text-muted-foreground">Replies</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-accent">
-                {new Set(comments.map(c => c.userId)).size}
-              </div>
-              <div className="text-sm text-muted-foreground">Unique commenters</div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   )
 }
