@@ -38,9 +38,9 @@ Failure to follow these rules will result in:
 
 # 📋 TASK LIST UPDATE PROTOCOL
 
-## RULE 1: MANDATORY 3-STEP UPDATE SEQUENCE (NEVER SKIP THIS)
+## RULE 1: MANDATORY 4-STEP UPDATE SEQUENCE (NEVER SKIP THIS)
 
-**🚨 CRITICAL: BEFORE using `attempt_completion`, you MUST complete ALL 3 steps in this EXACT order:**
+**🚨 CRITICAL: After completing a task, follow ALL 4 steps in this EXACT order:**
 
 ```
 STEP 1 (REQUIRED): Update SYSTEMATIC_FIX_PLAN.md file
@@ -61,14 +61,20 @@ STEP 2 (REQUIRED): Update update_todo_list tool
    ↳ Add brief note: (file, time, result)
    ↳ Keep other tasks as [ ]
 
-STEP 3 (FINALLY): Use attempt_completion
-   ↳ Summarize what you did
+STEP 3 (REQUIRED): Ask user if they want to continue
+   ↳ "✅ TASK X.Y complete. Continue to TASK X.Z? (yes/no)"
+   ↳ Wait for user response
+   ↳ If user says "yes" → Loop back to next task (DO NOT use attempt_completion)
+   ↳ If user says "no" → Proceed to Step 4
+
+STEP 4 (ONLY IF USER SAID STOP): Use attempt_completion
+   ↳ Summarize what you did in this session
    ↳ Reference that details are in SYSTEMATIC_FIX_PLAN.md
 ```
 
-**IF YOU USE attempt_completion BEFORE STEPS 1 & 2 → YOU VIOLATED THE PROTOCOL**
+**IF YOU USE attempt_completion BEFORE STEPS 1, 2 & 3 → YOU VIOLATED THE PROTOCOL**
 
-**Memory Aid**: "Plan file FIRST, todo list SECOND, completion LAST"
+**Memory Aid**: "Plan FIRST, Todo SECOND, Ask THIRD, Complete LAST (only if stopping)"
 
 **VIOLATION EXAMPLE** (DO NOT DO THIS):
 ```
@@ -141,7 +147,7 @@ What you did and why it fixes the problem.
 
 **Validation Results**:
 - [x] Test 1: Description - PASSED
-- [x] Test 2: Description - PASSED  
+- [x] Test 2: Description - PASSED
 - [ ] Test 3: Description - FAILED (created TASK X.Z to fix)
 
 **What Worked**:
@@ -165,13 +171,26 @@ What you did and why it fixes the problem.
 Any important context for the next person.
 ```
 
+**🚨 VALIDATION: Before marking task DONE, check for placeholders**:
+```
+Search completion notes for these strings:
+- "_not started_"
+- "_not completed_"
+- "___" (blank fields)
+- Empty fields
+
+If ANY found → Task is NOT complete! Fill them in first.
+```
+
 **INCOMPLETE EXAMPLE** (DO NOT DO THIS):
 ```markdown
 ❌ BAD:
-**Completion Date**: 2026-01-18
+**Completion Date**: _not completed_
 **Status**: DONE
+**Files Modified**:
+**Summary**:
 
-Fixed the file.
+This is marking DONE but notes are EMPTY!
 ```
 
 **This is NOT ACCEPTABLE.** You must provide full details.
@@ -921,15 +940,11 @@ START SESSION
     ↓
 Read SYSTEMATIC_FIX_PLAN.md
     ↓
-Find next TODO task in Phase 1
+Find next TODO task
     ↓
-Check dependencies met? → NO → Mark BLOCKED, skip to next task
+Check dependencies met? → NO → Mark BLOCKED, find next task
     ↓ YES
-Update status: TODO → IN_PROGRESS
-    ↓
-Update update_todo_list tool
-    ↓
-Update SYSTEMATIC_FIX_PLAN.md
+Update status: TODO → IN_PROGRESS (both files)
     ↓
 Perform the work (edit files)
     ↓
@@ -937,31 +952,31 @@ Update status: IN_PROGRESS → TESTING
     ↓
 Run validation checklist
     ↓
-All tests pass? → NO → Mark FAILED, document why, create fix task
+All tests pass? → NO → Mark FAILED, document, create fix task
     ↓ YES
 Update status: TESTING → DONE
     ↓
-Fill in ALL completion notes:
-  - Files modified
-  - Time taken
-  - Summary
-  - Validation results
-  - What worked/didn't work
-  - Issues discovered
-  - Next task
+Fill in ALL completion notes in SYSTEMATIC_FIX_PLAN.md
     ↓
 Update update_todo_list tool with [x] and summary
     ↓
-Update SYSTEMATIC_FIX_PLAN.md with completion notes
+Update progress dashboard + session log
     ↓
-Update progress dashboard
+Ask user: "Continue to next task? (yes/no)"
     ↓
-Update session log
+User says YES? ───┐
+    ↓ NO          │
+Use attempt_completion  │
+    ↓              │
+END SESSION       │
+                  │
+    ┌─────────────┘
+    │ LOOP BACK (Don't end session!)
     ↓
-THEN use attempt_completion
-    ↓
-END SESSION
+Find next TODO task (repeat from top)
 ```
+
+**THE LOOP IS KEY**: After asking to continue, if user says YES, jump back to "Find next TODO task" and keep working!
 
 **IF YOU SKIP ANY STEP → YOU'VE DONE IT WRONG**
 
@@ -1016,6 +1031,48 @@ C) User provides additional guidance
 
 ---
 
+## RULE 11: CONTINUATION LOGIC (CRITICAL - NEW)
+
+**🚨 AFTER COMPLETING A TASK, YOU MUST ASK THE USER BEFORE ENDING**
+
+**DO NOT use attempt_completion immediately after one task!**
+
+**Required Behavior**:
+```
+After updating plan files and todo list:
+
+Ask user: "✅ TASK X.Y complete. Continue to TASK X.Z? (yes/no)"
+
+Wait for response:
+  ├─ "yes" or "continue" → Start TASK X.Z immediately (DO NOT complete)
+  ├─ "no" or "stop" → Use attempt_completion
+  └─ No response → Ask again after 30 seconds
+```
+
+**Example**:
+```
+AI: "✅ Completed TASK 1.2: SubHeader optimized, API spam reduced 90%.
+     
+     Next task: TASK 1.3 (Optimize /my/markets backend query).
+     
+     Continue to TASK 1.3? (yes/no)"
+
+USER: "yes"
+
+AI: [Starts TASK 1.3 immediately, updates status to IN_PROGRESS, continues working]
+```
+
+**Goal**: One session should complete MULTIPLE tasks until user says stop or phase complete.
+
+**Wrong Behavior to Avoid**:
+```
+❌ Complete TASK 1.2 → Immediately use attempt_completion
+
+This wastes time by ending after each task!
+```
+
+---
+
 # ✅ FINAL CHECKLIST BEFORE COMPLETING SESSION
 
 **Before using attempt_completion, verify ALL are true**:
@@ -1032,8 +1089,14 @@ C) User provides additional guidance
 - [ ] Next task identified
 - [ ] Progress dashboard updated
 - [ ] Session log updated
+- [ ] **ASKED USER if they want to continue** ← NEW!
+- [ ] **USER SAID "STOP" or "NO"** ← NEW!
 
-**If ANY checkbox is unchecked**:
+**If first 12 checkboxes YES but last 2 are NO**:
+→ DO NOT use attempt_completion
+→ User wants you to keep working!
+
+**If ANY of first 12 checkboxes is unchecked**:
 → DO NOT use attempt_completion yet
 → Go back and complete the missing documentation
 
