@@ -129,19 +129,22 @@ export function HomePage() {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 p-6 space-y-12">
+        <div className="flex-1 p-6 space-y-6">
             {/* Sub-header - Only for authenticated users */}
             {isAuthenticated && <SubHeader />}
 
             {/* Hero Section */}
-            <div className="px-4">
+            <div className="w-full">
               <Link to="/markets" className="block">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  Rumfor Market Tracker
+                <h1 className="text-xl md:text-3xl text-foreground">
+                  <span className="inline-block bg-accent/40 px-3 py-1 md:px-4 md:py-2 transform -skew-x-3 mr-2">
+                    <span className="font-black normal-case text-2xl md:text-4xl" style={{WebkitTextStroke: '1px #000'}}>Rumfor</span>
+                  </span>
+                  -
+                  <span className="inline-block bg-yellow-300/40 px-3 py-1 md:px-4 md:py-2 transform -skew-x-2 ml-2">
+                    <span className="font-serif font-bold tracking-wider">Track and discover markets</span>
+                  </span>
                 </h1>
-                <p className="text-muted-foreground text-lg">
-                  Discover and track markets with ease
-                </p>
               </Link>
             </div>
 
