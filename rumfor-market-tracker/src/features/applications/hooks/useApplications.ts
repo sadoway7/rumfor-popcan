@@ -425,7 +425,7 @@ export const useApplications = () => {
   return {
     // Data
     applications,
-    myApplications,
+    myApplications: user?.id ? getMyApplications(user.id) : [],
     application,
     
     // Loading states

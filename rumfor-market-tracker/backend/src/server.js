@@ -97,58 +97,43 @@ const csrfProtection = csrf({
   ignoreMethods: ['GET', 'HEAD', 'OPTIONS']
 })
 
-// Enhanced Rate Limiting - User-based limits
-app.use('/api/', userRateLimiter('general'))
+// CORS configuration - Simplified and more reliable
+const cors = require('cors')
 
-// CORS configuration - manual headers for reliability
-app.use((req, res, next) => {
-  // Allow multiple development origins
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000',
-    'http://localhost:8080'
-  ]
+// CORS options
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true)
 
-  const origin = req.headers.origin
-  if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
-    res.header('Access-Control-Allow-Origin', origin || allowedOrigins[0])
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
-  res.header('Access-Control-Allow-Credentials', 'true')
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200)
-    return
-  }
-  next()
-})
-
-// Ensure CORS headers on all responses
-app.use((req, res, next) => {
-  const originalSend = res.send
-  res.send = function(data) {
-    // Allow multiple development origins
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:3000',
-      'http://localhost:8080'
+      'http://localhost:8080',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:8080'
     ]
 
-    const origin = this.req.headers.origin
     if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
-      this.header('Access-Control-Allow-Origin', origin || allowedOrigins[0])
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
     }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+}
 
-    this.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-    this.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
-    this.header('Access-Control-Allow-Credentials', 'true')
-    originalSend.call(this, data)
-  }
-  next()
-})
+// Apply CORS before other middleware
+app.use(cors(corsOptions))
+
+// Enhanced Rate Limiting - User-based limits
+app.use('/api/', userRateLimiter('general'))
 
 // Version extraction and headers middleware
 app.use('/api', extractVersionFromPath)

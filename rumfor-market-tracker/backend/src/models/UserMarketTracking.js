@@ -68,24 +68,19 @@ userMarketTrackingSchema.virtual('daysSinceTracking').get(function() {
 
 // Method to update status with validation
 userMarketTrackingSchema.methods.updateStatus = function(newStatus, options = {}) {
-  const validTransitions = {
-    'interested': ['applied', 'cancelled'],
-    'applied': ['booked', 'cancelled'],
-    'booked': ['completed', 'cancelled'],
-    'completed': ['interested'], // Start over
-    'cancelled': ['interested']  // Start over
-  }
-  
-  if (!validTransitions[this.status].includes(newStatus)) {
+  const { isValidApplicationStatusTransition } = require('../utils/marketLogic')
+
+  // Use the centralized business logic for status transitions
+  if (!isValidApplicationStatusTransition(this.status, newStatus)) {
     throw new Error(`Cannot transition from ${this.status} to ${newStatus}`)
   }
-  
+
   this.status = newStatus
-  
+
   if (options.notes) {
     this.personalNotes = options.notes
   }
-  
+
   return this.save()
 }
 

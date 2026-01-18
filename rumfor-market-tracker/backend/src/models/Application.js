@@ -203,7 +203,10 @@ const applicationSchema = new mongoose.Schema({
 
 // Indexes
 applicationSchema.index({ market: 1, status: 1 });
-applicationSchema.index({ vendor: 1, market: 1 });
+applicationSchema.index({ vendor: 1, market: 1 }, {
+  unique: true,
+  partialFilterExpression: { isDeleted: false }
+}); // One application per vendor per market
 applicationSchema.index({ promoter: 1 });
 applicationSchema.index({ status: 1 });
 applicationSchema.index({ submittedAt: -1 });

@@ -6,6 +6,7 @@ const Todo = require('../models/Todo')
 const Expense = require('../models/Expense')
 const Message = require('../models/Message')
 const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch } = require('../middleware/validation')
+const { calculateNextMarketDate, canMarketAcceptApplications } = require('../utils/marketLogic')
 
 // Get all markets with filtering and pagination
 const getMarkets = catchAsync(async (req, res, next) => {
@@ -681,14 +682,13 @@ const getApplicationStatus = catchAsync(async (req, res, next) => {
       id: market._id,
       name: market.name,
       promoter: market.promoter,
-      applicationDeadline: market.vendorInfo.applicationDeadline,
-      capacity: market.vendorInfo.capacity
+      applicationDeadline: market.applicationSettings?.applicationDeadline,
+      capacity: market.applicationSettings?.maxVendors
     },
     status: tracking || null,
-    isOpen: market.vendorInfo.applicationDeadline ?
-      new Date() < market.vendorInfo.applicationDeadline : true,
-    canApply: !tracking || tracking.status === 'cancelled',
-    isBooked: tracking && tracking.status === 'booked'
+    isOpen: canMarketAcceptApplications(market),
+    canApply: (!tracking || ['cancelled'].includes(tracking.status)) && canMarketAcceptApplications(market),
+    isBooked: tracking && ['booked', 'completed'].includes(tracking.status)
   }
 
   sendSuccess(res, applicationStatus, 'Application status retrieved successfully')

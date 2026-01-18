@@ -3,6 +3,7 @@ const UserMarketTracking = require('../models/UserMarketTracking')
 const Market = require('../models/Market')
 const Notification = require('../models/Notification')
 const { validateApplicationCreation, validateMongoId, validatePagination } = require('../middleware/validation')
+const { canMarketAcceptApplications, canVendorApplyToMarket, shouldAutoApproveApplication } = require('../utils/marketLogic')
 
 // Get all applications (for promoters/admin)
 const getApplications = catchAsync(async (req, res, next) => {
@@ -100,20 +101,14 @@ const createApplication = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  // Check if user already has an application for this market
-  const existingApplication = await UserMarketTracking.findOne({
-    user: req.user.id,
-    market: market
-  })
-
-  if (existingApplication) {
-    return next(new AppError('You already have an application for this market', 400))
+  // Use business logic to validate market can accept applications
+  if (!canMarketAcceptApplications(marketDoc)) {
+    return next(new AppError('This market is not currently accepting applications', 400))
   }
 
-  // Check if application deadline has passed
-  if (marketDoc.vendorInfo.applicationDeadline && 
-      marketDoc.vendorInfo.applicationDeadline < new Date()) {
-    return next(new AppError('Application deadline has passed', 400))
+  // Use business logic to check if vendor can apply (one application per vendor per market rule)
+  if (!(await canVendorApplyToMarket(req.user.id, market))) {
+    return next(new AppError('You already have an application for this market', 400))
   }
 
   // Create application
@@ -129,22 +124,43 @@ const createApplication = catchAsync(async (req, res, next) => {
     personalNotes: personalNotes || ''
   })
 
+  // Check for auto-approval based on business rules
+  const shouldAutoApprove = await shouldAutoApproveApplication(req.user.id, market)
+  if (shouldAutoApprove) {
+    // Auto-approve returning vendors with good track record
+    await application.reviewApplication('approve', null, 'Auto-approved: Returning vendor with good track record')
+
+    // Create approval notification
+    await Notification.create({
+      recipient: req.user.id,
+      type: 'application-approved',
+      title: 'Application Auto-Approved',
+      message: `Your application for ${marketDoc.name} has been automatically approved based on your positive track record.`,
+      data: {
+        marketId: market,
+        applicationId: application._id,
+        autoApproved: true
+      },
+      priority: 'high'
+    })
+  } else {
+    // Notify promoter of new application
+    await Notification.create({
+      recipient: marketDoc.promoter,
+      type: 'new-application',
+      title: 'New Application Received',
+      message: `A new application has been submitted for ${marketDoc.name}`,
+      data: {
+        marketId: market,
+        applicationId: application._id,
+        userId: req.user.id
+      },
+      priority: 'medium'
+    })
+  }
+
   // Increment market statistics
   await marketDoc.incrementStat('totalApplications')
-
-  // Create notification for promoter
-  await Notification.create({
-    recipient: marketDoc.promoter,
-    type: 'new-application',
-    title: 'New Application Received',
-    message: `A new application has been submitted for ${marketDoc.name}`,
-    data: {
-      marketId: market,
-      applicationId: application._id,
-      userId: req.user.id
-    },
-    priority: 'medium'
-  })
 
   const populatedApplication = await UserMarketTracking.findById(application._id)
     .populate({
@@ -178,28 +194,21 @@ const updateApplicationStatus = catchAsync(async (req, res, next) => {
     return next(new AppError('You can only update applications for your markets', 403))
   }
 
-  // Validate status transition logic:
-  // - 'applied' applications can be 'booked' (approved) or 'cancelled' (rejected)
-  // - 'booked' applications can only be 'cancelled' (withdrawn by promoter)
-  // This prevents invalid state changes and maintains application workflow integrity
-  const validStatuses = ['booked', 'cancelled']
+  // Use centralized business logic for status transitions
+  const { isValidApplicationStatusTransition } = require('../utils/marketLogic')
 
-  if (!validStatuses.includes(status)) {
-    return next(new AppError('Invalid status. Must be "booked" or "cancelled"', 400))
+  if (!isValidApplicationStatusTransition(application.status, status === 'booked' ? 'approved' : 'rejected')) {
+    return next(new AppError(`Cannot transition from ${application.status} to ${status}`, 400))
   }
 
-  // Business rule: Only pending applications can be approved
-  if (status === 'booked' && application.status !== 'applied') {
-    return next(new AppError('Can only book applications with "applied" status', 400))
+  // Business rule: Only applied applications can be approved or rejected
+  if (!['applied'].includes(application.status)) {
+    return next(new AppError(`Can only ${status} applications with "applied" status`, 400))
   }
 
-  // Business rule: Applications can be cancelled at any active stage
-  if (status === 'cancelled' && !['applied', 'booked'].includes(application.status)) {
-    return next(new AppError('Can only cancel applications with "applied" or "booked" status', 400))
-  }
-
-  // Update application
-  await application.reviewApplication(status, req.user.id, reviewNotes)
+  // Update application - map frontend status to backend decision
+  const decision = status === 'booked' ? 'approve' : 'reject'
+  await application.reviewApplication(decision, req.user.id, reviewNotes)
 
   // Create notification for applicant
   await Notification.create({

@@ -397,19 +397,24 @@ export const marketsApi = {
       const queryParams = new URLSearchParams()
       if (filters) {
         if (filters.search) queryParams.append('search', filters.search)
-        if (filters.status?.length) queryParams.append('status', filters.status.join(','))
-        if (filters.category?.length) queryParams.append('category', filters.category.join(','))
-        if (filters.location?.city) queryParams.append('city', filters.location.city)
-        if (filters.location?.state) queryParams.append('state', filters.location.state)
+        if (filters.status?.length) queryParams.append('status', filters.status[0]) // Backend expects single status
+        if (filters.category?.length) queryParams.append('category', filters.category[0]) // Backend expects single category
+        // Combine city and state for location parameter
+        if (filters.location?.city || filters.location?.state) {
+          const locationParts = []
+          if (filters.location.city) locationParts.push(filters.location.city)
+          if (filters.location.state) locationParts.push(filters.location.state)
+          queryParams.append('location', locationParts.join(' '))
+        }
       }
       queryParams.append('page', page.toString())
       queryParams.append('limit', limit.toString())
 
-      const response = await httpClient.get<ApiResponse<PaginatedResponse<any>>>(`/markets?${queryParams}`)
+      const response = await httpClient.get<ApiResponse<any>>(`/markets?${queryParams}`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch markets')
 
       // Map backend format to frontend format
-      const mappedData = response.data!.data.map(mapBackendMarketToFrontend)
+      const mappedData = response.data!.markets.map(mapBackendMarketToFrontend)
       return {
         data: mappedData as Market[],
         pagination: response.data!.pagination
@@ -595,9 +600,19 @@ export const marketsApi = {
         }
       }
     } else {
-      const response = await httpClient.get<ApiResponse<PaginatedResponse<Market>>>(`/users/${userId}/tracked-markets`)
+      const response = await httpClient.get<ApiResponse<any>>(`/markets/my/markets`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch tracked markets')
-      return response.data!
+
+      // Transform backend response to match frontend expectations
+      const backendData = response.data!
+      const markets = backendData.tracking
+        .filter((tracking: any) => tracking.market) // Filter out deleted markets
+        .map((tracking: any) => mapBackendMarketToFrontend(tracking.market))
+
+      return {
+        data: markets,
+        pagination: backendData.pagination
+      }
     }
   }
 }
