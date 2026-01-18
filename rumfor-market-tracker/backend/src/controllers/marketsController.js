@@ -111,6 +111,7 @@ const getMarket = catchAsync(async (req, res, next) => {
 
   const market = await Market.findById(id)
     .populate('promoter', 'username profile.firstName profile.lastName profile.business')
+    .populate('images.uploadedBy', 'username profile.firstName profile.lastName')
 
   if (!market) {
     return next(new AppError('Market not found', 404))
@@ -126,8 +127,8 @@ const getMarket = catchAsync(async (req, res, next) => {
     trackingStatus = tracking ? tracking.status : null
   }
 
-  // Get recent photos
-  const recentPhotos = await market.getPopulated('images.uploadedBy', 'username profile.firstName profile.lastName')
+  // Get recent photos from populated market
+  const recentPhotos = market.images?.slice(0, 5) || []
 
   sendSuccess(res, {
     market,
@@ -553,6 +554,7 @@ const getVendorView = catchAsync(async (req, res, next) => {
 
   const market = await Market.findById(id)
     .populate('promoter', 'username profile.firstName profile.lastName profile.business contact')
+    .populate('images.uploadedBy', 'username profile.firstName profile.lastName')
 
   if (!market) {
     return next(new AppError('Market not found', 404))
@@ -564,8 +566,8 @@ const getVendorView = catchAsync(async (req, res, next) => {
     market: id
   })
 
-  // Get recent photos
-  const recentPhotos = await market.getPopulated('images.uploadedBy', 'username profile.firstName profile.lastName')
+  // Get recent photos from populated market
+  const recentPhotos = market.images?.slice(0, 5) || []
 
   // Get market statistics for vendors
   const totalApplicants = await UserMarketTracking.countDocuments({
