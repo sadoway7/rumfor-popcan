@@ -14,22 +14,56 @@ const getComments = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const comments = await Comment.find({ market: marketId, parentId: null })
+  // Fetch all comments for the market to build the tree
+  const allComments = await Comment.find({
+    market: marketId,
+    isDeleted: false,
+    isModerated: false
+  })
     .populate('author', 'username firstName lastName')
-    .populate('replies.author', 'username firstName lastName')
     .sort({ createdAt: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit)
     .exec()
 
-  const total = await Comment.countDocuments({ market: marketId })
+  // Build comment tree
+  const commentMap = new Map()
+  const topLevelComments = []
+
+  // First pass: create map of all comments
+  allComments.forEach(comment => {
+    commentMap.set(comment._id.toString(), {
+      ...comment.toObject(),
+      replies: []
+    })
+  })
+
+  // Second pass: build tree structure
+  allComments.forEach(comment => {
+    const commentObj = commentMap.get(comment._id.toString())
+    if (comment.parentId) {
+      const parent = commentMap.get(comment.parentId.toString())
+      if (parent) {
+        parent.replies.push(commentObj)
+      }
+    } else {
+      topLevelComments.push(commentObj)
+    }
+  })
+
+  // Apply pagination to top-level comments
+  const startIndex = (page - 1) * limit
+  const endIndex = startIndex + limit
+  const paginatedComments = topLevelComments.slice(startIndex, endIndex)
+
+  const totalTopLevel = topLevelComments.length
+  const totalAllComments = allComments.length
 
   sendSuccess(res, {
-    comments,
+    comments: paginatedComments,
+    totalComments: totalAllComments,
     pagination: {
       current: parseInt(page),
-      total: Math.ceil(total / limit),
-      count: comments.length
+      total: Math.ceil(totalTopLevel / limit),
+      count: paginatedComments.length
     }
   }, 'Comments retrieved successfully')
 })

@@ -1,7 +1,7 @@
 import { ApiResponse, Comment, CommentReaction, Photo, Hashtag, HashtagVote, User } from '@/types'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api/v1'
 
 // HTTP client with interceptors
 class HttpClient {
@@ -155,15 +155,19 @@ const mapHashtag = (hashtag: any, marketId: string): Hashtag => ({
 
 export const communityApi = {
   // Comments API
-  async getComments(marketId: string, page = 1, limit = 20): Promise<ApiResponse<Comment[]>> {
+  async getComments(marketId: string, page = 1, limit = 20): Promise<ApiResponse<Comment[]> & { totalComments?: number }> {
     const queryParams = new URLSearchParams()
     queryParams.append('page', page.toString())
     queryParams.append('limit', limit.toString())
 
-    const response = await httpClient.get<ApiResponse<{ comments: any[] }>>(`/comments/market/${marketId}?${queryParams}`)
+    const response = await httpClient.get<ApiResponse<{ comments: any[], totalComments?: number, pagination?: any }>>(`/comments/market/${marketId}?${queryParams}`)
     if (!response.success) throw new Error(response.error || 'Failed to fetch comments')
     const comments = response.data?.comments || []
-    return { ...response, data: comments.map((comment) => mapComment(comment, marketId)) }
+    return {
+      ...response,
+      data: comments.map((comment) => mapComment(comment, marketId)),
+      totalComments: response.data?.totalComments
+    }
   },
 
   async createComment(comment: {

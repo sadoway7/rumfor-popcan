@@ -7,6 +7,7 @@ import { CommentReactions } from './CommentReactions'
 import { useComments } from '@/features/community/hooks/useComments'
 import { Comment } from '@/types'
 import { cn } from '@/utils/cn'
+import styles from './CommentList.module.css'
 
 interface CommentItemProps {
   comment: Comment
@@ -31,6 +32,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [replyContent, setReplyContent] = useState('')
   
   const {
+    createComment,
     editComment,
     deleteComment,
     addReaction,
@@ -80,11 +82,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
   const handleReply = async () => {
     if (!replyContent.trim()) return
-    
+
     try {
-      await onReply?.(comment.id)
+      await createComment(replyContent.trim(), comment.id)
       setIsReplying(false)
       setReplyContent('')
+      onReply?.(comment.id) // Refresh parent if needed
     } catch (error) {
       console.error('Failed to reply to comment:', error)
     }
@@ -115,17 +118,18 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const canDelete = comment.userId === 'user-1' // Assuming current user ID
 
   return (
-    <div className={cn('flex gap-3', className)}>
-      {/* Avatar */}
-      <Avatar
-        src={comment.user.avatar}
-        alt={`${comment.user.firstName} ${comment.user.lastName}`}
-        fallback={`${comment.user.firstName[0]}${comment.user.lastName[0]}`}
-        size="sm"
-      />
+    <li style={{ '--depth': depth, '--nested': depth > 0 ? 'true' : 'false' } as React.CSSProperties} className={cn('comment-item', className)}>
+      <div className="flex gap-3">
+        {/* Avatar */}
+        <Avatar
+          src={comment.user.avatar}
+          alt={`${comment.user.firstName} ${comment.user.lastName}`}
+          fallback={`${comment.user.firstName[0]}${comment.user.lastName[0]}`}
+          size="sm"
+        />
       
       {/* Comment Content */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 comment-content">
         <Card className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
@@ -200,7 +204,15 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             </div>
           ) : (
-            <p className="text-sm leading-relaxed mb-3">{comment.content}</p>
+            <p
+              dir="auto"
+              className={cn(
+                "text-sm leading-relaxed mb-3",
+                /^\p{Emoji}+$/u.test(comment.content.trim()) && styles.emojiOnly
+              )}
+            >
+              {comment.content}
+            </p>
           )}
           
           {/* Actions */}
@@ -262,21 +274,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         
         {/* Replies */}
         {comment.replies && comment.replies.length > 0 && (
-          <div className="mt-4 space-y-4">
+          <ul style={{ '--depth': depth + 1, '--nested': 'true' } as React.CSSProperties} className="mt-4 space-y-4">
             {comment.replies.map((reply) => (
-              <CommentItem
-                key={reply.id}
-                comment={reply}
-                marketId={marketId}
-                depth={depth + 1}
-                maxDepth={maxDepth}
-                onReply={onReply}
-              />
+              <li key={reply.id}>
+                <CommentItem
+                  comment={reply}
+                  marketId={marketId}
+                  depth={depth + 1}
+                  maxDepth={maxDepth}
+                  onReply={onReply}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
+        </div>
       </div>
-    </div>
+    </li>
   )
 }
 

@@ -1,0 +1,107 @@
+/* Comment List Styles with Reddit-style connecting lines */
+
+.comment-list {
+  --size: 2rem;
+}
+
+/* Depth-based avatar sizing */
+@container style(--depth: 1) or style(--depth: 2) {
+  .comment-item .avatar {
+    --size: 1.5rem;
+  }
+}
+
+/* Connecting lines for comments with replies */
+@container style(--lines: true) {
+  @container style(--depth: 0) or style(--depth: 1) {
+    li:has(ul) > li > .comment-item > div > .comment-content {
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--size) / 2);
+        top: 2rem;
+        bottom: 0;
+        width: 2px;
+        background: hsl(var(--border));
+      }
+    }
+  }
+
+  /* Curved lines for replies */
+  @container style(--depth: 1) {
+    li:not(:last-child) {
+      position: relative;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--size) / 2);
+        top: 2rem;
+        bottom: 0;
+        width: 2px;
+        background: hsl(var(--border));
+      }
+    }
+
+    li {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset-inline-start: calc(var(--size) / 2);
+        top: -2px;
+        height: 20px;
+        width: calc(var(--size) + 8px);
+        border-inline-start: 2px solid hsl(var(--border));
+        border-bottom: 2px solid hsl(var(--border));
+        border-end-start-radius: calc(var(--size) / 4);
+      }
+    }
+  }
+
+  /* Lines for depth 2 */
+  @container style(--depth: 2) {
+    li {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset-inline-start: calc(var(--size) / 2);
+        top: -2px;
+        height: 20px;
+        width: calc(var(--size) + 8px);
+        border-inline-start: 2px solid hsl(var(--border));
+        border-bottom: 2px solid hsl(var(--border));
+        border-end-start-radius: calc(var(--size) / 4);
+      }
+    }
+
+    li:not(:last-child) {
+      &::before {
+        content: "";
+        position: absolute;
+        left: calc(var(--size) / 2);
+        top: 2rem;
+        bottom: 0;
+        width: 2px;
+        background: hsl(var(--border));
+      }
+    }
+  }
+}
+
+/* Emoji-only comment styling */
+.comment-item:has(.emoji-only) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.emoji-only {
+  font-size: 1.5rem;
+  text-align: center;
+}

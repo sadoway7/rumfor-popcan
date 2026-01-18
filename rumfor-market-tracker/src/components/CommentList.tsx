@@ -6,6 +6,7 @@ import { CommentForm } from './CommentForm'
 import { CommentItem } from './CommentItem'
 import { useComments } from '@/features/community/hooks/useComments'
 import { cn } from '@/utils/cn'
+import styles from './CommentList.module.css'
 
 interface CommentListProps {
   marketId: string
@@ -26,16 +27,16 @@ export const CommentList: React.FC<CommentListProps> = ({
     refreshComments,
   } = useComments(marketId)
 
-  // Filter comments by depth level for initial display
+  // Get top-level comments for display control
   const topLevelComments = comments.filter(comment => !comment.parentId)
-  const displayComments = showAllComments ? comments : topLevelComments.slice(0, 3)
+
+  // Show all or limited top-level comments
+  const visibleTopLevelComments = showAllComments ? topLevelComments : topLevelComments.slice(0, 3)
   
-  // Separate top-level comments from replies
-  const visibleComments = displayComments.filter(comment => !comment.parentId)
-  
-  const handleReply = async () => {
-    // This will be handled by the CommentForm component
-    // We could implement a state to track which comment is being replied to
+  const handleReply = async (_commentId: string) => {
+    // This will trigger a refresh after reply is created
+    // The actual reply creation is handled by the CommentItem's reply form
+    await refreshComments()
   }
 
   const handleLoadMore = () => {
@@ -129,16 +130,18 @@ export const CommentList: React.FC<CommentListProps> = ({
           }
         />
       ) : (
-        <div className="space-y-4">
-          {visibleComments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              marketId={marketId}
-              onReply={handleReply}
-            />
-          ))}
-          
+        <div>
+          <ul style={{ '--depth': 0, '--lines': 'true', '--size': '2rem' } as React.CSSProperties} className={cn('space-y-4', styles.commentList)}>
+            {visibleTopLevelComments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                marketId={marketId}
+                onReply={handleReply}
+              />
+            ))}
+          </ul>
+
           {/* Show More/Less Button */}
           {topLevelComments.length > 3 && (
             <div className="text-center pt-4">
