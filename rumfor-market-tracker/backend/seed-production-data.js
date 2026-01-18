@@ -355,7 +355,12 @@ const seedProductionData = async () => {
         if (promoters.length > 0) {
           marketData.promoter = promoters[0]._id
         }
-        
+
+        // Set market to active and public so it appears in listings
+        marketData.status = 'active'
+        marketData.isPublic = true
+        marketData.createdByType = 'promoter' // Set as promoter-managed
+
         const market = new Market(marketData)
         await market.save()
         createdMarkets.push(market)

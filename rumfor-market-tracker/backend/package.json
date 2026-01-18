@@ -9,7 +9,8 @@
     "build": "echo 'No build step required for Node.js'",
     "test": "echo 'Tests not configured yet'",
     "seed": "node seed-test-users.js",
-    "seed:users": "node seed-test-users.js"
+    "seed:users": "node seed-test-users.js",
+    "seed:production": "node seed-production-data.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

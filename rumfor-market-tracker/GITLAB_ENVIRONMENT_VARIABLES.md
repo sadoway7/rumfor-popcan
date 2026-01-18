@@ -16,6 +16,12 @@ VITE_AUTH_AUDIENCE=your-auth-audience
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/rumfor-market-tracker
 DB_NAME=rumfor-market-tracker
 
+### Backend Security Configuration (Required for Production)
+JWT_SECRET=your-256-bit-jwt-secret-here
+JWT_REFRESH_SECRET=your-256-bit-refresh-secret-here
+SESSION_SECRET=your-256-bit-session-secret-here
+FRONTEND_URL=https://rumfor.sadoway.ca
+
 ### Third-party Services
 VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_public_key
 VITE_ANALYTICS_ID=your-analytics-id
@@ -47,6 +53,10 @@ VITE_INTERCOM_APP_ID=your-intercom-app-id
 3. Add the following variables:
 
 ### Masked Variables (sensitive data)
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `JWT_REFRESH_SECRET`
+- `SESSION_SECRET`
 - `DEPLOYMENT_TOKEN`
 - `DATABASE_URL`
 - `VITE_AUTH_SECRET_KEY`

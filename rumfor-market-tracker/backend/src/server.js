@@ -117,13 +117,24 @@ const corsOptions = {
       'http://127.0.0.1:5175',
       'http://127.0.0.1:5176',
       'http://127.0.0.1:3000',
-      'http://127.0.0.1:8080'
+      'http://127.0.0.1:8080',
+      'https://rumfor.sadoway.ca'  // Explicitly allow production domain
     ]
 
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
+    // In production, allow the configured frontend URL or any request
+    if (process.env.NODE_ENV === 'production') {
+      // Allow production domain explicitly or if FRONTEND_URL matches
+      if (origin === process.env.FRONTEND_URL || origin === 'https://rumfor.sadoway.ca') {
+        return callback(null, true)
+      }
+      // Allow all in production for now (can be restricted later)
+      return callback(null, true)
+    }
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS'))
+      callback(new Error(`Not allowed by CORS: ${origin}`))
     }
   },
   credentials: true,
