@@ -1,13 +1,11 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
-import { Card } from '@/components/ui/Card'
 import { Textarea } from '@/components/ui/Textarea'
 import { CommentReactions } from './CommentReactions'
 import { useComments } from '@/features/community/hooks/useComments'
 import { Comment } from '@/types'
 import { cn } from '@/utils/cn'
-import styles from './CommentList.module.css'
 
 interface CommentItemProps {
   comment: Comment
@@ -130,15 +128,12 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       
       {/* Comment Content */}
       <div className="flex-1 min-w-0 comment-content">
-        <Card className="p-4">
+        <div className="py-2">
           {/* Header */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">
+              <span className="font-medium text-sm text-foreground">
                 {comment.user.firstName} {comment.user.lastName}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {comment.user.role}
               </span>
               <span className="text-xs text-muted-foreground">
                 {formatDate(comment.createdAt)}
@@ -147,14 +142,15 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <span className="text-xs text-muted-foreground">(edited)</span>
               )}
             </div>
-            
+
             {/* Actions */}
             {(canEdit || canDelete) && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity">
                 {canEdit && !isEditing && (
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-6 px-2 text-xs"
                     onClick={() => setIsEditing(true)}
                   >
                     Edit
@@ -164,6 +160,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-6 px-2 text-xs text-destructive hover:text-destructive"
                     onClick={handleDelete}
                     disabled={isUpdating}
                   >
@@ -173,19 +170,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             )}
           </div>
-          
+
           {/* Content */}
           {isEditing ? (
-            <div className="space-y-3">
+            <div className="space-y-2 mt-2">
               <Textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 placeholder="Edit your comment..."
                 rows={3}
+                className="text-sm"
               />
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
+                  className="h-7 text-xs"
                   onClick={handleEdit}
                   disabled={isUpdating || !editContent.trim()}
                 >
@@ -194,6 +193,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="h-7 text-xs"
                   onClick={() => {
                     setIsEditing(false)
                     setEditContent(comment.content)
@@ -207,17 +207,17 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             <p
               dir="auto"
               className={cn(
-                "text-sm leading-relaxed mb-3",
-                /^\p{Emoji}+$/u.test(comment.content.trim()) && styles.emojiOnly
+                "text-sm leading-relaxed text-foreground",
+                /^\p{Emoji}+$/u.test(comment.content.trim()) && "text-lg"
               )}
             >
               {comment.content}
             </p>
           )}
-          
+
           {/* Actions */}
           {!isEditing && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-2">
               {/* Reactions */}
               <CommentReactions
                 commentId={comment.id}
@@ -226,12 +226,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 onRemoveReaction={handleRemoveReaction}
                 isLoading={isReacting}
               />
-              
+
               {/* Reply Button */}
               {canReply && (
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => setIsReplying(!isReplying)}
                 >
                   Reply
@@ -239,7 +240,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               )}
             </div>
           )}
-        </Card>
+        </div>
         
         {/* Reply Form */}
         {isReplying && (

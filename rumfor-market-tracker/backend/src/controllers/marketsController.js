@@ -133,7 +133,7 @@ const getMarket = catchAsync(async (req, res, next) => {
   sendSuccess(res, {
     market,
     trackingStatus,
-    recentPhotos: recentPhotos.images?.slice(0, 5) || []
+    recentPhotos
   }, 'Market retrieved successfully')
 })
 
@@ -589,7 +589,7 @@ const getVendorView = catchAsync(async (req, res, next) => {
         upcomingEvents: market.upcomingEvents
       }
     },
-    recentPhotos: recentPhotos.images?.slice(0, 5) || []
+    recentPhotos
   }, 'Vendor market view retrieved successfully')
 })
 

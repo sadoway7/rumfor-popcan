@@ -1,4 +1,5 @@
 import { ApiResponse, Comment, CommentReaction, Photo, Hashtag, HashtagVote, User } from '@/types'
+import { useAuthStore } from '@/features/auth/authStore'
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002/api/v1'
@@ -17,10 +18,8 @@ class HttpClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
-    // Add auth token if available
-    const token = localStorage.getItem('auth-storage')
-      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
-      : null
+    // Add auth token if available (using auth store for consistency)
+    const token = useAuthStore.getState().token
 
     const config: RequestInit = {
       headers: {
@@ -228,9 +227,7 @@ export const communityApi = {
     if (photo.caption) formData.append('caption', photo.caption)
     if (photo.tags?.length) formData.append('tags', JSON.stringify(photo.tags))
 
-    const token = localStorage.getItem('auth-storage')
-      ? JSON.parse(localStorage.getItem('auth-storage') || '{}').state?.token
-      : undefined
+    const token = useAuthStore.getState().token
 
     const headers: Record<string, string> = {}
     if (token) {
