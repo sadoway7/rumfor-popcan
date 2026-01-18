@@ -102,7 +102,19 @@ app.use('/api/', userRateLimiter('general'))
 
 // CORS configuration - manual headers for reliability
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
+  // Allow multiple development origins
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    'http://localhost:8080'
+  ]
+
+  const origin = req.headers.origin
+  if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
+    res.header('Access-Control-Allow-Origin', origin || allowedOrigins[0])
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
   res.header('Access-Control-Allow-Credentials', 'true')
@@ -117,10 +129,22 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   const originalSend = res.send
   res.send = function(data) {
-    res.header('Access-Control-Allow-Origin', '*')
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
-    res.header('Access-Control-Allow-Credentials', 'true')
+    // Allow multiple development origins
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:3000',
+      'http://localhost:8080'
+    ]
+
+    const origin = this.req.headers.origin
+    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
+      this.header('Access-Control-Allow-Origin', origin || allowedOrigins[0])
+    }
+
+    this.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+    this.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token')
+    this.header('Access-Control-Allow-Credentials', 'true')
     originalSend.call(this, data)
   }
   next()

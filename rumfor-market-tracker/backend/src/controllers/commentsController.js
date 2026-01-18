@@ -14,9 +14,9 @@ const getComments = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const comments = await Comment.find({ market: marketId })
-    .populate('author', 'username profile.firstName profile.lastName')
-    .populate('replies.author', 'username profile.firstName profile.lastName')
+  const comments = await Comment.find({ market: marketId, parentId: null })
+    .populate('author', 'username firstName lastName')
+    .populate('replies.author', 'username firstName lastName')
     .sort({ createdAt: -1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)

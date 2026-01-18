@@ -43,8 +43,14 @@ const marketSchema = new mongoose.Schema({
       country: { type: String, default: 'USA' }
     },
     coordinates: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true }
+      type: [Number], // [lng, lat]
+      required: true,
+      validate: {
+        validator: function(v) {
+          return v.length === 2 && v.every(n => typeof n === 'number')
+        },
+        message: 'Coordinates must be [longitude, latitude]'
+      }
     },
     googlePlaceId: String,
     formattedAddress: String
@@ -53,7 +59,7 @@ const marketSchema = new mongoose.Schema({
   // Market details
   category: {
     type: String,
-    enum: ['farmers-market', 'arts-crafts', 'flea-market', 'food-festival', 'craft-show', 'antique-market', 'specialty'],
+    enum: ['farmers-market', 'arts-crafts', 'flea-market', 'food-festival', 'holiday-market', 'craft-show', 'community-event', 'night-market', 'street-fair', 'vintage-antique'],
     required: true
   },
   subcategory: {

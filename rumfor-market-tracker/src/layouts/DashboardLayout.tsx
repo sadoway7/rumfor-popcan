@@ -1,7 +1,9 @@
 import React from 'react'
 import { Header } from '@/components/Header'
+import { SubHeader } from '@/components/SubHeader'
 import { Sidebar } from '@/components/Sidebar'
 import { BottomNav } from '@/components/BottomNav'
+import { DeferredComponent } from '@/components/DeferredComponent'
 import { UserRole } from '@/types'
 
 interface DashboardLayoutProps {
@@ -14,9 +16,12 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      <div className="flex h-[calc(100vh-4rem)]">
+      <DeferredComponent>
+        <Header />
+      </DeferredComponent>
+      <SubHeader />
+
+      <div className="flex h-[calc(100vh-4rem-3rem)]">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex lg:flex-shrink-0">
           <div className="flex flex-col min-w-0">

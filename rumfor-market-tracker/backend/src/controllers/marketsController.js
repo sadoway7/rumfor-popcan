@@ -22,7 +22,7 @@ const getMarkets = catchAsync(async (req, res, next) => {
   } = req.query
 
   // Build query
-  let query = { isActive: true }
+  let query = { status: 'active', isPublic: true }
 
   if (category) {
     query.category = category
@@ -64,7 +64,7 @@ const getMarkets = catchAsync(async (req, res, next) => {
 
   // Get popular categories for sidebar
   const popularCategories = await Market.aggregate([
-    { $match: { isActive: true } },
+    { $match: { status: 'active', isPublic: true } },
     { $group: { _id: '$category', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 10 }
@@ -72,7 +72,7 @@ const getMarkets = catchAsync(async (req, res, next) => {
 
   // Get popular marketTypes for sidebar
   const popularMarketTypes = await Market.aggregate([
-    { $match: { isActive: true } },
+    { $match: { status: 'active', isPublic: true } },
     {
       $group: {
         _id: {
@@ -294,7 +294,7 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   const tracking = await UserMarketTracking.find(query)
     .populate({
       path: 'market',
-      match: { isActive: true },
+      match: { status: 'active', isPublic: true },
       populate: {
         path: 'promoter',
         select: 'username profile.firstName profile.lastName'
@@ -340,7 +340,7 @@ const searchMarkets = catchAsync(async (req, res, next) => {
   } = req.query
 
   // Build search query
-  let query = { isActive: true }
+  let query = { status: 'active', isPublic: true }
 
   const searchConditions = []
 
@@ -434,7 +434,8 @@ const getPopularMarkets = catchAsync(async (req, res, next) => {
   }
 
   const popularMarkets = await Market.find({
-    isActive: true,
+    status: 'active',
+    isPublic: true,
     ...dateFilter
   })
   .populate('promoter', 'username profile.firstName profile.lastName')
@@ -463,14 +464,15 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
 
   const markets = await Market.find({
     category,
-    isActive: true
+    status: 'active',
+    isPublic: true
   })
   .populate('promoter', 'username profile.firstName profile.lastName')
   .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
   .limit(limit * 1)
   .skip((page - 1) * limit)
 
-  const total = await Market.countDocuments({ category, isActive: true })
+  const total = await Market.countDocuments({ category, status: 'active', isPublic: true })
 
   sendSuccess(res, {
     markets,
@@ -502,7 +504,8 @@ const getMarketsByType = catchAsync(async (req, res, next) => {
 
   const query = {
     createdByType: createdByTypeMap[marketType],
-    isActive: true
+    status: 'active',
+    isPublic: true
   };
 
   const markets = await Market.find(query)

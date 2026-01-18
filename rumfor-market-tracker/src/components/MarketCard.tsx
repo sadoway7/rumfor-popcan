@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { Calendar, MapPin, Clock, Accessibility, Car, Heart } from 'lucide-react'
+import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 
 interface MarketCardProps {
   market: Market
@@ -19,38 +20,7 @@ interface MarketCardProps {
   detailPath?: string // Custom path for market detail page
 }
 
-const categoryLabels = {
-  'farmers-market': 'Farmers Market',
-  'arts-crafts': 'Arts & Crafts',
-  'flea-market': 'Flea Market',
-  'food-festival': 'Food Festival',
-  'holiday-market': 'Holiday Market',
-  'craft-show': 'Craft Show',
-  'community-event': 'Community Event',
-  'night-market': 'Night Market',
-  'street-fair': 'Street Fair',
-  'vintage-antique': 'Vintage & Antique'
-}
 
-const categoryColors = {
-  'farmers-market': 'bg-green-100 text-green-800 border-green-200',
-  'arts-crafts': 'bg-purple-100 text-purple-800 border-purple-200',
-  'flea-market': 'bg-blue-100 text-blue-800 border-blue-200',
-  'food-festival': 'bg-orange-100 text-orange-800 border-orange-200',
-  'holiday-market': 'bg-red-100 text-red-800 border-red-200',
-  'craft-show': 'bg-pink-100 text-pink-800 border-pink-200',
-  'community-event': 'bg-gray-100 text-gray-800 border-gray-200',
-  'night-market': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  'street-fair': 'bg-amber-100 text-amber-800 border-amber-200',
-  'vintage-antique': 'bg-slate-100 text-slate-800 border-slate-200'
-}
-
-const statusColors = {
-  'active': 'bg-success/10 text-success border-success/20',
-  'draft': 'bg-warning/10 text-warning border-warning/20',
-  'cancelled': 'bg-destructive/10 text-destructive border-destructive/20',
-  'completed': 'bg-muted text-muted-foreground border-muted'
-}
 
 const marketTypeColors = {
   'vendor-created': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -130,10 +100,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <h3 className="font-semibold text-sm truncate">{market.name}</h3>
               <p className="text-xs text-muted-foreground mt-1">{formatLocation(market.location)}</p>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline" className={cn('text-xs px-2 py-1', categoryColors[market.category])}>
-                  {categoryLabels[market.category]}
+                <Badge variant="outline" className={cn('text-xs px-2 py-1', MARKET_CATEGORY_COLORS[market.category])}>
+                  {MARKET_CATEGORY_LABELS[market.category]}
                 </Badge>
-                <Badge variant="outline" className={cn('text-xs px-2 py-1', statusColors[market.status])}>
+                <Badge variant="outline" className={cn('text-xs px-2 py-1', MARKET_STATUS_COLORS[market.status])}>
                   {market.status}
                 </Badge>
               </div>
@@ -166,7 +136,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-4 left-4">
-                <Badge className={cn(categoryColors[market.category])}>
+                <Badge className={cn(MARKET_CATEGORY_COLORS[market.category])}>
                   Featured
                 </Badge>
               </div>
@@ -183,7 +153,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           <div className="p-6">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xl font-bold line-clamp-2">{market.name}</h3>
-              <Badge variant="outline" className={cn('ml-2 flex-shrink-0', statusColors[market.status])}>
+              <Badge variant="outline" className={cn('ml-2 flex-shrink-0', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
             </div>
@@ -209,8 +179,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             
             <div className="flex items-center justify-between mt-6">
               <div className="flex flex-wrap gap-1">
-                <Badge variant="outline" className={cn(categoryColors[market.category])}>
-                  {categoryLabels[market.category]}
+                <Badge variant="outline" className={cn(MARKET_CATEGORY_COLORS[market.category])}>
+                  {MARKET_CATEGORY_LABELS[market.category]}
                 </Badge>
                 {market.accessibility.wheelchairAccessible && (
                   <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
@@ -275,8 +245,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               
               {/* Category badge */}
               <div className="absolute top-3 left-3">
-                <Badge className={cn('text-xs font-medium backdrop-blur-sm', categoryColors[market.category])}>
-                  {categoryLabels[market.category]}
+                <Badge className={cn('text-xs font-medium backdrop-blur-sm', MARKET_CATEGORY_COLORS[market.category])}>
+                  {MARKET_CATEGORY_LABELS[market.category]}
                 </Badge>
               </div>
               
@@ -363,8 +333,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               className="w-full h-full object-cover"
             />
             <div className="absolute top-3 left-3">
-              <Badge variant="outline" className={cn(categoryColors[market.category])}>
-                {categoryLabels[market.category]}
+              <Badge variant="outline" className={cn(MARKET_CATEGORY_COLORS[market.category])}>
+                {MARKET_CATEGORY_LABELS[market.category]}
               </Badge>
             </div>
             {market.images.length > 1 && (
@@ -384,7 +354,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <Badge variant="outline" className={cn('text-xs', marketTypeColors[market.marketType])}>
                 {marketTypeLabels[market.marketType]}
               </Badge>
-              <Badge variant="outline" className={cn('text-xs', statusColors[market.status])}>
+              <Badge variant="outline" className={cn('text-xs', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
             </div>

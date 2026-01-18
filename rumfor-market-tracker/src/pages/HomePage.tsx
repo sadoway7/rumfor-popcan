@@ -4,6 +4,7 @@ import { Button } from '@/components/ui'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
 import { MarketGrid } from '@/components/MarketGrid'
+import { SubHeader } from '@/components/SubHeader'
 import { marketsApi } from '@/features/markets/marketsApi'
 import { Users, Leaf, Palette, ShoppingBag, UtensilsCrossed, Gift, Hammer, X, Moon, MapPin, Archive } from 'lucide-react'
 
@@ -35,18 +36,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-background md:flex">
-        {/* Sub-header - Only for authenticated users */}
-        {isAuthenticated && (
-          <div className="bg-surface/30 px-4 py-2 flex items-center gap-6 text-sm text-foreground">
-            <div>Saved Markets: <strong>12</strong></div>
-            <div>Following: <strong>8</strong></div>
-            <div>Notifications: <strong>3 new</strong></div>
-            <div className="ml-auto flex gap-2">
-              <button className="px-3 py-1 rounded hover:bg-surface transition-colors">Quick Add</button>
-              <button className="px-3 py-1 rounded hover:bg-surface transition-colors">My Calendar</button>
-            </div>
-          </div>
-        )}
+
 
         {/* Mobile Fullscreen Sidebar Overlay */}
         {isSidebarOpen && (
@@ -140,6 +130,8 @@ export function HomePage() {
 
         {/* Main Content */}
         <div className="flex-1 p-6 space-y-12">
+            {/* Sub-header - Only for authenticated users */}
+            {isAuthenticated && <SubHeader />}
 
             {/* Hero Section */}
             <div className="px-4">

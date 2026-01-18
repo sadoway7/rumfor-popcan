@@ -363,77 +363,104 @@ export const adminApi = {
 
   // User Management
   async getUsers(filters?: AdminFilters['userFilters']): Promise<PaginatedResponse<UserWithStats>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let filteredUsers = [...mockUsers]
-        
-        if (filters?.role && filters.role.length > 0) {
-          filteredUsers = filteredUsers.filter(user => filters.role!.includes(user.role))
-        }
-        
-        if (filters?.isActive !== undefined) {
-          filteredUsers = filteredUsers.filter(user => user.isActive === filters.isActive)
-        }
-        
-        if (filters?.search) {
-          const search = filters.search.toLowerCase()
-          filteredUsers = filteredUsers.filter(user => 
-            user.firstName.toLowerCase().includes(search) ||
-            user.lastName.toLowerCase().includes(search) ||
-            user.email.toLowerCase().includes(search)
-          )
-        }
-        
-        resolve({
-          data: filteredUsers,
-          pagination: {
-            page: 1,
-            limit: 20,
-            total: filteredUsers.length,
-            totalPages: Math.ceil(filteredUsers.length / 20)
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          let filteredUsers = [...mockUsers]
+
+          if (filters?.role && filters.role.length > 0) {
+            filteredUsers = filteredUsers.filter(user => filters.role!.includes(user.role))
           }
-        })
-      }, 400)
-    })
+
+          if (filters?.isActive !== undefined) {
+            filteredUsers = filteredUsers.filter(user => user.isActive === filters.isActive)
+          }
+
+          if (filters?.search) {
+            const search = filters.search.toLowerCase()
+            filteredUsers = filteredUsers.filter(user =>
+              user.firstName.toLowerCase().includes(search) ||
+              user.lastName.toLowerCase().includes(search) ||
+              user.email.toLowerCase().includes(search)
+            )
+          }
+
+          resolve({
+            data: filteredUsers,
+            pagination: {
+              page: 1,
+              limit: 20,
+              total: filteredUsers.length,
+              totalPages: Math.ceil(filteredUsers.length / 20)
+            }
+          })
+        }, 400)
+      })
+    } else {
+      const queryParams = new URLSearchParams()
+      if (filters?.role && filters.role.length > 0) queryParams.append('role', filters.role[0])
+      if (filters?.isActive !== undefined) queryParams.append('status', filters.isActive ? 'active' : 'inactive')
+      if (filters?.search) queryParams.append('search', filters.search)
+      if (filters?.sortBy) queryParams.append('sortBy', filters.sortBy)
+      if (filters?.sortDirection) queryParams.append('sortOrder', filters.sortDirection)
+
+      const response = await httpClient.get<PaginatedResponse<UserWithStats>>(`/admin/users?${queryParams}`)
+      return response
+    }
   },
 
   async updateUserRole(userId: string, role: UserRole): Promise<ApiResponse<User>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const user = mockUsers.find(u => u.id === userId)
-        if (user) {
-          user.role = role
-          user.updatedAt = new Date().toISOString()
-        }
-        resolve({ success: true, data: user! })
-      }, 300)
-    })
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const user = mockUsers.find(u => u.id === userId)
+          if (user) {
+            user.role = role
+            user.updatedAt = new Date().toISOString()
+          }
+          resolve({ success: true, data: user! })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { role })
+      return response
+    }
   },
 
   async suspendUser(userId: string, suspended: boolean): Promise<ApiResponse<User>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const user = mockUsers.find(u => u.id === userId)
-        if (user) {
-          user.isActive = !suspended
-          user.updatedAt = new Date().toISOString()
-        }
-        resolve({ success: true, data: user! })
-      }, 300)
-    })
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const user = mockUsers.find(u => u.id === userId)
+          if (user) {
+            user.isActive = !suspended
+            user.updatedAt = new Date().toISOString()
+          }
+          resolve({ success: true, data: user! })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { isActive: !suspended })
+      return response
+    }
   },
 
   async verifyUser(userId: string, verified: boolean): Promise<ApiResponse<User>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const user = mockUsers.find(u => u.id === userId)
-        if (user) {
-          user.isEmailVerified = verified
-          user.updatedAt = new Date().toISOString()
-        }
-        resolve({ success: true, data: user! })
-      }, 300)
-    })
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const user = mockUsers.find(u => u.id === userId)
+          if (user) {
+            user.isEmailVerified = verified
+            user.updatedAt = new Date().toISOString()
+          }
+          resolve({ success: true, data: user! })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { verifiedPromoter: verified })
+      return response
+    }
   },
 
   async bulkUpdateUsers(

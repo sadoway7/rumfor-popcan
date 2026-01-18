@@ -142,8 +142,8 @@ const getUsers = catchAsync(async (req, res, next) => {
     query.$or = [
       { username: { $regex: search, $options: 'i' } },
       { email: { $regex: search, $options: 'i' } },
-      { 'profile.firstName': { $regex: search, $options: 'i' } },
-      { 'profile.lastName': { $regex: search, $options: 'i' } }
+      { firstName: { $regex: search, $options: 'i' } },
+      { lastName: { $regex: search, $options: 'i' } }
     ]
   }
 
@@ -155,8 +155,60 @@ const getUsers = catchAsync(async (req, res, next) => {
 
   const total = await User.countDocuments(query)
 
+  // Get user stats by aggregating from UserMarketTracking
+  const userIds = users.map(user => user._id)
+  const userStats = await UserMarketTracking.aggregate([
+    { $match: { userId: { $in: userIds } } },
+    {
+      $group: {
+        _id: '$userId',
+        totalApplications: { $sum: 1 },
+        approvedApplications: {
+          $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] }
+        },
+        rejectedApplications: {
+          $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] }
+        }
+      }
+    }
+  ])
+
+  // Create a map for quick lookup
+  const statsMap = new Map()
+  userStats.forEach(stat => {
+    statsMap.set(stat._id.toString(), stat)
+  })
+
+  // Enhance users with stats and transform field names
+  const enhancedUsers = users.map(user => {
+    const stats = statsMap.get(user._id.toString()) || {
+      totalApplications: 0,
+      approvedApplications: 0,
+      rejectedApplications: 0
+    }
+
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      avatar: user.profileImage, // Map profileImage to avatar
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      isEmailVerified: user.isEmailVerified,
+      isActive: user.isActive,
+      totalApplications: stats.totalApplications,
+      approvedApplications: stats.approvedApplications,
+      rejectedApplications: stats.rejectedApplications,
+      lastActiveAt: user.lastLogin || user.updatedAt, // Use lastLogin or fallback to updatedAt
+      isVerified: user.isEmailVerified, // Map isEmailVerified to isVerified
+      reportedContent: 0 // TODO: Implement reported content count
+    }
+  })
+
   sendSuccess(res, {
-    users,
+    users: enhancedUsers,
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),
@@ -173,7 +225,7 @@ const updateUser = catchAsync(async (req, res, next) => {
   const updateData = { updatedAt: new Date() }
   if (role !== undefined) updateData.role = role
   if (isActive !== undefined) updateData.isActive = isActive
-  if (verifiedPromoter !== undefined) updateData.verifiedPromoter = verifiedPromoter
+  if (verifiedPromoter !== undefined) updateData.isEmailVerified = verifiedPromoter
 
   const user = await User.findByIdAndUpdate(id, updateData, {
     new: true,
@@ -194,7 +246,21 @@ const updateUser = catchAsync(async (req, res, next) => {
     priority: 'medium'
   })
 
-  sendSuccess(res, { user }, 'User updated successfully')
+  // Transform the response to match frontend expectations
+  const transformedUser = {
+    id: user._id.toString(),
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: user.role,
+    avatar: user.profileImage,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    isEmailVerified: user.isEmailVerified,
+    isActive: user.isActive
+  }
+
+  sendSuccess(res, { user: transformedUser }, 'User updated successfully')
 })
 
 // Market management

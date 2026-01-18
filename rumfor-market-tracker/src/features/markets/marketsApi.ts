@@ -1,11 +1,11 @@
 import { Market, MarketFilters, PaginatedResponse, ApiResponse } from '@/types'
 
 // Environment configuration
-const isDevelopment = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : true
-const isMockMode = typeof process !== 'undefined' ? process.env.VITE_USE_MOCK_API === 'true' : true
+const isDevelopment = import.meta.env.DEV
+const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
 
 // API Configuration - Versioned API
-const API_BASE_URL = 'http://localhost:3001/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
 // Mock data for development
 const mockMarkets: Market[] = [
@@ -278,6 +278,51 @@ class HttpClient {
 
 const httpClient = new HttpClient(API_BASE_URL)
 
+// Map backend market format to frontend format
+function mapBackendMarketToFrontend(backendMarket: any): Market {
+  return {
+    id: backendMarket._id || backendMarket.id,
+    name: backendMarket.name,
+    description: backendMarket.description,
+    category: backendMarket.category,
+    promoterId: backendMarket.promoter?._id || backendMarket.promoter,
+    promoter: backendMarket.promoter,
+    location: {
+      address: backendMarket.location?.address?.street || backendMarket.location?.address || '',
+      city: backendMarket.location?.address?.city || '',
+      state: backendMarket.location?.address?.state || '',
+      zipCode: backendMarket.location?.address?.zipCode || '',
+      country: backendMarket.location?.address?.country || '',
+      latitude: backendMarket.location?.coordinates?.[1] || backendMarket.location?.coordinates?.lat,
+      longitude: backendMarket.location?.coordinates?.[0] || backendMarket.location?.coordinates?.lng
+    },
+    schedule: backendMarket.schedule ? [{
+      id: '1',
+      dayOfWeek: backendMarket.schedule.daysOfWeek?.[0] ? (backendMarket.schedule.daysOfWeek[0] === 'monday' ? 1 : 6) : 6, // Simple mapping
+      startTime: backendMarket.schedule.startTime,
+      endTime: backendMarket.schedule.endTime,
+      startDate: backendMarket.schedule.seasonStart || '2024-01-01',
+      endDate: backendMarket.schedule.seasonEnd || '2024-12-31',
+      isRecurring: backendMarket.schedule.recurring
+    }] : [],
+    status: backendMarket.status === 'active' ? 'active' : 'draft',
+    marketType: backendMarket.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
+    images: backendMarket.images?.map((img: any) => img.url) || [],
+    tags: backendMarket.tags || [],
+    accessibility: {
+      wheelchairAccessible: backendMarket.amenities?.includes('accessible') || false,
+      parkingAvailable: backendMarket.amenities?.includes('parking') || false,
+      restroomsAvailable: backendMarket.amenities?.includes('restrooms') || false,
+      familyFriendly: true,
+      petFriendly: backendMarket.amenities?.includes('pet_friendly') || false
+    },
+    contact: backendMarket.contact || {},
+    applicationFields: [],
+    createdAt: backendMarket.createdAt,
+    updatedAt: backendMarket.updatedAt
+  }
+}
+
 export const marketsApi = {
   // Get all markets with optional filtering
   async getMarkets(filters?: MarketFilters, page = 1, limit = 20): Promise<PaginatedResponse<Market>> {
@@ -348,7 +393,7 @@ export const marketsApi = {
         }
       }
     } else {
-      // Real API
+      // Real API with mapping from backend to frontend format
       const queryParams = new URLSearchParams()
       if (filters) {
         if (filters.search) queryParams.append('search', filters.search)
@@ -360,9 +405,15 @@ export const marketsApi = {
       queryParams.append('page', page.toString())
       queryParams.append('limit', limit.toString())
 
-      const response = await httpClient.get<ApiResponse<PaginatedResponse<Market>>>(`/markets?${queryParams}`)
+      const response = await httpClient.get<ApiResponse<PaginatedResponse<any>>>(`/markets?${queryParams}`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch markets')
-      return response.data!
+
+      // Map backend format to frontend format
+      const mappedData = response.data!.data.map(mapBackendMarketToFrontend)
+      return {
+        data: mappedData as Market[],
+        pagination: response.data!.pagination
+      }
     }
   },
 

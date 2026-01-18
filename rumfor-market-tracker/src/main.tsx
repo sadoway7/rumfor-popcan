@@ -1,20 +1,14 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { ToastProvider } from './components/ui/Toast'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import './styles/globals.css'
 import 'uno.css'
 
 // Enable React Router v7 future flags to suppress warnings
-if (typeof window !== 'undefined') {
-  (window as any).ReactRouterV6_future = {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  }
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,14 +27,14 @@ const queryClient = new QueryClient({
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
+  <ErrorBoundary>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
           <App />
           <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  </React.StrictMode>,
+        </ToastProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </ErrorBoundary>,
 )

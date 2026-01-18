@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { startTransition } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users,
@@ -21,9 +21,7 @@ export function AdminDashboardPage() {
     fetchAdminStats
   } = useAdmin()
 
-  useEffect(() => {
-    fetchAdminStats()
-  }, [])
+
 
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat('en-US').format(value)
@@ -120,19 +118,19 @@ export function AdminDashboardPage() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Admin Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Button className="justify-start" variant="outline" onClick={() => navigate('/admin/users')}>
+          <Button className="justify-start" variant="outline" onClick={() => startTransition(() => navigate('/admin/users'))}>
             <Users className="h-4 w-4 mr-2" />
             Manage Users
           </Button>
-          <Button className="justify-start" variant="outline" onClick={() => navigate('/admin/markets')}>
+          <Button className="justify-start" variant="outline" onClick={() => startTransition(() => navigate('/admin/markets'))}>
             <Store className="h-4 w-4 mr-2" />
             Review Markets
           </Button>
-          <Button className="justify-start" variant="outline" onClick={() => navigate('/admin/moderation')}>
+          <Button className="justify-start" variant="outline" onClick={() => startTransition(() => navigate('/admin/moderation'))}>
             <Shield className="h-4 w-4 mr-2" />
             Moderate Content
           </Button>
-          <Button className="justify-start" variant="outline" onClick={() => navigate('/admin/applications')}>
+          <Button className="justify-start" variant="outline" onClick={() => startTransition(() => navigate('/admin/applications'))}>
             <FileText className="h-4 w-4 mr-2" />
             Process Apps
           </Button>

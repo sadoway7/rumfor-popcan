@@ -6,6 +6,7 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 // Lazy-loaded page imports for better performance
 const LoginPage = React.lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.default })))
@@ -92,13 +93,13 @@ export function AppRoutes() {
       {/* Protected Routes */}
       <Route path="/profile" element={
         <ProtectedRoute>
-          <MainLayout><ProfilePage /></MainLayout>
+          <MainLayout><Suspense fallback={<PageLoader />}><ProfilePage /></Suspense></MainLayout>
         </ProtectedRoute>
       } />
 
       <Route path="/settings" element={
         <ProtectedRoute>
-          <MainLayout><SettingsPage /></MainLayout>
+          <MainLayout><Suspense fallback={<PageLoader />}><SettingsPage /></Suspense></MainLayout>
         </ProtectedRoute>
       } />
 
@@ -106,7 +107,7 @@ export function AppRoutes() {
       <Route path="/applications/:id" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <MainLayout><ApplicationDetailPage /></MainLayout>
+            <MainLayout><Suspense fallback={<PageLoader />}><ApplicationDetailPage /></Suspense></MainLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -114,7 +115,7 @@ export function AppRoutes() {
       <Route path="/markets/:id/apply" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <MainLayout><ApplicationFormPage /></MainLayout>
+            <MainLayout><Suspense fallback={<PageLoader />}><ApplicationFormPage /></Suspense></MainLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -123,7 +124,7 @@ export function AppRoutes() {
       <Route path="/vendor/dashboard" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><VendorDashboardPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorDashboardPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -131,7 +132,7 @@ export function AppRoutes() {
       <Route path="/vendor/applications" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><MyApplicationsPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><MyApplicationsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -139,7 +140,7 @@ export function AppRoutes() {
       <Route path="/vendor/planning" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><BusinessPlanningPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><BusinessPlanningPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -147,7 +148,7 @@ export function AppRoutes() {
       <Route path="/vendor/todos" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><VendorTodosPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorTodosPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -155,7 +156,7 @@ export function AppRoutes() {
       <Route path="/vendor/expenses" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><FinancialReportsPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><FinancialReportsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -163,7 +164,7 @@ export function AppRoutes() {
       <Route path="/vendor/calendar" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><MarketCalendarPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><MarketCalendarPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -171,7 +172,7 @@ export function AppRoutes() {
       <Route path="/vendor/add-market" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><AddMarketPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><AddMarketPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -179,7 +180,7 @@ export function AppRoutes() {
       <Route path="/vendor/add-market/vendor" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><VendorAddMarketForm /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorAddMarketForm /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -187,7 +188,7 @@ export function AppRoutes() {
       <Route path="/vendor/tracked-markets" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><VendorTrackedMarketsPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorTrackedMarketsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -195,7 +196,7 @@ export function AppRoutes() {
       <Route path="/vendor/markets/:id" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><VendorMarketDetailPage /></DashboardLayout>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorMarketDetailPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -204,7 +205,7 @@ export function AppRoutes() {
       <Route path="/promoter/dashboard" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterDashboardPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterDashboardPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -212,7 +213,7 @@ export function AppRoutes() {
       <Route path="/promoter/markets" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterMarketsPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterMarketsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -220,7 +221,7 @@ export function AppRoutes() {
       <Route path="/promoter/markets/create" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterCreateMarketPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterCreateMarketPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -228,7 +229,7 @@ export function AppRoutes() {
       <Route path="/promoter/applications" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterApplicationsPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterApplicationsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -236,7 +237,7 @@ export function AppRoutes() {
       <Route path="/promoter/vendors" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterVendorsPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterVendorsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -244,7 +245,7 @@ export function AppRoutes() {
       <Route path="/promoter/analytics" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterAnalyticsPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterAnalyticsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -252,7 +253,7 @@ export function AppRoutes() {
       <Route path="/promoter/calendar" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['promoter', 'admin']}>
-            <DashboardLayout role="promoter"><PromoterCalendarPage /></DashboardLayout>
+            <DashboardLayout role="promoter"><Suspense fallback={<PageLoader />}><PromoterCalendarPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -261,7 +262,7 @@ export function AppRoutes() {
       <Route path="/admin/dashboard" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminDashboardPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -269,7 +270,9 @@ export function AppRoutes() {
       <Route path="/admin/users" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminUsersPage /></DashboardLayout>
+            <ErrorBoundary>
+              <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminUsersPage /></Suspense></DashboardLayout>
+            </ErrorBoundary>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -277,7 +280,7 @@ export function AppRoutes() {
       <Route path="/admin/markets" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminMarketsPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminMarketsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -285,7 +288,7 @@ export function AppRoutes() {
       <Route path="/admin/applications" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminApplicationsPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminApplicationsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -293,7 +296,7 @@ export function AppRoutes() {
       <Route path="/admin/moderation" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminModerationPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminModerationPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -301,7 +304,7 @@ export function AppRoutes() {
       <Route path="/admin/analytics" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminAnalyticsPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminAnalyticsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -309,7 +312,7 @@ export function AppRoutes() {
       <Route path="/admin/settings" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminSettingsPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminSettingsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -317,7 +320,7 @@ export function AppRoutes() {
       <Route path="/admin/support" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
-            <DashboardLayout role="admin"><AdminSupportPage /></DashboardLayout>
+            <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminSupportPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -326,7 +329,7 @@ export function AppRoutes() {
       <Route path="/notifications" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['visitor', 'vendor', 'promoter', 'admin']}>
-            <MainLayout><NotificationsPage /></MainLayout>
+            <MainLayout><Suspense fallback={<PageLoader />}><NotificationsPage /></Suspense></MainLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />
@@ -335,7 +338,7 @@ export function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute requireEmailVerification={false}>
           <RoleRoute allowedRoles={['visitor', 'vendor', 'promoter', 'admin']} requireEmailVerification={false}>
-            <DashboardRedirectPage />
+            <Suspense fallback={<PageLoader />}><DashboardRedirectPage /></Suspense>
           </RoleRoute>
         </ProtectedRoute>
       } />

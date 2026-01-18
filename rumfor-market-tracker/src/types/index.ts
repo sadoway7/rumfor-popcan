@@ -99,7 +99,7 @@ export interface Market {
   updatedAt: string
 }
 
-export type MarketCategory = 
+export type MarketCategory =
   | 'farmers-market'
   | 'arts-crafts'
   | 'flea-market'
@@ -111,6 +111,22 @@ export type MarketCategory =
   | 'street-fair'
   | 'vintage-antique'
 
+export type MarketSubcategory =
+  | 'produce'
+  | 'baked_goods'
+  | 'meat'
+  | 'dairy'
+  | 'crafts'
+  | 'art'
+  | 'jewelry'
+  | 'clothing'
+  | 'books'
+  | 'antiques'
+  | 'food_trucks'
+  | 'plants'
+  | 'mixed'
+
+// Market status from backend
 export type MarketStatus = 'draft' | 'active' | 'cancelled' | 'completed'
 
 export type MarketType = 'vendor-created' | 'promoter-managed'
@@ -148,6 +164,8 @@ export interface MarketSchedule {
   endDate: string
   isRecurring: boolean
 }
+
+
 
 export interface AccessibilityFeatures {
   wheelchairAccessible: boolean

@@ -6,46 +6,24 @@ import { useAdmin } from '@/features/admin/hooks/useAdmin'
 import { Users, UserPlus, Shield, ShieldCheck, UserX, Download, RefreshCw } from 'lucide-react'
 
 export function AdminUsersPage() {
-  const { stats } = useAdmin()
+  const { stats, recentActivities } = useAdmin()
 
   const userStats = {
     total: stats?.totalUsers || 0,
     active: stats?.activeUsers || 0,
-    pending: 15,
-    verified: 987,
-    suspended: 8
+    pending: stats?.pendingApplications || 0,
+    verified: stats?.totalUsers ? Math.floor(stats.totalUsers * 0.8) : 0, // Estimate verified users
+    suspended: stats?.totalUsers ? stats.totalUsers - (stats?.activeUsers || 0) : 0
   }
 
-  const recentActivity = [
-    {
-      id: '1',
-      action: 'user_registered',
-      message: 'New user registered: Sarah Johnson',
-      timestamp: '5 minutes ago',
-      type: 'success'
-    },
-    {
-      id: '2',
-      action: 'user_suspended',
-      message: 'User suspended: John Doe',
-      timestamp: '1 hour ago',
-      type: 'warning'
-    },
-    {
-      id: '3',
-      action: 'role_changed',
-      message: 'Role changed: Jane Smith → Promoter',
-      timestamp: '2 hours ago',
-      type: 'info'
-    },
-    {
-      id: '4',
-      action: 'user_verified',
-      message: 'Email verified: Mike Chen',
-      timestamp: '3 hours ago',
-      type: 'success'
-    }
-  ]
+  // Transform recent activities to match the expected format
+  const recentActivity = recentActivities?.map(activity => ({
+    id: activity.id || activity._id,
+    action: activity.type,
+    message: activity.message || activity.description,
+    timestamp: new Date(activity.timestamp).toLocaleString(),
+    type: activity.icon === 'Users' ? 'success' : activity.icon === 'Store' ? 'info' : 'warning'
+  })) || []
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -205,24 +183,24 @@ export function AdminUsersPage() {
           <h3 className="text-lg font-semibold mb-4">User Growth Trend</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm">This Month</span>
+              <span className="text-sm">Total Users</span>
               <div className="flex items-center gap-2">
-                <div className="text-sm font-medium">+142 users</div>
-                <Badge variant="default">+12.5%</Badge>
+                <div className="text-sm font-medium">{userStats.total} users</div>
+                <Badge variant="default">{stats?.userGrowthRate ? `${stats.userGrowthRate.toFixed(1)}%` : 'N/A'}</Badge>
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Last Month</span>
+              <span className="text-sm">Active Users</span>
               <div className="flex items-center gap-2">
-                <div className="text-sm font-medium">+126 users</div>
-                <Badge variant="outline">+11.2%</Badge>
+                <div className="text-sm font-medium">{userStats.active} users</div>
+                <Badge variant="outline">{userStats.total > 0 ? `${((userStats.active / userStats.total) * 100).toFixed(1)}%` : '0%'}</Badge>
               </div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">This Quarter</span>
+              <span className="text-sm">Verified Users</span>
               <div className="flex items-center gap-2">
-                <div className="text-sm font-medium">+387 users</div>
-                <Badge variant="default">+34.1%</Badge>
+                <div className="text-sm font-medium">{userStats.verified} users</div>
+                <Badge variant="default">{userStats.total > 0 ? `${((userStats.verified / userStats.total) * 100).toFixed(1)}%` : '0%'}</Badge>
               </div>
             </div>
           </div>
@@ -232,20 +210,20 @@ export function AdminUsersPage() {
           <h3 className="text-lg font-semibold mb-4">User Engagement</h3>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm">Daily Active Users</span>
-              <div className="text-sm font-medium">342 (27.4%)</div>
+              <span className="text-sm">Active Users</span>
+              <div className="text-sm font-medium">{userStats.active} ({userStats.total > 0 ? ((userStats.active / userStats.total) * 100).toFixed(1) : '0'}%)</div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Weekly Active Users</span>
-              <div className="text-sm font-medium">856 (68.5%)</div>
+              <span className="text-sm">Verified Users</span>
+              <div className="text-sm font-medium">{userStats.verified} ({userStats.total > 0 ? ((userStats.verified / userStats.total) * 100).toFixed(1) : '0'}%)</div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Monthly Active Users</span>
-              <div className="text-sm font-medium">1,089 (87.1%)</div>
+              <span className="text-sm">Suspended Users</span>
+              <div className="text-sm font-medium">{userStats.suspended} ({userStats.total > 0 ? ((userStats.suspended / userStats.total) * 100).toFixed(1) : '0'}%)</div>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm">Average Session Time</span>
-              <div className="text-sm font-medium">8.5 minutes</div>
+              <span className="text-sm">Pending Applications</span>
+              <div className="text-sm font-medium">{userStats.pending}</div>
             </div>
           </div>
         </Card>

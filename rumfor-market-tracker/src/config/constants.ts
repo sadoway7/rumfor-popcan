@@ -28,6 +28,42 @@ export const MARKET_CATEGORIES = {
   VINTAGE_ANTIQUE: 'vintage-antique',
 } as const
 
+// Market category labels for display
+export const MARKET_CATEGORY_LABELS = {
+  'farmers-market': 'Farmers Market',
+  'arts-crafts': 'Arts & Crafts',
+  'flea-market': 'Flea Market',
+  'food-festival': 'Food Festival',
+  'holiday-market': 'Holiday Market',
+  'craft-show': 'Craft Show',
+  'community-event': 'Community Event',
+  'night-market': 'Night Market',
+  'street-fair': 'Street Fair',
+  'vintage-antique': 'Vintage & Antique',
+} as const
+
+// Market category colors for badges
+export const MARKET_CATEGORY_COLORS = {
+  'farmers-market': 'bg-green-100 text-green-800 border-green-200',
+  'arts-crafts': 'bg-purple-100 text-purple-800 border-purple-200',
+  'flea-market': 'bg-orange-100 text-orange-800 border-orange-200',
+  'food-festival': 'bg-red-100 text-red-800 border-red-200',
+  'holiday-market': 'bg-blue-100 text-blue-800 border-blue-200',
+  'craft-show': 'bg-pink-100 text-pink-800 border-pink-200',
+  'community-event': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'night-market': 'bg-gray-100 text-gray-800 border-gray-200',
+  'street-fair': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  'vintage-antique': 'bg-brown-100 text-brown-800 border-brown-200',
+} as const
+
+// Market status colors
+export const MARKET_STATUS_COLORS = {
+  draft: 'bg-gray-100 text-gray-800 border-gray-200',
+  active: 'bg-green-100 text-green-800 border-green-200',
+  cancelled: 'bg-red-100 text-red-800 border-red-200',
+  completed: 'bg-blue-100 text-blue-800 border-blue-200',
+} as const
+
 // Application statuses
 export const APPLICATION_STATUSES = {
   DRAFT: 'draft',

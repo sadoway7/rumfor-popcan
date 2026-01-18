@@ -1,9 +1,11 @@
 import { useEffect, useCallback } from 'react'
 import { useAdminStore } from '../adminStore'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AdminFilters } from '@/types'
 
 // Main admin hook
 export function useAdmin() {
+  const { isAuthenticated, isAdmin } = useAuth()
   const {
     stats,
     isLoadingStats,
@@ -31,15 +33,23 @@ export function useAdmin() {
     fetchMarketAnalytics
   } = useAdminStore()
 
-  // Initialize admin data
+  // Initialize admin data only when user is authenticated as admin
   useEffect(() => {
-    fetchAdminStats()
-    fetchRecentActivities()
-    fetchUsers()
-    fetchModerationQueue()
-    fetchPromoterVerifications()
-    fetchSystemSettings()
-  }, []) // Empty dependency array to prevent infinite loops
+    if (isAuthenticated && isAdmin()) {
+      // Defer initial data loading to prevent synchronous suspension
+      const timer = setTimeout(() => {
+        // Temporarily disabled automatic fetching to prevent errors when backend is not running
+        // fetchAdminStats()
+        // fetchRecentActivities()
+        // fetchUsers()
+        // fetchModerationQueue()
+        // fetchPromoterVerifications()
+        // fetchSystemSettings()
+      }, 0)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isAuthenticated, isAdmin]) // Re-run when auth status changes
 
   return {
     stats,

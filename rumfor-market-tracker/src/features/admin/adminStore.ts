@@ -165,6 +165,7 @@ export const useAdminStore = create<AdminStore>()(
       
       // Dashboard
       fetchAdminStats: async () => {
+        if (get().isLoadingStats) return; // Prevent concurrent calls
         set({ isLoadingStats: true })
         try {
           const response = await adminApi.getAdminStats()
