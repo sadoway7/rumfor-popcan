@@ -91,11 +91,11 @@ const getMarkets = catchAsync(async (req, res, next) => {
     { $limit: 10 }
   ])
 
-  // SERIALIZER TEMPORARILY DISABLED - Issues found with location/schedule display
-  // const serializedMarkets = markets.map(market => serializeMarket(market))
+  // Re-enable serializer for proper frontend data formatting
+  const serializedMarkets = markets.map(market => serializeMarket(market))
 
   sendSuccess(res, {
-    markets, // Using raw MongoDB data temporarily
+    markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -134,8 +134,11 @@ const getMarket = catchAsync(async (req, res, next) => {
   // Get recent photos from populated market
   const recentPhotos = market.images?.slice(0, 5) || []
 
+  // Serialize market data for frontend compatibility
+  const serializedMarket = serializeMarket(market)
+
   sendSuccess(res, {
-    market,
+    market: serializedMarket,
     trackingStatus,
     recentPhotos
   }, 'Market retrieved successfully')
@@ -391,14 +394,14 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   // Get status counts (this is already efficient with aggregation)
   const statusCounts = await UserMarketTracking.getUserStatusCounts(req.user._id || req.user.id)
 
-  // SERIALIZER TEMPORARILY DISABLED - Issues with data display
-  // const serializedTracking = validTracking.map(t => ({
-  //   ...t,
-  //   market: serializeMarket(t.market)
-  // }))
+  // Re-enable serializer for proper frontend data formatting
+  const serializedTracking = validTracking.map(t => ({
+    ...t,
+    market: serializeMarket(t.market)
+  }))
 
   sendSuccess(res, {
-    tracking: validTracking, // Using raw MongoDB data temporarily
+    tracking: serializedTracking,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -481,8 +484,11 @@ const searchMarkets = catchAsync(async (req, res, next) => {
 
   const total = await Market.countDocuments(query)
 
+  // Serialize market data for frontend compatibility
+  const serializedMarkets = markets.map(market => serializeMarket(market))
+
   sendSuccess(res, {
-    markets,
+    markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -530,8 +536,11 @@ const getPopularMarkets = catchAsync(async (req, res, next) => {
   })
   .limit(parseInt(limit))
 
+  // Serialize market data for frontend compatibility
+  const serializedMarkets = popularMarkets.map(market => serializeMarket(market))
+
   sendSuccess(res, {
-    markets: popularMarkets,
+    markets: serializedMarkets,
     timeframe
   }, 'Popular markets retrieved successfully')
 })
@@ -558,8 +567,11 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
 
   const total = await Market.countDocuments({ category, status: 'active', isPublic: true })
 
+  // Serialize market data for frontend compatibility
+  const serializedMarkets = markets.map(market => serializeMarket(market))
+
   sendSuccess(res, {
-    markets,
+    markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -600,8 +612,11 @@ const getMarketsByType = catchAsync(async (req, res, next) => {
 
   const total = await Market.countDocuments(query)
 
+  // Serialize market data for frontend compatibility
+  const serializedMarkets = markets.map(market => serializeMarket(market))
+
   sendSuccess(res, {
-    markets,
+    markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),

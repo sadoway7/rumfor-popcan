@@ -205,50 +205,7 @@ const mockMarkets: Market[] = [
 // API simulation delay (reduced for better UX)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-// Map backend market format to frontend format (RESTORED - serializer had issues)
-function mapBackendMarketToFrontend(backendMarket: any): Market {
-  return {
-    id: backendMarket._id || backendMarket.id,
-    name: backendMarket.name,
-    description: backendMarket.description,
-    category: backendMarket.category,
-    promoterId: backendMarket.promoter?._id || backendMarket.promoter,
-    promoter: backendMarket.promoter,
-    location: {
-      address: backendMarket.location?.address?.street || '',
-      city: backendMarket.location?.address?.city || '',
-      state: backendMarket.location?.address?.state || '',
-      zipCode: backendMarket.location?.address?.zipCode || '',
-      country: backendMarket.location?.address?.country || 'USA',
-      latitude: backendMarket.location?.coordinates?.[1],
-      longitude: backendMarket.location?.coordinates?.[0]
-    },
-    schedule: backendMarket.schedule ? [{
-      id: '1',
-      dayOfWeek: backendMarket.schedule.daysOfWeek?.[0] ? (backendMarket.schedule.daysOfWeek[0] === 'monday' ? 1 : 6) : 6,
-      startTime: backendMarket.schedule.startTime,
-      endTime: backendMarket.schedule.endTime,
-      startDate: backendMarket.schedule.seasonStart || '2024-01-01',
-      endDate: backendMarket.schedule.seasonEnd || '2024-12-31',
-      isRecurring: backendMarket.schedule.recurring
-    }] : [],
-    status: backendMarket.status === 'active' ? 'active' : 'draft',
-    marketType: backendMarket.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
-    images: backendMarket.images?.map((img: any) => img.url || img) || [],
-    tags: backendMarket.tags || [],
-    accessibility: {
-      wheelchairAccessible: backendMarket.amenities?.includes('accessible') || false,
-      parkingAvailable: backendMarket.amenities?.includes('parking') || false,
-      restroomsAvailable: backendMarket.amenities?.includes('restrooms') || false,
-      familyFriendly: true,
-      petFriendly: backendMarket.amenities?.includes('pet_friendly') || false
-    },
-    contact: backendMarket.contact || {},
-    applicationFields: [],
-    createdAt: backendMarket.createdAt,
-    updatedAt: backendMarket.updatedAt
-  }
-}
+
 
 export const marketsApi = {
   // Get all markets with optional filtering

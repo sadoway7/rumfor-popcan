@@ -72,17 +72,15 @@ const getComments = catchAsync(async (req, res, next) => {
 const createComment = catchAsync(async (req, res, next) => {
   const { marketId: marketIdParam } = req.params
   const { content, parentId } = req.body
-  
-  // Auth middleware uses .lean() which returns plain objects with _id field
-  // Convert to string in case it's an ObjectId
-  const userId = (req.user._id?.toString?.() || req.user._id) || (req.user.id?.toString?.() || req.user.id)
-  const marketId = marketIdParam || req.body.marketId
 
-  console.log('[DEBUG COMMENTS] createComment called')
-  console.log('[DEBUG COMMENTS] req.user keys:', Object.keys(req.user))
+  // Auth middleware uses .lean() which returns plain objects with _id field
+  // Use ObjectId directly for Comment model
+  console.log('[DEBUG COMMENTS] req.user:', req.user)
   console.log('[DEBUG COMMENTS] req.user._id:', req.user._id)
   console.log('[DEBUG COMMENTS] req.user.id:', req.user.id)
-  console.log('[DEBUG COMMENTS] userId final:', userId)
+  const userId = req.user._id || req.user.id
+  const marketId = marketIdParam || req.body.marketId
+  console.log('[DEBUG COMMENTS] userId final:', userId, typeof userId)
 
   // Verify market exists
   const market = await Market.findById(marketId)
@@ -283,7 +281,7 @@ const addReaction = catchAsync(async (req, res, next) => {
 const reportComment = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
   const { reason, details } = req.body
-  const userId = req.user.id
+  const userId = req.user._id || req.user.id
 
   if (!reason) {
     return next(new AppError('Report reason is required', 400))
@@ -324,7 +322,7 @@ const reportComment = catchAsync(async (req, res, next) => {
 // Remove reaction from comment
 const removeReaction = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
-  const userId = req.user.id
+  const userId = req.user._id || req.user.id
 
   const comment = await Comment.findById(commentId)
   if (!comment) {

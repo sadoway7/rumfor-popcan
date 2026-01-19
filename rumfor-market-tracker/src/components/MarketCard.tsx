@@ -55,32 +55,35 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   }
 
   const formatSchedule = (schedule: Market['schedule']) => {
-    if (!schedule || schedule.length === 0) return 'Schedule TBD'
-    
+    if (!schedule || !Array.isArray(schedule) || schedule.length === 0) return 'Schedule TBD'
+
     // Get unique days and their dates
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dates = schedule
+      .filter(s => s && s.startDate && s.dayOfWeek !== undefined) // Filter out invalid schedule items
       .map(s => {
         const startDate = new Date(s.startDate)
         const endDate = new Date(s.endDate)
-        
+
         return {
-          dayName: dayNames[s.dayOfWeek],
+          dayName: dayNames[s.dayOfWeek] || 'Unknown',
           startDate: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           endDate: endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           startTime: s.startTime,
           endTime: s.endTime
         }
       })
-      .filter((item, index, arr) => 
+      .filter((item, index, arr) =>
         arr.findIndex(t => t.dayName === item.dayName) === index // Remove duplicates
       )
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    
+
+    if (dates.length === 0) return 'Schedule TBD'
+
     if (dates.length === 1) {
       return `${dates[0].startDate} ${dates[0].startTime}-${dates[0].endTime}`
     } else {
-      const times = dates[0].startTime === dates[dates.length - 1].startTime && 
+      const times = dates[0].startTime === dates[dates.length - 1].startTime &&
                    dates[0].endTime === dates[dates.length - 1].endTime
       const dateList = dates.map(d => d.startDate).join(', ')
       return times ? `${dateList} ${dates[0].startTime}-${dates[0].endTime}` : `${dateList} (var. times)`
@@ -215,13 +218,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   // Minimal modern variant with overlay name on image
   if (variant === 'minimal') {
     const formatScheduleDate = (schedule: Market['schedule']) => {
-      if (!schedule || schedule.length === 0) return null
-      
+      if (!schedule || !Array.isArray(schedule) || schedule.length === 0) return null
+
       const firstSchedule = schedule[0]
+      if (!firstSchedule || !firstSchedule.startDate) return null
+
       const startDate = new Date(firstSchedule.startDate)
-      
-      return startDate.toLocaleDateString('en-US', { 
-        month: 'short', 
+
+      return startDate.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric',
         year: startDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
       })

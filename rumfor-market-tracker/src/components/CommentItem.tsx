@@ -290,9 +290,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           ) : (
             <div className={cn(
-              "relative text-[14.5px] leading-relaxed text-zinc-700 px-4 py-3 rounded-[20px] border shadow-sm bg-white border-zinc-200/70 transition-shadow",
-              depth === 0 ? 'ring-[4px] ring-zinc-50/30 font-medium' : 'font-normal',
-              "group-hover/thread:shadow-md group-hover/thread:border-zinc-300/80"
+              "relative text-[14.5px] leading-relaxed text-zinc-700 px-4 py-3 rounded-[20px] border shadow-sm bg-white border-zinc-300",
+              depth === 0 ? 'ring-[4px] ring-zinc-50/30 font-medium' : 'font-normal'
             )}>
               {/* Floating Reaction Button */}
               <div className="absolute -top-3 -right-2 z-10">
@@ -330,7 +329,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
               {/* Edit/Delete Menu */}
               {(canEdit || canDelete) && (
-                <div className="ml-auto flex items-center gap-1 opacity-0 group-hover/thread:opacity-100 transition-all">
+                <div className="ml-auto flex items-center gap-1">
                   {canEdit && !isEditing && (
                     <Button
                       variant="ghost"

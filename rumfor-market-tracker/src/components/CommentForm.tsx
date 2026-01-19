@@ -24,6 +24,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 }) => {
   const [content, setContent] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
+  const [rows, setRows] = useState(1)
   
   const { user } = useAuthStore()
   const {
@@ -41,6 +42,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       await createComment(content.trim(), parentId)
       setContent('')
       setIsExpanded(false)
+      setRows(1)
       onSubmit?.()
     } catch (error) {
       console.error('Failed to create comment:', error)
@@ -55,11 +57,15 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value)
-    
+
     // Auto-expand when user starts typing
     if (e.target.value.trim() && !isExpanded) {
       setIsExpanded(true)
     }
+
+    // Update rows based on content lines, max 5
+    const lines = e.target.value.split('\n').length
+    setRows(Math.min(5, Math.max(1, lines)))
   }
 
   if (!user) {
@@ -75,14 +81,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className={cn('w-full', className)}>
       <div className="relative group w-full">
-        <div className="flex flex-col bg-white rounded-[22px] px-5 py-3 transition-all border border-zinc-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:border-zinc-300 focus-within:border-zinc-900 focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-zinc-900/5">
+        <div className="flex flex-col bg-white rounded-[22px] pl-3 pr-5 py-3 transition-all border border-zinc-400 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:border-zinc-500 focus-within:border-zinc-900 focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-zinc-900/5">
           <Textarea
             value={content}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             onFocus={() => setIsExpanded(true)}
             placeholder={placeholder}
-            rows={1}
+            rows={rows}
             autoFocus={autoFocus}
             className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[15px] leading-normal resize-none py-1 text-zinc-900 placeholder-zinc-400 font-semibold min-h-0"
             disabled={isCreating}
@@ -112,9 +118,10 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                   onClick={() => {
                     setIsExpanded(false)
                     setContent('')
+                    setRows(1)
                   }}
                   disabled={isCreating}
-                  className="text-zinc-500 hover:text-zinc-900 text-[12px] font-bold px-4 py-1.5 rounded-full hover:bg-zinc-50 transition-all h-auto active:scale-95"
+                  className="text-zinc-500 hover:text-zinc-900 text-[12px] font-bold rounded-full hover:bg-zinc-50 transition-all active:scale-95 h-6 min-h-0"
                 >
                   Cancel
                 </Button>
@@ -125,7 +132,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 size="sm"
                 disabled={!content.trim() || isCreating || content.length > 1000}
                 className={cn(
-                  "bg-zinc-900 text-white px-5 py-2 rounded-full font-black text-[12px] hover:bg-black disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center gap-2 h-auto active:scale-95 group/btn",
+                  "bg-zinc-900 text-white rounded-full font-black text-[12px] hover:bg-black disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center gap-1 active:scale-95 h-6 min-h-0",
                   isCreating && "opacity-50"
                 )}
               >
@@ -135,12 +142,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                     Posting
                   </>
                 ) : (
-                  <>
-                    Post
-                    <svg className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </>
+                  "Post"
                 )}
               </Button>
             </div>

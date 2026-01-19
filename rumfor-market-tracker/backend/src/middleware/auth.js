@@ -82,7 +82,7 @@ const isRefreshTokenBlacklisted = async (token) => {
 const cacheUser = async (userId, userData, ttl = 300) => { // 5 minutes default
   const expiryTime = Date.now() + (ttl * 1000)
   userCache.set(userId.toString(), {
-    data: userData,
+    data: { ...userData }, // Shallow copy to prevent reference issues
     expiryTime
   })
 }
@@ -233,6 +233,7 @@ const verifyToken = async (req, res, next) => {
 
     // Attach user to request (convert back to mongoose doc if needed, but since we use lean(), it's a plain object)
     req.user = user
+    console.log('[DEBUG BACKEND] req.user set to:', { hasUser: !!req.user, userKeys: req.user ? Object.keys(req.user) : null, userId: req.user ? req.user._id : null })
     next()
     
   } catch (error) {

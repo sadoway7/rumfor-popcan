@@ -9,7 +9,7 @@ import { useMarket, useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
-import { HashtagVoting } from '@/components/HashtagVoting'
+import TagVoting from '@/components/TagVoting'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
@@ -181,10 +181,10 @@ export const MarketDetailPage: React.FC = () => {
 
       {/* Header */}
       <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-3">
                 <Badge variant="outline" className={cn(categoryColors[market.category])}>
                   {categoryLabels[market.category]}
                 </Badge>
@@ -192,10 +192,10 @@ export const MarketDetailPage: React.FC = () => {
                   {market.status}
                 </Badge>
               </div>
-              
-              <h1 className="text-4xl font-bold mb-4">{market.name}</h1>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-muted-foreground">
+
+              <h1 className="text-4xl font-bold mb-2">{market.name}</h1>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-muted-foreground">
                 <div className="flex items-center">
                   <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -212,8 +212,8 @@ export const MarketDetailPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="flex gap-3 ml-6">
+
+            <div className="flex gap-2 ml-4">
               <Button
                 variant="outline"
                 onClick={() => navigate('/markets')}
@@ -232,7 +232,7 @@ export const MarketDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -352,23 +352,38 @@ export const MarketDetailPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Tags */}
-            {market.tags && market.tags.length > 0 && (
+            {/* Tags & Hashtags */}
+            {((market.tags && market.tags.length > 0) || user) && (
               <Card className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">Tags</h2>
-                <div className="flex flex-wrap gap-2">
-                  {market.tags.map((tag) => (
-                    <Badge key={tag} variant="outline">
-                      {tag}
-                    </Badge>
-                  ))}
+                <h2 className="text-2xl font-semibold mb-4">Tags & Hashtags</h2>
+
+                {/* Static Market Tags */}
+                {market.tags && market.tags.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium mb-2">Market Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {market.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="bg-muted">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Community Tags */}
+                <div className={market.tags && market.tags.length > 0 ? "border-t pt-4" : ""}>
+                  <TagVoting
+                    marketTags={market.tags || []}
+                    marketId={id!}
+                  />
                 </div>
               </Card>
             )}
 
             {/* Community Features */}
             <Card className="p-0 overflow-hidden">
-              <Tabs 
+              <Tabs
                 items={[
                   {
                     key: 'comments',
@@ -379,19 +394,9 @@ export const MarketDetailPage: React.FC = () => {
                     key: 'photos',
                     label: 'Photos',
                     content: (
-                      <PhotoGallery 
-                        marketId={id!} 
+                      <PhotoGallery
+                        marketId={id!}
                         showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}
-                      />
-                    )
-                  },
-                  {
-                    key: 'hashtags',
-                    label: 'Hashtags',
-                    content: (
-                      <HashtagVoting 
-                        marketId={id!} 
-                        showCreateForm={!!user}
                       />
                     )
                   }
@@ -405,70 +410,14 @@ export const MarketDetailPage: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-4 space-y-6">
-              {/* Contact Info */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
-                <div className="space-y-3">
-                  {market.contact?.phone && (
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span className="text-sm">{market.contact?.phone}</span>
-                    </div>
-                  )}
-                  
-                  {market.contact?.email && (
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      <a href={`mailto:${market.contact?.email}`} className="text-sm text-accent hover:underline">
-                        {market.contact?.email}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {market.contact?.website && (
-                    <div className="flex items-center">
-                      <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                      </svg>
-                      <a href={market.contact?.website} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline">
-                        Visit Website
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </Card>
-
-              {/* Market Promoter */}
-              {market.promoter && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Market Organizer</h3>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {market.promoter.firstName?.[0]}{market.promoter.lastName?.[0]}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{market.promoter.firstName || ''} {market.promoter.lastName || ''}</p>
-                      <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
-                    </div>
-                  </div>
-                </Card>
-              )}
-
               {/* Quick Actions */}
               <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Actions</h3>
                 <div className="space-y-3">
                   {/* Apply to Market Button */}
                   {existingApplication ? (
                     <div className="space-y-2">
-                      <Button 
-                        className="w-full" 
+                      <Button
+                        className="w-full"
                         onClick={() => navigate(`/applications/${existingApplication.id}`)}
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,8 +430,8 @@ export const MarketDetailPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <Button 
-                      className="w-full" 
+                    <Button
+                      className="w-full"
                       onClick={() => navigate(`/markets/${id}/apply`)}
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -491,21 +440,14 @@ export const MarketDetailPage: React.FC = () => {
                       Apply to Market
                     </Button>
                   )}
-                  
+
                   <Button className="w-full" variant="outline">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                     </svg>
                     Share Market
                   </Button>
-                  
-                  <Button className="w-full" variant="outline">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    Add to Favorites
-                  </Button>
-                  
+
                   <Button
                     className="w-full"
                     variant="outline"
@@ -518,6 +460,63 @@ export const MarketDetailPage: React.FC = () => {
                   </Button>
                 </div>
               </Card>
+
+              {/* Contact Info */}
+              {market.promoter && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                  <div className="space-y-3">
+                    {market.contact?.phone && (
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span className="text-sm">{market.contact?.phone}</span>
+                      </div>
+                    )}
+
+                    {market.contact?.email && (
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <a href={`mailto:${market.contact?.email}`} className="text-sm text-accent hover:underline">
+                          {market.contact?.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {market.contact?.website && (
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                        </svg>
+                        <a href={market.contact?.website} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline">
+                          Visit Website
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Market Promoter */}
+{market.promoter && (
+  <Card className="p-6">
+    <h3 className="text-lg font-semibold mb-4">Market Organizer</h3>
+    <div className="flex items-center space-x-3">
+      <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+        <span className="text-sm font-medium">
+          {market.promoter.firstName?.[0]}{market.promoter.lastName?.[0]}
+        </span>
+      </div>
+      <div>
+        <p className="font-medium">{market.promoter.firstName || ''} {market.promoter.lastName || ''}</p>
+        <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
+      </div>
+    </div>
+  </Card>
+)}
             </div>
           </div>
         </div>

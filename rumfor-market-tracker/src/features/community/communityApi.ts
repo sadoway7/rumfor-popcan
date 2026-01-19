@@ -221,6 +221,13 @@ export const communityApi = {
     const response = await httpClient.get<ApiResponse<string[]>>('/hashtags/predefined')
     if (!response.success) throw new Error(response.error || 'Failed to fetch predefined hashtags')
     return response
+  },
+
+  // Add tag to market
+  async addTagToMarket(marketId: string, tagName: string): Promise<ApiResponse<void>> {
+    const response = await httpClient.post<ApiResponse<void>>(`/hashtags/market/${marketId}/add`, { tagName })
+    if (!response.success) throw new Error(response.error || 'Failed to add tag to market')
+    return response
   }
 }
 
