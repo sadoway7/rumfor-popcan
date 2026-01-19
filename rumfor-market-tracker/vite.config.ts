@@ -81,8 +81,9 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor libraries
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor'
+            // Keep React in main entry to prevent loading issues
+            if (id.includes('react-router')) {
+              return 'router'
             }
             if (id.includes('react-router')) {
               return 'router'

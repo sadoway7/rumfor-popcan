@@ -439,6 +439,10 @@ export const MarketDetailPage: React.FC = () => {
                       placeholder="Filter vendors..."
                       value={vendorSearchTerm}
                       onChange={(e) => setVendorSearchTerm(e.target.value)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isVendorsCollapsed) setIsVendorsCollapsed(false);
+                      }}
                       className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-300 shadow"
                     />
                   </div>
