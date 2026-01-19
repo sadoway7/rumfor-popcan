@@ -13,6 +13,7 @@ import TagVoting from '@/components/TagVoting'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
+import { Search } from 'lucide-react'
 
 const categoryLabels = {
   'farmers-market': 'Farmers Market',
@@ -53,6 +54,9 @@ export const MarketDetailPage: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
+  const [isAccessibilityCollapsed, setIsAccessibilityCollapsed] = useState(true)
+  const [isVendorsCollapsed, setIsVendorsCollapsed] = useState(false)
+  const [vendorSearchTerm, setVendorSearchTerm] = useState('')
   
   const { market, isLoading, error, refetch } = useMarket(id!)
   const {
@@ -160,6 +164,56 @@ export const MarketDetailPage: React.FC = () => {
     return `${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.zipCode || ''}`.trim()
   }
 
+  // Mock vendor data with 40 different vendors
+  const mockVendors = [
+    { name: "Fresh Farms Market", type: "produce", avatar: "FF", color: "from-green-100 to-green-50" },
+    { name: "Artisan Crafts Co.", type: "crafts", avatar: "AC", color: "from-purple-100 to-purple-50" },
+    { name: "Sweet Treats Bakery", type: "food", avatar: "SB", color: "from-orange-100 to-orange-50" },
+    { name: "Mountain View Nursery", type: "plants", avatar: "MV", color: "from-emerald-100 to-emerald-50" },
+    { name: "Riverside Cheese", type: "dairy", avatar: "RC", color: "from-yellow-100 to-yellow-50" },
+    { name: "Heritage Textiles", type: "textiles", avatar: "HT", color: "from-blue-100 to-blue-50" },
+    { name: "Local Honey Traders", type: "food", avatar: "LH", color: "from-amber-100 to-amber-50" },
+    { name: "Woodcraft Workshop", type: "crafts", avatar: "WW", color: "from-amber-100 to-amber-50" },
+    { name: "Garden Fresh Herbs", type: "produce", avatar: "GF", color: "from-lime-100 to-lime-50" },
+    { name: "Artisan Pottery", type: "crafts", avatar: "AP", color: "from-stone-100 to-stone-50" },
+    { name: "Maple Syrup Delights", type: "food", avatar: "MS", color: "from-amber-100 to-amber-50" },
+    { name: "Vintage Treasures", type: "antiques", avatar: "VT", color: "from-slate-100 to-slate-50" },
+    { name: "Organic Vegetable Farm", type: "produce", avatar: "OV", color: "from-green-100 to-green-50" },
+    { name: "Handmade Jewelry", type: "jewelry", avatar: "HJ", color: "from-pink-100 to-pink-50" },
+    { name: "Fresh Bread Bakery", type: "food", avatar: "FB", color: "from-yellow-100 to-yellow-50" },
+    { name: "Leather Goods Co.", type: "crafts", avatar: "LG", color: "from-orange-100 to-orange-50" },
+    { name: "Berry Bliss Farm", type: "produce", avatar: "BB", color: "from-red-100 to-red-50" },
+    { name: "Ceramic Creations", type: "crafts", avatar: "CC", color: "from-blue-100 to-blue-50" },
+    { name: "Spice Route Traders", type: "food", avatar: "SR", color: "from-red-100 to-red-50" },
+    { name: "Floral Arrangements", type: "flowers", avatar: "FA", color: "from-pink-100 to-pink-50" },
+    { name: "Artisan Cheese Makers", type: "dairy", avatar: "AC", color: "from-yellow-100 to-yellow-50" },
+    { name: "Woodworking Studio", type: "crafts", avatar: "WS", color: "from-amber-100 to-amber-50" },
+    { name: "Herb & Spice Garden", type: "produce", avatar: "HS", color: "from-green-100 to-green-50" },
+    { name: "Glass Art Gallery", type: "art", avatar: "GA", color: "from-cyan-100 to-cyan-50" },
+    { name: "Coffee Roasters", type: "beverages", avatar: "CR", color: "from-amber-100 to-amber-50" },
+    { name: "Textile Weavers", type: "textiles", avatar: "TW", color: "from-indigo-100 to-indigo-50" },
+    { name: "Mushroom Growers", type: "produce", avatar: "MG", color: "from-neutral-100 to-neutral-50" },
+    { name: "Metalwork Studio", type: "crafts", avatar: "MS", color: "from-gray-100 to-gray-50" },
+    { name: "Jam & Preserves", type: "food", avatar: "JP", color: "from-red-100 to-red-50" },
+    { name: "Bookbinders Workshop", type: "crafts", avatar: "BW", color: "from-stone-100 to-stone-50" },
+    { name: "Olive Oil Producers", type: "food", avatar: "OO", color: "from-yellow-100 to-yellow-50" },
+    { name: "Basket Weavers", type: "crafts", avatar: "BW", color: "from-green-100 to-green-50" },
+    { name: "Tea Merchants", type: "beverages", avatar: "TM", color: "from-green-100 to-green-50" },
+    { name: "Soap & Candle Makers", type: "crafts", avatar: "SC", color: "from-purple-100 to-purple-50" },
+    { name: "Nut & Dried Fruit", type: "food", avatar: "ND", color: "from-orange-100 to-orange-50" },
+    { name: "Paper Crafts", type: "crafts", avatar: "PC", color: "from-pink-100 to-pink-50" },
+    { name: "Wine & Vineyard", type: "beverages", avatar: "WV", color: "from-purple-100 to-purple-50" },
+    { name: "Leather Tanners", type: "crafts", avatar: "LT", color: "from-brown-100 to-brown-50" },
+    { name: "Seed & Bulb Suppliers", type: "plants", avatar: "SB", color: "from-lime-100 to-lime-50" },
+    { name: "Musical Instruments", type: "crafts", avatar: "MI", color: "from-wood-100 to-wood-50" }
+  ]
+
+  // Filter vendors based on search term
+  const filteredVendors = mockVendors.filter(vendor =>
+    vendor.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.type.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+  )
+
   return (
     <div className="min-h-screen bg-background">
       {/* Breadcrumb */}
@@ -179,58 +233,7 @@ export const MarketDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <Badge variant="outline" className={cn(categoryColors[market.category])}>
-                  {categoryLabels[market.category]}
-                </Badge>
-                <Badge variant="outline" className={cn(statusColors[market.status])}>
-                  {market.status}
-                </Badge>
-              </div>
 
-              <h1 className="text-4xl font-bold mb-2">{market.name}</h1>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-muted-foreground">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>{formatLocation(market.location)}</span>
-                </div>
-                
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{formatSchedule(market.schedule)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 ml-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/markets')}
-              >
-                Back to Markets
-              </Button>
-              <Button
-                onClick={handleTrackToggle}
-                disabled={isTracking}
-                variant={isMarketTracked(market.id) ? "primary" : "outline"}
-              >
-                {isMarketTracked(market.id) ? '✓ Tracked' : '+ Track Market'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <div className="container mx-auto px-4 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -246,22 +249,36 @@ export const MarketDetailPage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
 
+                  {/* Back to Markets Button - Top Right */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('/markets')}
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Back to All Markets
+                    </Button>
+                  </div>
+
                   {/* Header Overlay */}
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-6">
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 via-black/40 to-transparent backdrop-blur-sm p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <Badge variant="outline" className={cn(categoryColors[market.category], "bg-white/20 text-white border-white/30")}>
-                            {categoryLabels[market.category]}
-                          </Badge>
                           <Badge variant="outline" className={cn(statusColors[market.status], "bg-white/20 text-white border-white/30")}>
                             {market.status}
                           </Badge>
+                          <Badge variant="outline" className={cn(categoryColors[market.category], "bg-white/20 text-white border-white/30")}>
+                            {categoryLabels[market.category]}
+                          </Badge>
                         </div>
 
-                        <h1 className="text-4xl font-bold mb-2 text-white">{market.name}</h1>
+                        <h1 className="text-2xl font-bold mb-4 text-white leading-tight" style={{textShadow: '3px 3px 6px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.7)'}}>{market.name}</h1>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-white/90">
+                        <div className="text-white/90">
                           <div className="flex items-center">
                             <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -270,37 +287,26 @@ export const MarketDetailPage: React.FC = () => {
                             <span>{formatLocation(market.location)}</span>
                           </div>
 
-                          <div className="flex items-center">
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>{formatSchedule(market.schedule)}</span>
-                          </div>
+
                         </div>
                       </div>
 
                       <div className="flex gap-2 ml-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => navigate('/markets')}
-                          className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-                        >
-                          Back to Markets
-                        </Button>
-                        <Button
+                        {/* Commented out for future use case */}
+                        {/* <Button
                           onClick={handleTrackToggle}
                           disabled={isTracking}
                           variant={isMarketTracked(market.id) ? "secondary" : "outline"}
                           className={isMarketTracked(market.id) ? "bg-white text-black" : "bg-white/10 border-white/30 text-white hover:bg-white/20"}
                         >
                           {isMarketTracked(market.id) ? '✓ Tracked' : '+ Track Market'}
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </div>
 
                   {/* Footer Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent backdrop-blur-sm p-6">
                     <div className="prose prose-sm max-w-none">
                       <p className={cn(
                         "text-white leading-relaxed",
@@ -346,90 +352,132 @@ export const MarketDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Description */}
-            <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">About This Market</h2>
-              <div className="prose prose-sm max-w-none">
-                <p className={cn(
-                  "text-muted-foreground leading-relaxed",
-                  !showFullDescription && "line-clamp-4"
-                )}>
-                  {market.description}
-                </p>
-                {market.description && market.description.length > 200 && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="p-0 h-auto mt-2"
-                  >
-                    {showFullDescription ? 'Show Less' : 'Read More'}
-                  </Button>
-                )}
-              </div>
-            </Card>
-
             {/* Accessibility Features */}
             <Card className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">Accessibility & Amenities</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <h3 className="font-medium">Accessibility</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      {market.accessibility?.wheelchairAccessible ? (
-                        <span className="text-success mr-2">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground mr-2">✗</span>
-                      )}
-                      <span className="text-sm">Wheelchair Accessible</span>
+              <button
+                onClick={() => setIsAccessibilityCollapsed(!isAccessibilityCollapsed)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h2 className="text-lg font-medium">Accessibility & Amenities</h2>
+                <svg
+                  className={`w-5 h-5 transition-all duration-300 ${isAccessibilityCollapsed ? 'rotate-0 animate-bounce' : 'rotate-180'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {!isAccessibilityCollapsed && (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <h3 className="font-medium">Accessibility</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        {market.accessibility?.wheelchairAccessible ? (
+                          <span className="text-success mr-2">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground mr-2">✗</span>
+                        )}
+                        <span className="text-sm">Wheelchair Accessible</span>
+                      </div>
+                      <div className="flex items-center">
+                        {market.accessibility?.parkingAvailable ? (
+                          <span className="text-success mr-2">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground mr-2">✗</span>
+                        )}
+                        <span className="text-sm">Parking Available</span>
+                      </div>
+                      <div className="flex items-center">
+                        {market.accessibility?.restroomsAvailable ? (
+                          <span className="text-success mr-2">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground mr-2">✗</span>
+                        )}
+                        <span className="text-sm">Restrooms Available</span>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      {market.accessibility?.parkingAvailable ? (
-                        <span className="text-success mr-2">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground mr-2">✗</span>
-                      )}
-                      <span className="text-sm">Parking Available</span>
-                    </div>
-                    <div className="flex items-center">
-                      {market.accessibility?.restroomsAvailable ? (
-                        <span className="text-success mr-2">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground mr-2">✗</span>
-                      )}
-                      <span className="text-sm">Restrooms Available</span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-medium">Family Features</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        {market.accessibility?.familyFriendly ? (
+                          <span className="text-success mr-2">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground mr-2">✗</span>
+                        )}
+                        <span className="text-sm">Family Friendly</span>
+                      </div>
+                      <div className="flex items-center">
+                        {market.accessibility?.petFriendly ? (
+                          <span className="text-success mr-2">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground mr-2">✗</span>
+                        )}
+                        <span className="text-sm">Pet Friendly</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="space-y-3">
-                  <h3 className="font-medium">Family Features</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      {market.accessibility?.familyFriendly ? (
-                        <span className="text-success mr-2">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground mr-2">✗</span>
-                      )}
-                      <span className="text-sm">Family Friendly</span>
-                    </div>
-                    <div className="flex items-center">
-                      {market.accessibility?.petFriendly ? (
-                        <span className="text-success mr-2">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground mr-2">✗</span>
-                      )}
-                      <span className="text-sm">Pet Friendly</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              )}
             </Card>
 
-
+            {/* Vendor List */}
+            <Card className="p-6">
+              <button
+                onClick={() => setIsVendorsCollapsed(!isVendorsCollapsed)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <div className="flex items-center justify-between flex-1">
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <input
+                      type="text"
+                      placeholder="Filter vendors..."
+                      value={vendorSearchTerm}
+                      onChange={(e) => setVendorSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-300 shadow"
+                    />
+                  </div>
+                  <span className="text-base font-medium text-muted-foreground ml-4">
+                    {filteredVendors.length} vendors attending
+                  </span>
+                </div>
+                <svg
+                  className={`w-5 h-5 ml-4 transition-transform ${isVendorsCollapsed ? 'rotate-0' : 'rotate-180'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {!isVendorsCollapsed && (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                {filteredVendors.map((vendor, index) => (
+                  <div key={index} className={`bg-gradient-to-br ${vendor.color} rounded-lg p-3 hover:shadow-md transition-all duration-200`}>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-white/50 shadow-sm">
+                        <span className="text-sm font-bold text-primary">
+                          {vendor.avatar}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm leading-tight text-foreground">{vendor.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{vendor.type}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              )}
+            </Card>
 
             {/* Community Features */}
-            <Card className="p-0 overflow-hidden">
+            <Card className="p-0 overflow-hidden bg-transparent">
               <Tabs
                 items={[
                   {
@@ -449,7 +497,7 @@ export const MarketDetailPage: React.FC = () => {
                   }
                 ]}
                 defaultActiveKey="comments"
-                className="w-full"
+                className="w-full [&>div:first-child]:bg-white [&>div:first-child]:rounded-lg [&>div:first-child]:border-b-0 [&>div:first-child>button]:ring-0 [&>div:first-child>button]:ring-offset-0 [&>div:first-child>button]:outline-none [&>div:first-child>button]:data-[state=active]:bg-accent/40 [&>div:last-child]:bg-transparent"
               />
             </Card>
           </div>
@@ -457,36 +505,107 @@ export const MarketDetailPage: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-4 space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Schedule</h3>
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{formatSchedule(market.schedule)}</span>
+                </div>
+              </Card>
+
+              {/* Official Market Link */}
+              <Card className="p-6">
+                <div className="text-center">
+                  <a
+                    href="#"
+                    className="inline-flex items-center text-lg font-medium text-accent hover:underline"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <svg className="w-5 h-5 mr-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Visit official website
+                  </a>
+                </div>
+              </Card>
               {/* Quick Actions */}
               <Card className="p-6">
                 <div className="space-y-3">
-                  {/* Apply to Market Button */}
-                  {existingApplication ? (
-                    <div className="space-y-2">
+                  {/* Track Market Button */}
+                  <Button
+                    className="w-full"
+                    onClick={handleTrackToggle}
+                    disabled={isTracking}
+                    variant={isMarketTracked(market.id) ? "secondary" : "primary"}
+                  >
+                    {isMarketTracked(market.id) ? (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Tracked
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Track this Market
+                      </>
+                    )}
+                  </Button>
+
+                  {/* User Status Button (only for tracked markets) */}
+                  {isMarketTracked(market.id) && (
+                    <div className="pt-2">
                       <Button
                         className="w-full"
-                        onClick={() => navigate(`/applications/${existingApplication.id}`)}
+                        variant="outline"
+                        size="sm"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        View My Application
+                        Update My Status
                       </Button>
-                      <div className="text-xs text-muted-foreground text-center">
-                        Status: {existingApplication.status.replace('-', ' ')}
-                      </div>
                     </div>
-                  ) : (
-                    <Button
-                      className="w-full"
-                      onClick={() => navigate(`/markets/${id}/apply`)}
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Apply to Market
-                    </Button>
                   )}
+
+                  {/* Application Button (for promoter-run markets) - Commented out for dynamic system */}
+                  {/* {market.promoter && (
+                    <div className="pt-2">
+                      {existingApplication ? (
+                        <div className="space-y-2">
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            onClick={() => navigate(`/applications/${existingApplication.id}`)}
+                          >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            View My Application
+                          </Button>
+                          <div className="text-xs text-muted-foreground text-center">
+                            Status: {existingApplication.status.replace('-', ' ')}
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => navigate(`/markets/${id}/apply`)}
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Apply to Market
+                        </Button>
+                      )}
+                    </div>
+                  )} */}
 
                   <Button className="w-full" variant="outline">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
