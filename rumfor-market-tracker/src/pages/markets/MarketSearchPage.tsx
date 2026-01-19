@@ -62,7 +62,7 @@ export const MarketSearchPage: React.FC = () => {
         restroomsAvailable: searchParams.get('restrooms') === 'true'
       }
     }
-    
+
     // Only set filters if they are not empty to avoid unnecessary updates
     if (Object.keys(urlFilters).some(key => {
       const value = urlFilters[key as keyof MarketFilterType]
@@ -76,6 +76,13 @@ export const MarketSearchPage: React.FC = () => {
       setFilters(urlFilters)
     }
   }, []) // Empty dependency array ensures this only runs on mount
+
+  // Close sidebar by default on mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      useSidebarStore.getState().setSidebarOpen(false)
+    }
+  }, [])
 
   // Update URL when filters change
   const updateUrlParams = (newFilters: MarketFilterType) => {

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useSidebarStore, useThemeStore } from '@/features/theme/themeStore'
@@ -33,6 +34,13 @@ export function HomePage() {
     queryFn: () => marketsApi.getMarkets({}, 1, 12),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
+
+  // Close sidebar by default on mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      useSidebarStore.getState().setSidebarOpen(false)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-background md:flex">
