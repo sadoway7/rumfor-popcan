@@ -11,7 +11,6 @@ import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar } from 'lucide
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
   const { isSidebarOpen } = useSidebarStore()
@@ -460,25 +459,7 @@ export const MarketSearchPage: React.FC = () => {
                   {isSearching ? 'Searching...' : `${markets.length} markets found`}
                 </p>
               </div>
-              {/* View Mode Toggle */}
-              <div className="flex rounded-lg bg-surface/50 border border-border w-full md:w-auto hidden lg:flex">
-                <Button
-                  variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('grid')}
-                  className="rounded-r-none px-3 flex-1 md:flex-none"
-                >
-                  Grid
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="rounded-l-none px-3 flex-1 md:flex-none hidden md:block"
-                >
-                  List
-                </Button>
-              </div>
+
             </div>
 
             {/* Market Grid */}
@@ -491,7 +472,7 @@ export const MarketSearchPage: React.FC = () => {
               onUntrack={handleUntrackMarket}
               trackedMarketIds={trackedMarketIds}
               isTracking={isTracking}
-              variant={viewMode}
+              variant="grid"
               emptyStateProps={{
                 title: "No markets found",
                 description: "Try adjusting your search criteria or filters to find more markets.",
