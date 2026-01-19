@@ -152,7 +152,7 @@ export const MarketSearchPage: React.FC = () => {
       <>
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0'} transition-all duration-300 overflow-hidden bg-surface border-b lg:border-b-0 lg:border-r border-border`}>
+          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0 lg:w-0'} transition-all duration-300 overflow-hidden bg-surface border-b lg:border-b-0 lg:border-r border-border ${!isSidebarOpen ? 'hidden lg:block' : ''}`}>
             <div className="p-4 sm:p-6 w-full lg:w-80 space-y-6">
 
               {/* Search */}
@@ -461,7 +461,7 @@ export const MarketSearchPage: React.FC = () => {
                 </p>
               </div>
               {/* View Mode Toggle */}
-              <div className="flex rounded-lg bg-surface/50 border border-border w-full md:w-auto">
+              <div className="flex rounded-lg bg-surface/50 border border-border w-full md:w-auto hidden lg:flex">
                 <Button
                   variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                   size="sm"
@@ -474,7 +474,7 @@ export const MarketSearchPage: React.FC = () => {
                   variant={viewMode === 'list' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="rounded-l-none px-3 flex-1 md:flex-none"
+                  className="rounded-l-none px-3 flex-1 md:flex-none hidden md:block"
                 >
                   List
                 </Button>

@@ -217,7 +217,7 @@ export const MarketDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Breadcrumb */}
-      <div className="border-b bg-card">
+      <div className="border-b bg-card hidden md:block">
         <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
