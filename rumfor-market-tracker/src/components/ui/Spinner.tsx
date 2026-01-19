@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '@/utils/cn'
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -6,7 +6,7 @@ export interface SpinnerProps extends React.HTMLAttributes<HTMLSpanElement> {
   color?: 'default' | 'accent' | 'muted' | 'success' | 'warning' | 'destructive'
 }
 
-const Spinner = React.forwardRef<HTMLSpanElement, SpinnerProps>(
+const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
   (
     {
       className,

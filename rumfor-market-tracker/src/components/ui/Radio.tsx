@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '@/utils/cn'
 
 export interface RadioOption {
@@ -17,7 +17,7 @@ export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   onChange?: React.ChangeEventHandler<HTMLInputElement>
 }
 
-const Radio = React.forwardRef<HTMLInputElement, RadioProps>(
+const Radio = forwardRef<HTMLInputElement, RadioProps>(
   (
     {
       className,

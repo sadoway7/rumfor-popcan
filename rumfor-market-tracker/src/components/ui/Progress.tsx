@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '@/utils/cn'
 
 export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -11,7 +11,7 @@ export interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   animated?: boolean
 }
 
-const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
+const Progress = forwardRef<HTMLDivElement, ProgressProps>(
   (
     {
       className,

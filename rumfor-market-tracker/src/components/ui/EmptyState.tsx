@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { forwardRef } from 'react'
 import { cn } from '@/utils/cn'
 import { Button } from './Button'
 
@@ -13,7 +13,7 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'centered' | 'minimal'
 }
 
-const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
+const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
   (
     {
       className,
