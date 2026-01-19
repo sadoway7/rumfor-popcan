@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       clearError()
       await login({ ...data, rememberMe })
-      navigate('/dashboard')
+      navigate('/')
     } catch (error) {
       // Error is handled by the auth store
     }

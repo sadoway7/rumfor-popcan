@@ -63,7 +63,7 @@ export function RegisterPage() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, agreeToTerms, ...registerData } = data
       await registerUser(registerData)
-      navigate('/dashboard')
+      navigate('/')
     } catch (error) {
       // Error is handled by the auth store
     }
