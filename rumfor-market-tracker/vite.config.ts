@@ -79,6 +79,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
+          // Keep React in main bundle to prevent forwardRef issues
+          if (id.includes('/react/') || id.includes('react-dom') || id.includes('react/jsx-runtime')) {
+            return undefined // Keep in main bundle
+          }
+
           // Vendor libraries
           if (id.includes('node_modules')) {
             // Keep React in main entry to prevent loading issues
