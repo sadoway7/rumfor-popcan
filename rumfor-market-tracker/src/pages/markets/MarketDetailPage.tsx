@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
 import { useMarket, useMarkets } from '@/features/markets/hooks/useMarkets'
-import { useVendorApplications } from '@/features/applications/hooks/useApplications'
+// import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import TagVoting from '@/components/TagVoting'
@@ -65,11 +65,11 @@ export const MarketDetailPage: React.FC = () => {
     isMarketTracked,
     isTracking
   } = useMarkets()
-  const { myApplications } = useVendorApplications()
+  // const { myApplications } = useVendorApplications()
   const { user } = useAuthStore()
 
   // Check if user has already applied to this market
-  const existingApplication = myApplications.find(app => app.marketId === id)
+  // const existingApplication = myApplications.find(app => app.marketId === id)
 
   if (isLoading) {
     return (
@@ -622,7 +622,7 @@ export const MarketDetailPage: React.FC = () => {
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v4m-4-4h.01M16 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Report Issue
+                    {market.promoter ? 'Report Issue' : 'Request Update'}
                   </Button>
                 </div>
               </Card>

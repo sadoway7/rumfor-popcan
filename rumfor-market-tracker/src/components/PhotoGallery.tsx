@@ -1,8 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { Badge } from '@/components/ui/Badge'
 import { PhotoUploader } from './PhotoUploader'
 import { PhotoThumbnail } from './PhotoThumbnail'
 import { usePhotos } from '@/features/community/hooks/usePhotos'

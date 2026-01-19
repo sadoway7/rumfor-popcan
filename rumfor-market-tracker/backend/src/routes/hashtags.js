@@ -1,3 +1,9 @@
+const express = require('express')
+const router = express.Router()
+
+const { verifyToken } = require('../middleware/auth')
+const hashtagController = require('../controllers/hashtagController')
+
 // Public routes
 router.get('/market/:marketId', hashtagController.getMarketHashtags)
 router.get('/trending', hashtagController.getTrendingHashtags)
@@ -20,7 +26,20 @@ router.post('/market/:marketId/add', (req, res) => {
     }
 
     // Validate tag is in predefined list
-    const predefinedTags = [/* same list as above */]
+    const predefinedTags = [
+      // Market Types & Categories
+      'farmers-market', 'flea-market', 'craft-fair', 'art-market', 'vintage-market',
+      'antique-market', 'night-market', 'street-market', 'community-market', 'holiday-market',
+      'seasonal-market', 'weekend-market', 'food-market', 'produce-market', 'bake-sale',
+
+      // Product Categories
+      'fresh-produce', 'organic-food', 'local-food', 'homemade-goods', 'handmade-crafts',
+      'jewelry', 'pottery', 'textiles', 'woodworking', 'metalwork', 'glass-art',
+      'photography', 'paintings', 'sculptures', 'prints', 'books', 'music',
+      'clothing', 'accessories', 'home-decor', 'furniture', 'plants', 'flowers',
+      'baked-goods', 'jams-preserves', 'honey', 'cheese', 'wine', 'beer',
+      'coffee', 'tea', 'spices', 'herbs', 'nuts', 'dried-fruits'
+    ]
     if (!predefinedTags.includes(tagName.toLowerCase())) {
       return res.status(400).json({
         success: false,
@@ -133,3 +152,5 @@ router.get('/predefined', (req, res) => {
     message: 'Predefined tags retrieved successfully'
   })
 })
+
+module.exports = router
