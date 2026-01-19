@@ -119,13 +119,13 @@ export const TagVoting: React.FC<TagVotingProps> = ({
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center">
           {marketHashtags.map((hashtag) => {
             const userVote = getUserVote(hashtag.id)
             const voteCount = getVoteCount(hashtag.id)
 
             return (
-              <div key={hashtag.name} className="relative inline-flex items-center gap-2 px-3 py-1 bg-white border border-border rounded-full text-sm shadow-sm">
+              <div key={hashtag.name} className="relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-border rounded-full text-sm shadow-sm">
                 <span className="font-medium">{hashtag.name}</span>
                 <span className="text-xs text-muted-foreground">
                   {voteCount > 0 ? '+' : ''}{voteCount}
@@ -178,7 +178,7 @@ export const TagVoting: React.FC<TagVotingProps> = ({
               <button
                 key={tag}
                 onClick={() => handleAddSuggestedTag(tag)}
-                className="relative inline-flex items-center gap-2 px-3 py-1 bg-white border border-border rounded-full text-sm shadow-sm hover:bg-muted/50 transition-colors"
+                className="relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-border rounded-full text-sm shadow-sm hover:bg-muted/50 transition-colors"
               >
                 <span className="text-primary font-bold text-xs">+</span>
                 <span className="font-medium">{tag}</span>

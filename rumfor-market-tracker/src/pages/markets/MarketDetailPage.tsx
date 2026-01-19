@@ -236,17 +236,91 @@ export const MarketDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery */}
+            {/* Image Gallery with Overlay */}
             {market.images && market.images.length > 0 && (
               <div className="space-y-4">
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
                   <img
                     src={market.images[selectedImageIndex]}
                     alt={market.name}
                     className="w-full h-full object-cover"
                   />
+
+                  {/* Header Overlay */}
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Badge variant="outline" className={cn(categoryColors[market.category], "bg-white/20 text-white border-white/30")}>
+                            {categoryLabels[market.category]}
+                          </Badge>
+                          <Badge variant="outline" className={cn(statusColors[market.status], "bg-white/20 text-white border-white/30")}>
+                            {market.status}
+                          </Badge>
+                        </div>
+
+                        <h1 className="text-4xl font-bold mb-2 text-white">{market.name}</h1>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-white/90">
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>{formatLocation(market.location)}</span>
+                          </div>
+
+                          <div className="flex items-center">
+                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{formatSchedule(market.schedule)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => navigate('/markets')}
+                          className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                        >
+                          Back to Markets
+                        </Button>
+                        <Button
+                          onClick={handleTrackToggle}
+                          disabled={isTracking}
+                          variant={isMarketTracked(market.id) ? "secondary" : "outline"}
+                          className={isMarketTracked(market.id) ? "bg-white text-black" : "bg-white/10 border-white/30 text-white hover:bg-white/20"}
+                        >
+                          {isMarketTracked(market.id) ? '✓ Tracked' : '+ Track Market'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                    <div className="prose prose-sm max-w-none">
+                      <p className={cn(
+                        "text-white leading-relaxed",
+                        !showFullDescription && "line-clamp-3"
+                      )}>
+                        {market.description}
+                      </p>
+                      {market.description && market.description.length > 200 && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => setShowFullDescription(!showFullDescription)}
+                          className="p-0 h-auto mt-2 text-white hover:text-white/80"
+                        >
+                          {showFullDescription ? 'Show Less' : 'Read More'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                
+
                 {market.images.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto">
                     {market.images.map((image, index) => (
@@ -255,8 +329,8 @@ export const MarketDetailPage: React.FC = () => {
                         onClick={() => setSelectedImageIndex(index)}
                         className={cn(
                           "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
-                          selectedImageIndex === index 
-                            ? "border-accent" 
+                          selectedImageIndex === index
+                            ? "border-accent"
                             : "border-transparent hover:border-muted-foreground/20"
                         )}
                       >
@@ -352,34 +426,7 @@ export const MarketDetailPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Tags & Hashtags */}
-            {((market.tags && market.tags.length > 0) || user) && (
-              <Card className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">Tags & Hashtags</h2>
 
-                {/* Static Market Tags */}
-                {market.tags && market.tags.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-medium mb-2">Market Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {market.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="bg-muted">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Community Tags */}
-                <div className={market.tags && market.tags.length > 0 ? "border-t pt-4" : ""}>
-                  <TagVoting
-                    marketTags={market.tags || []}
-                    marketId={id!}
-                  />
-                </div>
-              </Card>
-            )}
 
             {/* Community Features */}
             <Card className="p-0 overflow-hidden">
@@ -460,6 +507,16 @@ export const MarketDetailPage: React.FC = () => {
                   </Button>
                 </div>
               </Card>
+
+              {/* Tags & Hashtags */}
+              {((market.tags && market.tags.length > 0) || user) && (
+                <Card className="p-6">
+                  <TagVoting
+                    marketTags={market.tags || []}
+                    marketId={id!}
+                  />
+                </Card>
+              )}
 
               {/* Contact Info */}
               {market.promoter && (
