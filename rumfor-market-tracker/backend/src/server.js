@@ -173,9 +173,13 @@ const corsOptions = {
 // Apply CORS before other middleware
 app.use(cors(corsOptions))
 
-// HTTPS enforcement middleware
+// HTTPS enforcement middleware (skip for API routes)
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
+    // Skip HTTPS enforcement for API routes (handled by nginx)
+    if (req.path.startsWith('/api/')) {
+      return next()
+    }
     if (req.header('x-forwarded-proto') !== 'https') {
       res.redirect(`https://${req.header('host')}${req.url}`)
     } else {
