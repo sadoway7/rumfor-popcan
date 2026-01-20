@@ -90,6 +90,19 @@ export interface Market {
   status: MarketStatus
   marketType: MarketType // NEW: user-created or promoter-managed
   applicationStatus?: ApplicationStatus // Only for promoter-managed markets
+  applicationSettings?: {
+    acceptVendors: boolean
+    maxVendors?: number
+    applicationFee?: number
+    boothFee?: number
+    requirements?: {
+      businessLicense?: boolean
+      insurance?: boolean
+      healthPermit?: boolean
+      liabilityInsurance?: boolean
+    }
+    customRequirements?: string[]
+  }
   images: string[]
   tags: string[]
   accessibility: AccessibilityFeatures
@@ -136,7 +149,7 @@ export interface UserMarketTracking {
   id: string
   userId: string
   marketId: string
-  status: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled'
+  status: 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived'
   notes?: string
   todoCount: number
   todoProgress: number

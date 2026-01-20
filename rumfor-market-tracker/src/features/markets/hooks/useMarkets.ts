@@ -39,7 +39,7 @@ interface UseMarketsReturn {
 
   // Market actions
   getMarketById: (id: string) => Market | undefined
-  trackMarket: (marketId: string) => Promise<void>
+  trackMarket: (marketId: string, status?: string) => Promise<void>
   untrackMarket: (marketId: string) => Promise<void>
   isMarketTracked: (marketId: string) => boolean
 
@@ -141,9 +141,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   }, [queryClient])
 
   // Track market function
-  const trackMarket = useCallback(async (marketId: string) => {
+  const trackMarket = useCallback(async (marketId: string, status?: string) => {
     return new Promise<void>((resolve, reject) => {
-      trackMutation.mutate(marketId, {
+      trackMutation.mutate({ marketId, status }, {
         onSuccess: () => resolve(),
         onError: (error) => reject(error)
       })
@@ -209,7 +209,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const { user } = useAuthStore()
   const trackedMarketsQuery = useTrackedMarketsQuery(user?.id)
   const trackedMarketIds = Array.isArray(trackedMarketsQuery.data)
-    ? trackedMarketsQuery.data.map((market: Market) => market.id)
+    ? trackedMarketsQuery.data
+        .filter((t: any) => t.market) // Only markets that exist
+        .map((t: any) => t.market.id)
     : []
 
   // Get market by ID helper
@@ -302,8 +304,10 @@ const useTrackedMarketsQuery = (userId: string | undefined) => {
       if (!userId) {
         throw new Error('No authenticated user found')
       }
-      const response = await marketsApi.getUserTrackedMarkets(userId)
-      return response.data
+      // getUserTrackedMarkets now returns the tracking array directly
+      const trackingArray = await marketsApi.getUserTrackedMarkets(userId)
+      console.log('[useTrackedMarketsQuery] Received tracking array:', trackingArray)
+      return trackingArray
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -317,20 +321,48 @@ const useTrackMarketMutation = () => {
   const userId = useAuthStore(state => state.user?.id)
 
   return useMutation({
-    mutationFn: async (marketId: string) => {
-      const response = await marketsApi.trackMarket(marketId)
+    mutationFn: async ({ marketId, status }: { marketId: string; status?: string }) => {
+      const response = await marketsApi.trackMarket(marketId, status)
       if (!response.success) {
         throw new Error(response.error || 'Failed to track market')
       }
       return { marketId, response }
     },
+    onMutate: async ({ marketId }) => {
+      // Optimistic update - add market ID immediately
+      const queryKey = TRACKED_MARKETS_QUERY_KEY(userId)
+      await queryClient.cancelQueries({ queryKey })
+      
+      const previousData = queryClient.getQueryData(queryKey)
+      
+      // Optimistically update tracked IDs
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old || !Array.isArray(old)) return old
+        // Add a placeholder for this market if not already present
+        const hasMarket = old.some((m: any) => m.id === marketId || m._id === marketId)
+        if (hasMarket) return old
+        
+        // Return existing data - actual market will come from refetch
+        return old
+      })
+      
+      return { previousData }
+    },
     onSuccess: () => {
-      // Invalidate tracked markets query
+      console.log('[TRACK] Mutation successful, refetching tracked markets for userId:', userId)
+      // Invalidate ALL tracked markets queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ['trackedMarkets'] })
       if (userId) {
         queryClient.invalidateQueries({ queryKey: TRACKED_MARKETS_QUERY_KEY(userId) })
       }
+      // Force immediate refetch with await
+      queryClient.refetchQueries({ queryKey: ['trackedMarkets'], type: 'active' })
     },
-    onError: (err) => {
+    onError: (err, _variables, context: any) => {
+      // Rollback optimistic update on error
+      if (context?.previousData && userId) {
+        queryClient.setQueryData(TRACKED_MARKETS_QUERY_KEY(userId), context.previousData)
+      }
       console.error('Failed to track market:', err)
     }
   })
@@ -360,15 +392,48 @@ const useUntrackMarketMutation = () => {
   })
 }
 
+// Tracking data interface
+interface TrackingData {
+  id: string
+  userId: string
+  marketId: string
+  status: 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived'
+  notes?: string
+  todoCount: number
+  todoProgress: number
+  totalExpenses: number
+  createdAt: string
+  updatedAt: string
+}
+
+// Hook for market vendors
+export const useMarketVendors = (marketId: string) => {
+  const query = useQuery({
+    queryKey: ['market-vendors', marketId],
+    queryFn: () => marketsApi.getMarketVendors(marketId),
+    enabled: !!marketId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  return {
+    vendors: query.data?.data?.vendors || [],
+    isLoading: query.isLoading,
+    error: query.error?.message || null,
+    refetch: query.refetch
+  }
+}
+
 // Hook for tracked markets
 interface UseTrackedMarketsReturn {
   trackedMarkets: Market[]
   trackedMarketIds: string[]
+  trackingData: TrackingData[]
   isLoading: boolean
   error: string | null
-  trackMarket: (marketId: string) => void
+  trackMarket: (marketId: string, status?: string) => void
   untrackMarket: (marketId: string) => void
   isMarketTracked: (marketId: string) => boolean
+  getTrackingStatus: (marketId: string) => TrackingData | undefined
   refetch: () => Promise<any>
 }
 
@@ -380,30 +445,55 @@ export const useTrackedMarkets = (): UseTrackedMarketsReturn => {
   const trackMutation = useTrackMarketMutation()
   const untrackMutation = useUntrackMarketMutation()
 
-  const handleTrackMarket = useCallback((marketId: string) => {
-    trackMutation.mutate(marketId)
+  const handleTrackMarket = useCallback((marketId: string, status?: string) => {
+    trackMutation.mutate({ marketId, status })
   }, [trackMutation])
 
   const handleUntrackMarket = useCallback((marketId: string) => {
     untrackMutation.mutate(marketId)
   }, [untrackMutation])
 
-  const trackedMarketIds = Array.isArray(trackedMarketsQuery.data)
-    ? trackedMarketsQuery.data.map(market => market.id)
+  const trackingData = Array.isArray(trackedMarketsQuery.data)
+    ? trackedMarketsQuery.data.map((t: any) => ({
+        id: t._id || t.id,
+        userId: t.user,
+        marketId: t.market?.id || t.marketId,
+        status: t.status as 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived',
+        notes: t.personalNotes,
+        todoCount: t.todoCount || 0,
+        todoProgress: t.todoProgress || 0,
+        totalExpenses: t.totalExpenses || 0,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt
+      }))
     : []
+
+  const trackedMarkets = Array.isArray(trackedMarketsQuery.data)
+    ? trackedMarketsQuery.data
+        .filter((t: any) => t.market) // Only include valid tracking with market data
+        .map((t: any) => t.market)
+    : []
+
+  const trackedMarketIds = trackedMarkets.map(market => market.id)
 
   const isMarketTracked = useCallback((marketId: string) => {
     return trackedMarketIds.includes(marketId)
   }, [trackedMarketIds])
 
+  const getTrackingStatus = useCallback((marketId: string) => {
+    return trackingData.find(t => t.marketId === marketId)
+  }, [trackingData])
+
   return {
-    trackedMarkets: trackedMarketsQuery.data || [],
+    trackedMarkets,
     trackedMarketIds,
+    trackingData,
     isLoading: trackedMarketsQuery.isLoading || trackMutation.isPending || untrackMutation.isPending,
     error: trackedMarketsQuery.error?.message || null,
     trackMarket: handleTrackMarket,
     untrackMarket: handleUntrackMarket,
     isMarketTracked,
+    getTrackingStatus,
     refetch: trackedMarketsQuery.refetch
   }
 }

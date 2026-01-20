@@ -26,7 +26,7 @@ interface VendorMarketTracking {
   id: string
   userId: string
   marketId: string
-  status: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled'
+  status: 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived'
   notes?: string
   todoCount: number
   todoProgress: number
@@ -63,9 +63,12 @@ const categoryLabels = {
 const statusColors = {
   'interested': 'bg-blue-100 text-blue-800 border-blue-200',
   'applied': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'booked': 'bg-green-100 text-green-800 border-green-200',
+  'approved': 'bg-green-100 text-green-800 border-green-200',
+  'attending': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  'declined': 'bg-orange-100 text-orange-800 border-orange-200',
+  'cancelled': 'bg-red-100 text-red-800 border-red-200',
   'completed': 'bg-gray-100 text-gray-800 border-gray-200',
-  'cancelled': 'bg-red-100 text-red-800 border-red-200'
+  'archived': 'bg-slate-100 text-slate-800 border-slate-200'
 }
 
 export const VendorMarketRow: React.FC<VendorMarketRowProps> = ({
@@ -371,10 +374,11 @@ export const VendorMarketRow: React.FC<VendorMarketRowProps> = ({
         <div className="border-t border-border p-4 bg-surface-2">
           <div className="flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              {currentStatus === 'interested' ? 'Ready to apply?' : 
-               currentStatus === 'applied' ? 'Application submitted' : 
-               currentStatus === 'booked' ? 'Application approved!' : 
-               currentStatus === 'completed' ? 'Market completed' : 
+              {currentStatus === 'interested' ? 'Ready to apply?' :
+               currentStatus === 'applied' ? 'Application submitted' :
+               currentStatus === 'approved' ? 'Application approved!' :
+               currentStatus === 'attending' ? 'Attending market' :
+               currentStatus === 'completed' ? 'Market completed' :
                'Application processed'}
             </div>
             

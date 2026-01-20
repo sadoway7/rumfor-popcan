@@ -18,6 +18,7 @@ interface MarketCardProps {
   showTrackButton?: boolean
   variant?: 'default' | 'compact' | 'featured' | 'minimal'
   detailPath?: string // Custom path for market detail page
+  trackingStatus?: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled' // Current tracking status
 }
 
 
@@ -41,7 +42,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   isLoading = false,
   showTrackButton = true,
   variant = 'default',
-  detailPath
+  detailPath,
+  trackingStatus
 }) => {
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -93,6 +95,35 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const formatLocation = (location: Market['location']) => {
     return `${location.city}, ${location.state}`
   }
+
+  // Determine market type and application system
+  const isPromoterManaged = market.marketType === 'promoter-managed'
+  const hasApplicationSystem = isPromoterManaged && (market.applicationStatus === 'open' || market.applicationStatus === 'accepting-applications')
+
+  // Determine button text and behavior based on state
+  const getButtonConfig = () => {
+    if (!isTracked) {
+      if (hasApplicationSystem) {
+        return { text: 'Apply to Market', action: 'track' }
+      } else {
+        return { text: 'Track Market', action: 'track' }
+      }
+    } else {
+      if (trackingStatus === 'applied') {
+        return { text: 'Application Pending', action: 'untrack' }
+      } else if (trackingStatus === 'booked') {
+        return { text: '✓ Approved', action: 'untrack' }
+      } else if (trackingStatus === 'completed') {
+        return { text: '✓ Completed', action: 'untrack' }
+      } else if (trackingStatus === 'cancelled') {
+        return { text: 'Track Market', action: 'track' }
+      } else {
+        return { text: '✓ Tracked', action: 'untrack' }
+      }
+    }
+  }
+
+  const buttonConfig = getButtonConfig()
 
   if (variant === 'compact') {
     return (
@@ -199,13 +230,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               
               {showTrackButton && (
                 <Button
-                  variant={isTracked ? "primary" : "outline"}
+                  variant={buttonConfig.action === 'track' ? "outline" : "primary"}
                   size="sm"
                   onClick={handleTrackClick}
-                  disabled={isLoading}
+                  disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
                   className="ml-4"
                 >
-                  {isTracked ? '✓ Tracked' : 'Track Market'}
+                  {buttonConfig.text}
                 </Button>
               )}
             </div>
@@ -309,13 +340,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 
                 {showTrackButton && (
                   <Button
-                    variant={isTracked ? "primary" : "ghost"}
+                    variant={buttonConfig.action === 'track' ? "ghost" : "primary"}
                     size="sm"
                     onClick={handleTrackClick}
-                    disabled={isLoading}
+                    disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
                     className="h-7 px-3 text-xs"
                   >
-                    {isTracked ? '✓' : '+'}
+                    {buttonConfig.text === 'Track Market' ? '+' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
                   </Button>
                 )}
               </div>
@@ -405,13 +436,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             
             {showTrackButton && (
               <Button
-                variant={isTracked ? "primary" : "outline"}
+                variant={buttonConfig.action === 'track' ? "outline" : "primary"}
                 size="sm"
                 onClick={handleTrackClick}
-                disabled={isLoading}
+                disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
                 className="ml-2"
               >
-                {isTracked ? '✓' : '+'}
+                {buttonConfig.text}
               </Button>
             )}
           </div>

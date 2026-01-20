@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
-import { useMarket, useMarkets } from '@/features/markets/hooks/useMarkets'
+import { useMarket, useMarkets, useMarketVendors } from '@/features/markets/hooks/useMarkets'
 // import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
@@ -54,6 +54,7 @@ export const MarketDetailPage: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showFullDescription, setShowFullDescription] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
+  const [showStatusModal, setShowStatusModal] = useState(false)
   const [isAccessibilityCollapsed, setIsAccessibilityCollapsed] = useState(true)
   const [isVendorsCollapsed, setIsVendorsCollapsed] = useState(false)
   const [vendorSearchTerm, setVendorSearchTerm] = useState('')
@@ -65,6 +66,7 @@ export const MarketDetailPage: React.FC = () => {
     isMarketTracked,
     isTracking
   } = useMarkets()
+  const { vendors: marketVendors } = useMarketVendors(id!)
   // const { myApplications } = useVendorApplications()
   const { user } = useAuthStore()
 
@@ -116,6 +118,38 @@ export const MarketDetailPage: React.FC = () => {
     }
   }
 
+  // Determine button text based on market type
+  const getButtonText = () => {
+    const isTracked = isMarketTracked(market.id)
+
+    if (isTracked) {
+      return 'Tracked'
+    }
+
+    // For now, prioritize self-managed system - always show "Track this Market"
+    // Application system can be enabled later when needed
+    return 'Track this Market'
+  }
+
+  const getButtonIcon = () => {
+    const isTracked = isMarketTracked(market.id)
+
+    if (isTracked) {
+      return (
+        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      )
+    }
+
+    // Always use track icon for self-managed system
+    return (
+      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+    )
+  }
+
   const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
 
@@ -164,54 +198,10 @@ export const MarketDetailPage: React.FC = () => {
     return `${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.zipCode || ''}`.trim()
   }
 
-  // Mock vendor data with 40 different vendors
-  const mockVendors = [
-    { name: "Fresh Farms Market", type: "produce", avatar: "FF", color: "from-green-100 to-green-50" },
-    { name: "Artisan Crafts Co.", type: "crafts", avatar: "AC", color: "from-purple-100 to-purple-50" },
-    { name: "Sweet Treats Bakery", type: "food", avatar: "SB", color: "from-orange-100 to-orange-50" },
-    { name: "Mountain View Nursery", type: "plants", avatar: "MV", color: "from-emerald-100 to-emerald-50" },
-    { name: "Riverside Cheese", type: "dairy", avatar: "RC", color: "from-yellow-100 to-yellow-50" },
-    { name: "Heritage Textiles", type: "textiles", avatar: "HT", color: "from-blue-100 to-blue-50" },
-    { name: "Local Honey Traders", type: "food", avatar: "LH", color: "from-amber-100 to-amber-50" },
-    { name: "Woodcraft Workshop", type: "crafts", avatar: "WW", color: "from-amber-100 to-amber-50" },
-    { name: "Garden Fresh Herbs", type: "produce", avatar: "GF", color: "from-lime-100 to-lime-50" },
-    { name: "Artisan Pottery", type: "crafts", avatar: "AP", color: "from-stone-100 to-stone-50" },
-    { name: "Maple Syrup Delights", type: "food", avatar: "MS", color: "from-amber-100 to-amber-50" },
-    { name: "Vintage Treasures", type: "antiques", avatar: "VT", color: "from-slate-100 to-slate-50" },
-    { name: "Organic Vegetable Farm", type: "produce", avatar: "OV", color: "from-green-100 to-green-50" },
-    { name: "Handmade Jewelry", type: "jewelry", avatar: "HJ", color: "from-pink-100 to-pink-50" },
-    { name: "Fresh Bread Bakery", type: "food", avatar: "FB", color: "from-yellow-100 to-yellow-50" },
-    { name: "Leather Goods Co.", type: "crafts", avatar: "LG", color: "from-orange-100 to-orange-50" },
-    { name: "Berry Bliss Farm", type: "produce", avatar: "BB", color: "from-red-100 to-red-50" },
-    { name: "Ceramic Creations", type: "crafts", avatar: "CC", color: "from-blue-100 to-blue-50" },
-    { name: "Spice Route Traders", type: "food", avatar: "SR", color: "from-red-100 to-red-50" },
-    { name: "Floral Arrangements", type: "flowers", avatar: "FA", color: "from-pink-100 to-pink-50" },
-    { name: "Artisan Cheese Makers", type: "dairy", avatar: "AC", color: "from-yellow-100 to-yellow-50" },
-    { name: "Woodworking Studio", type: "crafts", avatar: "WS", color: "from-amber-100 to-amber-50" },
-    { name: "Herb & Spice Garden", type: "produce", avatar: "HS", color: "from-green-100 to-green-50" },
-    { name: "Glass Art Gallery", type: "art", avatar: "GA", color: "from-cyan-100 to-cyan-50" },
-    { name: "Coffee Roasters", type: "beverages", avatar: "CR", color: "from-amber-100 to-amber-50" },
-    { name: "Textile Weavers", type: "textiles", avatar: "TW", color: "from-indigo-100 to-indigo-50" },
-    { name: "Mushroom Growers", type: "produce", avatar: "MG", color: "from-neutral-100 to-neutral-50" },
-    { name: "Metalwork Studio", type: "crafts", avatar: "MS", color: "from-gray-100 to-gray-50" },
-    { name: "Jam & Preserves", type: "food", avatar: "JP", color: "from-red-100 to-red-50" },
-    { name: "Bookbinders Workshop", type: "crafts", avatar: "BW", color: "from-stone-100 to-stone-50" },
-    { name: "Olive Oil Producers", type: "food", avatar: "OO", color: "from-yellow-100 to-yellow-50" },
-    { name: "Basket Weavers", type: "crafts", avatar: "BW", color: "from-green-100 to-green-50" },
-    { name: "Tea Merchants", type: "beverages", avatar: "TM", color: "from-green-100 to-green-50" },
-    { name: "Soap & Candle Makers", type: "crafts", avatar: "SC", color: "from-purple-100 to-purple-50" },
-    { name: "Nut & Dried Fruit", type: "food", avatar: "ND", color: "from-orange-100 to-orange-50" },
-    { name: "Paper Crafts", type: "crafts", avatar: "PC", color: "from-pink-100 to-pink-50" },
-    { name: "Wine & Vineyard", type: "beverages", avatar: "WV", color: "from-purple-100 to-purple-50" },
-    { name: "Leather Tanners", type: "crafts", avatar: "LT", color: "from-brown-100 to-brown-50" },
-    { name: "Seed & Bulb Suppliers", type: "plants", avatar: "SB", color: "from-lime-100 to-lime-50" },
-    { name: "Musical Instruments", type: "crafts", avatar: "MI", color: "from-wood-100 to-wood-50" }
-  ]
-
-  // Filter vendors based on search term
-  const filteredVendors = mockVendors.filter(vendor =>
-    vendor.name.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
-    vendor.type.toLowerCase().includes(vendorSearchTerm.toLowerCase())
+  // Filter real vendors based on search term
+  const filteredVendors = marketVendors.filter(vendor =>
+    `${vendor.user.firstName} ${vendor.user.lastName}`.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
+    vendor.user.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
   )
 
   return (
@@ -544,21 +534,8 @@ export const MarketDetailPage: React.FC = () => {
                     disabled={isTracking}
                     variant={isMarketTracked(market.id) ? "secondary" : "primary"}
                   >
-                    {isMarketTracked(market.id) ? (
-                      <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Tracked
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Track this Market
-                      </>
-                    )}
+                    {getButtonIcon()}
+                    {getButtonText()}
                   </Button>
 
                   {/* User Status Button (only for tracked markets) */}
@@ -568,6 +545,7 @@ export const MarketDetailPage: React.FC = () => {
                         className="w-full"
                         variant="outline"
                         size="sm"
+                        onClick={() => setShowStatusModal(true)}
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -708,6 +686,54 @@ export const MarketDetailPage: React.FC = () => {
         marketId={market.id}
         marketName={market.name}
       />
+
+      {/* Status Update Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold mb-4">Update Your Status</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Update your participation status for this market.
+            </p>
+            <div className="space-y-2">
+              {[
+                { value: 'interested', label: 'Interested' },
+                { value: 'applied', label: 'Applied' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'attending', label: 'Attending' },
+                { value: 'declined', label: 'Declined' },
+                { value: 'cancelled', label: 'Cancelled' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'archived', label: 'Archived' }
+              ].map((status) => (
+                <button
+                  key={status.value}
+                  onClick={async () => {
+                    try {
+                      await trackMarket(market.id, status.value)
+                      setShowStatusModal(false)
+                    } catch (error) {
+                      console.error('Failed to update status:', error)
+                    }
+                  }}
+                  className="w-full text-left p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowStatusModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

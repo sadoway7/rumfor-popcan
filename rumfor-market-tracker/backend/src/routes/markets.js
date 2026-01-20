@@ -8,6 +8,7 @@ const {
   updateMarket,
   deleteMarket,
   toggleTracking,
+  untrackMarket,
   getMyMarkets,
   searchMarkets,
   getPopularMarkets,
@@ -26,7 +27,8 @@ const {
   getVendorExpenses,
   getLogistics,
   getWeatherForecast,
-  getCalendarEvents
+  getCalendarEvents,
+  getMarketVendors
 } = require('../controllers/marketsController')
 
 const { verifyToken, optionalAuth, requireVerifiedPromoter, requireAdmin, requireVendor, requireVendorOwnershipOrAdmin } = require('../middleware/auth')
@@ -39,6 +41,7 @@ router.get('/popular', validatePagination, getPopularMarkets)
 router.get('/category/:category', validatePagination, getMarketsByCategory)
 router.get('/type/:marketType', validateMarketTypeParam, validatePagination, getMarketsByType)
 router.get('/:id', validateMongoId('id'), getMarket)
+router.get('/:id/vendors', validateMongoId('id'), getMarketVendors)
 
 // Protected routes
 router.use(verifyToken)
@@ -48,6 +51,7 @@ router.post('/', requireVerifiedPromoter, validateMarketCreation, createMarket)
 router.patch('/:id', validateMongoId('id'), validateMarketUpdate, updateMarket)
 router.delete('/:id', validateMongoId('id'), deleteMarket)
 router.post('/:id/track', validateMongoId('id'), toggleTracking)
+router.delete('/:id/track', validateMongoId('id'), untrackMarket)
 
 // Admin routes
 router.patch('/:id/verify', validateMongoId('id'), requireAdmin, verifyMarket)

@@ -330,7 +330,7 @@ export const useMarketsStore = create<MarketsState>()(
         try {
           const response = await marketsApi.getUserTrackedMarkets('current-user-id')
           set({
-            trackedMarketIds: response.data.map(m => m.id),
+            trackedMarketIds: response.data.map((m: any) => m.id),
             isLoading: false
           })
         } catch (error) {

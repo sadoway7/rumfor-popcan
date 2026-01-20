@@ -124,8 +124,9 @@ const getMarket = catchAsync(async (req, res, next) => {
   // Get tracking status if user is authenticated
   let trackingStatus = null
   if (req.user) {
+    const userId = req.user._id || req.user.id
     const tracking = await UserMarketTracking.findOne({
-      user: req.user.id,
+      user: userId,
       market: id
     })
     trackingStatus = tracking ? tracking.status : null
@@ -155,9 +156,10 @@ const createMarket = catchAsync(async (req, res, next) => {
   }
 
   // Add promoter and creator type to market data
+  const userId = req.user._id || req.user.id
   const marketData = {
     ...req.body,
-    promoter: req.user.id,
+    promoter: userId,
     createdByType
   }
 
@@ -246,7 +248,7 @@ const deleteMarket = catchAsync(async (req, res, next) => {
 // Track/untrack market
 const toggleTracking = catchAsync(async (req, res, next) => {
   const { id } = req.params
-  const { status = 'interested' } = req.body
+  const { status } = req.body
 
   // Check if market exists
   const market = await Market.findById(id)
@@ -255,31 +257,84 @@ const toggleTracking = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
+  // For now, prioritize self-managed system - always start with 'interested'
+  // Application system can be enabled later when needed
+  let defaultStatus = 'interested'
+
+  const trackingStatus = status || defaultStatus
+
+  // Get user ID - handle both _id and id
+  const userId = req.user._id || req.user.id
+
   // Find existing tracking
   let tracking = await UserMarketTracking.findOne({
-    user: req.user.id,
+    user: userId,
     market: id
   })
 
   if (tracking) {
     // Update existing tracking
-    tracking.status = status
+    tracking.status = trackingStatus
     await tracking.save()
   } else {
     // Create new tracking
     tracking = await UserMarketTracking.create({
-      user: req.user.id,
+      user: userId,
       market: id,
-      status
+      status: trackingStatus
     })
 
     // Increment market statistics
-    await market.incrementStat('totalTrackers')
+    market.stats.favoriteCount = (market.stats.favoriteCount || 0) + 1
+    await market.save()
   }
 
   sendSuccess(res, {
-    tracking
-  }, `Market ${tracking.status === 'interested' ? 'tracked' : 'untracked'} successfully`)
+    tracking: {
+      id: tracking._id,
+      marketId: id,
+      userId: userId,
+      status: tracking.status,
+      createdAt: tracking.createdAt,
+      updatedAt: tracking.updatedAt
+    }
+  }, `Market tracked successfully`)
+})
+
+// Untrack market (delete tracking record)
+const untrackMarket = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  // Check if market exists
+  const market = await Market.findById(id)
+
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Get user ID - handle both _id and id
+  const userId = req.user._id || req.user.id
+
+  // Find existing tracking
+  const tracking = await UserMarketTracking.findOne({
+    user: userId,
+    market: id
+  })
+
+  if (!tracking) {
+    return next(new AppError('Market not currently tracked', 404))
+  }
+
+  // Delete the tracking record
+  await UserMarketTracking.findByIdAndDelete(tracking._id)
+
+  // Decrement market statistics
+  market.stats.favoriteCount = Math.max(0, (market.stats.favoriteCount || 0) - 1)
+  await market.save()
+
+  sendSuccess(res, {
+    tracked: false
+  }, 'Market untracked successfully')
 })
 
 // Get user's tracked markets
@@ -293,8 +348,10 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   } = req.query
 
   // Build query conditions
+  const userId = req.user._id || req.user.id
+  console.log('[GET MY MARKETS] Querying with userId:', userId)
   const query = {
-    user: req.user.id,
+    user: userId,
     isArchived: false
   }
 
@@ -1250,6 +1307,43 @@ const getCalendarEvents = catchAsync(async (req, res, next) => {
   }, 'Calendar events retrieved successfully')
 })
 
+// Get approved/attending vendors for public display
+const getMarketVendors = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return next(new AppError('Market not found', 404))
+  }
+
+  // Get tracking records for approved and attending vendors
+  const tracking = await UserMarketTracking.find({
+    market: id,
+    status: { $in: ['approved', 'attending'] },
+    isArchived: false
+  }).populate('user', 'username profile.firstName profile.lastName role')
+
+  const vendors = tracking.map(t => ({
+    user: {
+      id: t.user._id,
+      username: t.user.username,
+      firstName: t.user.profile?.firstName || t.user.firstName,
+      lastName: t.user.profile?.lastName || t.user.lastName,
+      role: t.user.role
+    },
+    status: t.status,
+    joinedAt: t.createdAt
+  }))
+
+  sendSuccess(res, {
+    vendors,
+    market: {
+      id: market._id,
+      name: market.name
+    }
+  }, 'Market vendors retrieved successfully')
+})
+
 module.exports = {
   getMarkets,
   getMarket,
@@ -1257,6 +1351,7 @@ module.exports = {
   updateMarket,
   deleteMarket,
   toggleTracking,
+  untrackMarket,
   getMyMarkets,
   searchMarkets,
   getPopularMarkets,
@@ -1275,5 +1370,6 @@ module.exports = {
   getVendorExpenses,
   getLogistics,
   getWeatherForecast,
-  getCalendarEvents
+  getCalendarEvents,
+  getMarketVendors
 }

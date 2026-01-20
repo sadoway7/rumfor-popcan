@@ -13,7 +13,7 @@ const userMarketTrackingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['interested', 'applied', 'booked', 'completed', 'cancelled'],
+    enum: ['interested', 'applied', 'approved', 'attending', 'declined', 'cancelled', 'completed', 'archived'],
     default: 'interested'
   },
   applicationData: {
@@ -112,9 +112,9 @@ userMarketTrackingSchema.methods.reviewApplication = function(decision, reviewed
   this.applicationData.reviewNotes = notes
   
   if (decision === 'approve') {
-    this.status = 'booked'
+    this.status = 'approved'
   } else if (decision === 'reject') {
-    this.status = 'cancelled'
+    this.status = 'declined'
   }
   
   return this.save()
@@ -137,7 +137,7 @@ userMarketTrackingSchema.statics.getMarketApplicationStats = function(marketId) 
         _id: '$status',
         count: { $sum: 1 },
         totalApplications: {
-          $sum: { $cond: [{ $in: ['$status', ['applied', 'booked', 'completed']] }, 1, 0] }
+          $sum: { $cond: [{ $in: ['$status', ['applied', 'approved', 'completed']] }, 1, 0] }
         }
       }
     }

@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, LogOut, Search, User, MapPin, Plus, Settings, FileText, Sun, Moon, Navigation, MoreHorizontal } from 'lucide-react'
+import { Menu, LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, MoreHorizontal } from 'lucide-react'
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore()
@@ -103,10 +103,10 @@ export function Header() {
                 )}
                 
                 {user?.role === 'vendor' && (
-                  <Link to="/vendor/applications">
+                  <Link to="/vendor/tracked-markets">
                     <Button variant="outline" size="sm" className="bg-surface/80 backdrop-blur-sm hover:bg-surface hover:glow-accent-sm transition-all duration-300">
-                      <FileText className="h-4 w-4 mr-2" />
-                      My Applications
+                      <MapPin className="h-4 w-4 mr-2" />
+                      My Markets
                     </Button>
                   </Link>
                 )}
@@ -260,9 +260,9 @@ export function Header() {
                     )}
                     {user?.role === 'vendor' && (
                       <DropdownMenuItem asChild>
-                        <Link to="/vendor/applications" className="flex items-center">
-                          <FileText className="h-4 w-4 mr-3 text-accent" />
-                          Applications
+                        <Link to="/vendor/tracked-markets" className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-3 text-accent" />
+                          My Markets
                         </Link>
                       </DropdownMenuItem>
                     )}

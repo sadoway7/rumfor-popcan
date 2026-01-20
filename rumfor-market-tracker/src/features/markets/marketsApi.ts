@@ -429,18 +429,19 @@ export const marketsApi = {
   },
 
   // Track/untrack market (mock implementation)
-  async trackMarket(marketId: string): Promise<ApiResponse<{ tracked: boolean }>> {
+  async trackMarket(marketId: string, status?: string): Promise<ApiResponse<{ tracked: boolean }>> {
     if (isDevelopment && isMockMode) {
       await delay(100)
 
-      console.log('Tracking market:', marketId)
+      console.log('Tracking market:', marketId, 'with status:', status || 'interested')
       // Simulate tracking action
       return {
         success: true,
         data: { tracked: true }
       }
     } else {
-      const response = await httpClient.post<ApiResponse<{ tracked: boolean }>>(`/markets/${marketId}/track`, {})
+      const body = status ? { status } : {}
+      const response = await httpClient.post<ApiResponse<{ tracked: boolean }>>(`/markets/${marketId}/track`, body)
       if (!response.success) throw new Error(response.error || 'Failed to track market')
       return response
     }
@@ -463,7 +464,7 @@ export const marketsApi = {
   },
 
   // Get user's tracked markets
-  async getUserTrackedMarkets(userId: string): Promise<PaginatedResponse<Market>> {
+  async getUserTrackedMarkets(userId: string): Promise<any> {
     if (isDevelopment && isMockMode) {
       await delay(300)
 
@@ -478,29 +479,60 @@ export const marketsApi = {
         return market.id === '1'
       })
 
+      // Return tracking objects, not just markets
+      return trackedMarkets.map(market => ({
+        _id: 'tracking-' + market.id,
+        user: userId,
+        market: market,
+        status: 'interested',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }))
+    } else {
+      const response = await httpClient.get<ApiResponse<any>>(`/markets/my/markets`)
+      console.log('[TRACKED MARKETS API] Response:', response)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch tracked markets')
+
+      // Return the tracking array directly - it contains both tracking and market data
+      const backendData = response.data!
+      console.log('[TRACKED MARKETS API] Backend data:', backendData)
+      console.log('[TRACKED MARKETS API] Tracking array:', backendData.tracking)
+
+      return backendData.tracking
+    }
+  },
+
+  // Get approved/attending vendors for a market
+  async getMarketVendors(marketId: string): Promise<ApiResponse<{ vendors: any[]; market: { id: string; name: string } }>> {
+    if (isDevelopment && isMockMode) {
+      await delay(100)
+
+      // Mock vendors
+      const vendors = [
+        {
+          user: {
+            id: 'user-1',
+            username: 'johnvendor',
+            firstName: 'John',
+            lastName: 'Smith',
+            role: 'vendor'
+          },
+          status: 'approved',
+          joinedAt: '2024-01-01T00:00:00Z'
+        }
+      ]
+
       return {
-        data: trackedMarkets,
-        pagination: {
-          page: 1,
-          limit: 20,
-          total: trackedMarkets.length,
-          totalPages: 1
+        success: true,
+        data: {
+          vendors,
+          market: { id: marketId, name: 'Mock Market' }
         }
       }
     } else {
-      const response = await httpClient.get<ApiResponse<any>>(`/markets/my/markets`)
-      if (!response.success) throw new Error(response.error || 'Failed to fetch tracked markets')
-
-      // Backend serializer now handles transformation
-      const backendData = response.data!
-      const markets = backendData.tracking
-        .filter((tracking: any) => tracking.market) // Filter out deleted markets
-        .map((tracking: any) => tracking.market as Market)
-
-      return {
-        data: markets,
-        pagination: backendData.pagination
-      }
+      const response = await httpClient.get<ApiResponse<{ vendors: any[]; market: { id: string; name: string } }>>(`/markets/${marketId}/vendors`)
+      if (!response.success) throw new Error(response.error || 'Failed to fetch market vendors')
+      return response
     }
   }
 }
