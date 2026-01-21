@@ -31,6 +31,8 @@ export function HomePage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const [showLoginForm, setShowLoginForm] = useState(false)
+
   // Fetch featured markets for homepage
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
     queryKey: ['markets', 'featured'],
@@ -116,57 +118,85 @@ export function HomePage() {
                 </Link>
               </div>
 
-              {/* Sign In Form - PUNK ANTI-DESIGN */}
+              {/* Sign In Form - Collapsible - PUNK ANTI-DESIGN */}
               {!isAuthenticated && (
-                <div className="mb-8 -mt-4 bg-surface rounded-xl p-4 space-y-3 shadow-[6px_8px_0px_0px] shadow-black/30 dark:shadow-white/30 transform -rotate-0.5 z-20 relative">
-                  <form onSubmit={handleSignIn} className="space-y-2.5">
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
-                      required
-                    />
-                    
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
-                      required
-                    />
-
-                    {authError && (
-                      <p className="text-sm font-bold text-red-500 text-center py-1 uppercase">{authError}</p>
-                    )}
-
+                !showLoginForm ? (
+                  <div className="mb-8 -mt-4">
                     <button
-                      type="submit"
-                      disabled={authLoading}
-                      className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 md:py-2.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px] disabled:opacity-50"
+                      onClick={() => setShowLoginForm(true)}
+                      className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 md:py-2.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
                     >
-                      <span className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">
-                        {authLoading ? 'Loading...' : 'Sign In'}
-                      </span>
+                      <span className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">Login / Register</span>
                     </button>
-                  </form>
+                  </div>
+                ) : (
+                  <div className="mb-8 -mt-4 bg-surface rounded-xl p-4 space-y-3 shadow-[6px_8px_0px_0px] shadow-black/30 dark:shadow-white/30 transform -rotate-0.5 z-20 relative">
+                    <div className="text-center mb-2">
+                      <button
+                        onClick={() => setShowLoginForm(false)}
+                        className="text-accent font-bold hover:underline text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <form onSubmit={handleSignIn} className="space-y-2.5">
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
+                        required
+                      />
 
-                  <Link to="/auth/register" className="block">
-                    <button className="w-full bg-amber-400 rounded-lg px-4 py-2 transition-all hover:bg-amber-300 shadow-[2px_2px_0px_0px] shadow-black/20 dark:shadow-white/20">
-                      <span className="text-foreground font-bold text-sm uppercase tracking-wide">Register</span>
-                    </button>
-                  </Link>
-                </div>
+                      <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
+                        required
+                      />
+
+                      {authError && (
+                        <p className="text-sm font-bold text-red-500 text-center py-1 uppercase">{authError}</p>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 md:py-2.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px] disabled:opacity-50"
+                      >
+                        <span className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">
+                          {authLoading ? 'Loading...' : 'Sign In'}
+                        </span>
+                      </button>
+                    </form>
+
+                    <Link to="/auth/register" className="block">
+                      <button className="w-full bg-amber-400 rounded-lg px-4 py-2 transition-all hover:bg-amber-300 shadow-[2px_2px_0px_0px] shadow-black/20 dark:shadow-white/20">
+                        <span className="text-foreground font-bold text-sm uppercase tracking-wide">Register</span>
+                      </button>
+                    </Link>
+                  </div>
+                )
               )}
 
               {/* Browse by Category - PUNK */}
               <div className="mb-8">
                 <div className="h-8"></div>
-                <h3 className="text-xl font-black text-foreground uppercase tracking-wide mb-8 mt-4 transform -rotate-1 text-center">
+                <h3 className="text-xl font-black text-foreground uppercase tracking-wide mb-4 mt-2 transform -rotate-1 text-center">
                   Explore Categories
                 </h3>
+
+                <div className="px-2 mb-6">
+                  <Link to="/markets" className="block max-w-xs mx-auto">
+                    <div className="w-full py-4 px-4 md:py-3 rounded-xl bg-accent hover:bg-accent-light transition-all shadow-[4px_4px_0px_0px] shadow-black/20 dark:shadow-white/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
+                      <div className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">Advanced Search →</div>
+                    </div>
+                  </Link>
+                </div>
+
                 <div className="grid grid-cols-3 gap-2.5">
                   {marketCategories.map((cat) => {
                     const Icon = cat.icon
@@ -191,11 +221,7 @@ export function HomePage() {
                     </div>
                   </Link>
 
-                  <Link to="/markets" className="block max-w-xs mx-auto">
-                    <div className="w-full py-4 px-4 md:py-3 rounded-xl bg-accent hover:bg-accent-light transition-all shadow-[4px_4px_0px_0px] shadow-black/20 dark:shadow-white/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
-                      <div className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">Advanced Search →</div>
-                    </div>
-                  </Link>
+
                 </div>
               </div>
             </div>
