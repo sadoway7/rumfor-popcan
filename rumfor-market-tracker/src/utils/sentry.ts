@@ -12,8 +12,8 @@ export const initSentry = () => {
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
-          maskAllText: true,
-          blockAllMedia: true,
+          maskAllText: import.meta.env.PROD,
+          blockAllMedia: import.meta.env.PROD,
         }),
       ],
 
@@ -49,17 +49,6 @@ export const initSentry = () => {
 
         return event
       },
-
-      // Capture console errors in development
-      ...(import.meta.env.DEV && {
-        integrations: [
-          Sentry.browserTracingIntegration(),
-          Sentry.replayIntegration({
-            maskAllText: false,
-            blockAllMedia: false,
-          }),
-        ],
-      }),
     })
 
     console.log('✅ Sentry error monitoring initialized')

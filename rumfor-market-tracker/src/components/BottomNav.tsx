@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Store,
   FileText,
-  Calendar,
   CheckSquare,
   Settings,
   HelpCircle,
@@ -22,7 +21,6 @@ interface BottomNavProps {
 const navigationConfig = {
   visitor: [
     { name: 'Markets', href: '/markets', icon: Store },
-    { name: 'Events', href: '/events', icon: Calendar },
     { name: 'About', href: '/about', icon: HelpCircle },
   ],
   vendor: [
@@ -53,8 +51,8 @@ export function BottomNav({ role }: BottomNavProps) {
   const navigation = (navigationConfig as any)[role] || []
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border">
-      <nav className="flex justify-around items-center py-2 px-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom">
+      <nav className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
         {navigation.map((item: any) => {
           const isActive = location.pathname === item.href
           return (
@@ -62,7 +60,7 @@ export function BottomNav({ role }: BottomNavProps) {
               key={item.name}
               to={item.href}
               className={cn(
-                'flex min-h-[44px] min-w-[44px] flex-col items-center justify-center rounded-md px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'flex min-h-[56px] min-w-[56px] flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95',
                 isActive
                   ? 'text-accent'
                   : 'text-muted-foreground hover:text-foreground'
@@ -70,11 +68,11 @@ export function BottomNav({ role }: BottomNavProps) {
             >
               <item.icon
                 className={cn(
-                  'h-5 w-5 mb-1',
-                  isActive ? 'text-accent' : 'text-muted-foreground'
+                  'h-6 w-6 mb-1 transition-transform duration-150',
+                  isActive ? 'text-accent scale-105' : 'text-muted-foreground'
                 )}
               />
-              <span className="truncate">{item.name}</span>
+              <span className="truncate text-[10px]">{item.name}</span>
             </Link>
           )
         })}

@@ -86,7 +86,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     
 
     
-    // Use fixed classes instead of dynamic ones for Tailwind purging
+    // Use fixed classes instead of dynamic ones for Tailwind purging - 4 wide on large screens
     return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6'
   }
 
@@ -122,6 +122,19 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     )
   }
 
+  // Ensure markets is an array
+  if (!Array.isArray(markets)) {
+    return (
+      <div className="py-12">
+        <EmptyState
+          title="Loading markets..."
+          description="Please wait while we load the markets."
+          className={className}
+        />
+      </div>
+    )
+  }
+
   // Show empty state
   if (markets.length === 0) {
     return (
@@ -135,6 +148,8 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
           title={emptyStateProps?.title || "No markets found"}
           description={emptyStateProps?.description || "Try adjusting your search criteria or filters to find more markets."}
           action={emptyStateProps?.action}
+          size="lg"
+          variant="centered"
           className={className}
         />
       </div>

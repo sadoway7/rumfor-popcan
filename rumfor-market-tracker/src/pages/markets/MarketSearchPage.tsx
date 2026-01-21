@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
 
 import { Button, Input } from '@/components/ui'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useSidebarStore } from '@/features/theme/themeStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import type { MarketCategory, MarketFilters as MarketFilterType } from '@/types'
 
 import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar } from 'lucide-react'
@@ -14,6 +15,7 @@ export const MarketSearchPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
   const { isSidebarOpen } = useSidebarStore()
+  const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
     'handmade',
     'fresh-produce',
@@ -39,13 +41,12 @@ export const MarketSearchPage: React.FC = () => {
     nextPage,
     previousPage,
     hasMore,
-    currentPage,
-    refresh
+    currentPage
   } = useMarkets({
     autoLoad: true
   })
 
-  // Initialize filters from URL params only on component mount
+  // Initialize filters from URL params when component mounts or URL changes
   useEffect(() => {
     const urlFilters: MarketFilterType = {
       search: searchParams.get('search') || '',
@@ -74,7 +75,7 @@ export const MarketSearchPage: React.FC = () => {
     })) {
       setFilters(urlFilters)
     }
-  }, []) // Empty dependency array ensures this only runs on mount
+  }, [searchParams]) // Re-run when URL params change
 
   // Close sidebar by default on mobile
   useEffect(() => {
@@ -148,6 +149,24 @@ export const MarketSearchPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Auth Message - Sales Pitch */}
+      {!isAuthenticated && (
+        <div className="w-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground p-4 text-center shadow-lg">
+          <div className="mb-2">
+            <span className="text-xl font-semibold">Manage your markets with tools, always free</span>
+          </div>
+          <div>
+            <Link to="/register" className="text-primary-foreground underline font-medium">
+              Register
+            </Link>
+            <span className="mx-2">or</span>
+            <Link to="/login" className="text-primary-foreground underline font-medium">
+              Sign In
+            </Link>
+          </div>
+        </div>
+      )}
+
       <>
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
@@ -454,9 +473,21 @@ export const MarketSearchPage: React.FC = () => {
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
+                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1 cursor-pointer" onClick={() => useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)}>    <span className={`transform transition-transform ${isSidebarOpen ? '' : 'rotate-90'}`}>▼</span> Advanced Search</p>
                 <h1 className="text-3xl font-bold text-foreground mb-2">Search Markets</h1>
                 <p className="text-muted-foreground">
                   {isSearching ? 'Searching...' : `${markets.length} markets found`}
+                  {filters.search && (
+                    <>
+                      {' · '}
+                      <button
+                        onClick={handleClearFilters}
+                        className="text-muted-foreground hover:text-foreground underline text-sm"
+                      >
+                        Clear search
+                      </button>
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -474,17 +505,12 @@ export const MarketSearchPage: React.FC = () => {
               isTracking={isTracking}
               variant="grid"
               emptyStateProps={{
-                title: "No markets found",
+                title: "Oops, we didn't find any of those markets.",
                 description: "Try adjusting your search criteria or filters to find more markets.",
                 action: (
-                  <div className="space-y-2">
-                    <Button onClick={handleClearFilters} variant="outline">
-                      Clear all filters
-                    </Button>
-                    <Button onClick={refresh} variant="outline">
-                      Refresh markets
-                    </Button>
-                  </div>
+                  <Button onClick={handleClearFilters} size="lg">
+                    Clear all filters
+                  </Button>
                 )
               }}
             />

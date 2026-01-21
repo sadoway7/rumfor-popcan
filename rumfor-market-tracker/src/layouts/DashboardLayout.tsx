@@ -52,7 +52,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
         {/* Main Content */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none pb-16 lg:pb-0">
             <div className="py-6">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {children}

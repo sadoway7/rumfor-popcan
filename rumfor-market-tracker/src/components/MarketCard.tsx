@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin, Clock, Accessibility, Car, Heart } from 'lucide-react'
+import { Calendar, MapPin, Clock, Accessibility, Car } from 'lucide-react'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 
 interface MarketCardProps {
@@ -246,7 +246,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     )
   }
 
-  // Minimal modern variant with overlay name on image
+  // Minimal modern variant with overlay name on image - COMPACT VERSION
   if (variant === 'minimal') {
     const formatScheduleDate = (schedule: Market['schedule']) => {
       if (!schedule || !Array.isArray(schedule) || schedule.length === 0) return null
@@ -258,8 +258,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
       return startDate.toLocaleDateString('en-US', {
         month: 'short',
-        day: 'numeric',
-        year: startDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+        day: 'numeric'
       })
     }
 
@@ -270,87 +269,79 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           'rounded-lg overflow-hidden',
           className
         )}>
-          {/* Image with overlaid name */}
+          {/* Image with overlaid content - MORE INFO IN IMAGE */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-48">
+            <div className="relative h-40">
               <img
                 src={market.images[0]}
                 alt={market.name}
                 className="w-full h-full object-cover"
               />
               
-              {/* Category badge */}
-              <div className="absolute top-3 left-3">
-                <Badge className={cn('text-xs font-medium backdrop-blur-sm', MARKET_CATEGORY_COLORS[market.category])}>
+              {/* Category badge - top left with better contrast */}
+              <div className="absolute top-2 left-2">
+                <Badge className={cn(
+                  'text-xs font-semibold shadow-lg border-white/20',
+                  'bg-black/60 text-white backdrop-blur-md',
+                  'hover:bg-black/70 transition-colors'
+                )}>
                   {MARKET_CATEGORY_LABELS[market.category]}
                 </Badge>
               </div>
               
-              {/* Market name overlay - big and catchy */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-end p-4">
-                <h3 className="text-white font-bold text-lg leading-tight group-hover:text-accent transition-colors drop-shadow-lg">
+              {/* Accessibility icons - top right */}
+              <div className="absolute top-2 right-2 flex items-center gap-1">
+                {market.accessibility.wheelchairAccessible && (
+                  <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5" title="Wheelchair Accessible">
+                    <Accessibility className="w-3.5 h-3.5 text-white" />
+                  </div>
+                )}
+                {market.accessibility.parkingAvailable && (
+                  <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5" title="Parking Available">
+                    <Car className="w-3.5 h-3.5 text-white" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Market name, date, and location overlay - bottom */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2.5">
+                <h3 className="text-white font-bold text-base leading-tight group-hover:text-accent transition-colors drop-shadow-lg mb-1 line-clamp-2">
                   {market.name}
                 </h3>
+                <div className="flex items-center gap-3 text-xs text-white/90">
+                  {formatScheduleDate(market.schedule) && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatScheduleDate(market.schedule)}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {formatLocation(market.location)}
+                  </div>
+                </div>
               </div>
             </div>
           )}
           
-          {/* Content - clean info below image */}
-          <div className="p-4 space-y-3">
-            {/* Date and location */}
-            <div className="space-y-1">
-              {formatScheduleDate(market.schedule) && (
-                <div className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  {formatScheduleDate(market.schedule)}
-                </div>
-              )}
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                {formatLocation(market.location)}
-              </div>
+          {/* Compact content below - MINIMAL PADDING */}
+          <div className="p-2 flex items-center justify-between">
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              <span className="truncate">{formatSchedule(market.schedule)}</span>
             </div>
             
-            {/* Schedule and accessibility */}
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {formatSchedule(market.schedule)}
-              </div>
-              
-              {/* Large, clear accessibility icons */}
-              <div className="flex items-center gap-3">
-                {market.accessibility.wheelchairAccessible && (
-                  <div className="flex items-center gap-1" title="Wheelchair Accessible">
-                    <Accessibility className="w-6 h-6" />
-                  </div>
-                )}
-                {market.accessibility.parkingAvailable && (
-                  <div className="flex items-center gap-1" title="Parking Available">
-                    <Car className="w-6 h-6" />
-                  </div>
-                )}
-                {market.accessibility.familyFriendly && (
-                  <div className="flex items-center gap-1" title="Family Friendly">
-                    <Heart className="w-6 h-6" />
-                  </div>
-                )}
-                
-                <div className="flex-1" />
-                
-                {showTrackButton && (
-                  <Button
-                    variant={buttonConfig.action === 'track' ? "ghost" : "primary"}
-                    size="sm"
-                    onClick={handleTrackClick}
-                    disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
-                    className="h-7 px-3 text-xs"
-                  >
-                    {buttonConfig.text === 'Track Market' ? '+' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
-                  </Button>
-                )}
-              </div>
-            </div>
+            {showTrackButton && (
+              <Button
+                variant={buttonConfig.action === 'track' ? "ghost" : "primary"}
+                size="sm"
+                onClick={handleTrackClick}
+                disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
+                className="h-6 px-2 text-xs flex-shrink-0"
+              >
+                {buttonConfig.text === 'Track Market' ? '+' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
+              </Button>
+            )}
           </div>
         </div>
       </Link>
