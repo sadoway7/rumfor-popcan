@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Button, Input, Card, CardHeader, CardTitle, CardContent, Alert, Spinner } from '@/components/ui'
-import { Eye, EyeOff, Store, Calendar } from 'lucide-react'
+import { Eye, EyeOff, Store, Calendar, Flag } from 'lucide-react'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -70,7 +70,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-start justify-center p-4 pt-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 sm:p-4 pt-8 sm:pt-4 pb-8">
       <div className="w-full max-w-md">
         <Card>
           <CardHeader className="text-center">
@@ -92,24 +92,31 @@ export function RegisterPage() {
               <label className="text-sm font-medium text-foreground mb-3 block">
                 Account Type
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {roleOptions.map((option) => {
                   const Icon = option.icon
                   const isSelected = selectedRole === option.value
+                  const isDisabled = option.value === 'promoter'
                   return (
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setValue('role', option.value as any)}
-                      className={`p-4 border rounded-lg text-center transition-all ${
+                      onClick={() => !isDisabled && setValue('role', option.value as any)}
+                      className={`p-6 sm:p-4 border rounded-lg text-center transition-all relative ${
                         isSelected
                           ? 'border-accent bg-accent/5 ring-2 ring-accent/20'
                           : 'border-border'
-                      }`}
+                      } ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <Icon className={`h-6 w-6 mx-auto mb-2 ${isSelected ? 'text-accent' : 'text-muted-foreground'}`} />
                       <div className="text-sm font-medium">{option.label}</div>
                       <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
+                      {isDisabled && (
+                        <div className="absolute top-1 right-1 bg-accent text-accent-foreground px-2 py-1 text-xs rounded flex items-center gap-1">
+                          <Flag className="h-3 w-3" />
+                          <span>Soon</span>
+                        </div>
+                      )}
                     </button>
                   )
                 })}
@@ -120,7 +127,7 @@ export function RegisterPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Input
                     id="firstName"
