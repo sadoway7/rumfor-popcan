@@ -24,7 +24,7 @@ const navigationConfig = {
     { name: 'About', href: '/about', icon: HelpCircle },
   ],
   vendor: [
-    { name: 'Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
+    { name: 'My Markets', href: '/vendor/tracked-markets', icon: MapPin },
     { name: 'Applications', href: '/vendor/applications', icon: FileText },
     { name: 'Markets', href: '/markets', icon: Store },
     { name: 'Todos', href: '/vendor/todos', icon: CheckSquare },
