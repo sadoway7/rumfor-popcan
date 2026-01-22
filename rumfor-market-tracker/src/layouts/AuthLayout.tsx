@@ -8,7 +8,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 pb-20 lg:pb-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 pb-20">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -23,10 +23,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         {children}
       </div>
       
-      {/* Mobile Bottom Navigation - Always visible */}
-      <div className="lg:hidden">
-        <BottomNav role="visitor" />
-      </div>
+      {/* Bottom Navigation */}
+      <BottomNav role="visitor" />
     </div>
   )
 }

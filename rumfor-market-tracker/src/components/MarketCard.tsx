@@ -5,7 +5,9 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin, Clock, Accessibility, Car } from 'lucide-react'
+import { Calendar, MapPin, Clock, MessageSquare } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
+import { CommentList } from './CommentList'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 
 interface MarketCardProps {
@@ -45,6 +47,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   detailPath,
   trackingStatus
 }) => {
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false)
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -128,7 +131,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   if (variant === 'compact') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('p-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer', className)}>
+        <Card className={cn('p-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer !rounded-none', className)}>
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{market.name}</h3>
@@ -246,7 +249,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     )
   }
 
-  // Minimal modern variant with overlay name on image - COMPACT VERSION
+  // Minimal modern variant - SIMPLE REDESIGN
   if (variant === 'minimal') {
     const formatScheduleDate = (schedule: Market['schedule']) => {
       if (!schedule || !Array.isArray(schedule) || schedule.length === 0) return null
@@ -263,97 +266,129 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     }
 
     return (
-      <Link to={detailPath || `/markets/${market.id}`} className="block group">
-        <div className={cn(
-          'bg-surface hover:bg-surface-2 transition-all duration-200 cursor-pointer',
-          'rounded-lg overflow-hidden',
-          className
-        )}>
-          {/* Image with overlaid content - MORE INFO IN IMAGE */}
+      <div className={cn(
+        'cursor-pointer',
+        'overflow-hidden !rounded-none',
+        className
+      )}>
+        <Link to={detailPath || `/markets/${market.id}`} className="block group">
+          {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-40">
+            <div className="relative h-96">
               <img
                 src={market.images[0]}
                 alt={market.name}
                 className="w-full h-full object-cover"
               />
-              
-              {/* Category badge - top left with better contrast */}
-              <div className="absolute top-2 left-2">
-                <Badge className={cn(
-                  'text-xs font-semibold shadow-lg border-white/20',
-                  'bg-black/60 text-white backdrop-blur-md',
-                  'hover:bg-black/70 transition-colors'
-                )}>
-                  {MARKET_CATEGORY_LABELS[market.category]}
-                </Badge>
-              </div>
-              
-              {/* Accessibility icons - top right */}
-              <div className="absolute top-2 right-2 flex items-center gap-1">
-                {market.accessibility.wheelchairAccessible && (
-                  <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5" title="Wheelchair Accessible">
-                    <Accessibility className="w-3.5 h-3.5 text-white" />
+
+              {/* Top overlays */}
+              <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+                <div className="space-y-2">
+                  {/* Category badge */}
+                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1 text-white text-xs font-medium">
+                    {MARKET_CATEGORY_LABELS[market.category]}
                   </div>
-                )}
-                {market.accessibility.parkingAvailable && (
-                  <div className="bg-black/40 backdrop-blur-sm rounded-full p-1.5" title="Parking Available">
-                    <Car className="w-3.5 h-3.5 text-white" />
-                  </div>
-                )}
-              </div>
-              
-              {/* Market name, date, and location overlay - bottom */}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-2.5">
-                <h3 className="text-white font-bold text-base leading-tight group-hover:text-accent transition-colors drop-shadow-lg mb-1 line-clamp-2">
-                  {market.name}
-                </h3>
-                <div className="flex items-center gap-3 text-xs text-white/90">
-                  {formatScheduleDate(market.schedule) && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatScheduleDate(market.schedule)}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
+                  {/* Location */}
+                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-xs">
                     <MapPin className="w-3 h-3" />
-                    {formatLocation(market.location)}
+                    <span>{formatLocation(market.location)}</span>
                   </div>
                 </div>
+                {/* Date */}
+                {formatScheduleDate(market.schedule) && (
+                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-xs">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatScheduleDate(market.schedule)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Solid dark bar at bottom for title */}
+              <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
+                <h3 className="text-white font-semibold text-lg leading-tight line-clamp-2">
+                  {market.name}
+                </h3>
               </div>
             </div>
           )}
-          
-          {/* Compact content below - MINIMAL PADDING */}
-          <div className="p-2 flex items-center justify-between">
-            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
-              <span className="truncate">{formatSchedule(market.schedule)}</span>
+
+          {/* Description under image */}
+          <div className="p-4 space-y-2">
+            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+              {market.description}
+            </p>
+
+            {/* Simple details row */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <Clock className="w-3 h-3" />
+                <span>{formatSchedule(market.schedule)}</span>
+              </div>
+
+              {/* Right side buttons */}
+              <div className="flex items-center gap-2">
+                {/* Comments button - Mobile only */}
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setIsCommentsModalOpen(true)
+                  }}
+                  className="text-sm text-muted-foreground hover:text-accent px-4 py-2 md:hidden"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Comments
+                </Button>
+
+                {/* Simple follow button inside Link */}
+                {showTrackButton && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (isTracked && onUntrack) {
+                        onUntrack(market.id)
+                      } else if (!isTracked && onTrack) {
+                        onTrack(market.id)
+                      }
+                    }}
+                    disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
+                    className="text-xs font-medium text-accent hover:text-accent/80 px-3 py-1.5"
+                  >
+                    {buttonConfig.text === 'Track Market' ? 'Follow' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
+                  </Button>
+                )}
+              </div>
             </div>
-            
-            {showTrackButton && (
-              <Button
-                variant={buttonConfig.action === 'track' ? "ghost" : "primary"}
-                size="sm"
-                onClick={handleTrackClick}
-                disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
-                className="h-6 px-2 text-xs flex-shrink-0"
-              >
-                {buttonConfig.text === 'Track Market' ? '+' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
-              </Button>
-            )}
           </div>
-        </div>
-      </Link>
+        </Link>
+
+
+
+        {/* Comments Modal - Fullscreen on mobile, normal modal on desktop */}
+        <Modal
+          isOpen={isCommentsModalOpen}
+          onClose={() => setIsCommentsModalOpen(false)}
+          title={`Comments for ${market.name}`}
+          size="xl"
+          className="sm:!max-w-xl sm:!h-auto sm:!max-h-[90vh] sm:!w-auto sm:!rounded-lg sm:!border sm:!shadow-lg sm:!bg-surface sm:!p-6 !absolute !inset-0 !w-full !h-full !max-w-none !max-h-none !rounded-none !border-none !shadow-none !bg-background !p-0"
+        >
+          <CommentList marketId={market.id} />
+        </Modal>
+      </div>
     )
   }
 
   // Default variant
   return (
     <Link to={detailPath || `/markets/${market.id}`} className="block">
-      <Card className={cn('overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
+      <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer !rounded-none', className)}>
         {market.images && market.images.length > 0 && (
-          <div className="relative h-40">
+          <div className="relative h-80">
             <img
               src={market.images[0]}
               alt={market.name}
@@ -373,10 +408,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             )}
           </div>
         )}
-        
-        <div className="p-4">
+
+        <div className="p-6">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-lg line-clamp-2 flex-1">{market.name}</h3>
+            <h3 className="font-bold text-2xl line-clamp-2 flex-1">{market.name}</h3>
             <div className="flex flex-col sm:flex-row gap-1 ml-2 flex-shrink-0">
               <Badge variant="outline" className={cn('text-xs', marketTypeColors[market.marketType])}>
                 {marketTypeLabels[market.marketType]}
@@ -387,7 +422,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             </div>
           </div>
           
-          <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{market.description}</p>
+          <p className="text-muted-foreground text-sm mb-3 line-clamp-3">{market.description}</p>
           
           <div className="space-y-2 mb-4">
             <div className="flex items-center text-sm text-muted-foreground">

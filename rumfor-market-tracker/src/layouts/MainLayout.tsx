@@ -15,17 +15,15 @@ export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <main className="flex-1 pb-16 lg:pb-0">
+      <main className="flex-1 pb-16">
         {children}
       </main>
       <div className="hidden lg:block">
         <Footer />
       </div>
       
-      {/* Mobile Bottom Navigation - Always visible */}
-      <div className="lg:hidden">
-        <BottomNav role={userRole} />
-      </div>
+      {/* Bottom Navigation - Always visible */}
+      <BottomNav role={userRole} />
     </div>
   )
 }

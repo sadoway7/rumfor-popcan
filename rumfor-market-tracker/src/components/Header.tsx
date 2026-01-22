@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useThemeStore, useLocationStore } from '@/features/theme/themeStore'
+import { useThemeStore, useSidebarStore, useLocationStore } from '@/features/theme/themeStore'
 import { Button } from '@/components/ui'
 import {
   DropdownMenu,
@@ -11,13 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation } from 'lucide-react'
+import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, SlidersHorizontal, Menu } from 'lucide-react'
 
 export function Header() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const { user, isAuthenticated, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
+  const { isSidebarOpen, setSidebarOpen } = useSidebarStore()
   const { setLocationModalOpen } = useLocationStore()
   const location = useLocation()
   const isHomePage = location.pathname === '/'
@@ -28,6 +29,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo and Sidebar Toggle Group - Left side */}
           <div className="flex items-center space-x-2">
+
             {/* Logo */}
             <Link to="/">
               <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
@@ -37,7 +39,7 @@ export function Header() {
           </div>
 
           {/* Search Bar - Narrower */}
-          <div className="flex flex-1 max-w-80 md:max-w-md md:ml-80 md:mr-6 items-center mx-4 md:mx-0">
+          <div className="flex flex-1 max-w-80 md:max-w-xl items-center mx-4 md:mx-0">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
@@ -50,21 +52,30 @@ export function Header() {
                     navigate(`/markets?search=${encodeURIComponent(searchQuery.trim())}`)
                   }
                 }}
-                className={`w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:bg-surface-2 transition-all duration-300 ${
+                className={`w-full pl-10 pr-12 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:bg-surface-2 transition-all duration-300 ${
                   theme === 'light' ? 'shadow' : 'shadow-lg shadow-black/30'
                 }`}
               />
+              {location.pathname === '/markets' && (
+                <button
+                  onClick={() => setSidebarOpen(!isSidebarOpen)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Toggle filters"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Right Side Actions - Context-Aware & Purposeful */}
-          <div className="hidden md:flex items-center space-x-3">
+          <div className="flex items-center space-x-3">
             {/* Location Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setLocationModalOpen(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
               title="Set location"
             >
               <Navigation className="h-4 w-4" />
@@ -75,7 +86,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
@@ -190,12 +201,12 @@ export function Header() {
               </>
             ) : !isHomePage ? (
               <>
-                <Link to="/auth/login">
+                <Link to="/auth/login" className="hidden md:inline">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-surface/80 backdrop-blur-sm rounded-xl transition-all duration-300">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/auth/register">
+                <Link to="/auth/register" className="hidden md:inline">
                   <Button size="sm" className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent shadow-lg hover:glow-accent transition-all duration-300 rounded-xl">
                     Sign Up
                   </Button>
@@ -210,7 +221,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="text-muted-foreground hover:text-foreground p-2 min-h-11 min-w-11" aria-label="Open menu">
-                  <Settings className="h-6 w-6" />
+                  <Menu className="h-6 w-6" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
@@ -218,6 +229,7 @@ export function Header() {
                   <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
                   Set Location
                 </DropdownMenuItem>
+
                 <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
                   {theme === 'light' ? <Moon className="h-5 w-5 mr-3 text-muted-foreground" /> : <Sun className="h-5 w-5 mr-3 text-muted-foreground" />}
                   {theme === 'light' ? 'Dark Mode' : 'Light Mode'}

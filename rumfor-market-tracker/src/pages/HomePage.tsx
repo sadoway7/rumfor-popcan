@@ -59,12 +59,11 @@ export function HomePage() {
     <div className="min-h-screen bg-background">
       {/* Sidebar - Full height, acts as mobile homepage */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-[60] md:inset-y-0 md:left-0 md:right-auto md:w-80 bg-background md:shadow-lg">
+        <div className="fixed inset-0 z-[60] md:inset-y-0 md:left-0 md:right-auto md:w-80 bg-background overflow-y-auto">
           <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto pt-6 pb-20 md:pb-6 px-6">
-              {/* Mobile Hero - PUNK ANTI-DESIGN NO GRADIENTS - Mobile Only */}
-              <div className="md:hidden w-full mb-6">
-                <div className="relative overflow-hidden bg-accent p-4 shadow-[6px_6px_0px_0px] shadow-black dark:shadow-white">
+            {/* Mobile Hero - PUNK ANTI-DESIGN NO GRADIENTS - Mobile Only */}
+            <div className="md:hidden pb-4">
+              <div className="relative overflow-hidden bg-accent py-6">
                   {/* Layered texture backgrounds - NO gradients */}
                   <div className="absolute inset-0 opacity-20" style={{
                     backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px)`
@@ -108,6 +107,7 @@ export function HomePage() {
                 </div>
               </div>
 
+            <div className="flex-1 pt-4 pb-20 md:pb-6 px-12">
               {/* Rumfor Logo - PUNK - Hidden on mobile since logo is in hero */}
               <div className="hidden md:flex items-center justify-center mb-8">
                 <Link to="/" className="flex flex-col items-center space-y-2 transform hover:scale-105 transition-transform">

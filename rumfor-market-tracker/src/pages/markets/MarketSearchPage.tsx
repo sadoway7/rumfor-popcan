@@ -222,6 +222,112 @@ export const MarketSearchPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
+                  <div>
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
+                    >
+                      <span className="text-sm font-medium flex items-center gap-2">
+                        <SlidersHorizontal className="h-4 w-4" />
+                        Advanced Filters
+                      </span>
+                      <span className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+
+                    {showFilters && (
+                      <div className="mt-3 space-y-4">
+                        {/* Category Filter */}
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
+                          <div className="flex flex-wrap gap-2">
+                            {([
+                              { label: 'Farmers Markets', value: 'farmers-market' },
+                              { label: 'Arts & Crafts', value: 'arts-crafts' },
+                              { label: 'Flea Markets', value: 'flea-market' },
+                              { label: 'Food Festivals', value: 'food-festival' },
+                              { label: 'Vintage & Antique', value: 'vintage-antique' },
+                              { label: 'Craft Shows', value: 'craft-show' },
+                              { label: 'Night Markets', value: 'night-market' },
+                              { label: 'Street Fairs', value: 'street-fair' },
+                              { label: 'Holiday Markets', value: 'holiday-market' },
+                              { label: 'Community Events', value: 'community-event' }
+                            ] satisfies { label: string; value: MarketCategory }[]).map((category) => (
+                              <button
+                                key={category.value}
+                                onClick={() => {
+                                  const currentCategories = filters.category || []
+                                  const newCategories = currentCategories.includes(category.value)
+                                    ? currentCategories.filter(c => c !== category.value)
+                                    : [...currentCategories, category.value]
+                                  handleFiltersChange({ ...filters, category: newCategories })
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
+                                  filters.category?.includes(category.value)
+                                    ? 'bg-accent text-accent-foreground'
+                                    : 'bg-surface-2 hover:bg-surface text-foreground'
+                                }`}
+                              >
+                                {category.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Date Range */}
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground mb-2">Date Range</div>
+                          <div className="space-y-2">
+                            <input
+                              type="date"
+                              placeholder="From date"
+                              className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
+                              onChange={(e) => {
+                                // Handle date range - this would need backend support
+                                console.log('Date from:', e.target.value)
+                              }}
+                            />
+                            <input
+                              type="date"
+                              placeholder="To date"
+                              className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
+                              onChange={(e) => {
+                                // Handle date range - this would need backend support
+                                console.log('Date to:', e.target.value)
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Additional Status Options */}
+                        <div>
+                          <div className="text-xs font-medium text-muted-foreground mb-2">More Status Options</div>
+                          <div className="flex flex-wrap gap-2">
+                            {['cancelled', 'postponed'].map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => {
+                                  const currentStatuses = filters.status || []
+                                  const newStatuses = currentStatuses.includes(status as any)
+                                    ? currentStatuses.filter(s => s !== status)
+                                    : [...currentStatuses, status as any]
+                                  handleFiltersChange({ ...filters, status: newStatuses })
+                                }}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
+                                  filters.status?.includes(status as any)
+                                    ? 'bg-accent text-accent-foreground'
+                                    : 'bg-surface-2 hover:bg-surface text-foreground'
+                                }`}
+                              >
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   {getActiveFilterCount() > 0 && (
                     <Button
                       onClick={handleClearFilters}
@@ -354,113 +460,7 @@ export const MarketSearchPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Advanced Filters Toggle */}
-                <div className="mt-4">
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
-                  >
-                    <span className="text-sm font-medium flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4" />
-                      Advanced Filters
-                    </span>
-                    <span className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`}>
-                      ▼
-                    </span>
-                  </button>
 
-                  {showFilters && (
-                    <div className="mt-3 space-y-4">
-                      {/* Category Filter */}
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
-                        <div className="flex flex-wrap gap-2">
-                          {([
-                            { label: 'Farmers Markets', value: 'farmers-market' },
-                            { label: 'Arts & Crafts', value: 'arts-crafts' },
-                            { label: 'Flea Markets', value: 'flea-market' },
-                            { label: 'Food Festivals', value: 'food-festival' },
-                            { label: 'Vintage & Antique', value: 'vintage-antique' },
-                            { label: 'Craft Shows', value: 'craft-show' },
-                            { label: 'Night Markets', value: 'night-market' },
-                            { label: 'Street Fairs', value: 'street-fair' },
-                            { label: 'Holiday Markets', value: 'holiday-market' },
-                            { label: 'Community Events', value: 'community-event' }
-                          ] satisfies { label: string; value: MarketCategory }[]).map((category) => (
-                            <button
-                              key={category.value}
-                              onClick={() => {
-                                const currentCategories = filters.category || []
-                                const newCategories = currentCategories.includes(category.value)
-                                  ? currentCategories.filter(c => c !== category.value)
-                                  : [...currentCategories, category.value]
-                                handleFiltersChange({ ...filters, category: newCategories })
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
-                                filters.category?.includes(category.value)
-                                  ? 'bg-accent text-accent-foreground'
-                                  : 'bg-surface-2 hover:bg-surface text-foreground'
-                              }`}
-                            >
-                              {category.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Date Range */}
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">Date Range</div>
-                        <div className="space-y-2">
-                          <input
-                            type="date"
-                            placeholder="From date"
-                            className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
-                            onChange={(e) => {
-                              // Handle date range - this would need backend support
-                              console.log('Date from:', e.target.value)
-                            }}
-                          />
-                          <input
-                            type="date"
-                            placeholder="To date"
-                            className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
-                            onChange={(e) => {
-                              // Handle date range - this would need backend support
-                              console.log('Date to:', e.target.value)
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Additional Status Options */}
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">More Status Options</div>
-                        <div className="flex flex-wrap gap-2">
-                          {['cancelled', 'postponed'].map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => {
-                                const currentStatuses = filters.status || []
-                                const newStatuses = currentStatuses.includes(status as any)
-                                  ? currentStatuses.filter(s => s !== status)
-                                  : [...currentStatuses, status as any]
-                                handleFiltersChange({ ...filters, status: newStatuses })
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
-                                filters.status?.includes(status as any)
-                                  ? 'bg-accent text-accent-foreground'
-                                  : 'bg-surface-2 hover:bg-surface text-foreground'
-                              }`}
-                            >
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
 
 
@@ -469,12 +469,12 @@ export const MarketSearchPage: React.FC = () => {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6">
+          <main className="flex-1 py-4 px-0 sm:p-6">
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1 cursor-pointer" onClick={() => useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)}>    <span className={`transform transition-transform ${isSidebarOpen ? '' : 'rotate-90'}`}>▼</span> Advanced Search</p>
-                <h1 className="text-3xl font-bold text-foreground mb-2">Search Markets</h1>
+                {/* <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1 cursor-pointer" onClick={() => useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)}>    <span className={`transform transition-transform ${isSidebarOpen ? '' : 'rotate-90'}`}>▼</span> Advanced Search</p>
+
                 <p className="text-muted-foreground">
                   {isSearching ? 'Searching...' : `${markets.length} markets found`}
                   {filters.search && (
@@ -488,7 +488,7 @@ export const MarketSearchPage: React.FC = () => {
                       </button>
                     </>
                   )}
-                </p>
+                </p> */}
               </div>
 
             </div>

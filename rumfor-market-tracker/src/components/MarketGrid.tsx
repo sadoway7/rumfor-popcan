@@ -87,7 +87,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
 
     
     // Use fixed classes instead of dynamic ones for Tailwind purging - 4 wide on large screens
-    return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6'
+    return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4'
   }
 
   // Show loading state
@@ -167,7 +167,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
           onUntrack={onUntrack}
           isTracked={trackedMarketIds.includes(market.id)}
           isLoading={isTracking}
-          showTrackButton={true}
+          showTrackButton={false}
           className="h-full"
         />
       ))}

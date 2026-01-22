@@ -52,7 +52,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
 
         {/* Main Content */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          <main className="flex-1 relative overflow-y-auto focus:outline-none pb-16 lg:pb-0">
+          <main className="flex-1 relative overflow-y-auto focus:outline-none pb-16">
             <div className="py-6">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {children}
@@ -62,10 +62,8 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden">
-        <BottomNav role={role} />
-      </div>
+      {/* Bottom Navigation */}
+      <BottomNav role={role} />
     </div>
   )
 }

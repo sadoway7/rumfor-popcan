@@ -12,6 +12,7 @@ import {
   Users,
   MapPin,
   Shield,
+  Home,
 } from 'lucide-react'
 
 interface BottomNavProps {
@@ -20,6 +21,7 @@ interface BottomNavProps {
 
 const navigationConfig = {
   visitor: [
+    { name: 'Home', href: '/', icon: Home },
     { name: 'Markets', href: '/markets', icon: Store },
     { name: 'About', href: '/about', icon: HelpCircle },
   ],
@@ -51,7 +53,7 @@ export function BottomNav({ role }: BottomNavProps) {
   const navigation = (navigationConfig as any)[role] || []
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom">
       <nav className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
         {navigation.map((item: any) => {
           const isActive = location.pathname === item.href
