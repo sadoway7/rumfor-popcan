@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useThemeStore, useSidebarStore, useLocationStore } from '@/features/theme/themeStore'
@@ -16,6 +16,8 @@ import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Sl
 export function Header() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [isHidden, setIsHidden] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const { user, isAuthenticated, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const { isSidebarOpen, setSidebarOpen } = useSidebarStore()
@@ -23,8 +25,28 @@ export function Header() {
   const location = useLocation()
   const isHomePage = location.pathname === '/'
 
+  // Handle scroll-based hide/show
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        // Scrolling down and past threshold
+        setIsHidden(true)
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsHidden(false)
+      }
+
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
+
   return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-xl">
+    <header className={`sticky top-0 z-50 bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? "-translate-y-full" : ""}`}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Sidebar Toggle Group - Left side */}

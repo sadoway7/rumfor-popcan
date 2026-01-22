@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
 import {
@@ -51,9 +52,34 @@ const navigationConfig = {
 export function BottomNav({ role }: BottomNavProps) {
   const location = useLocation()
   const navigation = (navigationConfig as any)[role] || []
+  const [isHidden, setIsHidden] = useState(false)
+  const [lastScrollY, setLastScrollY] = useState(0)
+
+  // Handle scroll-based hide/show
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        // Scrolling down and past threshold
+        setIsHidden(true)
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsHidden(false)
+      }
+
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom">
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
+      isHidden && "translate-y-full"
+    )}>
       <nav className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
         {navigation.map((item: any) => {
           const isActive = location.pathname === item.href
