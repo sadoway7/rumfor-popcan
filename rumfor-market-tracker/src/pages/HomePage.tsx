@@ -61,167 +61,172 @@ export function HomePage() {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-[60] md:inset-y-0 md:left-0 md:right-auto md:w-80 bg-background overflow-y-auto">
           <div className="flex flex-col h-full">
-            {/* Mobile Hero - PUNK ANTI-DESIGN NO GRADIENTS - Mobile Only */}
-            <div className="md:hidden pb-4">
-              <div className="relative overflow-hidden bg-accent py-6">
-                  {/* Layered texture backgrounds - NO gradients */}
-                  <div className="absolute inset-0 opacity-20" style={{
-                    backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px)`
-                  }}></div>
+            {/* Mobile Hero - Redesigned Landing Page */}
+            <div className="md:hidden">
+              {/* Hero Header */}
+              <div className="relative bg-accent py-8 px-6">
+                {/* Texture patterns */}
+                <div className="absolute inset-0 opacity-15" style={{
+                  backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,0.05) 8px, rgba(255,255,255,0.05) 16px)`
+                }}></div>
+                <div className="absolute inset-0 opacity-10" style={{
+                  backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 40px)'
+                }}></div>
 
-                  <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{
-                    backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 400 400\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' /%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\' /%3E%3C/svg%3E")'
-                  }}></div>
-
-                  <div className="relative z-10">
-                    {/* RUMFOR HERO - 2 Column Layout */}
-                    <div className="grid grid-cols-[40%_60%] gap-3">
-                      {/* Left Column: EVEN BIGGER RUMFOR LOGO */}
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <div className="w-20 h-20 bg-accent rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-black/40 dark:shadow-white/40 transform -rotate-3">
-                          <span className="text-accent-foreground font-black text-5xl">R</span>
-                        </div>
-                        <span className="font-black text-4xl text-white tracking-tighter uppercase">Rumfor</span>
-                      </div>
-
-                      {/* Right Column: Branding & Features */}
-                      <div className="flex flex-col justify-center space-y-2 items-center text-center">
-                        {/* YOUR MARKET ORGANIZER */}
-                        <div className="space-y-1">
-                          <div className="space-y-0.5">
-                            <span className="font-black text-2xl uppercase tracking-tight transform rotate-1 block"><span className="text-accent-foreground">YOUR </span><span className="text-amber-400">MARKET</span></span>
-                            <span className="text-accent-foreground font-black text-xl uppercase tracking-tight transform -rotate-1 block">ORGANIZER</span>
-                          </div>
-                        </div>
-
-                        {/* Feature Badges */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-amber-400 text-black font-bold text-sm px-3 py-0.5 rounded transform -rotate-1 uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] text-center">Save Markets</div>
-                          <div className="bg-emerald-400 text-black font-bold text-sm px-3 py-0.5 rounded transform rotate-1 uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] text-center">Track Apps</div>
-                          <div className="bg-orange-400 text-black font-bold text-sm px-3 py-0.5 rounded transform -rotate-1 uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] text-center">To-Dos</div>
-                          <div className="bg-pink-400 text-black font-bold text-sm px-3 py-0.5 rounded transform rotate-1 uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] text-center">Expenses</div>
-                        </div>
-                      </div>
+                <div className="relative z-10">
+                  {/* Logo - Centered and large */}
+                  <div className="flex justify-center mb-6">
+                    <div className="w-24 h-24 bg-accent-foreground rounded-2xl flex items-center justify-center shadow-[6px_6px_0px_0px] shadow-black/40 transform -rotate-6">
+                      <span className="text-accent font-black text-6xl">R</span>
                     </div>
                   </div>
+
+                  {/* Title */}
+                  <div className="text-center mb-6">
+                    <h1 className="font-black text-5xl text-accent-foreground tracking-tighter uppercase mb-1">Rumfor</h1>
+                    <p className="text-amber-300 font-black text-xl uppercase tracking-widest">Market Organizer</p>
+                  </div>
+
+                  {/* Feature Pills */}
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    <div className="bg-amber-400 text-black font-bold text-sm px-4 py-1.5 rounded-lg transform -rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.25)]">Save Markets</div>
+                    <div className="bg-emerald-400 text-black font-bold text-sm px-4 py-1.5 rounded-lg transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.25)]">Track Apps</div>
+                    <div className="bg-orange-400 text-black font-bold text-sm px-4 py-1.5 rounded-lg transform -rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.25)]">To-Dos</div>
+                    <div className="bg-pink-400 text-black font-bold text-sm px-4 py-1.5 rounded-lg transform rotate-1 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.25)]">Expenses</div>
+                  </div>
+
+                  {/* Tagline */}
+                  <p className="text-center text-accent-foreground/80 font-medium text-sm uppercase tracking-wide">
+                    Find Markets. Sell Stuff. Build Your Empire.
+                  </p>
                 </div>
               </div>
 
-            <div className="flex-1 pt-4 pb-20 md:pb-6 px-12">
-              {/* Rumfor Logo - PUNK - Hidden on mobile since logo is in hero */}
-              <div className="hidden md:flex items-center justify-center mb-8">
-                <Link to="/" className="flex flex-col items-center space-y-2 transform hover:scale-105 transition-transform">
-                  <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-black/40 dark:shadow-white/40 transform -rotate-3">
-                    <span className="text-accent-foreground font-black text-4xl">R</span>
-                  </div>
-                  <span className="font-black text-4xl text-foreground tracking-tighter uppercase">Rumfor</span>
-                </Link>
-              </div>
-
-              {/* Sign In Form - Collapsible - PUNK ANTI-DESIGN */}
-              {!isAuthenticated && (
-                !showLoginForm ? (
-                  <div className="mb-8 -mt-4">
+              {/* Login/Register Section */}
+              <div className="px-6 py-5 bg-surface-2 border-b border-surface-3">
+                {!isAuthenticated ? (
+                  !showLoginForm ? (
                     <button
                       onClick={() => setShowLoginForm(true)}
-                      className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 md:py-2.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
+                      className="w-full bg-accent hover:bg-accent-light rounded-xl px-6 py-4 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
                     >
-                      <span className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">Login / Register</span>
+                      <span className="text-accent-foreground font-black text-lg uppercase tracking-wide">Login / Register →</span>
                     </button>
-                  </div>
-                ) : (
-                  <div className="mb-8 -mt-4 bg-surface rounded-xl p-4 space-y-3 shadow-[6px_8px_0px_0px] shadow-black/30 dark:shadow-white/30 transform -rotate-0.5 z-20 relative">
-                    <div className="text-center mb-2">
-                      <button
-                        onClick={() => setShowLoginForm(false)}
-                        className="text-accent font-bold hover:underline text-sm"
-                      >
-                        Cancel
-                      </button>
+                  ) : (
+                    <div className="bg-surface rounded-xl p-5 space-y-4 shadow-[6px_6px_0px_0px] shadow-black/30 transform -rotate-0.5">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-black text-lg uppercase text-foreground">Sign In</h3>
+                        <button
+                          onClick={() => setShowLoginForm(false)}
+                          className="text-accent font-bold hover:underline text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <form onSubmit={handleSignIn} className="space-y-3">
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-4 py-3.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
+                          required
+                        />
+                        <input
+                          type="password"
+                          placeholder="Password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full px-4 py-3.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
+                          required
+                        />
+                        {authError && (
+                          <p className="text-sm font-bold text-red-500 text-center py-1 uppercase">{authError}</p>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={authLoading}
+                          className="w-full bg-accent hover:bg-accent-light rounded-lg px-6 py-3.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px] disabled:opacity-50"
+                        >
+                          <span className="text-accent-foreground font-black text-base uppercase tracking-wide">
+                            {authLoading ? 'Loading...' : 'Sign In'}
+                          </span>
+                        </button>
+                      </form>
+                      <Link to="/auth/register" className="block">
+                        <button className="w-full bg-amber-400 hover:bg-amber-300 rounded-lg px-6 py-3 transition-all shadow-[3px_3px_0px_0px] shadow-black/20">
+                          <span className="text-foreground font-black text-base uppercase tracking-wide">Register</span>
+                        </button>
+                      </Link>
                     </div>
-                    <form onSubmit={handleSignIn} className="space-y-2.5">
-                      <input
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
-                        required
-                      />
-
-                      <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-3 md:py-2.5 rounded-lg bg-surface-2 text-foreground placeholder:text-foreground/60 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3"
-                        required
-                      />
-
-                      {authError && (
-                        <p className="text-sm font-bold text-red-500 text-center py-1 uppercase">{authError}</p>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={authLoading}
-                        className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 md:py-2.5 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px] disabled:opacity-50"
-                      >
-                        <span className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">
-                          {authLoading ? 'Loading...' : 'Sign In'}
-                        </span>
-                      </button>
-                    </form>
-
-                    <Link to="/auth/register" className="block">
-                      <button className="w-full bg-amber-400 rounded-lg px-4 py-2 transition-all hover:bg-amber-300 shadow-[2px_2px_0px_0px] shadow-black/20 dark:shadow-white/20">
-                        <span className="text-foreground font-bold text-sm uppercase tracking-wide">Register</span>
-                      </button>
-                    </Link>
+                  )
+                ) : (
+                  <div className="bg-accent/10 rounded-xl p-4 text-center">
+                    <p className="text-accent font-bold uppercase tracking-wide">✓ Welcome back!</p>
                   </div>
-                )
+                )}
+              </div>
+            </div>
+
+            {/* Desktop Sidebar Header - Logo + Login */}
+            <div className="hidden md:flex flex-col items-center pt-8 pb-4 px-6 border-b border-surface-3">
+              <Link to="/" className="flex flex-col items-center space-y-2 transform hover:scale-105 transition-transform mb-4">
+                <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-black/40 dark:shadow-white/40 transform -rotate-3">
+                  <span className="text-accent-foreground font-black text-4xl">R</span>
+                </div>
+                <span className="font-black text-4xl text-foreground tracking-tighter uppercase">Rumfor</span>
+              </Link>
+              {!isAuthenticated && (
+                <button
+                  onClick={() => setShowLoginForm(true)}
+                  className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
+                >
+                  <span className="text-accent-foreground font-black text-base uppercase tracking-wide">Login / Register</span>
+                </button>
               )}
+            </div>
 
-              {/* Browse by Category - PUNK */}
+            {/* Main Content Area */}
+            <div className="flex-1 pt-6 pb-24 md:pb-6 px-6">
+              {/* Quick Actions */}
               <div className="mb-8">
-                <div className="h-8"></div>
-                <h3 className="text-xl font-black text-foreground uppercase tracking-wide mb-4 mt-2 transform -rotate-1 text-center">
-                  Explore Categories
+                <h3 className="text-lg font-black text-foreground uppercase tracking-wide mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-accent mr-2 transform rotate-45"></span>
+                  Quick Actions
                 </h3>
-
-                <div className="px-2 mb-6">
-                  <Link to="/markets" className="block max-w-xs mx-auto">
-                    <div className="w-full py-4 px-4 md:py-3 rounded-xl bg-accent hover:bg-accent-light transition-all shadow-[4px_4px_0px_0px] shadow-black/20 dark:shadow-white/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
-                      <div className="text-accent-foreground font-black text-base md:text-sm uppercase tracking-wide">Advanced Search →</div>
+                <div className="space-y-3">
+                  <Link to="/markets" className="block">
+                    <div className="w-full py-4 px-5 rounded-xl bg-accent hover:bg-accent-light transition-all shadow-[4px_4px_0px_0px] shadow-black/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
+                      <span className="text-accent-foreground font-black text-base uppercase tracking-wide">Browse All Markets →</span>
+                    </div>
+                  </Link>
+                  <Link to="/promoter/create-market" className="block">
+                    <div className="w-full py-4 px-5 rounded-xl bg-amber-400 hover:bg-amber-300 transition-all shadow-[4px_4px_0px_0px] shadow-black/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
+                      <span className="text-black font-black text-base uppercase tracking-wide">Add a Market +</span>
                     </div>
                   </Link>
                 </div>
+              </div>
 
-                <div className="grid grid-cols-3 gap-2.5">
+              {/* Browse by Category */}
+              <div className="mb-8">
+                <h3 className="text-lg font-black text-foreground uppercase tracking-wide mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-amber-400 mr-2 transform rotate-45"></span>
+                  Explore Categories
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
                   {marketCategories.map((cat) => {
                     const Icon = cat.icon
                     const categorySlug = cat.name.toLowerCase().replace(' & ', '-').replace(' ', '-')
                     return (
                       <Link key={cat.name} to={`/markets?category=${categorySlug}`}>
-                        <button
-                          className="w-full aspect-square flex flex-col items-center justify-center p-2.5 rounded-xl bg-surface hover:bg-surface-2 transition-all duration-200 group shadow-[2px_2px_0px_0px] shadow-black/10 dark:shadow-white/10 hover:shadow-[4px_4px_0px_0px] transform hover:-translate-y-1 border border-surface-3"
-                        >
-                          <Icon className="md:h-6 md:w-6 h-8 w-8 text-accent group-hover:scale-110 transition-transform mb-1.5" strokeWidth={2.5} />
-                          <div className="font-bold text-foreground text-xs text-center leading-tight uppercase tracking-tight">{cat.name}</div>
-                        </button>
+                        <div className="w-full aspect-square flex flex-col items-center justify-center p-3 rounded-xl bg-surface hover:bg-surface-2 transition-all duration-200 group shadow-[3px_3px_0px_0px] shadow-black/10 hover:shadow-[5px_5px_0px_0px] transform hover:-translate-y-1 border border-surface-3">
+                          <Icon className="h-7 w-7 text-accent group-hover:scale-110 transition-transform mb-2" strokeWidth={2.5} />
+                          <span className="font-bold text-foreground text-xs text-center leading-tight uppercase tracking-tight">{cat.name}</span>
+                        </div>
                       </Link>
                     )
                   })}
-                </div>
-
-                <div className="mt-16 px-2 space-y-4">
-                  <Link to="/promoter/create-market" className="block max-w-xs mx-auto">
-                    <div className="w-full py-4 px-4 md:py-3 rounded-xl bg-amber-400 hover:bg-amber-300 transition-all shadow-[4px_4px_0px_0px] shadow-black/20 dark:shadow-white/20 text-center transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]">
-                      <div className="text-black font-black text-base md:text-sm uppercase tracking-wide">Add a Market +</div>
-                    </div>
-                  </Link>
-
-
                 </div>
               </div>
             </div>

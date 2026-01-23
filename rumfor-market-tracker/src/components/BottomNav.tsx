@@ -54,9 +54,23 @@ export function BottomNav({ role }: BottomNavProps) {
   const navigation = (navigationConfig as any)[role] || []
   const [isHidden, setIsHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // Handle scroll-based hide/show
+  // Check if on mobile screen
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Handle scroll-based hide/show (only on mobile)
+  useEffect(() => {
+    if (!isMobile) return
+
     const handleScroll = () => {
       const currentScrollY = window.scrollY
 
@@ -73,12 +87,12 @@ export function BottomNav({ role }: BottomNavProps) {
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [lastScrollY])
+  }, [lastScrollY, isMobile])
 
   return (
     <div className={cn(
       "fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
-      isHidden && "translate-y-full"
+      (isHidden || !isMobile) && "hidden"
     )}>
       <nav className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
         {navigation.map((item: any) => {
