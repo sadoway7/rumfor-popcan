@@ -1,3 +1,7 @@
+/**
+ * @deprecated TodoItem is deprecated. Use the inline TodoCompactItem in VendorTodoList instead.
+ * This component is kept for backwards compatibility but will be removed in a future version.
+ */
 import React from 'react'
 import { CheckSquare, Square, Edit, Trash2, AlertCircle } from 'lucide-react'
 import { Todo } from '@/types'
@@ -38,7 +42,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       className
     )}>
       <div className="flex items-start gap-3">
-        {/* Toggle Button */}
         <button
           onClick={() => onToggle(todo.id)}
           className="mt-1 text-gray-400 hover:text-gray-600 transition-colors"
@@ -51,7 +54,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           )}
         </button>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
@@ -103,7 +105,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"

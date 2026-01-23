@@ -414,7 +414,8 @@ const validateTodoCreation = [
       'travel',
       'equipment',
       'permits',
-      'other'
+      'other',
+      'misc'
     ])
     .withMessage('Invalid todo category'),
   

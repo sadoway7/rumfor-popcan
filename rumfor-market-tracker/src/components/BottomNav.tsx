@@ -77,10 +77,8 @@ export function BottomNav({ role }: BottomNavProps) {
       const currentScrollY = window.scrollY
 
       if (currentScrollY > lastScrollY && currentScrollY > 80) {
-        // Scrolling down and past threshold
         setIsHidden(true)
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
         setIsHidden(false)
       }
 
@@ -107,7 +105,7 @@ export function BottomNav({ role }: BottomNavProps) {
               key={item.name}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95',
+                'flex flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95 relative group',
                 isPrimary
                   ? 'min-h-[64px] min-w-[64px]'
                   : 'min-h-[56px] min-w-[56px]',
@@ -125,21 +123,21 @@ export function BottomNav({ role }: BottomNavProps) {
                 </div>
               ) : (
                 <>
-                  <div className="relative">
-                    <item.icon
-                      className={cn(
-                        'h-6 w-6 transition-transform duration-150',
-                        isActive ? 'text-accent scale-105' : 'text-muted-foreground'
-                      )}
-                    />
-                    {isActive && (
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-1 bg-accent rounded-full" />
+                  <item.icon
+                    className={cn(
+                      'h-6 w-6 transition-transform duration-150',
+                      isActive ? 'text-accent scale-105' : 'text-muted-foreground group-hover:scale-105'
                     )}
-                  </div>
+                  />
                   <span className={cn(
-                    'truncate text-[10px]',
-                    isActive ? 'text-accent' : 'text-muted-foreground'
+                    'truncate text-[10px] mt-1',
+                    isActive ? 'text-accent' : 'text-muted-foreground group-hover:text-foreground'
                   )}>{item.name}</span>
+                  {/* Animated underline */}
+                  <div className={cn(
+                    'absolute bottom-0 h-1.5 bg-accent rounded-full transition-all duration-300 ease-out',
+                    isActive ? 'w-6 opacity-100' : 'w-0 opacity-0'
+                  )} />
                 </>
               )}
             </Link>

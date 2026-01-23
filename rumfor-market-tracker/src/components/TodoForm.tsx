@@ -117,11 +117,15 @@ export const TodoForm: React.FC<TodoFormProps> = ({
   ]
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-md">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {editingTodo ? 'Edit Todo' : 'Create New Todo'}
+    <Modal 
+      isOpen={isOpen} 
+      onClose={handleClose} 
+      className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto"
+    >
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">
+            {editingTodo ? 'Edit Task' : 'New Task'}
           </h2>
           <Button
             variant="ghost"
@@ -134,90 +138,74 @@ export const TodoForm: React.FC<TodoFormProps> = ({
         </div>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-          {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title *
-            </label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
             <Input
               {...register('title')}
-              placeholder="Enter todo title"
+              placeholder="Task title"
               error={errors.title?.message}
+              className="h-10"
             />
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
             <Textarea
               {...register('description')}
-              placeholder="Optional description"
-              rows={3}
+              placeholder="Add details..."
+              rows={2}
               error={errors.description?.message}
             />
           </div>
 
-          {/* Priority */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Priority *
-            </label>
-            <Select
-              value={watch('priority')}
-              onValueChange={(value) => setValue('priority', value as TodoPriority)}
-              options={priorityOptions}
-              placeholder="Select priority"
-            />
-            {errors.priority && (
-              <p className="text-sm text-red-600 mt-1">{errors.priority.message}</p>
-            )}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
+              <Select
+                value={watch('priority')}
+                onValueChange={(value) => setValue('priority', value as TodoPriority)}
+                options={priorityOptions}
+                placeholder="Priority"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Category</label>
+              <Select
+                value={watch('category')}
+                onValueChange={(value) => setValue('category', value)}
+                options={categoryOptions}
+                placeholder="Category"
+              />
+            </div>
           </div>
 
-          {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category *
-            </label>
-            <Select
-              value={watch('category')}
-              onValueChange={(value) => setValue('category', value)}
-              options={categoryOptions}
-              placeholder="Select category"
-            />
-            {errors.category && (
-              <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
-            )}
-          </div>
-
-          {/* Due Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date
-            </label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Due Date</label>
             <Input
               type="date"
               {...register('dueDate')}
               error={errors.dueDate?.message}
+              className="h-10"
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex gap-2 pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="flex-1 h-10"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
+              className="flex-1 h-10"
             >
-              {isSubmitting ? 'Saving...' : (editingTodo ? 'Update Todo' : 'Create Todo')}
+              {isSubmitting ? 'Saving...' : (editingTodo ? 'Save' : 'Create')}
             </Button>
           </div>
         </form>

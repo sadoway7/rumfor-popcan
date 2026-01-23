@@ -261,8 +261,12 @@ todoSchema.statics.getVendorMarketTodos = function(vendorId, marketId, options =
   
   const query = {
     vendor: vendorId,
-    market: marketId,
     isDeleted: false
+  }
+  
+  // Only add market filter if marketId is provided
+  if (marketId) {
+    query.market = marketId
   }
   
   if (status) query.status = status

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { MarketCard } from '@/components'
 import { MarketCalendar } from '@/components/MarketCalendar'
 import { EmailAlertsSettings } from '@/components/EmailAlertsSettings'
@@ -13,6 +13,7 @@ import { cn } from '@/utils/cn'
 import { ChevronDown, ChevronUp, RefreshCw, Search, Calendar, Mail, Download, Plus, Heart, Zap, Clock } from 'lucide-react'
 
 export const MyMarketsPage: React.FC = () => {
+  const navigate = useNavigate()
   const [activeTab] = useState<'tracked' | 'recent'>('tracked')
   const [activeFilter, setActiveFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,8 +54,7 @@ export const MyMarketsPage: React.FC = () => {
   }
 
   const handleMarketSelect = (market: Market) => {
-    // Navigate to market detail or perform other action
-    console.log('Selected market:', market.name)
+    navigate(`/markets/${market.id}`)
   }
 
   const handleEmailSettingsSave = async (preferences: any) => {

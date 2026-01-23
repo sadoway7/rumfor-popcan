@@ -41,13 +41,13 @@ const todoTemplates = {
 }
 
 export const trackingApi = {
-  async getTodos(marketId?: string): Promise<PaginatedResponse<Todo>> {
+  async getTodos(marketId?: string): Promise<Todo[]> {
     const queryParams = new URLSearchParams()
     if (marketId) queryParams.append('marketId', marketId)
 
-    const response = await httpClient.get<ApiResponse<PaginatedResponse<Todo>>>(`/todos?${queryParams}`)
+    const response = await httpClient.get<ApiResponse<{ todos: Todo[]; pagination: any }>>(`/todos?${queryParams}`)
     if (!response.success) throw new Error(response.error || 'Failed to fetch todos')
-    return response.data!
+    return response.data?.todos || []
   },
 
   async createTodo(todo: Omit<Todo, 'id' | 'vendorId' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Todo>> {

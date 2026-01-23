@@ -17,21 +17,33 @@ export const useTodos = (marketId?: string) => {
     queryKey: ['todos', user?.id, marketId],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      const response = await trackingApi.getTodos(marketId)
-      return response.data
+      console.log('[DEBUG] Fetching todos for marketId:', marketId, 'user:', user.id)
+      try {
+        const response = await trackingApi.getTodos(marketId)
+        console.log('[DEBUG] Fetched todos count:', response?.length || 0)
+        return response || []
+      } catch (err) {
+        console.error('Failed to fetch todos:', err)
+        return []
+      }
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Disable stale time to ensure fresh data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 
   // Create todo mutation
   const createTodoMutation = useMutation({
     mutationFn: async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated')
-      return trackingApi.createTodo(todo)
+      // Backend expects 'market' field, not 'marketId'
+      const todoWithMarket = { ...todo, market: marketId }
+      console.log('[DEBUG] Creating todo:', JSON.stringify(todoWithMarket, null, 2))
+      return trackingApi.createTodo(todoWithMarket as any)
     },
     onSuccess: () => {
+      console.log('[DEBUG] Todo created successfully, invalidating queries')
+      // Invalidate all todo queries to force refetch
       queryClient.invalidateQueries({ queryKey: ['todos'] })
     },
     onError: (error) => {
@@ -71,7 +83,8 @@ export const useTodos = (marketId?: string) => {
   // Toggle todo mutation
   const toggleTodoMutation = useMutation({
     mutationFn: async (id: string) => {
-      const todo = data?.find(t => t.id === id)
+      const todos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+      const todo = todos.find(t => t.id === id)
       if (!todo) throw new Error('Todo not found')
       return trackingApi.updateTodo(id, { completed: !todo.completed })
     },

@@ -14,6 +14,16 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, role }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
+  // Reset scroll position when route changes
+  React.useEffect(() => {
+    const mainContent = document.querySelector('main')
+    if (mainContent) {
+      mainContent.scrollTop = 0
+    }
+    // Also scroll window just in case
+    window.scrollTo(0, 0)
+  }, [children])
+
   return (
     <div className="min-h-screen bg-background">
       <DeferredComponent>

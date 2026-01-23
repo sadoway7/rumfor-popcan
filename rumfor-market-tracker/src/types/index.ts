@@ -296,11 +296,11 @@ export interface HashtagVote {
 // Vendor Tracking Types
 export interface Todo {
   id: string
-  vendorId: string
-  marketId: string
+  vendorId?: string    // Set by backend from auth
+  marketId?: string    // Set by backend from request
   title: string
   description?: string
-  completed: boolean
+  completed?: boolean  // Set by backend (defaults to false)
   priority: TodoPriority
   dueDate?: string
   category: string

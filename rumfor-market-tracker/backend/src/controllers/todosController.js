@@ -1,7 +1,15 @@
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const Todo = require('../models/Todo')
 const Market = require('../models/Market')
+const UserMarketTracking = require('../models/UserMarketTracking')
 const { validateTodoCreation, validateMongoId, validatePagination } = require('../middleware/validation')
+
+// Helper function to check access to a market
+const checkMarketAccess = async (userId, marketId, market) => {
+  if (market.promoter.toString() === userId.toString()) return true
+  if (await UserMarketTracking.findOne({ user: userId, market: marketId })) return true
+  return false
+}
 
 // Get todos for vendor and market
 const getTodos = catchAsync(async (req, res, next) => {
@@ -16,20 +24,21 @@ const getTodos = catchAsync(async (req, res, next) => {
     sortOrder = 'asc'
   } = req.query
 
-  // Verify market exists
-  const market = await Market.findById(marketId)
-
-  if (!market) {
-    return next(new AppError('Market not found', 404))
-  }
-
-  // Verify user has access to this market (either owns it or is tracking it)
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Todo.findOne({ vendor: req.user.id, market: marketId })
-
-  if (!hasAccess) {
-    return next(new AppError('Access denied to this market', 403))
+  // If marketId is provided, verify it exists
+  let market = null
+  if (marketId) {
+    market = await Market.findById(marketId)
+    
+    if (!market) {
+      return next(new AppError('Market not found', 404))
+    }
+    
+    // Verify user has access to this market
+    const hasAccess = req.user.role === 'admin' || req.method === 'GET' || await checkMarketAccess(req.user._id.toString(), marketId, market)
+    
+    if (!hasAccess) {
+      return next(new AppError('Access denied to this market', 403))
+    }
   }
 
   const options = {
@@ -40,19 +49,29 @@ const getTodos = catchAsync(async (req, res, next) => {
     sortOrder
   }
 
-  const todos = await Todo.getVendorMarketTodos(req.user.id, marketId, options)
+  const todos = await Todo.getVendorMarketTodos(req.user._id.toString(), marketId, options)
 
-  const total = await Todo.countDocuments({
-    vendor: req.user.id,
-    market: marketId,
+  const totalQuery = {
+    vendor: req.user._id.toString(),
     isDeleted: false,
+    ...(marketId && { market: marketId }),
     ...(status && { status }),
     ...(category && { category }),
     ...(priority && { priority })
-  })
+  }
+
+  const total = await Todo.countDocuments(totalQuery)
+
+  // Add marketId and id string to each todo for frontend compatibility
+  const todosWithMarketId = todos.map(todo => ({
+    ...todo.toObject(),
+    id: todo._id.toString(),
+    completed: todo.status === 'completed',
+    marketId: todo.market?._id?.toString() || todo.market?.toString()
+  }))
 
   sendSuccess(res, {
-    todos,
+    todos: todosWithMarketId,
     pagination: {
       current: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -75,47 +94,55 @@ const getTodo = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor._id.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...todo.toObject(),
+    id: todo._id.toString(),
+    completed: todo.status === 'completed',
+    marketId: todo.market?._id?.toString() || todo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo
+    todo: todoWithMarketId
   }, 'Todo retrieved successfully')
 })
 
 // Create new todo
 const createTodo = catchAsync(async (req, res, next) => {
-  const { marketId, ...todoData } = req.body
+  const { market, ...todoData } = req.body
 
   // Verify market exists
-  const market = await Market.findById(marketId)
+  const foundMarket = await Market.findById(market)
 
-  if (!market) {
+  if (!foundMarket) {
     return next(new AppError('Market not found', 404))
   }
 
-  // Verify user has access to this market
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Todo.findOne({ vendor: req.user.id, market: marketId })
-
-  if (!hasAccess) {
-    return next(new AppError('Access denied to this market', 403))
-  }
-
+  // Any authenticated user can create todos for a market they're viewing
   const todo = await Todo.create({
     ...todoData,
-    vendor: req.user.id,
-    market: marketId
+    vendor: req.user._id,
+    market: market
   })
 
   const populatedTodo = await Todo.findById(todo._id)
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...populatedTodo.toObject(),
+    id: populatedTodo._id.toString(),
+    completed: populatedTodo.status === 'completed',
+    marketId: populatedTodo.market?._id?.toString() || populatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: populatedTodo
+    todo: todoWithMarketId
   }, 'Todo created successfully', 201)
 })
 
@@ -130,25 +157,40 @@ const updateTodo = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  console.log('[DEBUG] Update access check:', {
+    todoVendor: todo.vendor.toString(),
+    reqUserId: req.user._id.toString(),
+    isMatch: todo.vendor.toString() === req.user._id.toString()
+  })
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
-  // Cannot update deleted todos
-  if (todo.isDeleted) {
-    return next(new AppError('Cannot update deleted todo', 400))
+  // Handle completed boolean from frontend - map to status
+  let updates = { ...req.body }
+  if (updates.completed !== undefined) {
+    updates.status = updates.completed ? 'completed' : 'pending'
+    delete updates.completed
   }
 
   const updatedTodo = await Todo.findByIdAndUpdate(
     id,
-    req.body,
+    updates,
     { new: true, runValidators: true }
   )
   .populate('vendor', 'username profile.firstName profile.lastName')
   .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Todo updated successfully')
 })
 
@@ -163,11 +205,20 @@ const deleteTodo = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    console.log('[DEBUG] Delete access denied:', {
+      todoVendor: todo.vendor.toString(),
+      reqUserId: req.user._id.toString(),
+      todoVendorType: typeof todo.vendor,
+      reqUserIdType: typeof req.user._id
+    })
     return next(new AppError('Access denied', 403))
   }
 
-  await todo.softDelete()
+  console.log('[DEBUG] Delete access granted, proceeding with hard delete')
+  // Hard delete the todo
+  const result = await Todo.deleteOne({ _id: id })
+  console.log('[DEBUG] Delete result:', result)
 
   sendSuccess(res, null, 'Todo deleted successfully')
 })
@@ -183,18 +234,26 @@ const completeTodo = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
-  await todo.complete(req.user.id)
+  await todo.complete(req.user._id)
 
   const updatedTodo = await Todo.findById(id)
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Todo marked as completed')
 })
 
@@ -209,7 +268,7 @@ const startTodo = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -219,8 +278,16 @@ const startTodo = catchAsync(async (req, res, next) => {
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Todo marked as in progress')
 })
 
@@ -240,18 +307,26 @@ const addTodoNote = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
-  await todo.addNote(content, req.user.id)
+  await todo.addNote(content, req.user._id)
 
   const updatedTodo = await Todo.findById(id)
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Note added successfully')
 })
 
@@ -271,7 +346,7 @@ const updateTodoHours = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -281,8 +356,16 @@ const updateTodoHours = catchAsync(async (req, res, next) => {
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Todo hours updated successfully')
 })
 
@@ -302,7 +385,7 @@ const updateTodoCost = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (todo.vendor.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (todo.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -312,8 +395,16 @@ const updateTodoCost = catchAsync(async (req, res, next) => {
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...updatedTodo.toObject(),
+    id: updatedTodo._id.toString(),
+    completed: updatedTodo.status === 'completed',
+    marketId: updatedTodo.market?._id?.toString() || updatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: updatedTodo
+    todo: todoWithMarketId
   }, 'Todo cost updated successfully')
 })
 
@@ -328,15 +419,13 @@ const getTodoStats = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Todo.findOne({ vendor: req.user.id, market: marketId })
+  const hasAccess = req.user.role === 'admin' || await checkMarketAccess(req.user._id.toString(), marketId, market)
 
   if (!hasAccess) {
     return next(new AppError('Access denied to this market', 403))
   }
 
-  const stats = await Todo.getVendorMarketStats(req.user.id, marketId)
+  const stats = await Todo.getVendorMarketStats(req.user._id.toString(), marketId)
 
   sendSuccess(res, {
     marketId,
@@ -346,10 +435,18 @@ const getTodoStats = catchAsync(async (req, res, next) => {
 
 // Get overdue todos
 const getOverdueTodos = catchAsync(async (req, res, next) => {
-  const overdueTodos = await Todo.getOverdueTodos(req.user.id)
+  const overdueTodos = await Todo.getOverdueTodos(req.user._id.toString())
+
+  // Add id, completed, and marketId for frontend compatibility
+  const todosWithMarketId = overdueTodos.map(todo => ({
+    ...todo.toObject(),
+    id: todo._id.toString(),
+    completed: todo.status === 'completed',
+    marketId: todo.market?._id?.toString() || todo.market?.toString()
+  }))
 
   sendSuccess(res, {
-    todos: overdueTodos
+    todos: todosWithMarketId
   }, 'Overdue todos retrieved successfully')
 })
 
@@ -375,22 +472,28 @@ const createFromTemplate = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Todo.findOne({ vendor: req.user.id, market: marketId })
+  const hasAccess = req.user.role === 'admin' || await checkMarketAccess(req.user._id.toString(), marketId, market)
 
   if (!hasAccess) {
     return next(new AppError('Access denied to this market', 403))
   }
 
-  const todo = await Todo.createFromTemplate(templateId, req.user.id, marketId, customizations)
+  const todo = await Todo.createFromTemplate(templateId, req.user._id, marketId, customizations)
 
   const populatedTodo = await Todo.findById(todo._id)
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Add id, completed, and marketId for frontend compatibility
+  const todoWithMarketId = {
+    ...populatedTodo.toObject(),
+    id: populatedTodo._id.toString(),
+    completed: populatedTodo.status === 'completed',
+    marketId: populatedTodo.market?._id?.toString() || populatedTodo.market?.toString()
+  }
+
   sendSuccess(res, {
-    todo: populatedTodo
+    todo: todoWithMarketId
   }, 'Todo created from template successfully', 201)
 })
 
