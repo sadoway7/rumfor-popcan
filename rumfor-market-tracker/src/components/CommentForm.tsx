@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { useAuthStore } from '@/features/auth/authStore'
@@ -70,10 +71,19 @@ export const CommentForm: React.FC<CommentFormProps> = ({
 
   if (!user) {
     return (
-      <div className={cn('p-4 border border-border rounded-lg bg-muted/50', className)}>
-        <p className="text-sm text-muted-foreground text-center">
-          Please log in to join the conversation.
-        </p>
+      <div className={cn('p-4 border border-zinc-200 rounded-lg bg-zinc-50', className)}>
+        <div className="flex items-center justify-between">
+          <p className="text-base font-semibold text-zinc-800">
+            Join the conversation
+          </p>
+          <div>
+            <Link to="/auth/login">
+              <Button>
+                Log In
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }

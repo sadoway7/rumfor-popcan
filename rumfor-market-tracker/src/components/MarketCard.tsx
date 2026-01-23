@@ -373,9 +373,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         <Modal
           isOpen={isCommentsModalOpen}
           onClose={() => setIsCommentsModalOpen(false)}
-          title={`Comments for ${market.name}`}
+          title={market.name}
           size="xl"
-          className="sm:!max-w-xl sm:!h-auto sm:!max-h-[90vh] sm:!w-auto sm:!rounded-lg sm:!border sm:!shadow-lg sm:!bg-surface sm:!p-6 !absolute !inset-0 !w-full !h-full !max-w-none !max-h-none !rounded-none !border-none !shadow-none !bg-background !p-0"
+          className="sm:!max-w-xl sm:!h-auto sm:!max-h-[90vh] sm:!w-auto sm:!rounded-lg sm:!border sm:!shadow-lg sm:!bg-surface sm:!p-4 !absolute !inset-0 !w-full !h-full !max-w-none !max-h-none !rounded-none !border-none !shadow-none !bg-background !p-0 [&>div>h2]:!text-base [&>div>h2]:!font-semibold [&>div>h2]:!mb-1 [&>div]:!pb-2 [&>div]:!border-b [&>div]:!border-zinc-200 [&>div>button]:!bg-zinc-100 [&>div>button]:!text-zinc-500 [&>div>button]:!hover:bg-zinc-200 [&>div>button]:!hover:text-zinc-900 [&>div>button]:!rounded-full [&>div>button]:!p-2"
         >
           <CommentList marketId={market.id} />
         </Modal>

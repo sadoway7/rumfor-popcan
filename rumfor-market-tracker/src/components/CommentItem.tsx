@@ -123,11 +123,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   // Collapsed state
   if (!isExpanded) {
     return (
-      <li className={cn('relative', depth > 0 ? 'mt-6' : 'mt-12 first:mt-0', className)}>
+      <li className={cn('relative', depth > 0 ? 'mt-3' : 'mt-4 first:mt-0', className)}>
         {depth > 0 && (
-          <div className="absolute left-[-21px] top-[-38px] w-[21px] h-[58px] pointer-events-none z-0">
-            <svg width="21" height="58" viewBox="0 0 21 58" fill="none" className="text-zinc-200/80">
-              <path d="M1 0V44C1 49.5228 5.47715 54 11 54H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <div className="absolute left-[-12px] top-[-38px] w-[12px] h-[58px] pointer-events-none z-0">
+            <svg width="12" height="58" viewBox="0 0 12 58" fill="none" className="text-zinc-200/80">
+              <path d="M1 0V44C1 49.5228 5.47715 54 4 54H12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
         )}
@@ -154,13 +154,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   return (
-    <li className={cn('relative', depth > 0 ? 'mt-6' : 'mt-12 first:mt-0', className)} data-depth={depth}>
+    <li className={cn('relative', depth > 0 ? 'mt-3' : 'mt-4 first:mt-0', className)} data-depth={depth}>
       {/* Curved Connector Line for nested replies - TALLER */}
       {depth > 0 && (
-        <div className="absolute left-[-21px] top-[-58px] w-[21px] h-[78px] pointer-events-none z-0">
-          <svg width="21" height="78" viewBox="0 0 21 78" fill="none" className="text-zinc-200">
+        <div className="absolute left-[-12px] top-[-58px] w-[12px] h-[78px] pointer-events-none z-0">
+          <svg width="12" height="78" viewBox="0 0 12 78" fill="none" className="text-zinc-200">
             <path
-              d="M1 0V64C1 69.5228 5.47715 74 11 74H21"
+              d="M1 0V64C1 69.5228 5.47715 74 4 74H12"
               stroke="currentColor"
               strokeWidth="1.75"
               strokeLinecap="round"
@@ -216,7 +216,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 relative">
           {/* Header Info */}
-          <div className="flex items-center gap-2 mb-2 mt-0.5">
+          <div className="flex items-center gap-2 mb-1.5 mt-0">
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-[14px] hover:underline cursor-pointer decoration-2 underline-offset-2 tracking-tight text-zinc-900">
                 {comment.user.firstName} {comment.user.lastName}
@@ -290,7 +290,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           ) : (
             <div className={cn(
-              "relative text-[14.5px] leading-relaxed text-zinc-700 px-4 py-3 rounded-[20px] border shadow-sm bg-white border-zinc-300",
+              "relative text-[14.5px] leading-relaxed text-zinc-700 px-3 py-2 rounded-[20px] border shadow-sm bg-white border-zinc-300",
               depth === 0 ? 'ring-[4px] ring-zinc-50/30 font-medium' : 'font-normal'
             )}>
               {/* Floating Reaction Button */}
@@ -360,11 +360,11 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           <div className="space-y-0">
             {/* Reply Form */}
             {isReplying && (
-              <div className="mt-6">
-                <div className="pl-[21px] relative">
-                  <div className="absolute left-0 top-[-48px] w-[21px] h-[68px] pointer-events-none z-0">
-                    <svg width="21" height="68" viewBox="0 0 21 68" fill="none" className="text-zinc-200">
-                      <path d="M1 0V54C1 59.5228 5.47715 64 11 64H21" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+              <div className="mt-3">
+                <div className="pl-[12px] relative">
+                  <div className="absolute left-0 top-[-48px] w-[12px] h-[68px] pointer-events-none z-0">
+                    <svg width="12" height="68" viewBox="0 0 12 68" fill="none" className="text-zinc-200">
+                      <path d="M1 0V54C1 59.5228 5.47715 64 4 64H12" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div className="bg-white rounded-[22px] px-4 py-3 border border-zinc-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -403,7 +403,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
             {/* Nested Replies */}
             {hasChildren && (
-              <ul className="pl-[21px] mt-6 space-y-0">
+              <ul className="pl-[12px] mt-3 space-y-0">
                 {comment.replies.map((reply) => (
                   <CommentItem
                     key={reply.id}

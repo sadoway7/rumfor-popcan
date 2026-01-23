@@ -1,19 +1,18 @@
 import React, { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
 import { useMarket, useMarkets, useMarketVendors } from '@/features/markets/hooks/useMarkets'
-// import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import TagVoting from '@/components/TagVoting'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
-import { Search } from 'lucide-react'
+import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image } from 'lucide-react'
 
 const categoryLabels = {
   'farmers-market': 'Farmers Market',
@@ -56,7 +55,7 @@ export const MarketDetailPage: React.FC = () => {
   const [showReportModal, setShowReportModal] = useState(false)
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [isAccessibilityCollapsed, setIsAccessibilityCollapsed] = useState(true)
-  const [isVendorsCollapsed, setIsVendorsCollapsed] = useState(false)
+  const [isVendorsCollapsed, setIsVendorsCollapsed] = useState(true)
   const [vendorSearchTerm, setVendorSearchTerm] = useState('')
   
   const { market, isLoading, error, refetch } = useMarket(id!)
@@ -67,18 +66,19 @@ export const MarketDetailPage: React.FC = () => {
     isTracking
   } = useMarkets()
   const { vendors: marketVendors } = useMarketVendors(id!)
-  // const { myApplications } = useVendorApplications()
   const { user } = useAuthStore()
 
-  // Check if user has already applied to this market
-  // const existingApplication = myApplications.find(app => app.marketId === id)
+  // Scroll to top when market ID changes
+  React.useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [id])
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center px-4">
           <Spinner className="h-8 w-8 mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading market details...</p>
+          <p className="text-muted-foreground text-sm">Loading market details...</p>
         </div>
       </div>
     )
@@ -93,8 +93,8 @@ export const MarketDetailPage: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold mb-2">Market Not Found</h1>
-          <p className="text-muted-foreground mb-6">
+          <h1 className="text-xl font-bold mb-2">Market Not Found</h1>
+          <p className="text-muted-foreground text-sm mb-6">
             The market you're looking for doesn't exist or has been removed.
           </p>
           <div className="space-y-2">
@@ -118,22 +118,16 @@ export const MarketDetailPage: React.FC = () => {
     }
   }
 
-  // Determine button text based on market type
   const getButtonText = () => {
     const isTracked = isMarketTracked(market.id)
-
     if (isTracked) {
-      return 'Tracked'
+      return '✓ Tracked'
     }
-
-    // For now, prioritize self-managed system - always show "Track this Market"
-    // Application system can be enabled later when needed
     return 'Track this Market'
   }
 
   const getButtonIcon = () => {
     const isTracked = isMarketTracked(market.id)
-
     if (isTracked) {
       return (
         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,8 +135,6 @@ export const MarketDetailPage: React.FC = () => {
         </svg>
       )
     }
-
-    // Always use track icon for self-managed system
     return (
       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -152,15 +144,11 @@ export const MarketDetailPage: React.FC = () => {
 
   const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
-
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
     let days: string[] = []
     let startTime: string = ''
     let endTime: string = ''
-
     if (Array.isArray(schedule)) {
-      // Handle array format
       if (schedule.length === 0) return 'Schedule TBD'
       days = schedule
         .map((s: any) => dayNames[s.dayOfWeek])
@@ -169,16 +157,10 @@ export const MarketDetailPage: React.FC = () => {
       startTime = time.startTime
       endTime = time.endTime
     } else if (schedule.daysOfWeek && schedule.daysOfWeek.length > 0) {
-      // Handle object format from backend
       days = schedule.daysOfWeek.map((day: string) => {
         const dayMap: { [key: string]: string } = {
-          'monday': 'Monday',
-          'tuesday': 'Tuesday',
-          'wednesday': 'Wednesday',
-          'thursday': 'Thursday',
-          'friday': 'Friday',
-          'saturday': 'Saturday',
-          'sunday': 'Sunday'
+          'monday': 'Mon', 'tuesday': 'Tue', 'wednesday': 'Wed', 'thursday': 'Thu',
+          'friday': 'Fri', 'saturday': 'Sat', 'sunday': 'Sun'
         }
         return dayMap[day.toLowerCase()] || day
       })
@@ -187,18 +169,14 @@ export const MarketDetailPage: React.FC = () => {
     } else {
       return 'Schedule TBD'
     }
-
     return `${days.join(', ')} ${startTime}-${endTime}`
   }
 
   const formatLocation = (location: any) => {
-    if (!location) {
-      return 'Address not available'
-    }
+    if (!location) return 'Address not available'
     return `${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.zipCode || ''}`.trim()
   }
 
-  // Filter real vendors based on search term
   const filteredVendors = marketVendors.filter(vendor =>
     `${vendor.user.firstName} ${vendor.user.lastName}`.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
     vendor.user.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
@@ -206,480 +184,425 @@ export const MarketDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
-      <div className="border-b bg-card hidden md:block">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <Link to="/markets" className="hover:text-foreground transition-colors">Markets</Link>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <span className="text-foreground font-medium truncate">{market.name}</span>
-          </nav>
-        </div>
-      </div>
+      {/* Hero Image with Overlaid Info - MarketCard Style */}
+      {market.images && market.images.length > 0 ? (
+        <div className="relative">
+          {/* Main Image */}
+          <div className="aspect-[4/3] md:aspect-video relative overflow-hidden bg-muted">
+            <img
+              src={market.images[selectedImageIndex]}
+              alt={market.name}
+              className="w-full h-full object-cover"
+            />
 
-
-
-      <div className="container mx-auto px-4 py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery with Overlay */}
-            {market.images && market.images.length > 0 && (
-              <div className="space-y-4">
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted relative">
-                  <img
-                    src={market.images[selectedImageIndex]}
-                    alt={market.name}
-                    className="w-full h-full object-cover"
-                  />
-
-                  {/* Back to Markets Button - Top Right */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate('/markets')}
-                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                      Back to All Markets
-                    </Button>
-                  </div>
-
-                  {/* Header Overlay */}
-                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 via-black/40 to-transparent backdrop-blur-sm p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Badge variant="outline" className={cn(statusColors[market.status], "bg-white/20 text-white border-white/30")}>
-                            {market.status}
-                          </Badge>
-                          <Badge variant="outline" className={cn(categoryColors[market.category], "bg-white/20 text-white border-white/30")}>
-                            {categoryLabels[market.category]}
-                          </Badge>
-                        </div>
-
-                        <h1 className="text-2xl font-bold mb-4 text-white leading-tight" style={{textShadow: '3px 3px 6px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.7)'}}>{market.name}</h1>
-
-                        <div className="text-white/90">
-                          <div className="flex items-center">
-                            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            <span>{formatLocation(market.location)}</span>
-                          </div>
-
-
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2 ml-4">
-                        {/* Commented out for future use case */}
-                        {/* <Button
-                          onClick={handleTrackToggle}
-                          disabled={isTracking}
-                          variant={isMarketTracked(market.id) ? "secondary" : "outline"}
-                          className={isMarketTracked(market.id) ? "bg-white text-black" : "bg-white/10 border-white/30 text-white hover:bg-white/20"}
-                        >
-                          {isMarketTracked(market.id) ? '✓ Tracked' : '+ Track Market'}
-                        </Button> */}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent backdrop-blur-sm p-6">
-                    <div className="prose prose-sm max-w-none">
-                      <p className={cn(
-                        "text-white leading-relaxed",
-                        !showFullDescription && "line-clamp-3"
-                      )}>
-                        {market.description}
-                      </p>
-                      {market.description && market.description.length > 200 && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => setShowFullDescription(!showFullDescription)}
-                          className="p-0 h-auto mt-2 text-white hover:text-white/80"
-                        >
-                          {showFullDescription ? 'Show Less' : 'Read More'}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {market.images.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto">
-                    {market.images.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={cn(
-                          "flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
-                          selectedImageIndex === index
-                            ? "border-accent"
-                            : "border-transparent hover:border-muted-foreground/20"
-                        )}
-                      >
-                        <img
-                          src={image}
-                          alt={`${market.name} ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Accessibility Features */}
-            <Card className="p-6">
-              <button
-                onClick={() => setIsAccessibilityCollapsed(!isAccessibilityCollapsed)}
-                className="w-full flex items-center justify-between text-left"
+            {/* Back Button - Top Left */}
+            <div className="absolute top-3 left-3 z-10">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/markets')}
+                className="bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm h-9 px-3"
               >
-                <h2 className="text-lg font-medium">Accessibility & Amenities</h2>
-                <svg
-                  className={`w-5 h-5 transition-all duration-300 ${isAccessibilityCollapsed ? 'rotate-0 animate-bounce' : 'rotate-180'}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-              </button>
-              {!isAccessibilityCollapsed && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <h3 className="font-medium">Accessibility</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        {market.accessibility?.wheelchairAccessible ? (
-                          <span className="text-success mr-2">✓</span>
-                        ) : (
-                          <span className="text-muted-foreground mr-2">✗</span>
-                        )}
-                        <span className="text-sm">Wheelchair Accessible</span>
-                      </div>
-                      <div className="flex items-center">
-                        {market.accessibility?.parkingAvailable ? (
-                          <span className="text-success mr-2">✓</span>
-                        ) : (
-                          <span className="text-muted-foreground mr-2">✗</span>
-                        )}
-                        <span className="text-sm">Parking Available</span>
-                      </div>
-                      <div className="flex items-center">
-                        {market.accessibility?.restroomsAvailable ? (
-                          <span className="text-success mr-2">✓</span>
-                        ) : (
-                          <span className="text-muted-foreground mr-2">✗</span>
-                        )}
-                        <span className="text-sm">Restrooms Available</span>
-                      </div>
-                    </div>
-                  </div>
+              </Button>
+            </div>
 
-                  <div className="space-y-3">
-                    <h3 className="font-medium">Family Features</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        {market.accessibility?.familyFriendly ? (
-                          <span className="text-success mr-2">✓</span>
-                        ) : (
-                          <span className="text-muted-foreground mr-2">✗</span>
-                        )}
-                        <span className="text-sm">Family Friendly</span>
-                      </div>
-                      <div className="flex items-center">
-                        {market.accessibility?.petFriendly ? (
-                          <span className="text-success mr-2">✓</span>
-                        ) : (
-                          <span className="text-muted-foreground mr-2">✗</span>
-                        )}
-                        <span className="text-sm">Pet Friendly</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Card>
+            {/* Category Badge - Top Right */}
+            <div className="absolute top-3 right-3 z-10">
+              <Badge className={cn(categoryColors[market.category], "bg-black/60 backdrop-blur-sm text-white border-0")}>
+                {categoryLabels[market.category]}
+              </Badge>
+            </div>
 
-            {/* Vendor List */}
-            <Card className="p-6">
-              <button
-                onClick={() => setIsVendorsCollapsed(!isVendorsCollapsed)}
-                className="w-full flex items-center justify-between text-left"
-              >
-                <div className="flex items-center justify-between flex-1">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <input
-                      type="text"
-                      placeholder="Filter vendors..."
-                      value={vendorSearchTerm}
-                      onChange={(e) => setVendorSearchTerm(e.target.value)}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isVendorsCollapsed) setIsVendorsCollapsed(false);
-                      }}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent transition-all duration-300 shadow"
-                    />
-                  </div>
-                  <span className="text-base font-medium text-muted-foreground ml-4">
-                    {filteredVendors.length} vendors attending
-                  </span>
-                </div>
-                <svg
-                  className={`w-5 h-5 ml-4 transition-transform ${isVendorsCollapsed ? 'rotate-0' : 'rotate-180'}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {!isVendorsCollapsed && (
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                {filteredVendors.map((vendor, index) => (
-                  <div key={index} className={`bg-gradient-to-br ${vendor.color} rounded-lg p-3 hover:shadow-md transition-all duration-200`}>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 ring-2 ring-white/50 shadow-sm">
-                        <span className="text-sm font-bold text-primary">
-                          {vendor.avatar}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm leading-tight text-foreground">{vendor.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{vendor.type}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {/* Location - Above title, floating */}
+            <div className="absolute bottom-16 left-3 right-3 z-10">
+              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 text-white text-xs inline-flex">
+                <MapPin className="w-3 h-3" />
+                <span>{formatLocation(market.location)}</span>
               </div>
-              )}
-            </Card>
+            </div>
 
-            {/* Community Features */}
-            <Card className="p-0 overflow-hidden bg-transparent">
-              <Tabs
-                items={[
-                  {
-                    key: 'comments',
-                    label: 'Comments',
-                    content: <CommentList marketId={id!} />
-                  },
-                  {
-                    key: 'photos',
-                    label: 'Photos',
-                    content: (
-                      <PhotoGallery
-                        marketId={id!}
-                        showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}
-                      />
-                    )
-                  }
-                ]}
-                defaultActiveKey="comments"
-                className="w-full [&>div:first-child]:bg-white [&>div:first-child]:rounded-lg [&>div:first-child]:border-b-0 [&>div:first-child>button]:ring-0 [&>div:first-child>button]:ring-offset-0 [&>div:first-child>button]:outline-none [&>div:first-child>button]:data-[state=active]:bg-accent/40 [&>div:last-child]:bg-transparent"
-              />
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4 space-y-6">
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Schedule</h3>
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{formatSchedule(market.schedule)}</span>
-                </div>
-              </Card>
-
-              {/* Official Market Link */}
-              <Card className="p-6">
-                <div className="text-center">
-                  <a
-                    href="#"
-                    className="inline-flex items-center text-lg font-medium text-accent hover:underline"
-                    onClick={(e) => e.preventDefault()}
-                  >
-                    <svg className="w-5 h-5 mr-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Visit official website
-                  </a>
-                </div>
-              </Card>
-              {/* Quick Actions */}
-              <Card className="p-6">
-                <div className="space-y-3">
-                  {/* Track Market Button */}
-                  <Button
-                    className="w-full"
-                    onClick={handleTrackToggle}
-                    disabled={isTracking}
-                    variant={isMarketTracked(market.id) ? "secondary" : "primary"}
-                  >
-                    {getButtonIcon()}
-                    {getButtonText()}
-                  </Button>
-
-                  {/* User Status Button (only for tracked markets) */}
-                  {isMarketTracked(market.id) && (
-                    <div className="pt-2">
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowStatusModal(true)}
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Update My Status
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Application Button (for promoter-run markets) - Commented out for dynamic system */}
-                  {/* {market.promoter && (
-                    <div className="pt-2">
-                      {existingApplication ? (
-                        <div className="space-y-2">
-                          <Button
-                            className="w-full"
-                            variant="outline"
-                            onClick={() => navigate(`/applications/${existingApplication.id}`)}
-                          >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            View My Application
-                          </Button>
-                          <div className="text-xs text-muted-foreground text-center">
-                            Status: {existingApplication.status.replace('-', ' ')}
-                          </div>
-                        </div>
-                      ) : (
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={() => navigate(`/markets/${id}/apply`)}
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Apply to Market
-                        </Button>
-                      )}
-                    </div>
-                  )} */}
-
-                  <Button className="w-full" variant="outline">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
-                    Share Market
-                  </Button>
-
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v4m-4-4h.01M16 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {market.promoter ? 'Report Issue' : 'Request Update'}
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Tags & Hashtags */}
-              {((market.tags && market.tags.length > 0) || user) && (
-                <Card className="p-6">
-                  <TagVoting
-                    marketTags={market.tags || []}
-                    marketId={id!}
-                  />
-                </Card>
-              )}
-
-              {/* Contact Info */}
-              {market.promoter && (
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
-                  <div className="space-y-3">
-                    {market.contact?.phone && (
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <span className="text-sm">{market.contact?.phone}</span>
-                      </div>
-                    )}
-
-                    {market.contact?.email && (
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        <a href={`mailto:${market.contact?.email}`} className="text-sm text-accent hover:underline">
-                          {market.contact?.email}
-                        </a>
-                      </div>
-                    )}
-
-                    {market.contact?.website && (
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 mr-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
-                        </svg>
-                        <a href={market.contact?.website} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline">
-                          Visit Website
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {/* Market Promoter */}
-{market.promoter && (
-  <Card className="p-6">
-    <h3 className="text-lg font-semibold mb-4">Market Organizer</h3>
-    <div className="flex items-center space-x-3">
-      <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-        <span className="text-sm font-medium">
-          {market.promoter.firstName?.[0]}{market.promoter.lastName?.[0]}
-        </span>
-      </div>
-      <div>
-        <p className="font-medium">{market.promoter.firstName || ''} {market.promoter.lastName || ''}</p>
-        <p className="text-sm text-muted-foreground">{market.promoter.email}</p>
-      </div>
-    </div>
-  </Card>
-)}
+            {/* Solid dark bar at bottom for title */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
+              <h1 className="text-white font-semibold text-lg md:text-2xl leading-tight line-clamp-2">
+                {market.name}
+              </h1>
             </div>
           </div>
+
+          {/* Thumbnail Strip */}
+          {market.images.length > 1 && (
+            <div className="flex gap-2 p-2 overflow-x-auto bg-muted/50">
+              {market.images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImageIndex(index)}
+                  className={cn(
+                    "flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all",
+                    selectedImageIndex === index
+                      ? "border-accent ring-2 ring-accent/30"
+                      : "border-transparent hover:border-muted-foreground/30"
+                  )}
+                >
+                  <img
+                    src={image}
+                    alt={`${market.name} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Description - After image, before main content (like MarketCard) */}
+          {market.description && (
+            <div className="px-2 md:px-4 py-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {showFullDescription ? market.description : market.description.length > 200 ? market.description.substring(0, 200) + '...' : market.description}
+              </p>
+              {market.description.length > 200 && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-sm text-accent hover:underline mt-1"
+                >
+                  {showFullDescription ? 'Show Less' : 'Read More'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Schedule - After description */}
+          <div className="px-2 md:px-4 pb-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span>{formatSchedule(market.schedule)}</span>
+            </div>
+          </div>
+
+          {/* Tags - After schedule */}
+          {market.tags && market.tags.length > 0 && (
+            <div className="px-2 md:px-4 pb-3">
+              <div className="flex flex-wrap gap-1.5">
+                {market.tags.slice(0, 8).map((tag, index) => (
+                  <span key={index} className="flex-shrink-0 px-3 py-1.5 bg-white text-foreground rounded-full text-sm font-medium border">
+                    #{tag}
+                  </span>
+                ))}
+                {market.tags.length > 8 && (
+                  <span className="flex-shrink-0 px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-sm">
+                    +{market.tags.length - 8}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+      ) : (
+        /* No Image - Show Name and Back Button */
+        <div className="bg-muted px-4 py-6">
+          <div className="flex items-center justify-between max-w-2xl mx-auto mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/markets')}
+              className="h-9"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </Button>
+            <div className="flex gap-2">
+              <Badge variant="outline" className={statusColors[market.status]}>
+                {market.status}
+              </Badge>
+              <Badge variant="outline" className={categoryColors[market.category]}>
+                {categoryLabels[market.category]}
+              </Badge>
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-center max-w-2xl mx-auto px-4">
+            {market.name}
+          </h1>
+          <div className="flex items-center justify-center text-muted-foreground mt-2 text-sm max-w-2xl mx-auto px-4">
+            <MapPin className="w-4 h-4 mr-2" />
+            <span>{formatLocation(market.location)}</span>
+          </div>
+          {/* Description for no-image case */}
+          {market.description && (
+            <div className="max-w-2xl mx-auto mt-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {showFullDescription ? market.description : market.description.length > 200 ? market.description.substring(0, 200) + '...' : market.description}
+              </p>
+              {market.description.length > 200 && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-sm text-accent hover:underline mt-1"
+                >
+                  {showFullDescription ? 'Show Less' : 'Read More'}
+                </button>
+              )}
+            </div>
+          )}
+          {/* Schedule for no-image case */}
+          <div className="max-w-2xl mx-auto mt-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <span>{formatSchedule(market.schedule)}</span>
+            </div>
+          </div>
+          {/* Tags for no-image case */}
+          {market.tags && market.tags.length > 0 && (
+            <div className="max-w-2xl mx-auto mt-3">
+              <div className="flex flex-wrap gap-1.5">
+                {market.tags.slice(0, 8).map((tag, index) => (
+                  <span key={index} className="flex-shrink-0 px-3 py-1.5 bg-white text-foreground rounded-full text-sm font-medium border">
+                    #{tag}
+                  </span>
+                ))}
+                {market.tags.length > 8 && (
+                  <span className="flex-shrink-0 px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-sm">
+                    +{market.tags.length - 8}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Content - Single Column Stack */}
+      <div className="max-w-2xl mx-auto px-2 md:px-4 py-4 space-y-3">
+
+        {/* Track Market Button - Full Width, Prominent */}
+        <Button
+          className="w-full h-11 text-base font-medium"
+          onClick={handleTrackToggle}
+          disabled={isTracking}
+          variant={isMarketTracked(market.id) ? "secondary" : "primary"}
+        >
+          {getButtonIcon()}
+          {getButtonText()}
+        </Button>
+
+        {/* Official Market Contact - With email, phone, website grouped */}
+        {market.promoter && (
+          <Card className="p-2">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">
+                  {market.promoter.firstName || ''} {market.promoter.lastName || ''}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{market.promoter.email}</p>
+              </div>
+            </div>
+            {/* Contact Actions */}
+            <div className="flex gap-1">
+              {market.contact?.website && (
+                <a
+                  href={market.contact.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
+                >
+                  <Globe className="w-3 h-3" />
+                  Website
+                </a>
+              )}
+              {market.contact?.phone && (
+                <a
+                  href={`tel:${market.contact.phone}`}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
+                >
+                  <Phone className="w-3 h-3" />
+                  Call
+                </a>
+              )}
+              {market.contact?.email && (
+                <a
+                  href={`mailto:${market.contact.email}`}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
+                >
+                  <Mail className="w-3 h-3" />
+                  Email
+                </a>
+              )}
+            </div>
+          </Card>
+        )}
+
+        {/* Accessibility & Amenities - Compact Collapsible */}
+        <Card className="overflow-hidden">
+          <button
+            onClick={() => setIsAccessibilityCollapsed(!isAccessibilityCollapsed)}
+            className="w-full flex items-center justify-between p-2 min-h-[36px]"
+          >
+            <h2 className="font-medium text-sm">Accessibility & Amenities</h2>
+            {isAccessibilityCollapsed ? (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+          {!isAccessibilityCollapsed && (
+            <div className="px-2 pb-2 space-y-1">
+              <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.wheelchairAccessible ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.wheelchairAccessible ? '' : 'text-muted-foreground'}>Wheelchair</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.parkingAvailable ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.parkingAvailable ? '' : 'text-muted-foreground'}>Parking</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.restroomsAvailable ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.restroomsAvailable ? '' : 'text-muted-foreground'}>Restrooms</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.familyFriendly ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.familyFriendly ? '' : 'text-muted-foreground'}>Family</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.petFriendly ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.petFriendly ? '' : 'text-muted-foreground'}>Pets</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Vendors Attending - Collapsed by Default */}
+        <Card className="overflow-hidden">
+          <button
+            onClick={() => setIsVendorsCollapsed(!isVendorsCollapsed)}
+            className="w-full flex items-center justify-between p-2 min-h-[36px]"
+          >
+            <div className="flex items-center gap-2">
+              <h2 className="font-medium text-sm">Vendors</h2>
+              <Badge variant="outline" className="text-xs">{filteredVendors.length}</Badge>
+            </div>
+            {isVendorsCollapsed ? (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+          {!isVendorsCollapsed && (
+            <div className="px-2 pb-2 space-y-1">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5" />
+                <input
+                  type="text"
+                  placeholder="Filter..."
+                  value={vendorSearchTerm}
+                  onChange={(e) => setVendorSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+              {/* Vendor List */}
+              {filteredVendors.length > 0 ? (
+                <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                  {filteredVendors.map((vendor, index) => (
+                    <div key={index} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
+                      <span className="font-medium">{vendor.name}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  {vendorSearchTerm ? 'No matches' : 'No vendors yet'}
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* Community Features - Comments/Photos Tabs (Comments Default) */}
+        <Card className="overflow-hidden bg-muted/20">
+          <Tabs
+            items={[
+              {
+                key: 'comments',
+                label: 'Comments',
+                icon: <MessageSquare className="w-4 h-4" />,
+                content: <CommentList marketId={id!} />
+              },
+              {
+                key: 'photos',
+                label: 'Photos',
+                icon: <Image className="w-4 h-4" />,
+                content: (
+                  <PhotoGallery
+                    marketId={id!}
+                    showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}
+                  />
+                )
+              }
+            ]}
+            defaultActiveKey="comments"
+            className="w-full"
+          />
+        </Card>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: market.name, url: window.location.href })
+              }
+            }}
+          >
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => setShowReportModal(true)}
+          >
+            <Flag className="w-4 h-4 mr-2" />
+            Report
+          </Button>
+        </div>
+
+        {/* Update Status Button (for tracked markets) */}
+        {isMarketTracked(market.id) && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full h-9"
+            onClick={() => setShowStatusModal(true)}
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Update My Status
+          </Button>
+        )}
+
+        {/* Tags Voting - At bottom for user interaction */}
+        {user && (
+          <TagVoting
+            marketTags={market.tags || []}
+            marketId={id!}
+          />
+        )}
+
       </div>
 
+      {/* Report Issue Modal */}
       <ReportIssueModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
@@ -689,13 +612,12 @@ export const MarketDetailPage: React.FC = () => {
 
       {/* Status Update Modal */}
       {showStatusModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold mb-4">Update Your Status</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Update your participation status for this market.
-            </p>
-            <div className="space-y-2">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-t-xl sm:rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-4 border-b sticky top-0 bg-background">
+              <h3 className="font-semibold">Update Your Status</h3>
+            </div>
+            <div className="p-4 space-y-2">
               {[
                 { value: 'interested', label: 'Interested' },
                 { value: 'applied', label: 'Applied' },
@@ -716,17 +638,17 @@ export const MarketDetailPage: React.FC = () => {
                       console.error('Failed to update status:', error)
                     }
                   }}
-                  className="w-full text-left p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+                  className="w-full text-left p-3 rounded-lg border hover:bg-accent/50 transition-colors min-h-[44px]"
                 >
                   {status.label}
                 </button>
               ))}
             </div>
-            <div className="mt-4 flex gap-2">
+            <div className="p-4 border-t sticky bottom-0 bg-background">
               <Button
                 variant="outline"
                 onClick={() => setShowStatusModal(false)}
-                className="flex-1"
+                className="w-full"
               >
                 Cancel
               </Button>

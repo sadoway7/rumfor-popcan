@@ -77,9 +77,9 @@ export const CommentList: React.FC<CommentListProps> = ({
   }
 
   return (
-    <div className={cn('p-6', className)}>
+    <div className={cn('p-0 md:p-3', className)}>
       {/* Modern Comment Form */}
-      <div className="mb-16">
+      <div className="mb-6">
         <CommentForm
           marketId={marketId}
           placeholder="Share your perspective..."
@@ -104,7 +104,7 @@ export const CommentList: React.FC<CommentListProps> = ({
         </div>
       ) : (
         <div>
-          <ul style={{ '--depth': 0 } as React.CSSProperties} className={cn('space-y-16', styles.commentList)}>
+          <ul style={{ '--depth': 0 } as React.CSSProperties} className={cn('space-y-6', styles.commentList)}>
             {visibleTopLevelComments.map((comment) => (
               <CommentItem
                 key={comment.id}

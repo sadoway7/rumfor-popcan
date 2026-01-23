@@ -151,19 +151,16 @@ export const MarketSearchPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Auth Message - Sales Pitch */}
       {!isAuthenticated && (
-        <div className="w-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground p-4 text-center shadow-lg">
-          <div className="mb-2">
-            <span className="text-xl font-semibold">Manage your markets with tools, always free</span>
-          </div>
-          <div>
-            <Link to="/register" className="text-primary-foreground underline font-medium">
-              Register
-            </Link>
-            <span className="mx-2">or</span>
-            <Link to="/login" className="text-primary-foreground underline font-medium">
-              Sign In
-            </Link>
-          </div>
+        <div className="w-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground py-2 px-4 text-center text-sm">
+          <span className="font-medium">Free market tools</span>
+          <span className="mx-2">·</span>
+          <Link to="/auth/register" className="text-primary-foreground underline font-medium hover:no-underline">
+            Register
+          </Link>
+          <span className="mx-2">or</span>
+          <Link to="/auth/login" className="text-primary-foreground underline font-medium hover:no-underline">
+            Sign In
+          </Link>
         </div>
       )}
 
