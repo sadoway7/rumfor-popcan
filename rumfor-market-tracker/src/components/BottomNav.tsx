@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Store,
   FileText,
-  CheckSquare,
   Settings,
   HelpCircle,
   BarChart3,
@@ -14,6 +13,9 @@ import {
   MapPin,
   Shield,
   Home,
+  Plus,
+  Calendar,
+  Search,
 } from 'lucide-react'
 
 interface BottomNavProps {
@@ -27,11 +29,11 @@ const navigationConfig = {
     { name: 'About', href: '/about', icon: HelpCircle },
   ],
   vendor: [
+    { name: 'Search', href: '/markets', icon: Search },
     { name: 'My Markets', href: '/vendor/tracked-markets', icon: MapPin },
-    { name: 'Applications', href: '/vendor/applications', icon: FileText },
-    { name: 'Markets', href: '/markets', icon: Store },
-    { name: 'Todos', href: '/vendor/todos', icon: CheckSquare },
-    { name: 'More', href: '/vendor/more', icon: Settings },
+    { name: 'Add Market', href: '/vendor/add-market', icon: Plus, isPrimary: true },
+    { name: 'Calendar', href: '/vendor/calendar', icon: Calendar },
+    { name: 'Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
   ],
   promoter: [
     { name: 'Dashboard', href: '/promoter/dashboard', icon: LayoutDashboard },
@@ -92,29 +94,54 @@ export function BottomNav({ role }: BottomNavProps) {
   return (
     <div className={cn(
       "fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
-      (isHidden || !isMobile) && "hidden"
+      !isMobile && "hidden",
+      isHidden && "translate-y-[200%]"
     )}>
-      <nav className="flex justify-around items-center py-3 px-4 max-w-md mx-auto">
+      <nav className="flex justify-around items-end py-2 px-4 max-w-md mx-auto">
         {navigation.map((item: any) => {
           const isActive = location.pathname === item.href
+          const isPrimary = item.isPrimary
+          
           return (
             <Link
               key={item.name}
               to={item.href}
               className={cn(
-                'flex min-h-[56px] min-w-[56px] flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95',
-                isActive
+                'flex flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95',
+                isPrimary
+                  ? 'min-h-[64px] min-w-[64px]'
+                  : 'min-h-[56px] min-w-[56px]',
+                isActive && !isPrimary
                   ? 'text-accent'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
-              <item.icon
-                className={cn(
-                  'h-6 w-6 mb-1 transition-transform duration-150',
-                  isActive ? 'text-accent scale-105' : 'text-muted-foreground'
-                )}
-              />
-              <span className="truncate text-[10px]">{item.name}</span>
+              {isPrimary ? (
+                <div className={cn(
+                  'h-16 w-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 -mt-8',
+                  isActive ? 'bg-accent shadow-accent/30' : 'bg-accent'
+                )}>
+                  <item.icon className="h-8 w-8 text-white" />
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <item.icon
+                      className={cn(
+                        'h-6 w-6 transition-transform duration-150',
+                        isActive ? 'text-accent scale-105' : 'text-muted-foreground'
+                      )}
+                    />
+                    {isActive && (
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-1 bg-accent rounded-full" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    'truncate text-[10px]',
+                    isActive ? 'text-accent' : 'text-muted-foreground'
+                  )}>{item.name}</span>
+                </>
+              )}
             </Link>
           )
         })}

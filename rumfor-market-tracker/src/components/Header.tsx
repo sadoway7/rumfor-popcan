@@ -54,7 +54,7 @@ export function Header() {
 
             {/* Logo */}
             <Link to="/">
-              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
                 <span className="text-white font-bold text-base">R</span>
               </div>
             </Link>
@@ -90,14 +90,14 @@ export function Header() {
             </div>
           </div>
 
-          {/* Right Side Actions - Context-Aware & Purposeful */}
-          <div className="flex items-center space-x-3">
+          {/* Right Side Actions - Desktop Only */}
+          <div className="hidden md:flex items-center space-x-3">
             {/* Location Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setLocationModalOpen(true)}
-              className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
               title="Set location"
             >
               <Navigation className="h-4 w-4" />
@@ -108,7 +108,7 @@ export function Header() {
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
-              className="hidden md:flex text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
@@ -147,20 +147,16 @@ export function Header() {
                 {/* User Profile Menu - Radix UI Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center space-x-2 p-2 hover:bg-surface/80 rounded-xl transition-all duration-300 hover:glow-accent-sm backdrop-blur-sm">
-                      <div className="w-8 h-8 bg-gradient-to-br from-accent/30 to-accent/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-accent">
-                          {user?.firstName?.charAt(0)}
-                        </span>
+                    <button className="flex items-center justify-center cursor-pointer hover:bg-surface/80 rounded-lg transition-all duration-300 hover:glow-accent-sm">
+                      <div className="w-10 h-10 bg-gradient-to-br from-accent/30 to-accent/20 rounded-lg flex items-center justify-center">
+                        <User className="h-5 w-5 text-accent" />
                       </div>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
                     <DropdownMenuLabel className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-accent">
-                          {user?.firstName?.charAt(0)}
-                        </span>
+                      <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                        <User className="h-5 w-5 text-accent" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-foreground">
@@ -223,12 +219,12 @@ export function Header() {
               </>
             ) : !isHomePage ? (
               <>
-                <Link to="/auth/login" className="hidden md:inline">
+                <Link to="/auth/login" className="inline">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-surface/80 backdrop-blur-sm rounded-xl transition-all duration-300">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/auth/register" className="hidden md:inline">
+                <Link to="/auth/register" className="inline">
                   <Button size="sm" className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent shadow-lg hover:glow-accent transition-all duration-300 rounded-xl">
                     Sign Up
                   </Button>
@@ -237,86 +233,113 @@ export function Header() {
             ) : null}
           </div>
 
-          {/* Mobile Actions - Streamlined */}
+          {/* Mobile Header - Logo, Search, Hamburger */}
           <div className="md:hidden flex items-center space-x-2">
-            {/* Mobile menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="text-muted-foreground hover:text-foreground p-2 min-h-11 min-w-11" aria-label="Open menu">
-                  <Menu className="h-6 w-6" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
-                <DropdownMenuItem onClick={() => setLocationModalOpen(true)} className="flex items-center">
-                  <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
-                  Set Location
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
-                  {theme === 'light' ? <Moon className="h-5 w-5 mr-3 text-muted-foreground" /> : <Sun className="h-5 w-5 mr-3 text-muted-foreground" />}
-                  {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-
-                {isAuthenticated ? (
-                  <>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-center cursor-pointer hover:bg-surface/80 rounded-lg transition-all duration-300 hover:glow-accent-sm" aria-label="Open menu">
+                    <div className="w-10 h-10 bg-gradient-to-br from-accent/30 to-accent/20 rounded-lg flex items-center justify-center">
+                      <User className="h-5 w-5 text-accent" />
+                    </div>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                  <DropdownMenuLabel className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <User className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">
+                        {user?.firstName}
+                      </div>
+                      <div className="text-xs text-muted-foreground capitalize">
+                        {user?.role}
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLocationModalOpen(true)} className="flex items-center">
+                    <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
+                    Set Location
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
+                    {theme === 'light' ? <Moon className="h-5 w-5 mr-3 text-muted-foreground" /> : <Sun className="h-5 w-5 mr-3 text-muted-foreground" />}
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={`/${user?.role}/dashboard`} className="flex items-center">
+                      <MapPin className="h-5 w-5 mr-3 text-accent" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  {user?.role === 'promoter' && (
                     <DropdownMenuItem asChild>
-                      <Link to={`/${user?.role}/dashboard`} className="flex items-center">
+                      <Link to="/promoter/markets/create" className="flex items-center">
+                        <Plus className="h-5 w-5 mr-3 text-accent" />
+                        List Market
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {user?.role === 'vendor' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/vendor/tracked-markets" className="flex items-center">
                         <MapPin className="h-5 w-5 mr-3 text-accent" />
-                        Dashboard
+                        My Markets
                       </Link>
                     </DropdownMenuItem>
-                    {user?.role === 'promoter' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/promoter/markets/create" className="flex items-center">
-                          <Plus className="h-5 w-5 mr-3 text-accent" />
-                          List Market
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {user?.role === 'vendor' && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/vendor/tracked-markets" className="flex items-center">
-                          <MapPin className="h-5 w-5 mr-3 text-accent" />
-                          My Markets
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center">
-                        <User className="h-5 w-5 mr-3 text-muted-foreground" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/settings" className="flex items-center">
-                        <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout} className="flex items-center text-foreground focus:text-foreground">
-                      <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </>
-                ) : !isHomePage ? (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link to="/auth/login" className="flex items-center">
-                        Sign In
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/auth/register" className="flex items-center">
-                        Sign Up
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
-                ) : null}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="h-5 w-5 mr-3 text-muted-foreground" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout} className="flex items-center text-foreground focus:text-foreground">
+                    <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="text-muted-foreground hover:text-foreground p-2 min-h-11 min-w-11" aria-label="Open menu">
+                    <Menu className="h-6 w-6" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                  <DropdownMenuItem onClick={() => setLocationModalOpen(true)} className="flex items-center">
+                    <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
+                    Set Location
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleTheme} className="flex items-center">
+                    {theme === 'light' ? <Moon className="h-5 w-5 mr-3 text-muted-foreground" /> : <Sun className="h-5 w-5 mr-3 text-muted-foreground" />}
+                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/auth/login" className="flex items-center">
+                      Sign In
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/auth/register" className="flex items-center">
+                      Sign Up
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>

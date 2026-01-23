@@ -7,10 +7,9 @@ import {
   Calendar, 
   MapPin, 
   CheckSquare, 
-  ClipboardList,
-  BookmarkX,
   X,
-  ChevronDown
+  ChevronDown,
+  Trash2
 } from 'lucide-react'
 
 interface VendorMarketTracking {
@@ -37,7 +36,7 @@ interface VendorTrackedMarketRowProps {
   className?: string
 }
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   'interested': 'bg-blue-500',
   'applied': 'bg-yellow-500',
   'approved': 'bg-green-500',
@@ -46,6 +45,14 @@ const statusColors = {
   'cancelled': 'bg-red-500',
   'completed': 'bg-gray-500',
   'archived': 'bg-slate-500'
+}
+
+const statusLabels: Record<string, string> = {
+  'interested': 'Interested',
+  'applied': 'Applied',
+  'approved': 'Approved',
+  'attending': 'Attending',
+  'completed': 'Completed',
 }
 
 const statusOptions = [
@@ -68,7 +75,7 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   const { todos, toggleTodo } = useTodos(market.id)
   const [showStatusModal, setShowStatusModal] = useState(false)
   
-  const formatSchedule = (schedule: Market['schedule']) => {
+  const formatSchedule = (schedule: Market['schedule']): string => {
     if (!schedule || schedule.length === 0) return 'TBD'
     const firstSchedule = schedule[0]
     const startDate = new Date(firstSchedule.startDate)
@@ -96,92 +103,114 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
     setShowStatusModal(false)
   }
 
+  const handleCardClick = () => {
+    onViewDetails?.(market.id)
+  }
+
   return (
     <>
-      <div className={cn('rounded-lg bg-card shadow hover:shadow-xl transition-shadow opacity-100', className)}>
+      <div 
+        className={cn('rounded-lg bg-card shadow hover:shadow-xl transition-shadow opacity-100', className)}
+        onClick={handleCardClick}
+      >
         {/* Mobile */}
         <div className="flex flex-col sm:hidden overflow-hidden rounded-lg">
-          <div className="relative w-full h-44 bg-gradient-to-br from-gray-800 to-gray-900">
+          <div className="relative w-full h-48 bg-gradient-to-br from-gray-800 to-gray-900">
             {market.images && market.images.length > 0 && (
               <img src={market.images[0]} alt={market.name} className="absolute inset-0 w-full h-full object-cover" />
             )}
             
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
+            {/* Status color tint - left edge, fading right */}
+            <div className={cn(
+              "absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent",
+              currentStatus === 'applied' && "from-yellow-500/20",
+              currentStatus === 'approved' && "from-green-500/20",
+              currentStatus === 'attending' && "from-emerald-500/20",
+              currentStatus === 'completed' && "from-gray-500/20"
+            )} />
             
-            <div className="absolute inset-0 p-4 flex flex-col">
-              <div className="flex justify-end mb-auto">
+            <div className="absolute inset-0 p-3 flex flex-col">
+              {/* Top row: Bigger status badge (left) + Untrack button (right) */}
+              <div className="flex justify-between items-start mb-auto">
                 <button
-                  onClick={() => setShowStatusModal(true)}
-                  className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', statusColors[currentStatus])}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowStatusModal(true)
+                  }}
+                  className={cn('flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity', statusColors[currentStatus])}
                 >
-                  <span>{currentStatus}</span>
-                  <ChevronDown className="w-3 h-3" />
+                  <span>{statusLabels[currentStatus]}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onUntrack?.(market.id)
+                  }}
+                  className="p-2 rounded-full bg-white/40 text-gray-600 hover:bg-white hover:text-red-600 transition-colors shadow"
+                >
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
               
-              <div className="text-white">
-                <h3 className="font-bold text-lg leading-tight mb-2 drop-shadow-lg line-clamp-2">
+              {/* Bottom info - clickable to view details */}
+              <div className="text-white mt-auto">
+                <h3 className="font-bold text-xl leading-tight mb-1 drop-shadow-lg line-clamp-2">
                   {market.name}
                 </h3>
-                <div className="space-y-1 text-sm">
-                  <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     <span>{market.location.city}, {market.location.state}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span className="text-xs">{formatSchedule(market.schedule)}</span>
+                    <span>{formatSchedule(market.schedule).split('·')[0]}</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-2 text-xs">
+                </div>
+                <div className="flex items-center justify-between mt-2 text-sm">
+                  <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <CheckSquare className="w-3.5 h-3.5" />
+                      <CheckSquare className="w-4 h-4" />
                       {completedTodos.length}/{todos.length}
                     </span>
                     <span>${tracking?.totalExpenses || 0}</span>
                   </div>
+                  <span className="text-white/70 text-xs">Tap for full plan →</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-3">
+          {/* Todo list */}
           {recentTodos.length > 0 && (
-            <div className="space-y-1.5">
-              {recentTodos.map((todo) => (
-                <label key={todo.id} className="flex items-center gap-2.5 py-1 rounded hover:bg-surface cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    onChange={() => handleToggleTodo(todo.id)}
-                    className="w-4 h-4 rounded border-border text-accent focus:ring-2 focus:ring-accent shrink-0"
-                  />
-                  <span className={cn("text-sm flex-1", todo.completed ? "line-through text-muted-foreground" : "text-foreground")}>
-                    {todo.title}
-                  </span>
-                  {todo.priority === 'urgent' && !todo.completed && (
-                    <span className="text-destructive font-bold">!</span>
-                  )}
-                </label>
-              ))}
+            <div className="p-3 border-t border-border" onClick={(e) => e.stopPropagation()}>
+              <div className="space-y-1.5">
+                {recentTodos.map((todo) => (
+                  <label key={todo.id} className="flex items-center gap-2.5 py-1 rounded hover:bg-surface cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      onChange={() => handleToggleTodo(todo.id)}
+                      className="w-4 h-4 rounded border-border text-accent focus:ring-2 focus:ring-accent shrink-0"
+                    />
+                    <span className={cn("text-sm flex-1", todo.completed ? "line-through text-muted-foreground" : "text-foreground")}>
+                      {todo.title}
+                    </span>
+                    {todo.priority === 'urgent' && !todo.completed && (
+                      <span className="text-destructive font-bold">!</span>
+                    )}
+                  </label>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-2 border-t border-border">
-          <button onClick={() => onViewDetails?.(market.id)} className="flex flex-col items-center gap-1 py-3 text-accent hover:bg-accent/10 active:bg-accent/20 border-r border-border">
-              <ClipboardList className="w-5 h-5" />
-              <span className="text-xs font-medium">My Plan</span>
-            </button>
-            <button onClick={() => onUntrack?.(market.id)} className="flex flex-col items-center gap-1 py-3 text-muted-foreground hover:bg-destructive/10 hover:text-destructive active:bg-destructive/20">
-              <BookmarkX className="w-5 h-5" />
-              <span className="text-xs font-medium">Untrack</span>
-            </button>
-          </div>
-        </div>
-
         {/* Desktop */}
         <div className="hidden sm:flex h-36 lg:h-40">
-          
           {/* Image with overlays */}
           <div className="relative w-80 lg:w-96 shrink-0 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden rounded-l-lg">
             {market.images && market.images.length > 0 && (
@@ -192,32 +221,38 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
             {/* Status badge - clickable with icon */}
             <div className="absolute left-3 top-3">
               <button
-                onClick={() => setShowStatusModal(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowStatusModal(true)
+                }}
                 className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', statusColors[currentStatus])}
               >
-                <span>{currentStatus}</span>
+                <span>{statusLabels[currentStatus]}</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
             </div>
 
-            {/* Action buttons */}
-            <div className="absolute right-2 top-2 flex gap-1">
+            {/* Untrack button */}
+            <div className="absolute right-2 top-2">
               <button
-                onClick={() => onViewDetails?.(market.id)}
-                className="px-2.5 py-1.5 rounded text-xs font-medium bg-white/90 text-accent hover:bg-white transition-colors shadow"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUntrack?.(market.id)
+                }}
+                className="p-2 rounded-full bg-white/40 text-gray-600 hover:bg-white hover:text-red-600 transition-colors shadow"
               >
-                My Plan
-              </button>
-              <button
-                onClick={() => onUntrack?.(market.id)}
-                className="px-2.5 py-1.5 rounded text-xs font-medium bg-white/90 text-gray-600 hover:bg-white hover:text-red-600 transition-colors shadow"
-              >
-                Untrack
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
             
-            {/* Market info */}
-            <div className="absolute bottom-3 left-3 right-3 text-white">
+            {/* Market info - clickable */}
+            <div 
+              className="absolute bottom-3 left-3 right-3 text-white cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onViewDetails?.(market.id)
+              }}
+            >
               <h3 className="font-bold text-base lg:text-lg leading-tight mb-1.5 drop-shadow-lg line-clamp-2">
                 {market.name}
               </h3>

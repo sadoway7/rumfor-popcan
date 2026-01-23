@@ -70,10 +70,10 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 sm:p-4 pt-8 sm:pt-4 pb-8">
-      <div className="w-full max-w-md">
-        <Card>
-          <CardHeader className="text-center">
+    <div className="min-h-screen bg-background flex items-start justify-center md:p-4">
+      <div className="w-full md:max-w-md md:rounded-xl md:shadow-lg">
+        <Card className="md:border rounded-none md:rounded-xl">
+          <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
 
           </CardHeader>
@@ -92,7 +92,7 @@ export function RegisterPage() {
               <label className="text-sm font-medium text-foreground mb-3 block">
                 Account Type
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {roleOptions.map((option) => {
                   const Icon = option.icon
                   const isSelected = selectedRole === option.value
@@ -102,7 +102,7 @@ export function RegisterPage() {
                       key={option.value}
                       type="button"
                       onClick={() => !isDisabled && setValue('role', option.value as any)}
-                      className={`p-6 sm:p-4 border rounded-lg text-center transition-all relative ${
+                      className={`p-4 border rounded-lg text-center transition-all relative ${
                         isSelected
                           ? 'border-accent bg-accent/5 ring-2 ring-accent/20'
                           : 'border-border'
@@ -127,7 +127,7 @@ export function RegisterPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Input
                     id="firstName"

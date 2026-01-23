@@ -1,10 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Button, EmptyState } from '@/components/ui'
 import { VendorTrackedMarketRow } from '@/components/VendorTrackedMarketRow'
 import { VendorMarketCard } from '@/components/VendorMarketCard'
-import { MapPin, Search, List, LayoutGrid, Plus } from 'lucide-react'
+import { MapPin, Search, List, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export function VendorTrackedMarketsPage() {
@@ -14,6 +14,13 @@ export function VendorTrackedMarketsPage() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Scroll to top when filters change
+  useEffect(() => {
+    if (statusFilter !== 'all' || searchQuery.trim()) {
+      window.scrollTo(0, 0)
+    }
+  }, [statusFilter, searchQuery])
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -89,9 +96,9 @@ export function VendorTrackedMarketsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Redesigned header matching main site */}
-      <div className="sticky top-0 z-20 bg-card border-b border-border shadow-sm">
+      <div className="sticky top-0 z-20 bg-surface shadow-sm -mt-px">
         {/* Main controls row */}
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-card">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-surface -mx-4 sm:mx-0 sm:px-3">
           {/* View toggle - hidden on mobile, visible on larger screens */}
           <div className="hidden sm:flex border border-border rounded shrink-0 h-10">
             <button
@@ -114,100 +121,126 @@ export function VendorTrackedMarketsPage() {
             </button>
           </div>
 
-          {/* Search - minimalist underline style, centered */}
+          {/* Search - styled search box */}
           <div className="flex-1 flex justify-center">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-0 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
                 type="text"
-                placeholder="Filter markets..."
+                placeholder="Filter search word"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-2 py-2 text-sm bg-transparent border-0 border-b-2 border-border focus:border-accent focus:outline-none transition-colors text-center sm:text-left"
+                className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-border rounded-full focus:border-accent focus:outline-none transition-all text-center sm:text-left placeholder:text-muted-foreground"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  ×
+                </button>
+              )}
             </div>
           </div>
 
           {/* Action buttons - far right, responsive text */}
-          <Link to="/markets" className="shrink-0">
+          <Link to="/markets" className="shrink-0 hidden sm:block">
             <Button size="sm" className="h-10 whitespace-nowrap">
               <MapPin className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Find Markets</span>
-              <span className="sm:hidden">Find</span>
             </Button>
           </Link>
           
-          <Link to="/vendor/add-market" className="shrink-0">
+          <Link to="/vendor/add-market" className="shrink-0 hidden sm:block">
             <Button size="sm" className="h-10 whitespace-nowrap">
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Add New Market</span>
-              <span className="sm:hidden">Add New</span>
             </Button>
           </Link>
         </div>
 
         {/* Status filters row */}
-        <div className="flex flex-wrap items-center justify-center gap-2 px-3 py-2 border-t border-border bg-card">
-          <span className="text-xs font-medium text-muted-foreground shrink-0 w-full sm:w-auto text-center sm:text-left">{trackedMarkets.length} Markets:</span>
-          <button
-            onClick={() => setStatusFilter('all')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.all}
-          </button>
-          <button
-            onClick={() => setStatusFilter('interested')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.interested} interested
-          </button>
-          <button
-            onClick={() => setStatusFilter('applied')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.applied} applied
-          </button>
-          <button
-            onClick={() => setStatusFilter('approved')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.approved} approved
-          </button>
-          <button
-            onClick={() => setStatusFilter('attending')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.attending} attending
-          </button>
-          <button
-            onClick={() => setStatusFilter('completed')}
-            className={cn(
-              'px-3 py-1 rounded-full text-xs font-semibold transition-all whitespace-nowrap',
-              statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
-            )}
-          >
-            {statusCounts.completed} done
-          </button>
+        <div className="relative flex flex-nowrap items-center gap-2 px-4 py-3 bg-surface -mx-4 overflow-x-auto scrollbar-hide sm:mx-0 sm:px-3">
+          <span className="text-xs font-medium text-muted-foreground shrink-0 hidden sm:block">{trackedMarkets.length} Markets:</span>
+          
+          {/* Left arrow indicator */}
+          <ChevronLeft className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
+          
+          {/* Scrollable filters */}
+          <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              All ({statusCounts.all})
+            </button>
+            <button
+              onClick={() => setStatusFilter('interested')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              {statusCounts.interested} interested
+            </button>
+            <button
+              onClick={() => setStatusFilter('applied')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              {statusCounts.applied} applied
+            </button>
+            <button
+              onClick={() => setStatusFilter('approved')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              {statusCounts.approved} approved
+            </button>
+            <button
+              onClick={() => setStatusFilter('attending')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              {statusCounts.attending} attending
+            </button>
+            <button
+              onClick={() => setStatusFilter('completed')}
+              className={cn(
+                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+              )}
+            >
+              {statusCounts.completed} done
+            </button>
+          </div>
+          
+          {/* Right arrow indicator */}
+          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
         </div>
+        
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
       </div>
 
       {/* Content */}
-      <div className="md:container md:mx-auto md:px-3 md:py-3">
+      <div className="pt-4 sm:p-0 sm:container sm:mx-auto sm:px-3 sm:py-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent" />
@@ -233,9 +266,9 @@ export function VendorTrackedMarketsPage() {
           <>
             {/* List view */}
             {viewMode === 'list' && (
-              <div className="md:space-y-3 overflow-visible">
-                {sortedMarkets.map((market, index) => (
-                  <div key={market.id} className={cn(index > 0 && 'mt-2 md:mt-0')}>
+              <div className="space-y-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:space-y-3">
+                {sortedMarkets.map((market) => (
+                  <div key={market.id}>
                     <VendorTrackedMarketRow
                       market={market}
                       tracking={getTrackingStatus(market.id)}
@@ -250,7 +283,7 @@ export function VendorTrackedMarketsPage() {
 
             {/* Grid view */}
             {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
+              <div className="grid grid-cols-1 gap-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedMarkets.map((market) => (
                   <VendorMarketCard
                     key={market.id}

@@ -13,7 +13,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2">
-            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
               <span className="text-accent-foreground font-bold text-lg">R</span>
             </div>
             <span className="font-bold text-2xl text-foreground">Rumfor</span>

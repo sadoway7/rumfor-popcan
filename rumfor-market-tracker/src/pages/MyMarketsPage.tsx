@@ -1,20 +1,25 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MarketGrid } from '@/components/MarketGrid'
+import { MarketCard } from '@/components'
 import { MarketCalendar } from '@/components/MarketCalendar'
 import { EmailAlertsSettings } from '@/components/EmailAlertsSettings'
 import { ExportModal } from '@/components/ExportModal'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
+import { ChevronDown, ChevronUp, RefreshCw, Search, Calendar, Mail, Download, Plus, Heart, Zap, Clock } from 'lucide-react'
 
 export const MyMarketsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'tracked' | 'recent'>('tracked')
+  const [activeTab] = useState<'tracked' | 'recent'>('tracked')
+  const [activeFilter, setActiveFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [showCalendar, setShowCalendar] = useState(false)
   const [showEmailSettings, setShowEmailSettings] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [isQuickActionsCollapsed, setIsQuickActionsCollapsed] = useState(true)
   const [emailPreferences, setEmailPreferences] = useState({
     marketUpdates: true,
     applicationDeadlines: true,
@@ -60,156 +65,192 @@ export const MyMarketsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">My Markets</h1>
-              <p className="text-muted-foreground mt-1">
-                Track your favorite markets and stay updated on events
-              </p>
-            </div>
+      {/* Header with gradient background */}
+      <div className="border-b bg-gradient-to-r from-accent/5 via-background to-background px-4 py-4 sticky top-0 z-20">
+        <div className="flex items-center justify-between gap-4 max-w-6xl mx-auto">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-accent to-accent/70 bg-clip-text text-transparent">My Markets</h1>
+            <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+              <span className="inline-flex items-center gap-1">
+                <Heart className="w-4 h-4 text-accent" />
+                {trackedMarkets.length} tracked
+              </span>
+              <span className="text-border">|</span>
+              <span className="inline-flex items-center gap-1 text-success">
+                <Zap className="w-4 h-4" />
+                {trackedMarkets.filter(m => m.status === 'active').length} active
+              </span>
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="h-9 px-3 border-accent/20 hover:border-accent/40"
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            </Button>
             
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isLoading}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
+            <Link to="/markets">
+              <Button size="sm" className="h-9 px-4 bg-accent hover:bg-accent/90">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Find Markets
               </Button>
-              
-              <Link to="/markets">
-                <Button>
-                  Discover Markets
-                </Button>
-              </Link>
-            </div>
+            </Link>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Tracked Markets</p>
-                <p className="text-3xl font-bold">{trackedMarkets.length}</p>
+      <div className="max-w-6xl mx-auto px-4 py-4 space-y-4 bg-background">
+        {/* Compact Stats Row */}
+        <div className="flex gap-2">
+          <Card className="flex-1 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Heart className="w-4 h-4 text-accent" />
               </div>
-              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+              <div>
+                <p className="text-xs text-muted-foreground">Tracked</p>
+                <p className="text-lg font-bold">{trackedMarkets.length}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-6">
-            <div className="flex items-center justify-between">
+          <Card className="flex-1 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Zap className="w-4 h-4 text-success" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Events</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs text-muted-foreground">Active</p>
+                <p className="text-lg font-bold">
                   {trackedMarkets.filter(m => m.status === 'active').length}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
             </div>
           </Card>
           
-          <Card className="p-6">
-            <div className="flex items-center justify-between">
+          <Card className="flex-1 p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-warning" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">This Week</p>
-                <p className="text-3xl font-bold">
+                <p className="text-xs text-muted-foreground">Scheduled</p>
+                <p className="text-lg font-bold">
                   {trackedMarkets.filter(m => m.schedule && m.schedule.length > 0).length}
                 </p>
-              </div>
-              <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-1">
+        {/* Filter Tabs - Horizontally Scrollable with Background */}
+        <div className="sticky top-[61px] z-10 space-y-2">
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <input
+              type="text"
+              placeholder="Filter search word..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-border rounded-full focus:border-accent focus:outline-none transition-all placeholder:text-muted-foreground"
+            />
+            {searchQuery && (
               <button
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                  activeTab === 'tracked'
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-                onClick={() => setActiveTab('tracked')}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                Tracked Markets ({trackedMarkets.length})
+                ×
               </button>
+            )}
+          </div>
+          
+          {/* Scrollable filter tags */}
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-4 px-4">
+            {[
+              { key: 'all', label: 'All', count: trackedMarkets.length },
+              { key: 'active', label: 'Active', count: trackedMarkets.filter(m => m.status === 'active').length },
+              { key: 'draft', label: 'Draft', count: trackedMarkets.filter(m => m.status === 'draft').length },
+              { key: 'upcoming', label: 'Upcoming', count: trackedMarkets.filter(m => m.schedule && m.schedule.length > 0).length },
+            ].map((filter) => (
               <button
+                key={filter.key}
+                onClick={() => setActiveFilter(filter.key)}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                  activeTab === 'recent'
+                  "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors whitespace-nowrap flex-shrink-0",
+                  activeFilter === filter.key
                     ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                 )}
-                onClick={() => setActiveTab('recent')}
               >
-                Recently Viewed
+                {filter.label}
+                <span className="text-xs opacity-70">({filter.count})</span>
               </button>
-            </div>
+            ))}
           </div>
         </div>
+
+        <style>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}</style>
 
         {/* Content */}
         {activeTab === 'tracked' && (
           <div>
             {trackedMarkets.length > 0 ? (
-              <MarketGrid
-                markets={trackedMarkets}
-                isLoading={isLoading}
-                onTrack={handleTrackToggle}
-                onUntrack={handleTrackToggle}
-                trackedMarketIds={trackedMarketIds}
-                emptyStateProps={{
-                  title: "No tracked markets yet",
-                  description: "Start tracking markets you're interested in to see them here.",
-                  action: (
-                    <Link to="/markets">
-                      <Button>Discover Markets</Button>
-                    </Link>
-                  )
-                }}
-              />
+              <div className="space-y-3">
+                {trackedMarkets
+            .filter(market => {
+              // First filter by status
+              if (activeFilter !== 'all' && market.status !== activeFilter) return false
+              // Then filter by search query
+              if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase()
+                return (
+                  market.name.toLowerCase().includes(query) ||
+                  market.location.city.toLowerCase().includes(query) ||
+                  market.location.state.toLowerCase().includes(query)
+                )
+              }
+              return true
+            })
+            .map((market) => (
+                  <MarketCard
+                    key={market.id}
+                    market={market}
+                    variant="minimal"
+                    onTrack={handleTrackToggle}
+                    onUntrack={handleTrackToggle}
+                    isTracked={trackedMarketIds.includes(market.id)}
+                    trackingStatus="interested"
+                  />
+                ))}
+              </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                  <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
+              <div className="flex flex-col items-center justify-center py-8 px-4">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <Heart className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <h3 className="text-lg font-medium mb-2">No tracked markets yet</h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Start tracking markets you're interested in by clicking the track button on any market.
+                <h3 className="text-sm font-medium mb-1">No tracked markets</h3>
+                <p className="text-xs text-muted-foreground mb-3 text-center max-w-xs">
+                  Start tracking markets you're interested in.
                 </p>
-                <div className="space-x-3">
+                <div className="flex gap-2">
                   <Link to="/markets">
-                    <Button>Discover Markets</Button>
+                    <Button size="sm" variant="outline">Find Markets</Button>
                   </Link>
-                  <Button variant="outline" onClick={handleRefresh}>
+                  <Button size="sm" variant="ghost" onClick={handleRefresh}>
                     Refresh
                   </Button>
                 </div>
@@ -219,69 +260,77 @@ export const MyMarketsPage: React.FC = () => {
         )}
 
         {activeTab === 'recent' && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Clock className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium mb-2">No recent activity</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Markets you view will appear here for quick access.
+            <h3 className="text-sm font-medium mb-1">No recent activity</h3>
+            <p className="text-xs text-muted-foreground mb-3 text-center max-w-xs">
+              Markets you view will appear here.
             </p>
             <Link to="/markets">
-              <Button>Browse Markets</Button>
+              <Button size="sm" variant="outline">Browse Markets</Button>
             </Link>
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Collapsible Quick Actions */}
         {trackedMarkets.length > 0 && (
-          <Card className="p-6 mt-8">
-            <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Link to="/markets">
-                <Button variant="outline" className="w-full justify-start">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Find More Markets
+          <Card className="overflow-hidden">
+            <button
+              onClick={() => setIsQuickActionsCollapsed(!isQuickActionsCollapsed)}
+              className="w-full flex items-center justify-between p-3 min-h-[44px]"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">Quick Actions</span>
+                <Badge variant="outline" className="text-xs">4</Badge>
+              </div>
+              {isQuickActionsCollapsed ? (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+            {!isQuickActionsCollapsed && (
+              <div className="px-3 pb-3 space-y-2">
+                <Link to="/markets">
+                  <Button variant="outline" size="sm" className="w-full justify-start h-9">
+                    <Search className="w-4 h-4 mr-2" />
+                    Find Markets
+                  </Button>
+                </Link>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full justify-start h-9"
+                  onClick={() => setShowCalendar(true)}
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  View Calendar
                 </Button>
-              </Link>
-              
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => setShowCalendar(true)}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a4 4 0 118 0v4m-4 12v4m-4-4h.01M16 8h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                View Calendar
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => setShowEmailSettings(true)}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Email Alerts
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => setShowExportModal(true)}
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export List
-              </Button>
-            </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full justify-start h-9"
+                  onClick={() => setShowEmailSettings(true)}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email Alerts
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="w-full justify-start h-9"
+                  onClick={() => setShowExportModal(true)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export List
+                </Button>
+              </div>
+            )}
           </Card>
         )}
 

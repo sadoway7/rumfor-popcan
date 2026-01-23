@@ -44,17 +44,6 @@ const categoryLabels = {
   'vintage-antique': 'Vintage & Antique'
 }
 
-const statusColors = {
-  'interested': 'bg-blue-100 text-blue-800 border-blue-200',
-  'applied': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'approved': 'bg-green-100 text-green-800 border-green-200',
-  'attending': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  'declined': 'bg-orange-100 text-orange-800 border-orange-200',
-  'cancelled': 'bg-red-100 text-red-800 border-red-200',
-  'completed': 'bg-gray-100 text-gray-800 border-gray-200',
-  'archived': 'bg-slate-100 text-slate-800 border-slate-200'
-}
-
 export const VendorMarketCard: React.FC<VendorMarketCardProps> = ({
   market,
   tracking,
@@ -112,25 +101,33 @@ export const VendorMarketCard: React.FC<VendorMarketCardProps> = ({
   )
 
   return (
-    <Card className={cn('overflow-hidden hover:shadow-lg transition-shadow', className)}>
+    <Card className={cn('overflow-hidden hover:shadow-lg transition-shadow !rounded-none', className)}>
       {/* Market Image and Basic Info */}
-      {market.images && market.images.length > 0 && (
-        <div className="relative h-32">
+      {market.images && market.images.length > 0 ? (
+        <div className="relative h-40">
           <img
             src={market.images[0]}
             alt={market.name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute top-2 left-2">
-            <Badge className="text-xs">
+          {/* Overlay with badges */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-3">
+            <Badge className="text-xs bg-white/90 text-foreground">
               {categoryLabels[market.category]}
             </Badge>
-          </div>
-          <div className="absolute top-2 right-2">
-            <Badge className={cn('text-xs', statusColors[currentStatus] || 'bg-gray-100 text-gray-800 border-gray-200')}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => onUpdateStatus && onUpdateStatus(market.id, currentStatus === 'interested' ? 'cancelled' : 'interested')}
+              className="text-xs font-medium px-4 py-1.5 min-w-[80px]"
+            >
               {currentStatus}
-            </Badge>
+            </Button>
           </div>
+        </div>
+      ) : (
+        <div className="h-40 bg-muted flex items-center justify-center">
+          <span className="text-muted-foreground">No image</span>
         </div>
       )}
 

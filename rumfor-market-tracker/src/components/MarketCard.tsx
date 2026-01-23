@@ -131,30 +131,51 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   if (variant === 'compact') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('p-4 hover:shadow-lg hover:scale-[1.01] transition-all duration-300 cursor-pointer !rounded-none', className)}>
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm truncate">{market.name}</h3>
-              <p className="text-xs text-muted-foreground mt-1">{formatLocation(market.location)}</p>
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="outline" className={cn('text-xs px-2 py-1', MARKET_CATEGORY_COLORS[market.category])}>
-                  {MARKET_CATEGORY_LABELS[market.category]}
-                </Badge>
-                <Badge variant="outline" className={cn('text-xs px-2 py-1', MARKET_STATUS_COLORS[market.status])}>
-                  {market.status}
-                </Badge>
+        <Card className={cn('overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer !rounded-none', className)}>
+          {/* Image with overlaid details */}
+          {market.images && market.images.length > 0 ? (
+            <div className="relative h-48">
+              <img
+                src={market.images[0]}
+                alt={market.name}
+                className="w-full h-full object-cover"
+              />
+              {/* Overlay with buttons */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-3">
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="outline" className={cn('text-xs px-2.5 py-1 bg-white/90', MARKET_CATEGORY_COLORS[market.category])}>
+                    {MARKET_CATEGORY_LABELS[market.category]}
+                  </Badge>
+                </div>
+                <Button
+                  variant={isTracked ? "primary" : "outline"}
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (isTracked && onUntrack) {
+                      onUntrack(market.id)
+                    } else if (!isTracked && onTrack) {
+                      onTrack(market.id)
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="text-xs font-medium px-4 py-1.5 min-w-[70px]"
+                >
+                  {isTracked ? 'Untrack' : 'Plan'}
+                </Button>
               </div>
             </div>
-            
-            {market.images && market.images.length > 0 && (
-              <div className="ml-3 flex-shrink-0">
-                <img
-                  src={market.images[0]}
-                  alt={market.name}
-                  className="w-16 h-16 object-cover rounded-lg"
-                />
-              </div>
-            )}
+          ) : (
+            <div className="h-48 bg-muted flex items-center justify-center">
+              <span className="text-muted-foreground">No image</span>
+            </div>
+          )}
+          
+          {/* Content below image */}
+          <div className="p-4">
+            <h3 className="font-semibold text-sm truncate">{market.name}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{formatLocation(market.location)}</p>
           </div>
         </Card>
       </Link>
@@ -190,7 +211,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           <div className="p-6">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-xl font-bold line-clamp-2">{market.name}</h3>
-              <Badge variant="outline" className={cn('ml-2 flex-shrink-0', MARKET_STATUS_COLORS[market.status])}>
+              <Badge variant="outline" className={cn('ml-2 flex-shrink-0 text-base font-medium px-4 py-1.5 min-w-[80px] text-center', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
             </div>
@@ -367,7 +388,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           </div>
         </Link>
 
-
+        
 
         {/* Comments Modal - Fullscreen on mobile, normal modal on desktop */}
         <Modal
@@ -416,7 +437,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <Badge variant="outline" className={cn('text-xs', marketTypeColors[market.marketType])}>
                 {marketTypeLabels[market.marketType]}
               </Badge>
-              <Badge variant="outline" className={cn('text-xs', MARKET_STATUS_COLORS[market.status])}>
+              <Badge variant="outline" className={cn('text-base font-medium px-4 py-1.5 min-w-[80px] text-center', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
             </div>
