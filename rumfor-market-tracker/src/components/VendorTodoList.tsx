@@ -165,10 +165,10 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
         {todo.dueDate && (
           <span className={cn(
             "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
-            isOverdue ? "bg-red-100 text-red-700 font-medium" : "bg-muted text-muted-foreground"
+            isOverdue ? "bg-red-100 text-red-700 font-medium" : "text-foreground font-medium"
           )}>
             <Clock className="w-3 h-3" />
-            {isOverdue ? `${Math.abs(days)}d` : days === 0 ? 'Today' : days === 1 ? '1d' : `${days}d`}
+            {isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
           </span>
         )}
 
@@ -240,16 +240,8 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
           </span>
         )}
         <div className="flex gap-1 ml-auto">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowPresets(true)}
-            className="h-8 w-8 p-0"
-          >
-            <BookOpen className="w-4 h-4" />
-          </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={() => { setEditingTodo(null); setShowForm(true); setNewTitle(''); }}
             className="h-8 px-3"
           >
@@ -356,14 +348,25 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
       </Modal>
 
       {/* Add/Edit Todo Modal */}
-      <Modal 
-        isOpen={showForm} 
+      <Modal
+        isOpen={showForm}
         onClose={() => setShowForm(false)}
         title={editingTodo ? 'Edit Task' : 'New Task'}
         showCloseButton={true}
         className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto"
       >
         <div className="h-full flex flex-col -mx-4">
+          {!editingTodo && (
+            <div className="px-4 pb-2 border-b">
+              <Button
+                size="sm"
+                onClick={() => { setShowForm(false); setShowPresets(true); }}
+                className="w-full justify-center font-medium h-10"
+              >
+                Use a Preset Task
+              </Button>
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto px-4">
             <div className="space-y-4">
               <div>
@@ -454,7 +457,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
                     }
                   }}
                 >
-                  + Add Template
+                  Quick Add Task
                 </Button>
               )}
             </div>
