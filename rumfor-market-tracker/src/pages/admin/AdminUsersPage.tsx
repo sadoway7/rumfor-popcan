@@ -2,11 +2,18 @@ import { AdminUserTable } from '@/components/AdminUserTable'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { useAdmin } from '@/features/admin/hooks/useAdmin'
+import { useAdmin, useAdminUsers } from '@/features/admin/hooks/useAdmin'
 import { Users, UserPlus, Shield, ShieldCheck, UserX, Download, RefreshCw } from 'lucide-react'
+import { useEffect } from 'react'
 
 export function AdminUsersPage() {
   const { stats, recentActivities } = useAdmin()
+  const { refreshUsers } = useAdminUsers()
+
+  // Fetch users on mount
+  useEffect(() => {
+    refreshUsers()
+  }, [refreshUsers])
 
   const userStats = {
     total: stats?.totalUsers || 0,

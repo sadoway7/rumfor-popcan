@@ -25,6 +25,12 @@ const marketSchema = new mongoose.Schema({
     required: true
   },
 
+  // Whether the market accepts vendors (always true if they have vendors)
+  acceptVendors: { type: Boolean, default: true },
+  
+  // Whether the application system is enabled for this market (false = not enabled yet)
+  applicationsEnabled: { type: Boolean, default: false },
+  
   // Who created this market (vendor, promoter, admin)
   createdByType: {
     type: String,
@@ -98,7 +104,7 @@ const marketSchema = new mongoose.Schema({
 
   // Application settings
   applicationSettings: {
-    acceptVendors: { type: Boolean, default: true },
+    acceptVendors: { type: Boolean, default: true }, // Whether market accepts vendor applications
     maxVendors: Number,
     applicationFee: { type: Number, default: 0 },
     boothFee: { type: Number, default: 0 },

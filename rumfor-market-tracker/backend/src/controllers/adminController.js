@@ -128,6 +128,7 @@ const getUsers = catchAsync(async (req, res, next) => {
     role,
     status,
     search,
+    isEmailVerified,
     sortBy = 'createdAt',
     sortOrder = 'desc'
   } = req.query
@@ -137,6 +138,7 @@ const getUsers = catchAsync(async (req, res, next) => {
   if (role) query.role = role
   if (status === 'active') query.isActive = true
   if (status === 'inactive') query.isActive = false
+  if (isEmailVerified !== undefined) query.isEmailVerified = isEmailVerified === 'true'
 
   if (search) {
     query.$or = [
@@ -155,10 +157,27 @@ const getUsers = catchAsync(async (req, res, next) => {
 
   const total = await User.countDocuments(query)
 
-  // Get user stats by aggregating from UserMarketTracking
+  // Get user stats by aggregating from UserMarketTracking (only for markets that accept vendors)
   const userIds = users.map(user => user._id)
   const userStats = await UserMarketTracking.aggregate([
     { $match: { userId: { $in: userIds } } },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'marketInfo'
+      }
+    },
+    { $unwind: { path: '$marketInfo', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        $or: [
+          { 'marketInfo.applicationsEnabled': true },
+          { marketInfo: { $exists: false } }
+        ]
+      }
+    },
     {
       $group: {
         _id: '$userId',
@@ -213,19 +232,19 @@ const getUsers = catchAsync(async (req, res, next) => {
       page: parseInt(page),
       limit: parseInt(limit),
       total,
-      pages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit)
     }
   }, 'Users retrieved successfully')
 })
 
 const updateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params
-  const { role, isActive, verifiedPromoter } = req.body
+  const { role, isActive, isEmailVerified } = req.body
 
   const updateData = { updatedAt: new Date() }
   if (role !== undefined) updateData.role = role
   if (isActive !== undefined) updateData.isActive = isActive
-  if (verifiedPromoter !== undefined) updateData.isEmailVerified = verifiedPromoter
+  if (isEmailVerified !== undefined) updateData.isEmailVerified = isEmailVerified
 
   const user = await User.findByIdAndUpdate(id, updateData, {
     new: true,
@@ -246,8 +265,7 @@ const updateUser = catchAsync(async (req, res, next) => {
     priority: 'medium'
   })
 
-  // Transform the response to match frontend expectations
-  const transformedUser = {
+  sendSuccess(res, { user: {
     id: user._id.toString(),
     email: user.email,
     firstName: user.firstName,
@@ -258,9 +276,229 @@ const updateUser = catchAsync(async (req, res, next) => {
     updatedAt: user.updatedAt,
     isEmailVerified: user.isEmailVerified,
     isActive: user.isActive
-  }
+  } }, 'User updated successfully')
+})
 
-  sendSuccess(res, { user: transformedUser }, 'User updated successfully')
+// Get single user with full profile
+const getUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  
+  const user = await User.findById(id).select('-password')
+  if (!user) {
+    return sendError(res, 'User not found', 404)
+  }
+  
+  // Get user stats - only count applications for markets with applicationsEnabled
+  const stats = await UserMarketTracking.aggregate([
+    {
+      $match: {
+        user: user._id,
+        // Only include tracking records for markets with applicationsEnabled
+      }
+    },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'marketInfo'
+      }
+    },
+    {
+      $unwind: { path: '$marketInfo', preserveNullAndEmptyArrays: true }
+    },
+    {
+      $match: {
+        // Only count if market doesn't exist (legacy data) OR applications are enabled
+        $or: [
+          { 'marketInfo.applicationsEnabled': true },
+          { marketInfo: { $exists: false } }
+        ]
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalApplications: { $sum: 1 },
+        approvedApplications: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
+        rejectedApplications: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } },
+        pendingApplications: { $sum: { $cond: [{ $in: ['$status', ['applied', 'under-review']] }, 1, 0] } }
+      }
+    }
+  ])
+  
+  const userStats = stats[0] || { totalApplications: 0, approvedApplications: 0, rejectedApplications: 0, pendingApplications: 0 }
+  
+  // Get total tracking count (only for markets that accept vendors)
+  const trackingWithApplications = await UserMarketTracking.aggregate([
+    { $match: { user: user._id } },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'marketInfo'
+      }
+    },
+    {
+      $unwind: { path: '$marketInfo', preserveNullAndEmptyArrays: true }
+    },
+    {
+      $match: {
+        $or: [
+          { 'marketInfo.applicationsEnabled': true },
+          { marketInfo: { $exists: false } }
+        ]
+      }
+    },
+    { $count: 'total' }
+  ])
+  
+  const followingCount = trackingWithApplications[0]?.total || 0
+  
+  sendSuccess(res, {
+    user: {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+      avatar: user.profileImage,
+      bio: user.bio,
+      phone: user.phone,
+      businessName: user.businessName,
+      businessDescription: user.businessDescription,
+      businessLicense: user.businessLicense,
+      insuranceCertificate: user.insuranceCertificate,
+      taxId: user.taxId,
+      organizationName: user.organizationName,
+      organizationDescription: user.organizationDescription,
+      preferences: user.preferences,
+      twoFactorEnabled: user.twoFactorEnabled,
+      isEmailVerified: user.isEmailVerified,
+      isActive: user.isActive,
+      lastLogin: user.lastLogin,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      totalApplications: userStats.totalApplications,
+      approvedApplications: userStats.approvedApplications,
+      rejectedApplications: userStats.rejectedApplications,
+      pendingApplications: userStats.pendingApplications,
+      followingCount,
+      lastActiveAt: user.lastLogin || user.updatedAt
+    }
+  }, 'User retrieved successfully')
+})
+
+// Get user activity
+const getUserActivity = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  
+  // Check if user exists
+  const user = await User.findById(id).select('username email firstName lastName')
+  if (!user) {
+    return sendError(res, 'User not found', 404)
+  }
+  
+  // Get user's applications with market info (only for markets that accept vendors)
+  const applications = await UserMarketTracking.aggregate([
+    { $match: { user: new mongoose.Types.ObjectId(id) } },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'marketInfo'
+      }
+    },
+    { $unwind: { path: '$marketInfo', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        $or: [
+          { 'marketInfo.applicationsEnabled': true },
+          { marketInfo: { $exists: false } }
+        ]
+      }
+    },
+    { $sort: { createdAt: -1 } }
+  ])
+  
+  // Transform applications to include market name
+  const transformedApplications = applications.map(app => ({
+    id: app._id.toString(),
+    marketId: app.market?._id?.toString(),
+    marketName: app.marketInfo?.name || 'Unknown Market',
+    marketCategory: app.marketInfo?.category,
+    status: app.status,
+    createdAt: app.createdAt
+  }))
+  
+  // Get user's comments
+  const comments = await Comment.find({ author: id, isDeleted: false })
+    .populate('market', 'name')
+    .sort({ createdAt: -1 })
+    .lean()
+  
+  // Get user's photos
+  const photos = await Photo.find({ userId: id, isDeleted: false })
+    .populate('market', 'name')
+    .sort({ createdAt: -1 })
+    .lean()
+  
+  // Get markets user is tracking (only for markets that accept vendors)
+  const tracking = await UserMarketTracking.aggregate([
+    { $match: { user: new mongoose.Types.ObjectId(id) } },
+    {
+      $lookup: {
+        from: 'markets',
+        localField: 'market',
+        foreignField: '_id',
+        as: 'marketInfo'
+      }
+    },
+    { $unwind: { path: '$marketInfo', preserveNullAndEmptyArrays: true } },
+    {
+      $match: {
+        $or: [
+          { 'marketInfo.applicationsEnabled': true },
+          { marketInfo: { $exists: false } }
+        ]
+      }
+    },
+    { $sort: { updatedAt: -1 } }
+  ])
+  
+  // Transform tracking to include market info
+  const transformedTracking = tracking.map(t => ({
+    id: t._id.toString(),
+    marketId: t.market?._id?.toString(),
+    marketName: t.marketInfo?.name || 'Unknown Market',
+    marketCategory: t.marketInfo?.category,
+    marketStatus: t.marketInfo?.status,
+    status: t.status,
+    updatedAt: t.updatedAt
+  }))
+  
+  sendSuccess(res, {
+    applications: transformedApplications,
+    comments: comments.map(c => ({
+      id: c._id.toString(),
+      marketId: c.market?._id?.toString(),
+      marketName: c.market?.name || 'Unknown Market',
+      content: c.content,
+      createdAt: c.createdAt
+    })),
+    photos: photos.map(p => ({
+      id: p._id.toString(),
+      marketId: p.market?._id?.toString(),
+      marketName: p.market?.name || 'Unknown Market',
+      url: p.url,
+      createdAt: p.createdAt
+    })),
+    tracking: transformedTracking
+  }, 'User activity retrieved successfully')
 })
 
 // Market management
@@ -309,12 +547,92 @@ const getMarkets = catchAsync(async (req, res, next) => {
 
 const updateMarket = catchAsync(async (req, res, next) => {
   const { id } = req.params
-  const { isActive, category, vendorInfo } = req.body
+  const { 
+    isActive, 
+    category, 
+    vendorInfo, 
+    schedule, 
+    name, 
+    description, 
+    applicationsEnabled, 
+    status, 
+    images, 
+    heroImage,
+    // Location fields
+    address,
+    city,
+    state,
+    zipCode,
+    country
+  } = req.body
 
   const updateData = { updatedAt: new Date() }
   if (isActive !== undefined) updateData.isActive = isActive
   if (category) updateData.category = category
   if (vendorInfo) updateData.vendorInfo = vendorInfo
+  if (name) updateData.name = name
+  if (description) updateData.description = description
+  if (applicationsEnabled !== undefined) updateData.applicationsEnabled = applicationsEnabled
+  if (status) updateData.status = status
+
+  // Handle location updates
+  if (address || city || state || zipCode || country) {
+    updateData.location = {
+      address: {
+        street: address || '',
+        city: city || '',
+        state: state || '',
+        zipCode: zipCode || '',
+        country: country || 'USA'
+      },
+      // Preserve existing coordinates if not being updated
+    }
+  }
+
+  // Handle images
+  if (images && Array.isArray(images)) {
+    updateData.images = images.map((url, index) => ({
+      url,
+      isHero: url === heroImage || index === 0,
+      uploadedAt: new Date()
+    }))
+  }
+
+  // Handle schedule updates
+  if (schedule && Array.isArray(schedule) && schedule.length > 0) {
+    // Convert frontend schedule format to backend format
+    const recurringSchedules = schedule.filter(s => s.isRecurring)
+    const specialDates = schedule.filter(s => !s.isRecurring)
+
+    updateData.schedule = {
+      recurring: recurringSchedules.length > 0,
+      daysOfWeek: recurringSchedules.length > 0 ? recurringSchedules.map(s => {
+        const dayMap = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+        return dayMap[s.dayOfWeek]
+      }).filter(Boolean) : [],
+      startTime: recurringSchedules.length > 0 ? recurringSchedules[0].startTime : '08:00',
+      endTime: recurringSchedules.length > 0 ? recurringSchedules[0].endTime : '16:00',
+      seasonStart: recurringSchedules.length > 0 ? new Date(recurringSchedules[0].startDate) : new Date(),
+      seasonEnd: recurringSchedules.length > 0 ? new Date(recurringSchedules[0].endDate) : new Date(),
+      specialDates: specialDates.map(s => ({
+        date: new Date(s.startDate),
+        startTime: s.startTime,
+        endTime: s.endTime,
+        notes: ''
+      }))
+    }
+  } else if (schedule && Array.isArray(schedule) && schedule.length === 0) {
+    // Clear schedule if empty array sent
+    updateData.schedule = {
+      recurring: false,
+      daysOfWeek: [],
+      startTime: '08:00',
+      endTime: '16:00',
+      seasonStart: new Date(),
+      seasonEnd: new Date(),
+      specialDates: []
+    }
+  }
 
   const market = await Market.findByIdAndUpdate(id, updateData, {
     new: true,
@@ -338,6 +656,134 @@ const updateMarket = catchAsync(async (req, res, next) => {
   }
 
   sendSuccess(res, { market }, 'Market updated successfully')
+})
+
+// Get single market for admin
+const getMarket = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+
+  const market = await Market.findById(id)
+    .populate('promoter', 'username email profile.firstName profile.lastName profile.businessName')
+    .populate('createdBy', 'username email')
+
+  if (!market) {
+    return sendError(res, 'Market not found', 404)
+  }
+
+  // Flatten location for frontend compatibility
+  const flatLocation = {
+    address: market.location?.address?.street || '',
+    city: market.location?.address?.city || '',
+    state: market.location?.address?.state || '',
+    zipCode: market.location?.address?.zipCode || '',
+    country: market.location?.address?.country || 'USA',
+    latitude: market.location?.coordinates?.[1],
+    longitude: market.location?.coordinates?.[0]
+  }
+
+  // Get additional stats
+  const [trackingCount, applicationCount, approvedCount, rejectedCount, pendingCount, commentCount, photoCount] = await Promise.all([
+    require('../models/UserMarketTracking').countDocuments({ market: id }),
+    require('../models/UserMarketTracking').countDocuments({ market: id, status: 'applied' }),
+    require('../models/UserMarketTracking').countDocuments({ market: id, status: 'approved' }),
+    require('../models/UserMarketTracking').countDocuments({ market: id, status: 'rejected' }),
+    require('../models/UserMarketTracking').countDocuments({ market: id, status: { $in: ['applied', 'under-review'] } }),
+    require('../models/Comment').countDocuments({ market: id, isDeleted: false }),
+    require('../models/Photo').countDocuments({ market: id, isDeleted: false })
+  ])
+
+  // Build marketType from createdByType
+  const marketType = market.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed'
+
+  // Flatten schedule for frontend
+  const schedules = []
+  if (market.schedule) {
+    if (market.schedule.recurring && market.schedule.daysOfWeek && market.schedule.daysOfWeek.length > 0) {
+      const dayMap = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 }
+      market.schedule.daysOfWeek.forEach(day => {
+        const dayOfWeek = dayMap[day.toLowerCase()]
+        if (dayOfWeek !== undefined) {
+          schedules.push({
+            id: `${market._id}_${day}`,
+            dayOfWeek,
+            startTime: market.schedule.startTime,
+            endTime: market.schedule.endTime,
+            startDate: market.schedule.seasonStart?.toISOString() || new Date().toISOString(),
+            endDate: market.schedule.seasonEnd?.toISOString() || new Date().toISOString(),
+            isRecurring: true
+          })
+        }
+      })
+    } else if (market.schedule.specialDates && market.schedule.specialDates.length > 0) {
+      market.schedule.specialDates.forEach(date => {
+        schedules.push({
+          id: `${market._id}_${date.date.getTime()}`,
+          dayOfWeek: date.date.getDay(),
+          startTime: date.startTime || market.schedule.startTime,
+          endTime: date.endTime || market.schedule.endTime,
+          startDate: date.date.toISOString(),
+          endDate: date.date.toISOString(),
+          isRecurring: false
+        })
+      })
+    }
+  }
+
+  // Flatten images
+  const images = (market.images || []).map(img => img.url)
+
+  // Flatten amenities to accessibility
+  const accessibility = {
+    wheelchairAccessible: (market.amenities || []).includes('accessible') || (market.amenities || []).includes('covered_area'),
+    parkingAvailable: (market.amenities || []).includes('parking'),
+    restroomsAvailable: (market.amenities || []).includes('restrooms'),
+    familyFriendly: (market.amenities || []).includes('playground'),
+    petFriendly: (market.amenities || []).includes('pet_friendly')
+  }
+
+  sendSuccess(res, {
+    market: {
+      id: market._id.toString(),
+      name: market.name,
+      description: market.description,
+      category: market.category,
+      marketType,
+      createdByType: market.createdByType,
+      location: flatLocation,
+      schedule: schedules,
+      status: market.status,
+      isActive: market.isActive !== false,
+      applicationsEnabled: market.applicationsEnabled || false,
+      images,
+      tags: market.tags || [],
+      accessibility,
+      contact: {
+        phone: market.contact?.phone,
+        email: market.contact?.email,
+        website: market.contact?.website,
+        socialMedia: market.contact?.socialMedia
+      },
+      stats: {
+        viewCount: market.stats?.viewCount || 0,
+        favoriteCount: market.stats?.favoriteCount || 0,
+        applicationCount: market.stats?.applicationCount || 0,
+        commentCount: market.stats?.commentCount || 0,
+        rating: market.stats?.rating || 0,
+        reviewCount: market.stats?.reviewCount || 0
+      },
+      createdAt: market.createdAt,
+      updatedAt: market.updatedAt
+    },
+    stats: {
+      totalTracking: trackingCount,
+      totalApplications: applicationCount,
+      approvedApplications: approvedCount,
+      rejectedApplications: rejectedCount,
+      pendingApplications: pendingCount,
+      totalComments: commentCount,
+      totalPhotos: photoCount
+    }
+  }, 'Market retrieved successfully')
 })
 
 // Content moderation
@@ -465,7 +911,10 @@ module.exports = {
   getAdminStats,
   getUsers,
   updateUser,
+  getUser,
+  getUserActivity,
   getMarkets,
+  getMarket,
   updateMarket,
   getModerationQueue,
   moderateContent,

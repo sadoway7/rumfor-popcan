@@ -63,6 +63,15 @@ const mockApplications: Application[] = [
       ],
       marketType: 'promoter-managed',
       status: 'active',
+      applicationsEnabled: true,
+      stats: {
+        viewCount: 1500,
+        favoriteCount: 250,
+        applicationCount: 45,
+        commentCount: 32,
+        rating: 4.7,
+        reviewCount: 18
+      },
       images: ['https://picsum.photos/800/600?random=1'],
       tags: ['local-produce', 'fresh-produce', 'organic'],
       accessibility: {
@@ -168,6 +177,15 @@ const mockApplications: Application[] = [
       ],
       marketType: 'promoter-managed',
       status: 'active',
+      applicationsEnabled: true,
+      stats: {
+        viewCount: 850,
+        favoriteCount: 120,
+        applicationCount: 25,
+        commentCount: 15,
+        rating: 4.5,
+        reviewCount: 8
+      },
       images: ['https://picsum.photos/800/600?random=2'],
       tags: ['handmade', 'local-artisans', 'crafts', 'fine-art'],
       accessibility: {

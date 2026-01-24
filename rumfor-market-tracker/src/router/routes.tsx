@@ -46,9 +46,11 @@ const BusinessPlanningPage = React.lazy(() => import('@/pages/promoter/BusinessP
 const AdminDashboardPage = React.lazy(() => import('@/pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
 const AdminModerationPage = React.lazy(() => import('@/pages/admin/AdminModerationPage').then(module => ({ default: module.AdminModerationPage })))
 const AdminUsersPage = React.lazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
+const AdminEditUserPage = React.lazy(() => import('@/pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })))
 const AdminAnalyticsPage = React.lazy(() => import('@/pages/admin/AdminAnalyticsPage').then(module => ({ default: module.AdminAnalyticsPage })))
 const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPage').then(module => ({ default: module.AdminSettingsPage })))
 const AdminMarketsPage = React.lazy(() => import('@/pages/admin/AdminMarketsPage').then(module => ({ default: module.AdminMarketsPage })))
+const AdminEditMarketPage = React.lazy(() => import('@/pages/admin/AdminEditMarketPage').then(module => ({ default: module.AdminEditMarketPage })))
 const AdminApplicationsPage = React.lazy(() => import('@/pages/admin/AdminApplicationsPage').then(module => ({ default: module.AdminApplicationsPage })))
 const AdminSupportPage = React.lazy(() => import('@/pages/admin/AdminSupportPage').then(module => ({ default: module.AdminSupportPage })))
 
@@ -277,10 +279,30 @@ export function AppRoutes() {
         </ProtectedRoute>
       } />
 
+      <Route path="/admin/users/:id" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['admin']}>
+            <ErrorBoundary>
+              <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminEditUserPage /></Suspense></DashboardLayout>
+            </ErrorBoundary>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
       <Route path="/admin/markets" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['admin']}>
             <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminMarketsPage /></Suspense></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/admin/markets/:marketId" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['admin']}>
+            <ErrorBoundary>
+              <DashboardLayout role="admin"><Suspense fallback={<PageLoader />}><AdminEditMarketPage /></Suspense></DashboardLayout>
+            </ErrorBoundary>
           </RoleRoute>
         </ProtectedRoute>
       } />

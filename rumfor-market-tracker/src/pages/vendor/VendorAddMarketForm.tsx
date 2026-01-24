@@ -195,6 +195,15 @@ export function VendorAddMarketForm() {
         })),
         status: 'draft',
         marketType: 'vendor-created',
+        applicationsEnabled: false,
+        stats: {
+          viewCount: 0,
+          favoriteCount: 0,
+          applicationCount: 0,
+          commentCount: 0,
+          rating: 0,
+          reviewCount: 0
+        },
         images: [],
         tags: formData.additionalInfo.tags,
         accessibility: formData.accessibility,

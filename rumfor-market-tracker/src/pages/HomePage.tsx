@@ -248,12 +248,61 @@ export function HomePage() {
                 <span className="font-black text-4xl text-foreground tracking-tighter uppercase">Rumfor</span>
               </Link>
               {!isAuthenticated && (
-                <button
-                  onClick={() => setShowLoginForm(true)}
-                  className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
-                >
-                  <span className="text-accent-foreground font-black text-base uppercase tracking-wide">Login / Register</span>
-                </button>
+                <div className="w-full">
+                  {!showLoginForm ? (
+                    <button
+                      onClick={() => setShowLoginForm(true)}
+                      className="w-full bg-accent hover:bg-accent-light rounded-lg px-4 py-3 transition-all shadow-[4px_4px_0px_0px] shadow-black/30 dark:shadow-white/30 transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px]"
+                    >
+                      <span className="text-accent-foreground font-black text-base uppercase tracking-wide">Login / Register</span>
+                    </button>
+                  ) : (
+                    <div className="bg-surface rounded-xl p-4 space-y-3 shadow-[3px_3px_0px_0px] shadow-black/20 border border-surface-3">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold uppercase text-foreground">Sign In</h3>
+                        <button
+                          onClick={() => setShowLoginForm(false)}
+                          className="text-accent font-bold hover:underline text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <form onSubmit={handleSignIn} className="space-y-2">
+                        <input
+                          type="email"
+                          placeholder="Email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3 text-sm"
+                          required
+                        />
+                        <input
+                          type="password"
+                          placeholder="Password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:shadow-[2px_2px_0px_0px] focus:shadow-accent/70 border border-surface-3 text-sm"
+                          required
+                        />
+                        {authError && (
+                          <p className="text-sm font-bold text-red-500 text-center">{authError}</p>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={authLoading}
+                          className="w-full bg-accent hover:bg-accent-light rounded-lg py-2.5 transition-all shadow-[3px_3px_0px_0px] shadow-black/20 disabled:opacity-50"
+                        >
+                          <span className="text-accent-foreground font-bold text-sm uppercase tracking-wide">
+                            {authLoading ? 'Loading...' : 'Sign In'}
+                          </span>
+                        </button>
+                      </form>
+                      <p className="text-center text-sm text-muted-foreground">
+                        No account? <Link to="/auth/register" className="text-accent font-medium hover:underline">Register</Link>
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 

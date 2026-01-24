@@ -89,6 +89,10 @@ export interface Market {
   schedule: MarketSchedule[]
   status: MarketStatus
   marketType: MarketType // NEW: user-created or promoter-managed
+  
+  // Application system settings
+  applicationsEnabled: boolean // Whether the application system is enabled for this market
+  
   applicationStatus?: ApplicationStatus // Only for promoter-managed markets
   applicationSettings?: {
     acceptVendors: boolean
@@ -103,6 +107,17 @@ export interface Market {
     }
     customRequirements?: string[]
   }
+  
+  // Market statistics
+  stats: {
+    viewCount: number
+    favoriteCount: number
+    applicationCount: number
+    commentCount: number
+    rating: number
+    reviewCount: number
+  }
+  
   images: string[]
   tags: string[]
   accessibility: AccessibilityFeatures
@@ -140,7 +155,7 @@ export type MarketSubcategory =
   | 'mixed'
 
 // Market status from backend
-export type MarketStatus = 'draft' | 'active' | 'cancelled' | 'completed'
+export type MarketStatus = 'draft' | 'pending_approval' | 'active' | 'suspended' | 'inactive' | 'cancelled' | 'completed'
 
 export type MarketType = 'vendor-created' | 'promoter-managed'
 
@@ -530,6 +545,7 @@ export interface AdminFilters {
   userFilters?: {
     role?: UserRole[]
     isActive?: boolean
+    isEmailVerified?: boolean
     dateRange?: { start: string; end: string }
     search?: string
     sortBy?: string

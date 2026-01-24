@@ -68,6 +68,15 @@ const mockMarkets: Market[] = [
       }
     },
     applicationFields: [],
+    applicationsEnabled: false,
+    stats: {
+      viewCount: 1000,
+      favoriteCount: 150,
+      applicationCount: 30,
+      commentCount: 20,
+      rating: 4.6,
+      reviewCount: 12
+    },
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z'
   },
@@ -128,6 +137,15 @@ const mockMarkets: Market[] = [
       socialMedia: {
         instagram: 'https://instagram.com/artisanfair'
       }
+    },
+    applicationsEnabled: true,
+    stats: {
+      viewCount: 1500,
+      favoriteCount: 250,
+      applicationCount: 45,
+      commentCount: 32,
+      rating: 4.7,
+      reviewCount: 18
     },
     applicationFields: [],
     createdAt: '2024-01-01T00:00:00Z',
@@ -195,6 +213,15 @@ const mockMarkets: Market[] = [
     contact: {
       phone: '(555) 456-7890',
       email: 'info@weekendflea.com'
+    },
+    applicationsEnabled: false,
+    stats: {
+      viewCount: 420,
+      favoriteCount: 65,
+      applicationCount: 12,
+      commentCount: 8,
+      rating: 4.2,
+      reviewCount: 4
     },
     applicationFields: [],
     createdAt: '2024-01-01T00:00:00Z',

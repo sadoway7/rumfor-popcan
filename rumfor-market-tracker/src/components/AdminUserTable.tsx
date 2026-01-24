@@ -1,16 +1,18 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
   Users, 
-  Search, 
-  Filter, 
-  ShieldCheck, 
-  ShieldX, 
-  UserX, 
-  UserCheck, 
-  CheckSquare, 
+  Search,
+  Filter,
+  ShieldCheck,
+  ShieldX,
+  UserX,
+  UserCheck,
+  CheckSquare,
   Square,
   Download,
-  RefreshCw
+  RefreshCw,
+  Edit
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -28,6 +30,7 @@ interface AdminUserTableProps {
 }
 
 export function AdminUserTable({ className }: AdminUserTableProps) {
+  const navigate = useNavigate()
   const {
     users,
     usersPagination,
@@ -78,9 +81,11 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
 
   const handleStatusFilter = (status: string) => {
     const isActive = status === 'active' ? true : status === 'inactive' ? false : undefined
+    const isEmailVerified = status === 'unverified' ? false : undefined
     handleFilterChange({
       ...userFilters,
-      isActive
+      isActive,
+      isEmailVerified
     })
   }
 
@@ -126,7 +131,8 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
   const statusFilterOptions: SelectOption[] = [
     { value: '', label: 'All Status' },
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' }
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'unverified', label: 'Unverified' }
   ]
 
   const bulkActionOptions: SelectOption[] = [
@@ -230,6 +236,14 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => navigate(`/admin/users/${record.id}`)}
+            title="Edit user"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => handleVerifyUser(record.id, !record.isEmailVerified)}
             title={record.isEmailVerified ? 'Unverify user' : 'Verify user'}
           >
@@ -242,7 +256,7 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleSuspendUser(record.id, record.isActive)}
+            onClick={() => handleSuspendUser(record.id, !record.isActive)}
             title={record.isActive ? 'Suspend user' : 'Activate user'}
           >
             {record.isActive ? (

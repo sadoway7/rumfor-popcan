@@ -6,7 +6,10 @@ const {
   getAdminStats,
   getUsers,
   updateUser,
+  getUser,
+  getUserActivity,
   getMarkets,
+  getMarket,
   updateMarket,
   getModerationQueue,
   moderateContent,
@@ -26,10 +29,13 @@ router.get('/stats', getAdminStats)
 
 // User management
 router.get('/users', validatePagination, getUsers)
+router.get('/users/:id', validateMongoId('id'), getUser)
 router.patch('/users/:id', validateMongoId('id'), updateUser)
+router.get('/users/:id/activity', validateMongoId('id'), getUserActivity)
 
 // Market management
 router.get('/markets', validatePagination, getMarkets)
+router.get('/markets/:id', validateMongoId('id'), getMarket)
 router.patch('/markets/:id', validateMongoId('id'), updateMarket)
 
 // Content moderation

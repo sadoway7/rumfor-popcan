@@ -12,40 +12,12 @@ import TagVoting from '@/components/TagVoting'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
+import { MARKET_STATUS_COLORS, MARKET_CATEGORY_COLORS, MARKET_CATEGORY_LABELS } from '@/config/constants'
 import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image } from 'lucide-react'
 
-const categoryLabels = {
-  'farmers-market': 'Farmers Market',
-  'arts-crafts': 'Arts & Crafts',
-  'flea-market': 'Flea Market',
-  'food-festival': 'Food Festival',
-  'holiday-market': 'Holiday Market',
-  'craft-show': 'Craft Show',
-  'community-event': 'Community Event',
-  'night-market': 'Night Market',
-  'street-fair': 'Street Fair',
-  'vintage-antique': 'Vintage & Antique'
-}
-
-const categoryColors = {
-  'farmers-market': 'bg-green-100 text-green-800 border-green-200',
-  'arts-crafts': 'bg-purple-100 text-purple-800 border-purple-200',
-  'flea-market': 'bg-blue-100 text-blue-800 border-blue-200',
-  'food-festival': 'bg-orange-100 text-orange-800 border-orange-200',
-  'holiday-market': 'bg-red-100 text-red-800 border-red-200',
-  'craft-show': 'bg-pink-100 text-pink-800 border-pink-200',
-  'community-event': 'bg-gray-100 text-gray-800 border-gray-200',
-  'night-market': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  'street-fair': 'bg-amber-100 text-amber-800 border-amber-200',
-  'vintage-antique': 'bg-slate-100 text-slate-800 border-slate-200'
-}
-
-const statusColors = {
-  'active': 'bg-success/10 text-success border-success/20',
-  'draft': 'bg-warning/10 text-warning border-warning/20',
-  'cancelled': 'bg-destructive/10 text-destructive border-destructive/20',
-  'completed': 'bg-muted text-muted-foreground border-muted'
-}
+const categoryLabels = MARKET_CATEGORY_LABELS
+const categoryColors = MARKET_CATEGORY_COLORS
+const statusColors = MARKET_STATUS_COLORS
 
 export const MarketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()

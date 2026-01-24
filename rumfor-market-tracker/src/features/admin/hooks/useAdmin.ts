@@ -34,22 +34,24 @@ export function useAdmin() {
   } = useAdminStore()
 
   // Initialize admin data only when user is authenticated as admin
+  // Only run once on mount when user is admin
   useEffect(() => {
-    if (isAuthenticated && isAdmin()) {
-      // Defer initial data loading to prevent synchronous suspension
-      const timer = setTimeout(() => {
-        // Temporarily disabled automatic fetching to prevent errors when backend is not running
-        // fetchAdminStats()
-        // fetchRecentActivities()
-        // fetchUsers()
-        // fetchModerationQueue()
-        // fetchPromoterVerifications()
-        // fetchSystemSettings()
-      }, 0)
+    if (!isAuthenticated) return
+    
+    // Check if user is admin - only run if true
+    if (!isAdmin()) return
 
-      return () => clearTimeout(timer)
-    }
-  }, [isAuthenticated, isAdmin]) // Re-run when auth status changes
+    const timer = setTimeout(() => {
+      fetchAdminStats()
+      fetchRecentActivities()
+      fetchModerationQueue()
+      fetchPromoterVerifications()
+      fetchSystemSettings()
+      // Note: fetchUsers() is called in AdminUsersPage component
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [isAuthenticated]) // Only re-run if auth state changes
 
   return {
     stats,

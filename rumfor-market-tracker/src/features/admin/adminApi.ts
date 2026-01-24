@@ -12,7 +12,8 @@ import {
   Application,
   UserRole,
   ApiResponse,
-  PaginatedResponse
+  PaginatedResponse,
+  Market
 } from '@/types'
 import { httpClient } from '@/lib/httpClient'
 
@@ -181,8 +182,11 @@ export const adminApi = {
       await delay(500)
       return { success: true, data: mockAdminStats }
     } else {
-      const response = await httpClient.get<ApiResponse<AdminStats>>('/admin/stats')
-      return response
+      const response = await httpClient.get<ApiResponse<any>>('/v1/admin/stats')
+      if (response.success && response.data) {
+        return { success: true, data: response.data }
+      }
+      return { success: false, data: null as any }
     }
   },
 
@@ -196,7 +200,7 @@ export const adminApi = {
             id: '1',
             type: 'user_registered',
             message: 'New vendor registered: Sarah Johnson',
-            timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(), // 2 minutes ago
+            timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
             icon: 'Users',
             color: 'text-blue-500'
           },
@@ -204,7 +208,7 @@ export const adminApi = {
             id: '2',
             type: 'market_created',
             message: 'New market created: Downtown Artisan Fair',
-            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+            timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
             icon: 'Store',
             color: 'text-green-500'
           },
@@ -212,15 +216,19 @@ export const adminApi = {
             id: '3',
             type: 'application_submitted',
             message: 'Application submitted for Spring Market 2024',
-            timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hour ago
+            timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
             icon: 'FileText',
             color: 'text-yellow-500'
           }
-        ].slice(0, 5) // Limit to 5 recent activities
+        ].slice(0, 5)
       }
     } else {
-      const response = await httpClient.get<ApiResponse<any[]>>('/admin/activities/recent')
-      return response
+      // Use dashboard endpoint for recent activity
+      const response = await httpClient.get<ApiResponse<any>>('/v1/admin/dashboard')
+      if (response.success && response.data) {
+        return { success: true, data: response.data.recentActivity || [] }
+      }
+      return { success: true, data: [] }
     }
   },
 
@@ -329,8 +337,21 @@ export const adminApi = {
       if (filters?.sortBy) queryParams.append('sortBy', filters.sortBy)
       if (filters?.sortDirection) queryParams.append('sortOrder', filters.sortDirection)
 
-      const response = await httpClient.get<PaginatedResponse<UserWithStats>>(`/admin/users?${queryParams}`)
-      return response
+      // Use v1 prefix for admin routes
+      const response = await httpClient.get<ApiResponse<{ users: UserWithStats[], pagination: any }>>(`/v1/admin/users?${queryParams}`)
+      
+      // Unwrap the response from backend format { success, data, message }
+      if (response.success && response.data) {
+        return {
+          data: response.data.users,
+          pagination: response.data.pagination
+        }
+      }
+      // Fallback if response structure is different
+      return {
+        data: (response as any).data || [],
+        pagination: (response as any).pagination || { page: 1, limit: 20, total: 0, totalPages: 0 }
+      }
     }
   },
 
@@ -347,27 +368,118 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { role })
-      return response
+      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { role })
+      // Unwrap response
+      if (response.success && response.data) {
+        return { success: true, data: response.data.user }
+      }
+      return { success: false, data: response.data } as any
     }
   },
 
-  async suspendUser(userId: string, suspended: boolean): Promise<ApiResponse<User>> {
+  async suspendUser(userId: string, isActive: boolean): Promise<ApiResponse<User>> {
     if (isMockMode) {
       return new Promise((resolve) => {
         setTimeout(() => {
           const user = mockUsers.find(u => u.id === userId)
           if (user) {
-            user.isActive = !suspended
+            user.isActive = isActive
             user.updatedAt = new Date().toISOString()
           }
           resolve({ success: true, data: user! })
         }, 300)
       })
     } else {
-      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { isActive: !suspended })
-      return response
+      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { isActive })
+      if (response.success && response.data) {
+        return { success: true, data: response.data.user }
+      }
+      return { success: false, data: response.data } as any
     }
+  },
+
+  async getUserActivity(userId: string): Promise<ApiResponse<{
+    applications: Array<{
+      id: string
+      marketId?: string
+      marketName: string
+      marketCategory?: string
+      status: string
+      createdAt: string
+    }>
+    comments: Array<{
+      id: string
+      marketId?: string
+      marketName: string
+      content: string
+      createdAt: string
+    }>
+    photos: Array<{
+      id: string
+      marketId?: string
+      marketName: string
+      url: string
+      createdAt: string
+    }>
+    tracking: Array<{
+      id: string
+      marketId?: string
+      marketName: string
+      marketCategory?: string
+      marketStatus?: string
+      status: string
+      updatedAt: string
+    }>
+  }>> {
+    const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/users/${userId}/activity`)
+    if (response.success && response.data) {
+      return { success: true, data: response.data }
+    }
+    return { success: false, data: null as any }
+  },
+
+  async getUser(userId: string): Promise<ApiResponse<{
+    id: string
+    email: string
+    firstName: string
+    lastName: string
+    username?: string
+    displayName?: string
+    role: UserRole
+    avatar?: string
+    bio?: string
+    phone?: string
+    businessName?: string
+    businessDescription?: string
+    businessLicense?: string
+    insuranceCertificate?: string
+    taxId?: string
+    organizationName?: string
+    organizationDescription?: string
+    preferences?: {
+      emailNotifications: boolean
+      smsNotifications: boolean
+      locationTracking: boolean
+      theme: string
+    }
+    twoFactorEnabled: boolean
+    isEmailVerified: boolean
+    isActive: boolean
+    lastLogin?: string
+    createdAt: string
+    updatedAt: string
+    totalApplications: number
+    approvedApplications: number
+    rejectedApplications: number
+    pendingApplications: number
+    followingCount: number
+    lastActiveAt: string
+  }>> {
+    const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/users/${userId}`)
+    if (response.success && response.data) {
+      return { success: true, data: response.data.user }
+    }
+    return { success: false, data: null as any }
   },
 
   async verifyUser(userId: string, verified: boolean): Promise<ApiResponse<User>> {
@@ -383,8 +495,11 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.put<ApiResponse<User>>(`/admin/users/${userId}`, { verifiedPromoter: verified })
-      return response
+      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { isEmailVerified: verified })
+      if (response.success && response.data) {
+        return { success: true, data: response.data.user }
+      }
+      return { success: false, data: response.data } as any
     }
   },
 
@@ -759,5 +874,115 @@ export const adminApi = {
         resolve({ success: true, data: { id: marketId, deleted: true } })
       }, 500)
     })
+  },
+
+  // Admin Market Management
+  async getAdminMarkets(filters?: {
+    status?: string
+    category?: string
+    search?: string
+    page?: number
+    limit?: number
+  }): Promise<PaginatedResponse<Market>> {
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            data: [],
+            pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }
+          })
+        }, 400)
+      })
+    } else {
+      const queryParams = new URLSearchParams()
+      if (filters?.status) queryParams.append('status', filters.status)
+      if (filters?.category) queryParams.append('category', filters.category)
+      if (filters?.search) queryParams.append('search', filters.search)
+      if (filters?.page) queryParams.append('page', String(filters.page))
+      if (filters?.limit) queryParams.append('limit', String(filters.limit))
+
+      const response = await httpClient.get<ApiResponse<{ markets: Market[], pagination: any }>>(`/v1/admin/markets?${queryParams}`)
+      if (response.success && response.data) {
+        return {
+          data: response.data.markets,
+          pagination: response.data.pagination
+        }
+      }
+      return {
+        data: [],
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }
+      }
+    }
+  },
+
+  async getAdminMarket(marketId: string): Promise<ApiResponse<{ market: Market; stats?: any }>> {
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ success: true, data: { market: null as any } })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/markets/${marketId}`)
+      if (response.success && response.data) {
+        return { success: true, data: response.data }
+      }
+      return { success: false, data: null as any }
+    }
+  },
+
+  async updateAdminMarket(marketId: string, data: {
+    status?: string
+    isActive?: boolean
+    applicationsEnabled?: boolean
+    name?: string
+    description?: string
+    category?: string
+    address?: string
+    city?: string
+    state?: string
+    zipCode?: string
+    country?: string
+    schedule?: Array<{
+      id?: string
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+      startDate: string
+      endDate: string
+      isRecurring: boolean
+    }>
+    images?: string[]
+  }): Promise<ApiResponse<Market>> {
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          console.log('Updating market:', marketId, data)
+          resolve({ success: true, data: { id: marketId, ...data } as any })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/markets/${marketId}`, data)
+      if (response.success && response.data) {
+        return { success: true, data: response.data.market }
+      }
+      return { success: false, data: response.data } as any
+    }
+  },
+
+  async deleteAdminMarket(marketId: string, reason?: string): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          console.log('Deleting market:', marketId, 'Reason:', reason)
+          resolve({ success: true, data: { id: marketId, deleted: true } })
+        }, 300)
+      })
+    } else {
+      const queryParams = new URLSearchParams()
+      if (reason) queryParams.append('reason', reason)
+      const response = await httpClient.delete<ApiResponse<any>>(`/v1/admin/markets/${marketId}?${queryParams}`)
+      return response
+    }
   }
 }

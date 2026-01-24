@@ -82,7 +82,7 @@ interface AdminStore extends AdminStoreState {
   // User management methods
   fetchUsers: (filters?: AdminFilters['userFilters']) => Promise<void>
   updateUserRole: (userId: string, role: any) => Promise<void>
-  suspendUser: (userId: string, suspended: boolean) => Promise<void>
+  suspendUser: (userId: string, isActive: boolean) => Promise<void>
   verifyUser: (userId: string, verified: boolean) => Promise<void>
   bulkUpdateUsers: (userIds: string[], operation: 'role' | 'suspend' | 'verify', value: any) => Promise<void>
   setUserFilters: (filters: AdminFilters['userFilters']) => void
@@ -229,12 +229,12 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
     }
   },
 
-  suspendUser: async (userId, suspended) => {
-    const response = await adminApi.suspendUser(userId, suspended)
+  suspendUser: async (userId, isActive) => {
+    const response = await adminApi.suspendUser(userId, isActive)
     if (response.success) {
       const { users } = get()
       const updatedUsers = users.map(user =>
-        user.id === userId ? { ...user, isActive: !suspended } : user
+        user.id === userId ? { ...user, isActive } : user
       )
       set({ users: updatedUsers })
     }

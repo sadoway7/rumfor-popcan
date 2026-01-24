@@ -15,6 +15,7 @@ const register = catchAsync(async (req, res, next) => {
     lastName,
     bio,
     phone,
+    role,
     preferences = {}
   } = req.body
 
@@ -25,6 +26,7 @@ const register = catchAsync(async (req, res, next) => {
     lastName,
     bio,
     phone,
+    role: role || 'visitor', // Default to visitor if not provided
     preferences,
     lastLogin: new Date()
   }
