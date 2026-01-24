@@ -5,15 +5,17 @@ import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Button, Input, Card, CardHeader, CardTitle, CardContent, Alert, Spinner } from '@/components/ui'
-import { Eye, EyeOff, Store, Calendar, User } from 'lucide-react'
+import { Eye, EyeOff, Store, Calendar } from 'lucide-react'
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
   confirmPassword: z.string(),
-  role: z.enum(['visitor', 'vendor', 'promoter', 'admin'], {
+  role: z.enum(['vendor', 'promoter'], {
     errorMap: () => ({ message: 'Please select a valid role' }),
   }),
   agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms and conditions'),
@@ -26,22 +28,19 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 const roleOptions = [
   {
-    value: 'visitor',
-    label: 'Visitor',
-    description: 'Browse markets and events',
-    icon: User
-  },
-  {
     value: 'vendor',
     label: 'Vendor',
     description: 'Apply to markets and manage applications',
-    icon: Store
+    icon: Store,
+    disabled: false
   },
   {
     value: 'promoter',
     label: 'Promoter',
     description: 'Create and manage markets',
-    icon: Calendar
+    icon: Calendar,
+    disabled: true,
+    comingSoon: true
   },
 ]
 
@@ -59,6 +58,9 @@ export function RegisterPage() {
     setValue,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: 'vendor',
+    },
   })
 
   const selectedRole = watch('role')
@@ -102,20 +104,29 @@ export function RegisterPage() {
                 {roleOptions.map((option) => {
                   const Icon = option.icon
                   const isSelected = selectedRole === option.value
+                  const isDisabled = option.disabled
                   return (
                     <button
                       key={option.value}
                       type="button"
-                      onClick={() => setValue('role', option.value as any)}
+                      onClick={() => !isDisabled && setValue('role', option.value as any)}
+                      disabled={isDisabled}
                       className={`p-4 border rounded-lg text-center transition-all relative ${
                         isSelected
                           ? 'border-accent bg-accent/5 ring-2 ring-accent/20'
-                          : 'border-border'
-                      } cursor-pointer`}
+                          : 'border-border hover:border-accent/50'
+                      }`}
                     >
                       <Icon className={`h-6 w-6 mx-auto mb-2 ${isSelected ? 'text-accent' : 'text-muted-foreground'}`} />
                       <div className="text-sm font-medium">{option.label}</div>
                       <div className="text-xs text-muted-foreground mt-1">{option.description}</div>
+                      {option.comingSoon && (
+                        <div className="absolute top-2 right-2">
+                          <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
+                            Coming Soon
+                          </span>
+                        </div>
+                      )}
                     </button>
                   )
                 })}
@@ -187,6 +198,9 @@ export function RegisterPage() {
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password.message}</p>
                 )}
+                <p className="text-xs text-muted-foreground">
+                  Password must be at least 8 characters with uppercase, lowercase, and number
+                </p>
               </div>
 
               <div className="space-y-2">
