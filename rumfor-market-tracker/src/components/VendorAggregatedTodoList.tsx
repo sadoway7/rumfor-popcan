@@ -1,15 +1,16 @@
-import React, { useState } from 'react'
-import { useTodos } from '@/features/tracking/hooks/useTodos'
-import { Todo, TodoPriority } from '@/types'
+import React, { useState, useMemo } from 'react'
+import { useAllTodos } from '@/features/tracking/hooks/useAllTodos'
+import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
+import { Todo, TodoPriority, Market } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
-import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle } from 'lucide-react'
 
-interface VendorTodoListProps {
-  marketId: string
+interface VendorAggregatedTodoListProps {
   className?: string
+  showHeader?: boolean
 }
 
 const categories = [
@@ -37,8 +38,9 @@ const priorityConfig = {
   low: { color: 'bg-gray-100 text-gray-600', icon: null }
 }
 
-export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, className }) => {
-  const { todos, isLoading, error, toggleTodo, deleteTodo, createTodo, updateTodo } = useTodos(marketId)
+export const VendorAggregatedTodoList: React.FC<VendorAggregatedTodoListProps> = ({ className }) => {
+  const { todos, isLoading, error, toggleTodo, deleteTodo, createTodo, updateTodo } = useAllTodos()
+  const { trackedMarkets, isLoading: marketsLoading } = useTrackedMarkets()
   const [showPresets, setShowPresets] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
@@ -48,11 +50,24 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
   const [newCategory, setNewCategory] = useState('setup')
   const [newPriority, setNewPriority] = useState<TodoPriority>('medium')
   const [newDueDate, setNewDueDate] = useState('')
+  const [newMarketId, setNewMarketId] = useState<string | null>(null)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const pendingTodos = todos.filter((t: Todo) => !t.completed)
-  const completedTodos = todos.filter((t: Todo) => t.completed)
   const overdueCount = pendingTodos.filter(t => t.dueDate && new Date(t.dueDate) < new Date()).length
+
+  // Group todos by market
+  const todosByMarket = useMemo(() => {
+    const grouped: Record<string, Todo[]> = {}
+    todos.forEach(todo => {
+      const marketId = todo.marketId || 'general'
+      if (!grouped[marketId]) {
+        grouped[marketId] = []
+      }
+      grouped[marketId].push(todo)
+    })
+    return grouped
+  }, [todos])
 
   const handleToggle = async (id: string) => {
     await toggleTodo(id)
@@ -73,6 +88,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     setNewCategory(todo.category)
     setNewPriority(todo.priority)
     setNewDueDate(todo.dueDate ? todo.dueDate.split('T')[0] : '')
+    setNewMarketId(todo.marketId || null)
     setShowForm(true)
     setOpenMenuId(null)
   }
@@ -81,20 +97,22 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     if (!newTitle.trim()) return
 
     if (editingTodo) {
-      await updateTodo(editingTodo.id, { 
-        title: newTitle, 
-        description: newDescription, 
-        category: newCategory, 
+      await updateTodo(editingTodo.id, {
+        title: newTitle,
+        description: newDescription,
+        category: newCategory,
         priority: newPriority,
-        dueDate: newDueDate || undefined
+        dueDate: newDueDate || undefined,
+        marketId: newMarketId || undefined
       })
     } else {
-      createTodo({ 
-        title: newTitle, 
-        description: newDescription, 
-        category: newCategory, 
+      createTodo({
+        title: newTitle,
+        description: newDescription,
+        category: newCategory,
         priority: newPriority,
-        dueDate: newDueDate || undefined
+        dueDate: newDueDate || undefined,
+        marketId: newMarketId || undefined
       })
     }
     setShowForm(false)
@@ -104,10 +122,11 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     setNewCategory('setup')
     setNewPriority('medium')
     setNewDueDate('')
+    setNewMarketId(null)
   }
 
   const handleSelectPreset = async (preset: string) => {
-    createTodo({ title: preset, category: selectedCategory || 'setup', priority: 'medium' })
+    createTodo({ title: preset, category: selectedCategory || 'setup', priority: 'medium', marketId: newMarketId || undefined })
     setShowPresets(false)
     setSelectedCategory(null)
   }
@@ -116,6 +135,12 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     if (!dueDate) return null
     const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     return days
+  }
+
+  const getMarketName = (marketId: string) => {
+    if (!marketId) return 'General'
+    const market = trackedMarkets.find((m: Market) => m.id === marketId)
+    return market ? market.name : 'Unknown Market'
   }
 
   // Ultra-compact todo item - single line for mobile efficiency
@@ -127,39 +152,43 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     return (
       <div className={cn(
         "flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]",
-        todo.completed && "bg-muted/30 border-transparent opacity-60",
         isOverdue && "border-red-200 bg-red-50/50"
       )}>
-        {/* Checkbox */}
-        <button
-          onClick={() => handleToggle(todo.id)}
-          className={cn(
-            "w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center transition-all border-2",
-            todo.completed
-              ? 'bg-accent border-accent text-white'
-              : 'border-muted-foreground/40 hover:border-accent bg-white'
-          )}
-        >
-          {todo.completed && <Check className="w-4 h-4" />}
-        </button>
-
-        {/* Title and description */}
-        <div className="flex-1 min-w-0">
-          <span className={cn(
-            "block text-sm font-medium truncate",
-            todo.completed && "line-through text-muted-foreground"
-          )}>
-            {todo.title}
-          </span>
-          {todo.description && (
-            <span className={cn(
-              "block text-xs text-muted-foreground truncate",
-              todo.completed && "line-through"
-            )}>
-              {todo.description}
-            </span>
+        {/* Checkbox with market indicator */}
+        <div className="flex-shrink-0 relative">
+          <button
+            onClick={() => handleToggle(todo.id)}
+            className={cn(
+              "w-6 h-6 rounded-md flex items-center justify-center transition-all border-2",
+              todo.completed
+                ? 'bg-accent border-accent text-white'
+                : 'border-muted-foreground/40 hover:border-accent bg-white'
+            )}
+          >
+            {todo.completed && <Check className="w-4 h-4" />}
+          </button>
+          {todo.marketId && (
+            <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full border border-background" style={{backgroundColor: getMarketColor(todo.marketId)}} />
           )}
         </div>
+
+        {/* Title and description */}
+          <div className="flex-1 min-w-0">
+            <span className={cn(
+              "block text-sm font-medium truncate text-foreground",
+              isOverdue && "text-red-600 font-medium"
+            )}>
+              {todo.title}
+            </span>
+            {todo.description && (
+              <span className={cn(
+                "block text-xs text-muted-foreground truncate",
+                isOverdue && "text-red-500"
+              )}>
+                {todo.description}
+              </span>
+            )}
+          </div>
 
         {/* Due date pill - only show if has due date */}
         {todo.dueDate && (
@@ -214,7 +243,17 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     )
   }
 
-  if (isLoading) {
+  const getMarketColor = (marketId: string) => {
+    // Simple hash-based color generation for consistent market colors
+    let hash = 0
+    for (let i = 0; i < marketId.length; i++) {
+      hash = marketId.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899']
+    return colors[Math.abs(hash) % colors.length]
+  }
+
+  if (isLoading || marketsLoading) {
     return (
       <Card className={cn("p-6 text-center", className)}>
         <div className="animate-pulse">Loading...</div>
@@ -230,65 +269,91 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     )
   }
 
+  // Filter todos by selected market
+  // const filteredTodos = filterMarketId ? todos.filter(t => t.marketId === filterMarketId) : todos
+  // const filteredPendingTodos = filteredTodos.filter((t: Todo) => !t.completed)
+  // const filteredCompletedTodos = filteredTodos.filter((t: Todo) => t.completed)
+
   return (
     <div className={cn("space-y-2", className)}>
-      {/* Header - compact, no duplicate "Tasks" since tab says Tasks */}
-      <div className="flex items-center justify-between">
-        {todos.length > 0 && (
-          <span className="text-sm text-muted-foreground">
-            {completedTodos.length} / {todos.length}
-          </span>
-        )}
-        <div className="flex gap-1 ml-auto">
-          <Button
-            size="sm"
-            onClick={() => { setEditingTodo(null); setShowForm(true); setNewTitle(''); }}
-            className="h-8 px-3"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+      {/* Market filter - mobile-friendly dropdown (commented out as not functional yet) */}
+      {/* <div className="mb-4">
+        <select
+          value={filterMarketId || ''}
+          onChange={(e) => setFilterMarketId(e.target.value || null)}
+          className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none text-sm"
+        >
+          <option value="">All Markets</option>
+          {Object.keys(todosByMarket).map(marketId => {
+            if (marketId === 'general') return null
+            const market = trackedMarkets.find((m: Market) => m.id === marketId)
+            if (!market) return null
+            return (
+              <option key={marketId} value={marketId}>
+                {market.name}
+              </option>
+            )
+          })}
+        </select>
+      </div> */}
 
       {/* Overdue alert */}
       {overdueCount > 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm">
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm mb-3">
           <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
           <span className="text-red-700 font-medium">{overdueCount} overdue</span>
         </div>
       )}
 
-      {/* Pending Tasks */}
-      {pendingTodos.length > 0 && (
-        <div className="space-y-1">
-          {pendingTodos.map((todo: Todo) => (
-            <TodoCompactItem key={todo.id} todo={todo} />
-          ))}
-        </div>
-      )}
-
-      {/* Completed Tasks - collapsible */}
-      {completedTodos.length > 0 && (
-        <details className="group">
-          <summary className="text-sm text-muted-foreground cursor-pointer py-2 list-none flex items-center gap-1 min-h-[44px]">
-            <span>{completedTodos.length} completed</span>
-            <ChevronLeft className="w-4 h-4 transition-transform group-open:rotate-90" />
-          </summary>
-          <div className="space-y-1 mt-1 pb-2">
-            {completedTodos.map((todo: Todo) => (
-              <TodoCompactItem key={todo.id} todo={todo} />
-            ))}
+      {/* Tasks grouped by market sections */}
+      {Object.entries(todosByMarket).map(([marketId, marketTodos]) => {
+        const marketName = marketId === 'general' ? 'General' : getMarketName(marketId)
+        const marketColor = marketId === 'general' ? '#ccc' : getMarketColor(marketId)
+        const pendingMarketTodos = marketTodos.filter(t => !t.completed)
+        const completedMarketTodos = marketTodos.filter(t => t.completed)
+        
+        return (
+          <div key={marketId} className="mb-4">
+            {/* Market section header - more noticeable */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{backgroundColor: marketColor}} />
+              <span className="text-base font-semibold text-foreground">{marketName}</span>
+            </div>
+            
+            {/* Pending tasks for this market */}
+            {pendingMarketTodos.length > 0 && (
+              <div className="space-y-1 ml-5">
+                {pendingMarketTodos.map((todo: Todo) => (
+                  <TodoCompactItem key={todo.id} todo={todo} />
+                ))}
+              </div>
+            )}
+            
+            {/* Completed tasks for this market - collapsible */}
+            {completedMarketTodos.length > 0 && (
+              <details className="group ml-5">
+                <summary className="text-sm font-medium text-green-800 cursor-pointer py-1 list-none flex items-center gap-1 bg-green-100 rounded-lg px-2 hover:bg-green-200 transition-colors">
+                  <span>{completedMarketTodos.length} completed</span>
+                  <ChevronLeft className="w-4 h-4 transition-transform group-open:rotate-90" />
+                </summary>
+                <div className="space-y-1 mt-1 pb-1">
+                  {completedMarketTodos.map((todo: Todo) => (
+                    <TodoCompactItem key={todo.id} todo={todo} />
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
-        </details>
-      )}
+        )
+      })}
 
       {/* Empty State */}
       {todos.length === 0 && (
         <div className="text-center py-6 text-muted-foreground">
           <p className="text-sm">No tasks yet</p>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowPresets(true)}
             className="mt-1 text-xs"
           >
@@ -332,6 +397,19 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
               </div>
             ) : (
               <div className="space-y-2">
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Market</label>
+                  <select
+                    value={newMarketId || ''}
+                    onChange={e => setNewMarketId(e.target.value || null)}
+                    className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+                  >
+                    <option value="">General</option>
+                    {trackedMarkets.map(market => (
+                      <option key={(market as Market).id} value={(market as Market).id}>{(market as Market).name}</option>
+                    ))}
+                  </select>
+                </div>
                 {systemPresets[selectedCategory]?.map((preset, i) => (
                   <button
                     key={i}
@@ -422,6 +500,20 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
               </div>
 
               <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Market</label>
+                <select
+                  value={newMarketId || ''}
+                  onChange={e => setNewMarketId(e.target.value || null)}
+                  className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+                >
+                  <option value="">General</option>
+                  {trackedMarkets.map((market: Market) => (
+                    <option key={market.id} value={market.id}>{market.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Due Date</label>
                 <input
                   type="date"
@@ -448,12 +540,13 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
                   className="flex-1 h-10"
                   onClick={() => {
                     if (newTitle.trim()) {
-                      createTodo({ title: newTitle, description: newDescription, category: newCategory, priority: newPriority, dueDate: newDueDate || undefined })
+                      createTodo({ title: newTitle, description: newDescription, category: newCategory, priority: newPriority, dueDate: newDueDate || undefined, marketId: newMarketId || undefined })
                       setNewTitle('')
                       setNewDescription('')
                       setNewCategory('setup')
                       setNewPriority('medium')
                       setNewDueDate('')
+                      setNewMarketId(null)
                     }
                   }}
                 >

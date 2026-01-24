@@ -1,90 +1,87 @@
 import { Link } from 'react-router-dom'
-import { 
-  CheckSquare, 
-  DollarSign, 
-  Calendar, 
-  FileText, 
-  Bell,
-  AlertCircle,
-  Clock,
-  Plus,
-  Store
-} from 'lucide-react'
+import { useState } from 'react'
+import { Plus, CheckSquare, AlertCircle, Clock, Check, Edit2, Trash2, MoreVertical } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
-import { VendorMarketRow } from '@/components/VendorMarketRow'
+import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
-import { useExpenses } from '@/features/tracking/hooks/useExpenses'
-import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
-import { cn } from '@/utils/cn'
+import { useAllTodos } from '@/features/tracking/hooks/useAllTodos'
 
 export function VendorDashboardPage() {
   const { user } = useAuthStore()
-  const { applications, isLoading: applicationsLoading } = useApplications()
   const { todos, isLoading: todosLoading } = useTodos()
-  const { expenses, isLoading: expensesLoading } = useExpenses()
-  const { notifications, unreadCount } = useNotifications()
-  
-  // Real API data - replace mock data with real hooks
-  const { trackedMarkets, isLoading: marketsLoading } = useTrackedMarkets()
-  
-  // Calculate tracking data from real todos and expenses
-  const trackingData = Object.fromEntries(
-    trackedMarkets.map(market => [
-      market.id,
-      {
-        id: `track-${market.id}`,
-        userId: user?.id || '',
-        marketId: market.id,
-        status: 'applied' as const,
-        notes: 'Tracking via dashboard',
-        todoCount: todos.filter(t => t.marketId === market.id).length,
-        todoProgress: Math.round((todos.filter(t => t.marketId === market.id && t.completed).length / 
-                                 Math.max(todos.filter(t => t.marketId === market.id).length, 1)) * 100),
-        totalExpenses: expenses.filter(e => e.marketId === market.id).reduce((sum, e) => sum + e.amount, 0),
-        createdAt: '2024-01-10T00:00:00Z',
-        updatedAt: new Date().toISOString()
-      }
-    ])
+  const { trackedMarkets, isLoading: marketsLoading, getTrackingStatus } = useTrackedMarkets()
+  const { toggleTodo, deleteTodo, updateTodo } = useAllTodos()
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingTodo, setEditingTodo] = useState<any>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editPriority, setEditPriority] = useState('medium')
+  const [editDueDate, setEditDueDate] = useState('')
+  const [editMarketId, setEditMarketId] = useState<string | null>(null)
+
+  // Calculate task stats
+  const pendingTodos = todos.filter(todo => !todo.completed)
+  const completedTodos = todos.filter(todo => todo.completed)
+  const overdueTodos = todos.filter(todo =>
+    !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()
   )
 
-  // Get recent activity
-  const recentApplications = applications.slice(0, 3)
-  const recentTodos = todos.filter(todo => !todo.completed).slice(0, 3)
-  const recentExpenses = expenses.slice(0, 3)
-  const recentNotifications = notifications.slice(0, 5)
+  // Calculate market tracking status counts
+  const interestedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'interested').length
+  const appliedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'applied').length
+  const approvedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'approved').length
+  // const attendingCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'attending').length
+  // const completedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'completed').length
 
-  // Calculate stats
-  const stats = {
-    totalApplications: applications.length,
-    pendingApplications: applications.filter(app => app.status === 'under-review').length,
-    approvedApplications: applications.filter(app => app.status === 'approved').length,
-    totalTodos: todos.length,
-    completedTodos: todos.filter(todo => todo.completed).length,
-    overdueTodos: todos.filter(todo => 
-      !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()
-    ).length,
-    totalExpenses: expenses.reduce((sum, expense) => sum + expense.amount, 0),
-    thisMonthExpenses: expenses.filter(expense => {
-      const expenseDate = new Date(expense.date)
-      const now = new Date()
-      return expenseDate.getMonth() === now.getMonth() && 
-             expenseDate.getFullYear() === now.getFullYear()
-    }).reduce((sum, expense) => sum + expense.amount, 0)
+  const getMarketColor = (marketId: string) => {
+    // Simple hash-based color generation for consistent market colors
+    let hash = 0
+    for (let i = 0; i < marketId.length; i++) {
+      hash = marketId.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899']
+    return colors[Math.abs(hash) % colors.length]
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
+  const handleEdit = (todo: any) => {
+    setEditingTodo(todo)
+    setEditTitle(todo.title)
+    setEditDescription(todo.description || '')
+    setEditPriority(todo.priority)
+    setEditDueDate(todo.dueDate ? todo.dueDate.split('T')[0] : '')
+    setEditMarketId(todo.marketId || null)
+    setShowEditModal(true)
+    setOpenMenuId(null)
   }
 
-  if (applicationsLoading || todosLoading || expensesLoading || marketsLoading) {
+  const handleDelete = async (id: string) => {
+    if (confirm('Delete this task?')) {
+      await deleteTodo(id)
+    }
+    setOpenMenuId(null)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim() || !editingTodo) return
+
+    await updateTodo(editingTodo.id, {
+      title: editTitle,
+      description: editDescription || undefined,
+      priority: editPriority as any,
+      dueDate: editDueDate || undefined,
+      marketId: editMarketId || undefined
+    })
+    
+    setShowEditModal(false)
+    setEditingTodo(null)
+  }
+
+  if (todosLoading || marketsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -97,324 +94,282 @@ export function VendorDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Welcome back, {user?.firstName}!</h1>
-          <p className="text-muted-foreground mt-1">
-            Here's what's happening with your market business
+      {/* Header - Hero Style - Toned Down */}
+      <div className="relative overflow-hidden rounded-2xl bg-accent p-6 md:p-8 shadow-[4px_4px_0px_0px] shadow-black/10 dark:shadow-white/10 mb-6">
+        {/* Background texture - much more subtle */}
+        <div className="absolute inset-0 opacity-8" style={{
+          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 12px, hsl(var(--accent-foreground)) 12px, hsl(var(--accent-foreground)) 24px)`
+        }}></div>
+        
+        <div className="relative z-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-accent-foreground mb-2">
+            Welcome back, {user?.firstName}!
+          </h1>
+          <p className="text-lg text-accent-foreground/80">
+            Manage your market participation and tasks
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {unreadCount > 0 && (
-            <Badge variant="destructive" className="flex items-center gap-1">
-              <Bell className="w-3 h-3" />
-              {unreadCount} new
-            </Badge>
-          )}
-          <Link to="/markets">
-            <Button variant="outline" className="flex items-center gap-2">
-              <Store className="w-4 h-4" />
-              Find a Market
-            </Button>
-          </Link>
-          <Link to="/vendor/add-market">
-            <Button className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Market
-            </Button>
-          </Link>
-        </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Applications</p>
-              <p className="text-2xl font-bold text-foreground">{stats.totalApplications}</p>
-              <p className="text-xs text-muted-foreground">
-                {stats.pendingApplications} pending
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <CheckSquare className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Todos</p>
-              <p className="text-2xl font-bold text-foreground">{stats.totalTodos}</p>
-              <p className="text-xs text-muted-foreground">
-                {stats.completedTodos} completed
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Expenses</p>
-              <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalExpenses)}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatCurrency(stats.thisMonthExpenses)} this month
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Markets</p>
-              <p className="text-2xl font-bold text-foreground">{stats.approvedApplications}</p>
-              <p className="text-xs text-muted-foreground">
-                approved
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* My Markets Section */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Store className="w-5 h-5" />
-            My Markets
-          </h2>
-          <Link to="/markets">
-            <Button variant="ghost" size="sm">Browse Markets</Button>
-          </Link>
-        </div>
-        
-        <div className="space-y-4">
-          {trackedMarkets.map((market) => (
-            <VendorMarketRow
-              key={market.id}
-              market={market}
-              tracking={trackingData[market.id as keyof typeof trackingData]}
-            />
-          ))}
-        </div>
-        
-        {trackedMarkets.length === 0 && (
-          <div className="text-center py-8">
-            <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No markets tracked yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Start tracking markets to get organized and plan your participation
-            </p>
-            <Link to="/markets">
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Browse Markets
+      {/* Markets Status Overview - Similar to Task Overview metrics */}
+      <Card variant="default" padding="none">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-foreground">Markets Overview</h2>
+            <Link to="/vendor/tracked-markets" className="block">
+              <Button size="sm" className="h-9">
+                <Plus className="h-4 w-4 mr-2" />
+                View My Markets
               </Button>
             </Link>
           </div>
-        )}
-      </Card>
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/vendor/todos" className="group">
-            <Button variant="outline" className="w-full h-20 flex-col gap-2 group-hover:bg-accent/10">
-              <CheckSquare className="w-6 h-6" />
-              <span className="text-sm">Manage Todos</span>
-            </Button>
-          </Link>
-          <Link to="/vendor/expenses" className="group">
-            <Button variant="outline" className="w-full h-20 flex-col gap-2 group-hover:bg-accent/10">
-              <DollarSign className="w-6 h-6" />
-              <span className="text-sm">Track Expenses</span>
-            </Button>
-          </Link>
-          <Link to="/vendor/calendar" className="group">
-            <Button variant="outline" className="w-full h-20 flex-col gap-2 group-hover:bg-accent/10">
-              <Calendar className="w-6 h-6" />
-              <span className="text-sm">View Calendar</span>
-            </Button>
-          </Link>
-          <Link to="/notifications" className="group">
-            <Button variant="outline" className="w-full h-20 flex-col gap-2 group-hover:bg-accent/10 relative">
-              <Bell className="w-6 h-6" />
-              <span className="text-sm">Notifications</span>
-              {unreadCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs p-0"
-                >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
+          <div className="grid grid-cols-4 md:grid-cols-2 gap-4">
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-foreground">{trackedMarkets.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">All Markets</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{interestedCount}</div>
+              <div className="text-sm text-muted-foreground mt-1">Interested</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">{appliedCount}</div>
+              <div className="text-sm text-muted-foreground mt-1">Applied</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
+              <div className="text-sm text-muted-foreground mt-1">Approved</div>
+            </Card>
+          </div>
         </div>
       </Card>
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Applications */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Recent Applications</h2>
-            <Link to="/vendor/applications">
-              <Button variant="ghost" size="sm">View all</Button>
+      {/* Task Metrics and Overdue Section - Updated with proper structure */}
+      <Card variant="default" padding="none">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-foreground">Task Overview</h2>
+            <Link to="/vendor/todos" className="block">
+              <Button size="sm" className="h-9">
+                <Plus className="h-4 w-4 mr-2" />
+                View All Tasks
+              </Button>
             </Link>
           </div>
-          <div className="space-y-3">
-            {recentApplications.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No applications yet</p>
-            ) : (
-              recentApplications.map((application) => (
-                <div key={application.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">{application.market.name}</p>
-                    <p className="text-sm text-muted-foreground">{application.vendor.firstName} {application.vendor.lastName}</p>
-                  </div>
-                  <Badge 
-                    variant={
-                      application.status === 'approved' ? 'success' :
-                      application.status === 'rejected' ? 'destructive' : 'outline'
-                    }
-                  >
-                    {application.status}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
 
-        {/* Recent Todos */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Upcoming Tasks</h2>
-            <Link to="/vendor/todos">
-              <Button variant="ghost" size="sm">View all</Button>
-            </Link>
+          {/* Task Metrics - Compact 4-column layout */}
+          <div className="grid grid-cols-4 md:grid-cols-2 gap-4 mb-6">
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-foreground">{todos.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">Total</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-green-600">{completedTodos.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">Done</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-red-600">{overdueTodos.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">Overdue</div>
+            </Card>
+            <Card variant="default" padding="sm" className="text-center">
+              <div className="text-2xl font-bold text-foreground">{pendingTodos.length}</div>
+              <div className="text-sm text-muted-foreground mt-1">Pending</div>
+            </Card>
           </div>
-          <div className="space-y-3">
-            {recentTodos.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No pending tasks</p>
-            ) : (
-              recentTodos.map((todo) => (
-                <div key={todo.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">{todo.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {todo.dueDate ? (
-                        new Date(todo.dueDate) < new Date() ? (
-                          <span className="text-red-600 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Overdue
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            Due {new Date(todo.dueDate).toLocaleDateString()}
-                          </span>
-                        )
-                      ) : (
-                        'No due date'
+
+          <h3 className="text-base font-semibold text-foreground mb-3">Overdue Tasks</h3>
+          
+          {overdueTodos.length === 0 ? (
+            <div className="text-center py-6">
+              <CheckSquare className="w-12 h-12 text-green-200 mx-auto mb-4" />
+              <p className="text-muted-foreground">No overdue tasks</p>
+              <p className="text-sm text-muted-foreground mt-1">All tasks are up to date!</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {overdueTodos.slice(0, 5).map((todo) => {
+                const days = todo.dueDate ? Math.ceil((new Date(todo.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null
+                const marketName = todo.marketId ? trackedMarkets.find(m => m.id === todo.marketId)?.name || 'General' : 'General'
+                
+                return (
+                  <div key={todo.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px] border-red-200 bg-red-50/50">
+                    {/* Checkbox with market indicator */}
+                    <div className="flex-shrink-0 relative">
+                      <button
+                        onClick={() => {
+                          toggleTodo(todo.id)
+                          setOpenMenuId(null)
+                        }}
+                        className={`w-6 h-6 rounded-md flex items-center justify-center transition-all border-2 ${todo.completed ? 'bg-accent border-accent text-white' : 'border-muted-foreground/40 hover:border-accent bg-white'}`}
+                        title="Complete task"
+                      >
+                        {todo.completed && <Check className="w-4 h-4" />}
+                      </button>
+                      {todo.marketId && (
+                        <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full border border-background" style={{backgroundColor: getMarketColor(todo.marketId)}} />
                       )}
-                    </p>
-                  </div>
-                  <Badge variant={
-                    todo.priority === 'urgent' ? 'destructive' :
-                    todo.priority === 'high' ? 'default' : 'outline'
-                  }>
-                    {todo.priority}
-                  </Badge>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* Recent Expenses & Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Expenses */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Recent Expenses</h2>
-            <Link to="/vendor/expenses">
-              <Button variant="ghost" size="sm">View all</Button>
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentExpenses.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No expenses recorded</p>
-            ) : (
-              recentExpenses.map((expense) => (
-                <div key={expense.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">{expense.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(expense.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-foreground">{formatCurrency(expense.amount)}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {expense.category.replace('-', ' ')}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* Recent Notifications */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Recent Notifications</h2>
-            <Link to="/notifications">
-              <Button variant="ghost" size="sm">View all</Button>
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentNotifications.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No notifications</p>
-            ) : (
-              recentNotifications.map((notification: any) => (
-                <div key={notification.id} className={cn(
-                  "p-3 border rounded-lg",
-                  !notification.read && "bg-blue-50 border-l-4 border-l-blue-500"
-                )}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground text-sm">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
                     </div>
-                    {!notification.read && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+  
+                    {/* Title and market name */}
+                    <div className="flex-1 min-w-0">
+                      <p className="block text-sm font-medium truncate text-foreground text-red-600">
+                        {todo.title}
+                      </p>
+                      <p className="block text-xs text-muted-foreground truncate">
+                        {marketName}
+                      </p>
+                    </div>
+  
+                    {/* Due date pill */}
+                    {todo.dueDate && (
+                      <span className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0 bg-red-100 text-red-700 font-medium">
+                        <Clock className="w-3 h-3" />
+                        {days !== null && days < 0 ? `${Math.abs(days)}d overdue` : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </span>
                     )}
+  
+                    {/* Priority pill for urgent tasks */}
+                    {todo.priority === 'urgent' && (
+                      <span className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0 bg-red-100 text-red-700">
+                        <AlertCircle className="w-3 h-3" />
+                      </span>
+                    )}
+  
+                    {/* Actions menu */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setOpenMenuId(openMenuId === todo.id ? null : todo.id)}
+                        className="p-1.5 rounded hover:bg-surface/50 touch-manipulation"
+                        title="More actions"
+                      >
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                      
+                      {openMenuId === todo.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+                          <button
+                            onClick={() => handleEdit(todo)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(todo.id)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Edit Task Modal */}
+      {showEditModal && editingTodo && (
+        <Modal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingTodo(null)
+          }}
+          title="Edit Task"
+          showCloseButton={true}
+          size="sm"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
+              <Input
+                type="text"
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                placeholder="Task title"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
+              <textarea
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Add details..."
+                rows={2}
+                className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
+              <select
+                value={editPriority}
+                onChange={e => setEditPriority(e.target.value)}
+                className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Market</label>
+              <select
+                value={editMarketId || ''}
+                onChange={e => setEditMarketId(e.target.value || null)}
+                className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+              >
+                <option value="">General</option>
+                {trackedMarkets.map(market => (
+                  <option key={market.id} value={market.id}>{market.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Due Date</label>
+              <input
+                type="date"
+                value={editDueDate}
+                onChange={e => setEditDueDate(e.target.value)}
+                className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-4 border-t">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleSaveEdit}
+              >
+                Save
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => {
+                  handleDelete(editingTodo.id)
+                  setShowEditModal(false)
+                  setEditingTodo(null)
+                }}
+              >
+                Delete
+              </Button>
+            </div>
           </div>
-        </Card>
-      </div>
+        </Modal>
+      )}
+
     </div>
   )
 }
