@@ -6,6 +6,8 @@ import {
   AdminFilters,
   SystemSettings,
   EmailTemplate,
+  EmailConfig,
+  EmailTemplatePreview,
   AuditLog,
   BulkOperation,
   User,
@@ -744,26 +746,154 @@ export const adminApi = {
     })
   },
 
+  // Email Configuration
+  async getEmailConfig(): Promise<ApiResponse<EmailConfig>> {
+    if (isMockMode) {
+      await delay(300)
+      const mockConfig: EmailConfig = {
+        id: '1',
+        host: 'rumfor.com',
+        port: 465,
+        secure: true,
+        username: 'noreply@rumfor.com',
+        password: '********',
+        fromEmail: 'noreply@rumfor.com',
+        fromName: 'RumFor Market Tracker',
+        replyTo: '',
+        isActive: true,
+        lastTestedAt: '2023-12-01T10:00:00Z',
+        lastTestStatus: 'success',
+        updatedAt: '2023-11-01T00:00:00Z',
+        createdAt: '2023-01-01T00:00:00Z'
+      }
+      return { success: true, data: mockConfig }
+    } else {
+      const response = await httpClient.get<ApiResponse<EmailConfig>>('/v1/admin/email/config')
+      return response
+    }
+  },
+
+  async updateEmailConfig(config: Partial<EmailConfig>): Promise<ApiResponse<EmailConfig>> {
+    if (isMockMode) {
+      await delay(400)
+      return { success: true, data: { ...config, id: '1' } as EmailConfig }
+    } else {
+      const response = await httpClient.post<ApiResponse<EmailConfig>>('/v1/admin/email/config', config)
+      return response
+    }
+  },
+
+  async testEmailConnection(): Promise<ApiResponse<{ success: boolean; message: string }>> {
+    if (isMockMode) {
+      await delay(800)
+      return { success: true, data: { success: true, message: 'Email connection successful' } }
+    } else {
+      const response = await httpClient.post<ApiResponse<{ success: boolean; message: string }>>('/v1/admin/email/test-connection', {})
+      return response
+    }
+  },
+
+  async sendTestEmail(to: string, testConfig?: Partial<EmailConfig>): Promise<ApiResponse<{ success: boolean; messageId?: string; message?: string }>> {
+    if (isMockMode) {
+      await delay(1000)
+      return { success: true, data: { success: true, messageId: 'test-msg-' + Date.now() } }
+    } else {
+      const response = await httpClient.post<ApiResponse<{ success: boolean; messageId?: string; message?: string }>>('/v1/admin/email/send-test', { to, testConfig })
+      return response
+    }
+  },
+
   // Email Templates
-  async getEmailTemplates(): Promise<ApiResponse<EmailTemplate[]>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const templates: EmailTemplate[] = [
-          {
-            id: '1',
-            name: 'Welcome Email',
-            subject: 'Welcome to RumFor!',
-            content: 'Hello {{firstName}}, welcome to our platform!',
-            variables: ['firstName', 'lastName'],
-            category: 'welcome',
-            isActive: true,
-            createdAt: '2023-01-01T00:00:00Z',
-            updatedAt: '2023-01-01T00:00:00Z'
-          }
-        ]
-        resolve({ success: true, data: templates })
-      }, 300)
-    })
+  async getEmailTemplates(filters?: { category?: string; active?: boolean }): Promise<ApiResponse<EmailTemplate[]>> {
+    if (isMockMode) {
+      await delay(300)
+      const templates: EmailTemplate[] = [
+        {
+          id: '1',
+          slug: 'welcome',
+          name: 'Welcome Email',
+          description: 'Welcome email for new users',
+          subject: 'Welcome to RumFor Market Tracker, {{firstName}}!',
+          htmlContent: '<div>Welcome {{firstName}}!</div>',
+          textContent: 'Welcome {{firstName}}!',
+          variables: [
+            { name: 'firstName', description: 'User first name', example: 'John', required: true },
+            { name: 'lastName', description: 'User last name', example: 'Doe', required: true }
+          ],
+          category: 'authentication',
+          isActive: true,
+          isSystem: true,
+          createdAt: '2023-01-01T00:00:00Z',
+          updatedAt: '2023-01-01T00:00:00Z'
+        }
+      ]
+      return { success: true, data: templates }
+    } else {
+      const queryParams = new URLSearchParams()
+      if (filters?.category) queryParams.append('category', filters.category)
+      if (filters?.active !== undefined) queryParams.append('active', String(filters.active))
+      
+      const response = await httpClient.get<ApiResponse<EmailTemplate[]>>(`/v1/admin/email/templates?${queryParams}`)
+      return response
+    }
+  },
+
+  async getEmailTemplate(id: string): Promise<ApiResponse<EmailTemplate>> {
+    if (isMockMode) {
+      await delay(200)
+      return { success: false, error: 'Template not found' } as any
+    } else {
+      const response = await httpClient.get<ApiResponse<EmailTemplate>>(`/v1/admin/email/templates/${id}`)
+      return response
+    }
+  },
+
+  async createEmailTemplate(template: Partial<EmailTemplate>): Promise<ApiResponse<EmailTemplate>> {
+    if (isMockMode) {
+      await delay(400)
+      return { success: true, data: { ...template, id: Date.now().toString() } as EmailTemplate }
+    } else {
+      const response = await httpClient.post<ApiResponse<EmailTemplate>>('/v1/admin/email/templates', template)
+      return response
+    }
+  },
+
+  async updateEmailTemplate(id: string, template: Partial<EmailTemplate>): Promise<ApiResponse<EmailTemplate>> {
+    if (isMockMode) {
+      await delay(400)
+      return { success: true, data: { ...template, id } as EmailTemplate }
+    } else {
+      const response = await httpClient.put<ApiResponse<EmailTemplate>>(`/v1/admin/email/templates/${id}`, template)
+      return response
+    }
+  },
+
+  async deleteEmailTemplate(id: string): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(300)
+      return { success: true, message: 'Template deleted' }
+    } else {
+      const response = await httpClient.delete<ApiResponse<any>>(`/v1/admin/email/templates/${id}`)
+      return response
+    }
+  },
+
+  async previewEmailTemplate(id: string, sampleData?: Record<string, string>): Promise<ApiResponse<EmailTemplatePreview>> {
+    if (isMockMode) {
+      await delay(500)
+      return {
+        success: true,
+        data: {
+          subject: 'Preview Subject',
+          html: '<div>Preview HTML</div>',
+          text: 'Preview Text',
+          variables: sampleData || {}
+        }
+      }
+    } else {
+      const response = await httpClient.post<ApiResponse<EmailTemplatePreview>>(`/v1/admin/email/templates/${id}/preview`, { sampleData })
+      return response
+    }
   },
 
   // Contact Form Submission

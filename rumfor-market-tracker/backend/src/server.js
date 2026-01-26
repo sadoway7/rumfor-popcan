@@ -46,6 +46,7 @@ const hashtagRoutes = require('./routes/hashtags')
 const adminRoutes = require('./routes/admin')
 const notificationRoutes = require('./routes/notifications')
 const ralphCardsRoutes = require('./routes/ralphCards')
+const emailRoutes = require('./routes/email')
 
 const app = express()
 
@@ -269,6 +270,7 @@ app.use('/api/comments', commentRoutes)
 app.use('/api/photos', uploadRateLimiter, photoRoutes)
 app.use('/api/hashtags', hashtagRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/admin/email', emailRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/ralph/cards', ralphCardsRoutes)
 
@@ -290,6 +292,7 @@ app.use('/api/v1/comments', commentRoutes)
 app.use('/api/v1/photos', uploadRateLimiter, photoRoutes)
 app.use('/api/v1/hashtags', hashtagRoutes)
 app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/admin/email', emailRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1/ralph/cards', ralphCardsRoutes)
 
