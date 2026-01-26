@@ -7,8 +7,10 @@ import {
   SystemSettings,
   BulkOperation,
   EmailTemplate,
+  EmailConfig,
   AuditLog,
-  AdminFilters
+  AdminFilters,
+  ApiResponse
 } from '@/types'
 import { adminApi } from './adminApi'
 
@@ -56,6 +58,12 @@ interface AdminStoreState {
   // Email Templates
   emailTemplates: EmailTemplate[]
   isLoadingTemplates: boolean
+
+  // Email Configuration
+  emailConfig: EmailConfig | null
+  isLoadingEmailConfig: boolean
+  isTestingEmailConnection: boolean
+  isSendingTestEmail: boolean
 
   // Audit Logs
   auditLogs: AuditLog[]
@@ -110,6 +118,12 @@ interface AdminStore extends AdminStoreState {
   // Email templates methods
   fetchEmailTemplates: () => Promise<void>
 
+  // Email configuration methods
+  fetchEmailConfig: () => Promise<void>
+  updateEmailConfig: (config: Partial<EmailConfig>) => Promise<void>
+  testEmailConnection: () => Promise<ApiResponse<{ success: boolean; message: string }>>
+  sendTestEmail: (to: string, testConfig?: Partial<EmailConfig>) => Promise<ApiResponse<{ success: boolean; messageId?: string; message?: string }>>
+
   // Audit logs methods
   fetchAuditLogs: (filters?: any) => Promise<void>
 
@@ -160,6 +174,12 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
 
   emailTemplates: [],
   isLoadingTemplates: false,
+
+  // Email Configuration
+  emailConfig: null,
+  isLoadingEmailConfig: false,
+  isTestingEmailConnection: false,
+  isSendingTestEmail: false,
 
   auditLogs: [],
   auditPagination: {
@@ -401,6 +421,57 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       }
     } catch (error) {
       set({ isLoadingTemplates: false })
+      throw error
+    }
+  },
+
+  // Email configuration methods
+  fetchEmailConfig: async () => {
+    try {
+      set({ isLoadingEmailConfig: true })
+      const response = await adminApi.getEmailConfig()
+      if (response.success) {
+        set({ emailConfig: response.data, isLoadingEmailConfig: false })
+      }
+    } catch (error) {
+      set({ isLoadingEmailConfig: false })
+      throw error
+    }
+  },
+
+  updateEmailConfig: async (config) => {
+    try {
+      set({ isLoadingEmailConfig: true })
+      const response = await adminApi.updateEmailConfig(config)
+      if (response.success) {
+        set({ emailConfig: response.data, isLoadingEmailConfig: false })
+      }
+    } catch (error) {
+      set({ isLoadingEmailConfig: false })
+      throw error
+    }
+  },
+
+  testEmailConnection: async () => {
+    try {
+      set({ isTestingEmailConnection: true })
+      const response = await adminApi.testEmailConnection()
+      set({ isTestingEmailConnection: false })
+      return response
+    } catch (error) {
+      set({ isTestingEmailConnection: false })
+      throw error
+    }
+  },
+
+  sendTestEmail: async (to, testConfig) => {
+    try {
+      set({ isSendingTestEmail: true })
+      const response = await adminApi.sendTestEmail(to, testConfig)
+      set({ isSendingTestEmail: false })
+      return response
+    } catch (error) {
+      set({ isSendingTestEmail: false })
       throw error
     }
   },

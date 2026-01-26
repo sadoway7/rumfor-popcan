@@ -4,17 +4,63 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
-import { useAdminSystemSettings, useAdminEmailTemplates } from '@/features/admin/hooks/useAdmin'
+import { useAdminSystemSettings, useAdminEmailTemplates, useAdminEmailConfig } from '@/features/admin/hooks/useAdmin'
 import { Settings, Mail, Shield, Bell, Palette, Database, Save, RefreshCw } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 export function AdminSettingsPage() {
   const { systemSettings, isLoadingSettings, refreshSettings, handleUpdateSetting } = useAdminSystemSettings()
   const { emailTemplates, isLoadingTemplates, refreshTemplates } = useAdminEmailTemplates()
+  const {
+    emailConfig,
+    isLoadingEmailConfig,
+    isTestingEmailConnection,
+    isSendingTestEmail,
+    refreshEmailConfig,
+    handleUpdateEmailConfig,
+    handleTestConnection,
+    handleSendTestEmail
+  } = useAdminEmailConfig()
   const [activeTab, setActiveTab] = useState<'general' | 'moderation' | 'notifications' | 'email' | 'appearance' | 'security'>('general')
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [emailFormData, setEmailFormData] = useState({
+    host: '',
+    port: 465,
+    secure: true,
+    username: '',
+    password: '',
+    fromEmail: '',
+    fromName: 'RumFor Market Tracker',
+    replyTo: '',
+    isActive: true
+  })
+  const [testEmail, setTestEmail] = useState('')
   const { addToast } = useToast()
+
+  // Load email config when component mounts or when tab changes to email
+  useEffect(() => {
+    if (activeTab === 'email') {
+      refreshEmailConfig()
+    }
+  }, [activeTab, refreshEmailConfig])
+
+  // Update form data when email config is loaded
+  useEffect(() => {
+    if (emailConfig) {
+      setEmailFormData({
+        host: emailConfig.host || '',
+        port: emailConfig.port || 465,
+        secure: emailConfig.secure || true,
+        username: emailConfig.username || '',
+        password: '', // Don't populate password for security
+        fromEmail: emailConfig.fromEmail || '',
+        fromName: emailConfig.fromName || 'RumFor Market Tracker',
+        replyTo: emailConfig.replyTo || '',
+        isActive: emailConfig.isActive || true
+      })
+    }
+  }, [emailConfig])
 
   const handleSettingChange = useCallback((key: string, value: string) => {
     setUnsavedChanges(true)
@@ -49,7 +95,7 @@ export function AdminSettingsPage() {
     { id: 'general', label: 'General', icon: Settings },
     { id: 'moderation', label: 'Moderation', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'email', label: 'Email Templates', icon: Mail },
+    { id: 'email', label: 'Email Settings', icon: Mail },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'security', label: 'Security', icon: Database }
   ] as const
@@ -210,8 +256,261 @@ export function AdminSettingsPage() {
     </div>
   )
 
+  const handleEmailFormChange = (field: string, value: any) => {
+    setEmailFormData(prev => ({ ...prev, [field]: value }))
+    setUnsavedChanges(true)
+  }
+
+  const handleSaveEmailConfig = async () => {
+    try {
+      setIsSaving(true)
+      await handleUpdateEmailConfig(emailFormData)
+      setUnsavedChanges(false)
+      addToast({
+        variant: 'success',
+        title: 'Email Configuration Saved',
+        description: 'Email configuration has been saved successfully.'
+      })
+    } catch (error) {
+      addToast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Failed to save email configuration. Please try again.'
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleTestEmailConnection = async () => {
+    try {
+      const result = await handleTestConnection()
+      if (result.success) {
+        addToast({
+          variant: 'success',
+          title: 'Connection Test Successful',
+          description: 'Email server connection is working.'
+        })
+      } else {
+        addToast({
+          variant: 'destructive',
+          title: 'Connection Test Failed',
+          description: result.message || 'Failed to connect to email server.'
+        })
+      }
+    } catch (error) {
+      addToast({
+        variant: 'destructive',
+        title: 'Connection Test Failed',
+        description: 'Failed to test email connection.'
+      })
+    }
+  }
+
+  const handleSendTestEmailClick = async () => {
+    if (!testEmail) {
+      addToast({
+        variant: 'destructive',
+        title: 'Validation Error',
+        description: 'Please enter a valid email address.'
+      })
+      return
+    }
+
+    try {
+      const result = await handleSendTestEmail(testEmail, emailFormData)
+      if (result.success) {
+        addToast({
+          variant: 'success',
+          title: 'Test Email Sent',
+          description: `Test email sent successfully to ${testEmail}`
+        })
+      } else {
+        addToast({
+          variant: 'destructive',
+          title: 'Failed to Send Test Email',
+          description: result.message || 'Failed to send test email.'
+        })
+      }
+    } catch (error) {
+      addToast({
+        variant: 'destructive',
+        title: 'Failed to Send Test Email',
+        description: 'An error occurred while sending test email.'
+      })
+    }
+  }
+
   const renderEmailTab = () => (
     <div className="space-y-6">
+      {/* Email Configuration */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Email Configuration</h3>
+          <Button
+            variant="outline"
+            onClick={refreshEmailConfig}
+            disabled={isLoadingEmailConfig}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingEmailConfig ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">SMTP Host</label>
+              <Input
+                value={emailFormData.host}
+                onChange={(e) => handleEmailFormChange('host', e.target.value)}
+                placeholder="smtp.example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">SMTP Port</label>
+              <Input
+                type="number"
+                value={emailFormData.port}
+                onChange={(e) => handleEmailFormChange('port', parseInt(e.target.value) || 0)}
+                placeholder="465"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">SMTP Username</label>
+              <Input
+                value={emailFormData.username}
+                onChange={(e) => handleEmailFormChange('username', e.target.value)}
+                placeholder="username@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">SMTP Password</label>
+              <Input
+                type="password"
+                value={emailFormData.password}
+                onChange={(e) => handleEmailFormChange('password', e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">From Email</label>
+              <Input
+                type="email"
+                value={emailFormData.fromEmail}
+                onChange={(e) => handleEmailFormChange('fromEmail', e.target.value)}
+                placeholder="noreply@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">From Name</label>
+              <Input
+                value={emailFormData.fromName}
+                onChange={(e) => handleEmailFormChange('fromName', e.target.value)}
+                placeholder="RumFor Market Tracker"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Reply To</label>
+            <Input
+              type="email"
+              value={emailFormData.replyTo}
+              onChange={(e) => handleEmailFormChange('replyTo', e.target.value)}
+              placeholder="support@example.com"
+            />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="secure"
+                checked={emailFormData.secure}
+                onChange={(e) => handleEmailFormChange('secure', e.target.checked)}
+                className="rounded border-border"
+              />
+              <label htmlFor="secure" className="text-sm font-medium">Use SSL/TLS</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={emailFormData.isActive}
+                onChange={(e) => handleEmailFormChange('isActive', e.target.checked)}
+                className="rounded border-border"
+              />
+              <label htmlFor="isActive" className="text-sm font-medium">Email System Active</label>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSaveEmailConfig}
+              disabled={!unsavedChanges || isSaving || isLoadingEmailConfig}
+            >
+              <Save className={`h-4 w-4 mr-2 ${isSaving ? 'animate-spin' : ''}`} />
+              {isSaving ? 'Saving...' : 'Save Configuration'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleTestEmailConnection}
+              disabled={isTestingEmailConnection}
+            >
+              {isTestingEmailConnection ? 'Testing...' : 'Test Connection'}
+            </Button>
+          </div>
+
+          <div className="border-t pt-4 mt-4">
+            <h4 className="font-medium mb-2">Send Test Email</h4>
+            <div className="flex items-center gap-2">
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="Enter test email address"
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSendTestEmailClick}
+                disabled={isSendingTestEmail || !testEmail}
+              >
+                {isSendingTestEmail ? 'Sending...' : 'Send Test Email'}
+              </Button>
+            </div>
+          </div>
+
+          {emailConfig && (
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-medium mb-2">Connection Status</h4>
+              <div className="flex items-center gap-2">
+                <Badge variant={emailConfig.lastTestStatus === 'success' ? 'default' : 'destructive'}>
+                  {emailConfig.lastTestStatus === 'success' ? 'Connected' : 'Connection Failed'}
+                </Badge>
+                {emailConfig.lastTestedAt && (
+                  <span className="text-sm text-muted-foreground">
+                    Last tested: {new Date(emailConfig.lastTestedAt).toLocaleString()}
+                  </span>
+                )}
+              </div>
+              {emailConfig.lastTestError && (
+                <p className="text-sm text-destructive mt-2">
+                  Error: {emailConfig.lastTestError}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Email Templates */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Email Templates</h3>

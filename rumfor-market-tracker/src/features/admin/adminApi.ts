@@ -768,7 +768,7 @@ export const adminApi = {
       }
       return { success: true, data: mockConfig }
     } else {
-      const response = await httpClient.get<ApiResponse<EmailConfig>>('/v1/admin/email/config')
+      const response = await httpClient.get<ApiResponse<EmailConfig>>('/admin/email/config')
       return response
     }
   },
@@ -778,7 +778,7 @@ export const adminApi = {
       await delay(400)
       return { success: true, data: { ...config, id: '1' } as EmailConfig }
     } else {
-      const response = await httpClient.post<ApiResponse<EmailConfig>>('/v1/admin/email/config', config)
+      const response = await httpClient.post<ApiResponse<EmailConfig>>('/admin/email/config', config)
       return response
     }
   },
@@ -788,7 +788,7 @@ export const adminApi = {
       await delay(800)
       return { success: true, data: { success: true, message: 'Email connection successful' } }
     } else {
-      const response = await httpClient.post<ApiResponse<{ success: boolean; message: string }>>('/v1/admin/email/test-connection', {})
+      const response = await httpClient.post<ApiResponse<{ success: boolean; message: string }>>('/admin/email/test-connection', {})
       return response
     }
   },
@@ -798,7 +798,7 @@ export const adminApi = {
       await delay(1000)
       return { success: true, data: { success: true, messageId: 'test-msg-' + Date.now() } }
     } else {
-      const response = await httpClient.post<ApiResponse<{ success: boolean; messageId?: string; message?: string }>>('/v1/admin/email/send-test', { to, testConfig })
+      const response = await httpClient.post<ApiResponse<{ success: boolean; messageId?: string; message?: string }>>('/admin/email/send-test', { to, testConfig })
       return response
     }
   },
@@ -833,7 +833,7 @@ export const adminApi = {
       if (filters?.category) queryParams.append('category', filters.category)
       if (filters?.active !== undefined) queryParams.append('active', String(filters.active))
       
-      const response = await httpClient.get<ApiResponse<EmailTemplate[]>>(`/v1/admin/email/templates?${queryParams}`)
+      const response = await httpClient.get<ApiResponse<EmailTemplate[]>>(`/admin/email/templates?${queryParams}`)
       return response
     }
   },

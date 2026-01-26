@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
 import { useAdminStore } from '../adminStore'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { AdminFilters } from '@/types'
+import { AdminFilters, EmailConfig } from '@/types'
 
 // Main admin hook
 export function useAdmin() {
@@ -314,6 +314,47 @@ export function useAdminEmailTemplates() {
     emailTemplates,
     isLoadingTemplates,
     refreshTemplates
+  }
+}
+
+// Email configuration hook
+export function useAdminEmailConfig() {
+  const {
+    emailConfig,
+    isLoadingEmailConfig,
+    isTestingEmailConnection,
+    isSendingTestEmail,
+    fetchEmailConfig,
+    updateEmailConfig,
+    testEmailConnection,
+    sendTestEmail
+  } = useAdminStore()
+
+  const refreshEmailConfig = useCallback(() => {
+    fetchEmailConfig()
+  }, [fetchEmailConfig])
+
+  const handleUpdateEmailConfig = useCallback(async (config: Partial<EmailConfig>) => {
+    await updateEmailConfig(config)
+  }, [updateEmailConfig])
+
+  const handleTestConnection = useCallback(async () => {
+    return await testEmailConnection()
+  }, [testEmailConnection])
+
+  const handleSendTestEmail = useCallback(async (to: string, testConfig?: Partial<EmailConfig>) => {
+    return await sendTestEmail(to, testConfig)
+  }, [sendTestEmail])
+
+  return {
+    emailConfig,
+    isLoadingEmailConfig,
+    isTestingEmailConnection,
+    isSendingTestEmail,
+    refreshEmailConfig,
+    handleUpdateEmailConfig,
+    handleTestConnection,
+    handleSendTestEmail
   }
 }
 

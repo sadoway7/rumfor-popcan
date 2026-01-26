@@ -42,7 +42,7 @@ export function PasswordRecoveryPage() {
     if (error) {
       clearErrors()
     }
-  }, [watchedEmail, clearErrors])
+  }, [watchedEmail]) // Removed clearErrors from dependencies to prevent infinite loop
 
   React.useEffect(() => {
     // Clear success state when component unmounts
