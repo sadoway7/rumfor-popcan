@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Button, Card, CardHeader, CardTitle, CardContent, Input, Textarea, Select } from '@/components/ui'
-import { ArrowLeft, MapPin, Calendar, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Clock, Lock, Plus, Trash2, MapPin, Calendar } from 'lucide-react'
+import { useMarket } from '@/features/markets/hooks/useMarkets'
+import { useAuthStore } from '@/features/auth/authStore'
 import { getCategoryDefaultImage } from '@/config/constants'
-import { useCreateMarketMutation } from '@/features/markets/hooks/useMarkets'
+import { marketsApi } from '@/features/markets/marketsApi'
 
 const marketCategories = [
   { value: 'farmers-market', label: 'Farmers Market' },
@@ -18,15 +20,12 @@ const marketCategories = [
   { value: 'vintage-antique', label: 'Vintage & Antique' },
 ]
 
-const vendorAttendanceOptions = [
-  { value: 'attending', label: 'I\'m attending this market' },
-  { value: 'interested', label: 'I\'m interested in attending' },
-  { value: 'not-attending', label: 'Not attending (or no longer attending)' },
-]
-
-export function VendorCreateMarketPage() {
+export function VendorEditMarketPage() {
+  const { marketId } = useParams<{ marketId: string }>()
   const navigate = useNavigate()
-  const createMarketMutation = useCreateMarketMutation()
+  const { user } = useAuthStore()
+  const { market, isLoading, error } = useMarket(marketId || '')
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -37,24 +36,80 @@ export function VendorCreateMarketPage() {
     city: '',
     state: '',
     zipCode: '',
-    latitude: '',
-    longitude: '',
-    // New: Array of event dates
     eventDates: [] as Array<{
       id: string
-      date: string      // YYYY-MM-DD
-      startTime: string // HH:mm
-      endTime: string   // HH:mm
+      date: string
+      startTime: string
+      endTime: string
     }>,
-    vendorAttendance: '',
     contactEmail: '',
     contactPhone: '',
     website: '',
     facebook: '',
     instagram: '',
-    otherLink: '',
   })
-
+  
+  // Calculate time remaining
+  const [timeRemaining, setTimeRemaining] = useState<string>('')
+  const [canEdit, setCanEdit] = useState(false)
+  
+  useEffect(() => {
+    if (market) {
+      // Populate form with market data
+      setFormData({
+        name: market.name,
+        category: market.category,
+        description: market.description || '',
+        comments: '', // Not stored yet
+        address: market.location.address,
+        city: market.location.city,
+        state: market.location.state,
+        zipCode: market.location.zipCode || '',
+        eventDates: market.schedule?.map((s, i) => ({
+          id: `event-${i}`,
+          date: s.startDate?.split('T')[0] || '',
+          startTime: s.startTime,
+          endTime: s.endTime
+        })) || [],
+        contactEmail: market.contact?.email || '',
+        contactPhone: market.contact?.phone || '',
+        website: market.contact?.website || '',
+        facebook: market.contact?.socialMedia?.facebook || '',
+        instagram: market.contact?.socialMedia?.instagram || '',
+      })
+      
+      // Check if editable
+      if (market.editableUntil) {
+        const editUntil = new Date(market.editableUntil)
+        const now = new Date()
+        setCanEdit(now < editUntil)
+        
+        if (now < editUntil) {
+          // Update countdown
+          const updateTimer = () => {
+            const remaining = editUntil.getTime() - Date.now()
+            if (remaining <= 0) {
+              setTimeRemaining('Editing period has ended')
+              setCanEdit(false)
+            } else {
+              const hours = Math.floor(remaining / (1000 * 60 * 60))
+              const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+              setTimeRemaining(`${hours}h ${minutes}m remaining to edit`)
+            }
+          }
+          updateTimer()
+          const interval = setInterval(updateTimer, 60000)
+          return () => clearInterval(interval)
+        }
+      } else {
+        setCanEdit(true)
+      }
+    }
+  }, [market])
+  
+  // Check ownership
+  const isOwner = market?.createdBy === user?.id
+  
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -89,68 +144,65 @@ export function VendorCreateMarketPage() {
       )
     }))
   }
-
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    )
+  }
+  
+  if (error || !market) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <p className="text-destructive">Market not found or you don't have access.</p>
+        <Link to="/my-markets" className="text-accent hover:underline">
+          Back to My Markets
+        </Link>
+      </div>
+    )
+  }
+  
+  if (!isOwner) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <p className="text-destructive">You can only edit markets you created.</p>
+        <Link to="/my-markets" className="text-accent hover:underline">
+          Back to My Markets
+        </Link>
+      </div>
+    )
+  }
+  
+  if (!canEdit) {
+    return (
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Lock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-xl font-semibold mb-2">Editing Period Ended</h2>
+            <p className="text-muted-foreground mb-4">
+              The 24-hour editing window for this market has expired.
+              The market is now locked for security.
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              If you need to make changes, please contact support.
+            </p>
+            <Link to={`/markets/${marketId}`}>
+              <Button>View Market</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Validation: Check required fields
-    if (!formData.name.trim()) {
-      alert('Market name is required.')
-      return
-    }
-    if (!formData.category) {
-      alert('Market category is required.')
-      return
-    }
-    if (!formData.address.trim()) {
-      alert('Street address is required.')
-      return
-    }
-    if (!formData.city.trim()) {
-      alert('City is required.')
-      return
-    }
-    if (!formData.state.trim()) {
-      alert('State is required.')
-      return
-    }
-    if (formData.eventDates.length === 0) {
-      alert('Please add at least one market date.')
-      return
-    }
-    // Validate each event date
-    for (const event of formData.eventDates) {
-      if (!event.date) {
-        alert('Please fill in all event dates.')
-        return
-      }
-      if (!event.startTime) {
-        alert('Please fill in start times for all events.')
-        return
-      }
-      if (!event.endTime) {
-        alert('Please fill in end times for all events.')
-        return
-      }
-    }
-    if (!formData.vendorAttendance) {
-      alert('Please specify your attendance status.')
-      return
-    }
-
-    // Validation: Check if at least one link is provided
-    const hasLink = formData.website.trim() || formData.facebook.trim() || formData.instagram.trim() || formData.otherLink.trim()
-    if (!hasLink) {
-      alert('Please provide at least one link to the market\'s official page or social media.')
-      return
-    }
-
     setIsSubmitting(true)
-
+    
     try {
-      // Get default image based on category
-      const defaultImage = getCategoryDefaultImage(formData.category)
-      
       // Transform event dates to backend format
       const events = formData.eventDates.map(event => ({
         startDate: new Date(event.date).toISOString(),
@@ -160,20 +212,17 @@ export function VendorCreateMarketPage() {
           end: event.endTime
         }
       }))
-      
-      const marketData = {
+
+      const updateData = {
         name: formData.name,
         category: formData.category,
         description: formData.description,
-        comments: formData.comments,
         location: {
           address: formData.address,
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
           country: 'USA',
-          latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-          longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
         },
         dates: {
           type: 'one-time' as const,
@@ -182,55 +231,52 @@ export function VendorCreateMarketPage() {
         contact: {
           email: formData.contactEmail || undefined,
           phone: formData.contactPhone || undefined,
-          website: formData.website || formData.facebook || formData.instagram || formData.otherLink || undefined,
+          website: formData.website || undefined,
           socialMedia: {
             facebook: formData.facebook || undefined,
             instagram: formData.instagram || undefined,
           }
         },
-        images: [defaultImage],
-        vendorAttendance: formData.vendorAttendance,
-        marketType: 'vendor-created' as const,
-        status: 'active',
-        editableUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
       }
+
+      await marketsApi.updateMarket(marketId!, updateData)
       
-      // Create the market
-      const newMarket = await createMarketMutation.mutateAsync(marketData)
-      
-      // Show success with edit window notice
-      navigate('/my-markets', {
-        state: {
-          message: 'Market created successfully! You have 24 hours to make any edits.',
-          marketId: newMarket?.id
-        }
+      navigate(`/markets/${marketId}`, {
+        state: { message: 'Market updated successfully!' }
       })
-      
     } catch (error) {
-      console.error('Failed to create market:', error)
-      alert('Failed to create market. Please try again.')
+      console.error('Failed to update market:', error)
+      alert('Failed to update market. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
   }
-
+  
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
-      {/* Header */}
+      {/* Header with Timer */}
       <div className="mb-6">
         <Link
-          to="/markets"
+          to={`/markets/${marketId}`}
           className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Back to Markets
+          Back to Market
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Create Community Market</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">Edit Market</h1>
+          {timeRemaining && (
+            <div className="flex items-center gap-2 text-warning">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm font-medium">{timeRemaining}</span>
+            </div>
+          )}
+        </div>
         <p className="text-muted-foreground">
-          Share a market with the community. This is an honor-based system where vendors indicate their attendance.
+          You can make changes to your market during the 24-hour window after creation.
         </p>
       </div>
-
+      
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <Card>
@@ -248,7 +294,6 @@ export function VendorCreateMarketPage() {
               <Input
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="e.g., Downtown Farmers Market"
                 required
               />
             </div>
@@ -261,7 +306,6 @@ export function VendorCreateMarketPage() {
                 value={formData.category}
                 onValueChange={(value) => handleChange('category', value)}
                 options={marketCategories}
-                placeholder="Select market category"
               />
             </div>
 
@@ -272,20 +316,7 @@ export function VendorCreateMarketPage() {
               <Textarea
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
-                placeholder="Describe this market and what makes it special..."
                 rows={4}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Additional Comments
-              </label>
-              <Textarea
-                value={formData.comments}
-                onChange={(e) => handleChange('comments', e.target.value)}
-                placeholder="Any additional details, booth fees, special notes, or other information..."
-                rows={3}
               />
             </div>
           </CardContent>
@@ -307,7 +338,6 @@ export function VendorCreateMarketPage() {
               <Input
                 value={formData.address}
                 onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="123 Main Street"
                 required
               />
             </div>
@@ -320,7 +350,6 @@ export function VendorCreateMarketPage() {
                 <Input
                   value={formData.city}
                   onChange={(e) => handleChange('city', e.target.value)}
-                  placeholder="City"
                   required
                 />
               </div>
@@ -331,7 +360,6 @@ export function VendorCreateMarketPage() {
                 <Input
                   value={formData.state}
                   onChange={(e) => handleChange('state', e.target.value)}
-                  placeholder="State"
                   required
                 />
               </div>
@@ -344,17 +372,12 @@ export function VendorCreateMarketPage() {
               <Input
                 value={formData.zipCode}
                 onChange={(e) => handleChange('zipCode', e.target.value)}
-                placeholder="12345"
               />
-            </div>
-
-            <div className="text-sm text-muted-foreground">
-              Tip: Click on the map or provide coordinates for better location accuracy
             </div>
           </CardContent>
         </Card>
 
-        {/* Schedule - New multi-date picker */}
+        {/* Schedule */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -363,12 +386,7 @@ export function VendorCreateMarketPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Add each date this market will occur. You can add multiple dates.
-            </p>
-            
-            {/* Date List */}
-            {formData.eventDates.map((event, index) => (
+            {formData.eventDates.map((event) => (
               <div key={event.id} className="flex gap-4 items-end p-4 bg-surface rounded-lg">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Date</label>
@@ -410,7 +428,6 @@ export function VendorCreateMarketPage() {
               </div>
             ))}
             
-            {/* Add Date Button */}
             <Button
               type="button"
               variant="outline"
@@ -420,16 +437,10 @@ export function VendorCreateMarketPage() {
               <Plus className="h-4 w-4 mr-2" />
               Add Market Date
             </Button>
-            
-            {formData.eventDates.length === 0 && (
-              <p className="text-sm text-destructive">
-                Please add at least one market date.
-              </p>
-            )}
           </CardContent>
         </Card>
 
-        {/* Contact & Details */}
+        {/* Contact Information */}
         <Card>
           <CardHeader>
             <CardTitle>Contact Information</CardTitle>
@@ -444,7 +455,6 @@ export function VendorCreateMarketPage() {
                   type="email"
                   value={formData.contactEmail}
                   onChange={(e) => handleChange('contactEmail', e.target.value)}
-                  placeholder="your.email@example.com"
                 />
               </div>
               <div>
@@ -455,107 +465,54 @@ export function VendorCreateMarketPage() {
                   type="tel"
                   value={formData.contactPhone}
                   onChange={(e) => handleChange('contactPhone', e.target.value)}
-                  placeholder="(555) 123-4567"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Website or Official Link *
+                Website
               </label>
               <Input
                 value={formData.website}
                 onChange={(e) => handleChange('website', e.target.value)}
-                placeholder="https://example.com or link to official market page"
               />
-              <div className="text-xs text-muted-foreground mt-1">
-                At least one official link is required
-              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Facebook (optional)
+                Facebook
               </label>
               <Input
                 value={formData.facebook}
                 onChange={(e) => handleChange('facebook', e.target.value)}
-                placeholder="https://facebook.com/marketpage"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Instagram (optional)
+                Instagram
               </label>
               <Input
                 value={formData.instagram}
                 onChange={(e) => handleChange('instagram', e.target.value)}
-                placeholder="https://instagram.com/marketpage"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Other Link (optional)
-              </label>
-              <Input
-                value={formData.otherLink}
-                onChange={(e) => handleChange('otherLink', e.target.value)}
-                placeholder="Any other relevant link"
               />
             </div>
           </CardContent>
         </Card>
-
-        {/* Vendor Attendance */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Attendance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Will you be attending this market?
-              </label>
-              <div className="space-y-2">
-                {vendorAttendanceOptions.map((option) => (
-                  <label key={option.value} className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="vendorAttendance"
-                      value={option.value}
-                      checked={formData.vendorAttendance === option.value}
-                      onChange={(e) => handleChange('vendorAttendance', e.target.value)}
-                      required
-                    />
-                    <span className="text-sm">{option.label}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="mt-2 text-sm text-muted-foreground">
-                You can always change your attendance status later.
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Submit */}
+        
         <div className="flex justify-end gap-4">
-          <Link to="/markets">
-            <Button type="button" variant="outline">
-              Cancel
-            </Button>
+          <Link to={`/markets/${marketId}`}>
+            <Button type="button" variant="outline">Cancel</Button>
           </Link>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Creating Market...
+                Saving...
               </>
             ) : (
-              'Create Market'
+              'Save Changes'
             )}
           </Button>
         </div>
