@@ -392,6 +392,77 @@ const useUntrackMarketMutation = () => {
   })
 }
 
+// Interface for creating a market
+interface CreateMarketData {
+  name: string
+  category: string
+  description?: string
+  comments?: string
+  location: {
+    address: string
+    city: string
+    state: string
+    zipCode?: string
+    country: string
+    latitude?: number
+    longitude?: number
+  }
+  dates: {
+    type: 'one-time'
+    events: Array<{
+      startDate: string
+      endDate: string
+      time: {
+        start: string
+        end: string
+      }
+    }>
+  }
+  contact?: {
+    email?: string
+    phone?: string
+    website?: string
+    socialMedia?: {
+      facebook?: string
+      instagram?: string
+    }
+  }
+  images: string[]
+  vendorAttendance: string
+  marketType: 'vendor-created'
+  status: string
+  editableUntil: string
+}
+
+// Mutation hook for creating markets
+export const useCreateMarketMutation = () => {
+  const queryClient = useQueryClient()
+  const userId = useAuthStore(state => state.user?.id)
+
+  return useMutation({
+    mutationFn: async (marketData: CreateMarketData) => {
+      const response = await marketsApi.createMarket(marketData)
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create market')
+      }
+      return response.data
+    },
+    onSuccess: (newMarket) => {
+      // Invalidate markets list to show the new market
+      queryClient.invalidateQueries({ queryKey: ['markets'] })
+      
+      // Auto-track the market for the creating vendor
+      if (userId && newMarket?.id) {
+        marketsApi.trackMarket(newMarket.id, 'attending')
+        queryClient.invalidateQueries({ queryKey: ['trackedMarkets', userId] })
+      }
+    },
+    onError: (err) => {
+      console.error('Failed to create market:', err)
+    }
+  })
+}
+
 // Tracking data interface
 interface TrackingData {
   id: string

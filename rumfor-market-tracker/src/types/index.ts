@@ -125,6 +125,12 @@ export interface Market {
   applicationFields: CustomField[]
   createdAt: string
   updatedAt: string
+  
+  // 24-hour edit window fields (for vendor-created markets)
+  editableUntil?: string  // ISO date string - when the edit window expires
+  isLocked?: boolean       // Whether the market is locked from editing
+  createdBy?: string       // User ID of the creator
+  canEdit?: boolean        // Computed field from backend - whether the market can still be edited
 }
 
 export type MarketCategory =

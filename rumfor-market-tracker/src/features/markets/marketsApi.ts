@@ -455,6 +455,27 @@ export const marketsApi = {
     }
   },
 
+  // Update existing market
+  async updateMarket(marketId: string, marketData: Partial<Omit<Market, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ApiResponse<Market>> {
+    if (isDevelopment && isMockMode) {
+      await delay(800)
+
+      // Simulate market update
+      return {
+        success: true,
+        data: {
+          id: marketId,
+          ...marketData,
+          updatedAt: new Date().toISOString()
+        } as Market
+      }
+    } else {
+      const response = await httpClient.put<ApiResponse<Market>>(`/markets/${marketId}`, marketData)
+      if (!response.success) throw new Error(response.error || 'Failed to update market')
+      return response
+    }
+  },
+
   // Track/untrack market (mock implementation)
   async trackMarket(marketId: string, status?: string): Promise<ApiResponse<{ tracked: boolean }>> {
     if (isDevelopment && isMockMode) {
