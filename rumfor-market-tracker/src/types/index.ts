@@ -579,16 +579,55 @@ export interface SystemSettings {
   updatedBy: string
 }
 
+export interface EmailConfig {
+  id: string
+  host: string
+  port: number
+  secure: boolean
+  username: string
+  password: string // Masked on client
+  fromEmail: string
+  fromName: string
+  replyTo?: string
+  isActive: boolean
+  lastTestedAt?: string
+  lastTestStatus?: 'success' | 'failed'
+  lastTestError?: string
+  updatedBy?: string
+  updatedAt: string
+  createdAt: string
+}
+
+export interface EmailTemplateVariable {
+  name: string
+  description: string
+  example: string
+  required: boolean
+}
+
 export interface EmailTemplate {
   id: string
+  slug: string
   name: string
+  description?: string
   subject: string
-  content: string
-  variables: string[]
-  category: 'welcome' | 'application' | 'moderation' | 'notification' | 'marketing'
+  htmlContent: string
+  textContent?: string
+  variables: EmailTemplateVariable[]
+  category: 'authentication' | 'application' | 'notification' | 'marketing' | 'system'
   isActive: boolean
+  isSystem: boolean
+  createdBy?: string
+  updatedBy?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface EmailTemplatePreview {
+  subject: string
+  html: string
+  text: string
+  variables: Record<string, string>
 }
 
 export interface AuditLog {
