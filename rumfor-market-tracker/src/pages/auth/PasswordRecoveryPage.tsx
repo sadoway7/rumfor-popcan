@@ -35,14 +35,15 @@ export function PasswordRecoveryPage() {
     resolver: zodResolver(passwordRecoverySchema),
   })
 
-  const watchedEmail = watch('email')
+  // Remove the problematic useEffect entirely and handle error clearing differently
+  // const watchedEmail = watch('email')
 
-  React.useEffect(() => {
-    // Clear errors when email changes
+  // Clear errors when user starts typing (on input change)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (error) {
       clearErrors()
     }
-  }, [watchedEmail]) // Removed clearErrors from dependencies to prevent infinite loop
+  }
 
   React.useEffect(() => {
     // Clear success state when component unmounts
@@ -153,6 +154,7 @@ export function PasswordRecoveryPage() {
                     placeholder="Enter your email"
                     className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
                     {...register('email')}
+                    onChange={handleInputChange}
                   />
                 </div>
                 {errors.email && (
