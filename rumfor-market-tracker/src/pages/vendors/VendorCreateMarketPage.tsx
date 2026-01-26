@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card, CardHeader, CardTitle, CardContent, Input, Textarea, Select } from '@/components/ui'
 import { ArrowLeft, MapPin, Calendar, Loader2, Plus, Trash2 } from 'lucide-react'
 import { getCategoryDefaultImage } from '@/config/constants'
-import { useCreateMarketMutation } from '@/features/markets/hooks/useMarkets'
+import { useCreateMarketMutation, CreateMarketData } from '@/features/markets/hooks/useMarkets'
+import { MarketCategory, MarketStatus } from '@/types'
 
 const marketCategories = [
   { value: 'farmers-market', label: 'Farmers Market' },
@@ -161,16 +162,16 @@ export function VendorCreateMarketPage() {
         }
       }))
       
-      const marketData = {
+      const marketData: CreateMarketData = {
         name: formData.name,
-        category: formData.category,
-        description: formData.description,
+        category: formData.category as MarketCategory,
+        description: formData.description || 'No description provided',
         comments: formData.comments,
         location: {
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
+          zipCode: formData.zipCode || '00000',
           country: 'USA',
           latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
           longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
@@ -191,8 +192,27 @@ export function VendorCreateMarketPage() {
         images: [defaultImage],
         vendorAttendance: formData.vendorAttendance,
         marketType: 'vendor-created' as const,
-        status: 'active',
+        status: 'active' as MarketStatus,
         editableUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        tags: [],
+        schedule: [],
+        applicationsEnabled: false,
+        stats: {
+          viewCount: 0,
+          favoriteCount: 0,
+          applicationCount: 0,
+          commentCount: 0,
+          rating: 0,
+          reviewCount: 0
+        },
+        accessibility: {
+          wheelchairAccessible: false,
+          parkingAvailable: false,
+          restroomsAvailable: false,
+          familyFriendly: false,
+          petFriendly: false
+        },
+        applicationFields: []
       }
       
       // Create the market
@@ -368,7 +388,7 @@ export function VendorCreateMarketPage() {
             </p>
             
             {/* Date List */}
-            {formData.eventDates.map((event, index) => (
+            {formData.eventDates.map((event) => (
               <div key={event.id} className="flex gap-4 items-end p-4 bg-surface rounded-lg">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Date</label>

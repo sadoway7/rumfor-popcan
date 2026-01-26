@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'
-import { Market, MarketFilters } from '@/types'
+import { Market, MarketFilters, MarketCategory, MarketStatus, MarketSchedule, AccessibilityFeatures, CustomField, ContactInfo } from '@/types'
 
 interface UseMarketsOptions {
   autoLoad?: boolean
@@ -393,16 +393,16 @@ const useUntrackMarketMutation = () => {
 }
 
 // Interface for creating a market
-interface CreateMarketData {
+export interface CreateMarketData {
   name: string
-  category: string
-  description?: string
+  category: MarketCategory
+  description: string
   comments?: string
   location: {
     address: string
     city: string
     state: string
-    zipCode?: string
+    zipCode: string
     country: string
     latitude?: number
     longitude?: number
@@ -418,20 +418,26 @@ interface CreateMarketData {
       }
     }>
   }
-  contact?: {
-    email?: string
-    phone?: string
-    website?: string
-    socialMedia?: {
-      facebook?: string
-      instagram?: string
-    }
-  }
+  contact: ContactInfo
   images: string[]
   vendorAttendance: string
   marketType: 'vendor-created'
-  status: string
+  status: MarketStatus
   editableUntil: string
+  // Add missing fields from Market type
+  tags: string[]
+  schedule: MarketSchedule[]
+  applicationsEnabled: boolean
+  stats: {
+    viewCount: number
+    favoriteCount: number
+    applicationCount: number
+    commentCount: number
+    rating: number
+    reviewCount: number
+  }
+  accessibility: AccessibilityFeatures
+  applicationFields: CustomField[]
 }
 
 // Mutation hook for creating markets

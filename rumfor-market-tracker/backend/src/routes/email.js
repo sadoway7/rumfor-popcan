@@ -1,11 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const emailController = require('../controllers/emailController')
-const { protect, adminOnly } = require('../middleware/auth')
+const { verifyToken, requireAdmin } = require('../middleware/auth')
 
 // All email routes require admin authentication
-router.use(protect)
-router.use(adminOnly)
+router.use(verifyToken)
+router.use(requireAdmin)
 
 // Email Configuration Routes
 router.get('/config', emailController.getEmailConfig)

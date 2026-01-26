@@ -4,8 +4,8 @@ import { Button, Card, CardHeader, CardTitle, CardContent, Input, Textarea, Sele
 import { ArrowLeft, Loader2, Clock, Lock, Plus, Trash2, MapPin, Calendar } from 'lucide-react'
 import { useMarket } from '@/features/markets/hooks/useMarkets'
 import { useAuthStore } from '@/features/auth/authStore'
-import { getCategoryDefaultImage } from '@/config/constants'
 import { marketsApi } from '@/features/markets/marketsApi'
+import { MarketCategory } from '@/types'
 
 const marketCategories = [
   { value: 'farmers-market', label: 'Farmers Market' },
@@ -215,13 +215,13 @@ export function VendorEditMarketPage() {
 
       const updateData = {
         name: formData.name,
-        category: formData.category,
+        category: formData.category as MarketCategory,
         description: formData.description,
         location: {
           address: formData.address,
           city: formData.city,
           state: formData.state,
-          zipCode: formData.zipCode,
+          zipCode: formData.zipCode || '00000',
           country: 'USA',
         },
         dates: {
