@@ -41,6 +41,7 @@ const updateEmailConfig = async (req, res) => {
       host,
       port,
       secure,
+      authMethod,
       username,
       password,
       fromEmail,
@@ -48,6 +49,8 @@ const updateEmailConfig = async (req, res) => {
       replyTo,
       isActive
     } = req.body
+    
+    console.log('[DEBUG] updateEmailConfig - Received authMethod:', authMethod)
     
     // Validate required fields
     if (!host || !port || !username || !fromEmail) {
@@ -62,12 +65,15 @@ const updateEmailConfig = async (req, res) => {
       host,
       port: parseInt(port),
       secure: secure === true || secure === 'true',
+      authMethod: authMethod || 'PLAIN',
       username,
       fromEmail,
       fromName: fromName || 'RumFor Market Tracker',
       replyTo: replyTo || '',
       isActive: isActive !== false
     }
+    
+    console.log('[DEBUG] updateEmailConfig - Updates prepared with authMethod:', updates.authMethod)
     
     // Only update password if provided (not masked)
     if (password && !password.includes('*')) {
@@ -132,6 +138,12 @@ const sendTestEmail = async (req, res) => {
   try {
     const { to, testConfig } = req.body
     
+    console.log('[DEBUG] sendTestEmail - Received testConfig:', testConfig ? 'Yes' : 'No')
+    if (testConfig) {
+      console.log('[DEBUG] sendTestEmail - testConfig:', JSON.stringify(testConfig, null, 2))
+      console.log('[DEBUG] sendTestEmail - testConfig.password:', testConfig.password ? 'YES' : 'NO (empty)')
+    }
+    
     if (!to) {
       return res.status(400).json({
         success: false,
@@ -144,11 +156,14 @@ const sendTestEmail = async (req, res) => {
       host: testConfig.host,
       port: testConfig.port,
       secure: testConfig.secure,
+      authMethod: testConfig.authMethod || 'PLAIN',
       username: testConfig.username,
       password: testConfig.password, // Not encrypted in test
       fromEmail: testConfig.fromEmail,
       fromName: testConfig.fromName
     } : null
+    
+    console.log('[DEBUG] sendTestEmail - Config authMethod:', config?.authMethod)
     
     const result = await emailService.sendTestEmail(to, config)
     

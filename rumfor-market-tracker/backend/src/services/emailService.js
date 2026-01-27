@@ -12,16 +12,35 @@ const createTransporter = async () => {
     // Try to get config from database
     const config = await EmailConfig.getConfig()
     
+    console.log('[DEBUG] createTransporter - Config from DB:', config ? {
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      authMethod: config.authMethod,
+      username: config.username,
+      hasPassword: !!config.password
+    } : 'No config')
+    
     if (config && config.isActive) {
       // Use database configuration
+      const authConfig = {
+        user: config.username,
+        pass: decrypt(config.password) // Decrypt the password
+      }
+      
+      // Add auth method if specified and not PLAIN
+      if (config.authMethod && config.authMethod !== 'PLAIN') {
+        authConfig.method = config.authMethod
+        console.log('[DEBUG] createTransporter - Using auth method:', config.authMethod)
+      } else {
+        console.log('[DEBUG] createTransporter - Using default PLAIN auth')
+      }
+      
       return nodemailer.createTransport({
         host: config.host,
         port: config.port,
         secure: config.secure,
-        auth: {
-          user: config.username,
-          pass: decrypt(config.password) // Decrypt the password
-        }
+        auth: authConfig
       })
     }
   } catch (error) {
@@ -342,18 +361,37 @@ const testEmailConnection = async () => {
  */
 const sendTestEmail = async (to, config = null) => {
   try {
+    console.log('[DEBUG] sendTestEmail - Config received:', config ? {
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      authMethod: config.authMethod,
+      username: config.username,
+      hasPassword: !!config.password
+    } : 'No config, using createTransporter()')
+    
     let transporter
     
     if (config) {
       // Use provided config for testing
+      const authConfig = {
+        user: config.username,
+        pass: config.password // Already decrypted
+      }
+      
+      // Add auth method if specified
+      if (config.authMethod && config.authMethod !== 'PLAIN') {
+        authConfig.method = config.authMethod
+        console.log('[DEBUG] sendTestEmail - Using auth method:', config.authMethod)
+      } else {
+        console.log('[DEBUG] sendTestEmail - Using default PLAIN auth')
+      }
+      
       transporter = nodemailer.createTransport({
         host: config.host,
         port: config.port,
         secure: config.secure,
-        auth: {
-          user: config.username,
-          pass: config.password // Already decrypted
-        }
+        auth: authConfig
       })
     } else {
       transporter = await createTransporter()

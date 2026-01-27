@@ -590,6 +590,7 @@ export interface EmailConfig {
   host: string
   port: number
   secure: boolean
+  authMethod?: 'PLAIN' | 'LOGIN' | 'CRAM-MD5'
   username: string
   password: string // Masked on client
   fromEmail: string

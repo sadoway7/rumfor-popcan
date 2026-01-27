@@ -184,7 +184,7 @@ export const adminApi = {
       await delay(500)
       return { success: true, data: mockAdminStats }
     } else {
-      const response = await httpClient.get<ApiResponse<any>>('/v1/admin/stats')
+      const response = await httpClient.get<ApiResponse<any>>('/admin/stats')
       if (response.success && response.data) {
         return { success: true, data: response.data }
       }
@@ -226,7 +226,7 @@ export const adminApi = {
       }
     } else {
       // Use dashboard endpoint for recent activity
-      const response = await httpClient.get<ApiResponse<any>>('/v1/admin/dashboard')
+      const response = await httpClient.get<ApiResponse<any>>('/admin/dashboard')
       if (response.success && response.data) {
         return { success: true, data: response.data.recentActivity || [] }
       }
@@ -339,8 +339,7 @@ export const adminApi = {
       if (filters?.sortBy) queryParams.append('sortBy', filters.sortBy)
       if (filters?.sortDirection) queryParams.append('sortOrder', filters.sortDirection)
 
-      // Use v1 prefix for admin routes
-      const response = await httpClient.get<ApiResponse<{ users: UserWithStats[], pagination: any }>>(`/v1/admin/users?${queryParams}`)
+      const response = await httpClient.get<ApiResponse<{ users: UserWithStats[], pagination: any }>>(`/admin/users?${queryParams}`)
       
       // Unwrap the response from backend format { success, data, message }
       if (response.success && response.data) {
@@ -370,7 +369,7 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { role })
+      const response = await httpClient.patch<ApiResponse<any>>(`/admin/users/${userId}`, { role })
       // Unwrap response
       if (response.success && response.data) {
         return { success: true, data: response.data.user }
@@ -392,7 +391,7 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { isActive })
+      const response = await httpClient.patch<ApiResponse<any>>(`/admin/users/${userId}`, { isActive })
       if (response.success && response.data) {
         return { success: true, data: response.data.user }
       }
@@ -433,7 +432,7 @@ export const adminApi = {
       updatedAt: string
     }>
   }>> {
-    const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/users/${userId}/activity`)
+    const response = await httpClient.get<ApiResponse<any>>(`/admin/users/${userId}/activity`)
     if (response.success && response.data) {
       return { success: true, data: response.data }
     }
@@ -477,7 +476,7 @@ export const adminApi = {
     followingCount: number
     lastActiveAt: string
   }>> {
-    const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/users/${userId}`)
+    const response = await httpClient.get<ApiResponse<any>>(`/admin/users/${userId}`)
     if (response.success && response.data) {
       return { success: true, data: response.data.user }
     }
@@ -497,7 +496,7 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/users/${userId}`, { isEmailVerified: verified })
+      const response = await httpClient.patch<ApiResponse<any>>(`/admin/users/${userId}`, { isEmailVerified: verified })
       if (response.success && response.data) {
         return { success: true, data: response.data.user }
       }
@@ -843,7 +842,7 @@ export const adminApi = {
       await delay(200)
       return { success: false, error: 'Template not found' } as any
     } else {
-      const response = await httpClient.get<ApiResponse<EmailTemplate>>(`/v1/admin/email/templates/${id}`)
+      const response = await httpClient.get<ApiResponse<EmailTemplate>>(`/admin/email/templates/${id}`)
       return response
     }
   },
@@ -853,7 +852,7 @@ export const adminApi = {
       await delay(400)
       return { success: true, data: { ...template, id: Date.now().toString() } as EmailTemplate }
     } else {
-      const response = await httpClient.post<ApiResponse<EmailTemplate>>('/v1/admin/email/templates', template)
+      const response = await httpClient.post<ApiResponse<EmailTemplate>>('/admin/email/templates', template)
       return response
     }
   },
@@ -863,7 +862,7 @@ export const adminApi = {
       await delay(400)
       return { success: true, data: { ...template, id } as EmailTemplate }
     } else {
-      const response = await httpClient.put<ApiResponse<EmailTemplate>>(`/v1/admin/email/templates/${id}`, template)
+      const response = await httpClient.put<ApiResponse<EmailTemplate>>(`/admin/email/templates/${id}`, template)
       return response
     }
   },
@@ -873,7 +872,7 @@ export const adminApi = {
       await delay(300)
       return { success: true, message: 'Template deleted' }
     } else {
-      const response = await httpClient.delete<ApiResponse<any>>(`/v1/admin/email/templates/${id}`)
+      const response = await httpClient.delete<ApiResponse<any>>(`/admin/email/templates/${id}`)
       return response
     }
   },
@@ -891,7 +890,7 @@ export const adminApi = {
         }
       }
     } else {
-      const response = await httpClient.post<ApiResponse<EmailTemplatePreview>>(`/v1/admin/email/templates/${id}/preview`, { sampleData })
+      const response = await httpClient.post<ApiResponse<EmailTemplatePreview>>(`/admin/email/templates/${id}/preview`, { sampleData })
       return response
     }
   },
@@ -1031,7 +1030,7 @@ export const adminApi = {
       if (filters?.page) queryParams.append('page', String(filters.page))
       if (filters?.limit) queryParams.append('limit', String(filters.limit))
 
-      const response = await httpClient.get<ApiResponse<{ markets: Market[], pagination: any }>>(`/v1/admin/markets?${queryParams}`)
+      const response = await httpClient.get<ApiResponse<{ markets: Market[], pagination: any }>>(`/admin/markets?${queryParams}`)
       if (response.success && response.data) {
         return {
           data: response.data.markets,
@@ -1053,7 +1052,7 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.get<ApiResponse<any>>(`/v1/admin/markets/${marketId}`)
+      const response = await httpClient.get<ApiResponse<any>>(`/admin/markets/${marketId}`)
       if (response.success && response.data) {
         return { success: true, data: response.data }
       }
@@ -1092,7 +1091,7 @@ export const adminApi = {
         }, 300)
       })
     } else {
-      const response = await httpClient.patch<ApiResponse<any>>(`/v1/admin/markets/${marketId}`, data)
+      const response = await httpClient.patch<ApiResponse<any>>(`/admin/markets/${marketId}`, data)
       if (response.success && response.data) {
         return { success: true, data: response.data.market }
       }
@@ -1111,7 +1110,7 @@ export const adminApi = {
     } else {
       const queryParams = new URLSearchParams()
       if (reason) queryParams.append('reason', reason)
-      const response = await httpClient.delete<ApiResponse<any>>(`/v1/admin/markets/${marketId}?${queryParams}`)
+      const response = await httpClient.delete<ApiResponse<any>>(`/admin/markets/${marketId}?${queryParams}`)
       return response
     }
   }

@@ -28,6 +28,7 @@ export function AdminSettingsPage() {
     host: '',
     port: 465,
     secure: true,
+    authMethod: 'PLAIN' as 'PLAIN' | 'LOGIN' | 'CRAM-MD5',
     username: '',
     password: '',
     fromEmail: '',
@@ -52,8 +53,9 @@ export function AdminSettingsPage() {
         host: emailConfig.host || '',
         port: emailConfig.port || 465,
         secure: emailConfig.secure || true,
+        authMethod: (emailConfig.authMethod || 'PLAIN') as 'PLAIN' | 'LOGIN' | 'CRAM-MD5',
         username: emailConfig.username || '',
-        password: '', // Don't populate password for security
+        password: emailConfig.password || '', // Keep password (it's masked but has value)
         fromEmail: emailConfig.fromEmail || '',
         fromName: emailConfig.fromName || 'RumFor Market Tracker',
         replyTo: emailConfig.replyTo || '',
@@ -317,8 +319,12 @@ export function AdminSettingsPage() {
       return
     }
 
+    // Don't send testConfig if password is empty/masked - use saved config instead
+    const hasPassword = emailFormData.password && !emailFormData.password.includes('•••')
+    const testConfigToSend = hasPassword ? emailFormData : undefined
+
     try {
-      const result = await handleSendTestEmail(testEmail, emailFormData)
+      const result = await handleSendTestEmail(testEmail, testConfigToSend)
       if (result.success) {
         addToast({
           variant: 'success',
@@ -376,6 +382,22 @@ export function AdminSettingsPage() {
                 placeholder="465"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Authentication Method</label>
+            <select
+              className="w-full p-2 border rounded-md"
+              value={emailFormData.authMethod}
+              onChange={(e) => handleEmailFormChange('authMethod', e.target.value)}
+            >
+              <option value="PLAIN">PLAIN (Default)</option>
+              <option value="LOGIN">LOGIN</option>
+              <option value="CRAM-MD5">CRAM-MD5</option>
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Select the authentication method required by your SMTP server. Try LOGIN or CRAM-MD5 if PLAIN doesn't work.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

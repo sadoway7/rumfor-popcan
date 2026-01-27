@@ -30,7 +30,6 @@ export function PasswordRecoveryPage() {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<PasswordRecoveryFormData>({
     resolver: zodResolver(passwordRecoverySchema),
   })
@@ -39,7 +38,7 @@ export function PasswordRecoveryPage() {
   // const watchedEmail = watch('email')
 
   // Clear errors when user starts typing (on input change)
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = () => {
     if (error) {
       clearErrors()
     }

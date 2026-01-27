@@ -12,18 +12,23 @@ const emailConfigSchema = new mongoose.Schema({
     required: true, 
     default: 465 
   },
-  secure: { 
-    type: Boolean, 
-    default: true 
+  secure: {
+    type: Boolean,
+    default: true
   },
-  username: { 
-    type: String, 
+  authMethod: {
+    type: String,
+    enum: ['PLAIN', 'LOGIN', 'CRAM-MD5'],
+    default: 'PLAIN'
+  },
+  username: {
+    type: String,
     required: true,
     default: 'noreply@rumfor.com'
   },
-  password: { 
-    type: String, 
-    required: true 
+  password: {
+    type: String,
+    required: true
   }, // Encrypted password
   
   // Sender Settings
