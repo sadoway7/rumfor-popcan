@@ -287,6 +287,8 @@ export function AdminSettingsPage() {
   const handleTestEmailConnection = async () => {
     try {
       const result = await handleTestConnection()
+      // Refresh email config to get updated connection status from database
+      await refreshEmailConfig()
       if (result.success) {
         addToast({
           variant: 'success',
@@ -320,7 +322,13 @@ export function AdminSettingsPage() {
     }
 
     // Don't send testConfig if password is empty/masked - use saved config instead
-    const hasPassword = emailFormData.password && !emailFormData.password.includes('•••')
+    // Backend masks with asterisks (*), frontend checks for bullets (•) - handle both
+    const isMasked = emailFormData.password && (
+      emailFormData.password.includes('•••') ||
+      emailFormData.password.includes('***') ||
+      emailFormData.password.startsWith('*')
+    )
+    const hasPassword = emailFormData.password && !isMasked
     const testConfigToSend = hasPassword ? emailFormData : undefined
 
     try {

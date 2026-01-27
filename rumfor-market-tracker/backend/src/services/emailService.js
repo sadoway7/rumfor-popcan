@@ -23,10 +23,16 @@ const createTransporter = async () => {
     
     if (config && config.isActive) {
       // Use database configuration
+      const decryptedPassword = decrypt(config.password)
       const authConfig = {
         user: config.username,
-        pass: decrypt(config.password) // Decrypt the password
+        pass: decryptedPassword // Decrypt the password
       }
+      
+      // Log password info for debugging (without revealing actual password)
+      console.log('[DEBUG] createTransporter - Decrypted password length:', decryptedPassword.length)
+      console.log('[DEBUG] createTransporter - Decrypted password first char:', decryptedPassword.charAt(0))
+      console.log('[DEBUG] createTransporter - Decrypted password last char:', decryptedPassword.charAt(decryptedPassword.length - 1))
       
       // Add auth method if specified and not PLAIN
       if (config.authMethod && config.authMethod !== 'PLAIN') {
@@ -374,6 +380,11 @@ const sendTestEmail = async (to, config = null) => {
     
     if (config) {
       // Use provided config for testing
+      // Log password info for debugging (without revealing actual password)
+      console.log('[DEBUG] sendTestEmail - Test password length:', config.password.length)
+      console.log('[DEBUG] sendTestEmail - Test password first char:', config.password.charAt(0))
+      console.log('[DEBUG] sendTestEmail - Test password last char:', config.password.charAt(config.password.length - 1))
+      
       const authConfig = {
         user: config.username,
         pass: config.password // Already decrypted
