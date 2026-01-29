@@ -357,7 +357,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                     e.stopPropagation()
                     setIsCommentsModalOpen(true)
                   }}
-                  className="text-sm text-muted-foreground hover:text-accent px-4 py-2 md:hidden"
+                  className="text-sm text-muted-foreground hover:text-amber-500 px-4 py-2 md:hidden"
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Comments
@@ -378,7 +378,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       }
                     }}
                     disabled={isLoading || buttonConfig.text.includes('Pending') || buttonConfig.text.includes('Approved') || buttonConfig.text.includes('Completed')}
-                    className="text-xs font-medium text-accent hover:text-accent/80 px-3 py-1.5"
+                    className="text-xs font-medium text-amber-500 hover:text-amber-600 px-3 py-1.5"
                   >
                     {buttonConfig.text === 'Track Market' ? 'Follow' : buttonConfig.text === 'Apply to Market' ? 'Apply' : buttonConfig.text}
                   </Button>

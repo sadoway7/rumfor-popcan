@@ -54,7 +54,9 @@ export function Header() {
 
             {/* Logo */}
             <Link to="/">
-              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
+              <div className="relative w-10 h-10 bg-amber-500 flex items-center justify-center" style={{
+                clipPath: 'polygon(0 0, 100% 10%, 100% 100%, 10% 100%)'
+              }}>
                 <span className="text-white font-bold text-base">R</span>
               </div>
             </Link>
@@ -74,8 +76,8 @@ export function Header() {
                     navigate(`/markets?search=${encodeURIComponent(searchQuery.trim())}`)
                   }
                 }}
-                className={`w-full pl-10 pr-12 py-2.5 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:bg-surface-2 transition-all duration-300 ${
-                  theme === 'light' ? 'shadow' : 'shadow-lg shadow-black/30'
+                className={`w-full pl-10 pr-12 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-surface-2 transition-all duration-200 ${
+                  theme === 'light' ? 'shadow shadow-black/20' : 'shadow shadow-black/30'
                 }`}
               />
               {location.pathname === '/markets' && (
@@ -118,7 +120,7 @@ export function Header() {
                 {/* Dashboard Button - Promoters and Admins Only */}
                 {user?.role !== 'vendor' && (
                   <Link to={`/${user?.role}/dashboard`}>
-                    <Button variant="outline" size="sm" className="bg-surface/80 backdrop-blur-sm hover:bg-surface hover:glow-accent-sm transition-all duration-300">
+                    <Button variant="outline" size="sm" className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200">
                       <MapPin className="h-4 w-4 mr-2" />
                       Dashboard
                     </Button>
@@ -128,16 +130,16 @@ export function Header() {
                 {/* Primary Action Based on Role */}
                 {user?.role === 'promoter' && (
                   <Link to="/promoter/markets/create">
-                    <Button size="sm" className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent shadow-lg hover:glow-accent transition-all duration-300">
+                    <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200">
                       <Plus className="h-4 w-4 mr-2" />
                       List Market
                     </Button>
                   </Link>
                 )}
-                
+
                 {user?.role === 'vendor' && (
                   <Link to="/vendor/tracked-markets">
-                    <Button variant="outline" size="sm" className="bg-surface/80 backdrop-blur-sm hover:bg-surface hover:glow-accent-sm transition-all duration-300">
+                    <Button variant="outline" size="sm" className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200">
                       <MapPin className="h-4 w-4 mr-2" />
                       My Markets
                     </Button>
@@ -147,16 +149,16 @@ export function Header() {
                 {/* User Profile Menu - Radix UI Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center justify-center cursor-pointer hover:bg-surface/80 rounded-lg transition-all duration-300 hover:glow-accent-sm">
-                      <div className="w-10 h-10 bg-gradient-to-br from-accent/30 to-accent/20 rounded-lg flex items-center justify-center">
-                        <User className="h-5 w-5 text-accent" />
+                    <button className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-lg transition-colors duration-200">
+                      <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
+                        <User className="h-5 w-5 text-foreground" />
                       </div>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                  <DropdownMenuContent className="w-56 bg-surface border border-surface-3 rounded-lg shadow-lg" align="end">
                     <DropdownMenuLabel className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                        <User className="h-5 w-5 text-accent" />
+                      <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
+                        <User className="h-5 w-5 text-foreground" />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-foreground">
@@ -225,7 +227,7 @@ export function Header() {
                   </Button>
                 </Link>
                 <Link to="/auth/register" className="inline">
-                  <Button size="sm" className="bg-gradient-to-r from-accent to-accent-light hover:from-accent-light hover:to-accent shadow-lg hover:glow-accent transition-all duration-300 rounded-xl">
+                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200 rounded-lg">
                     Sign Up
                   </Button>
                 </Link>
@@ -233,21 +235,21 @@ export function Header() {
             ) : null}
           </div>
 
-          {/* Mobile Header - Logo, Search, Hamburger */}
+          {/* Mobile Header - Logo, Search, User Avatar or Hamburger */}
           <div className="md:hidden flex items-center space-x-2">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center justify-center cursor-pointer hover:bg-surface/80 rounded-lg transition-all duration-300 hover:glow-accent-sm" aria-label="Open menu">
-                    <div className="w-10 h-10 bg-gradient-to-br from-accent/30 to-accent/20 rounded-lg flex items-center justify-center">
-                      <User className="h-5 w-5 text-accent" />
+                  <button className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-lg transition-colors duration-200" aria-label="Open menu">
+                    <div className="w-10 h-10 bg-amber-500 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">{user?.firstName?.charAt(0) || user?.lastName?.charAt(0) || 'U'}</span>
                     </div>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                <DropdownMenuContent className="w-56 bg-surface border border-surface-3 rounded-lg shadow-lg" align="end">
                   <DropdownMenuLabel className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-accent/20 rounded-lg flex items-center justify-center">
-                      <User className="h-5 w-5 text-accent" />
+                    <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
+                      <User className="h-5 w-5 text-foreground" />
                     </div>
                     <div>
                       <div className="text-sm font-medium text-foreground">
@@ -270,14 +272,14 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={`/${user?.role}/dashboard`} className="flex items-center">
-                      <MapPin className="h-5 w-5 mr-3 text-accent" />
+                      <MapPin className="h-5 w-5 mr-3 text-amber-500" />
                       Dashboard
                     </Link>
                   </DropdownMenuItem>
                   {user?.role === 'promoter' && (
                     <DropdownMenuItem asChild>
                       <Link to="/promoter/markets/create" className="flex items-center">
-                        <Plus className="h-5 w-5 mr-3 text-accent" />
+                        <Plus className="h-5 w-5 mr-3 text-amber-500" />
                         List Market
                       </Link>
                     </DropdownMenuItem>
@@ -285,7 +287,7 @@ export function Header() {
                   {user?.role === 'vendor' && (
                     <DropdownMenuItem asChild>
                       <Link to="/vendor/tracked-markets" className="flex items-center">
-                        <MapPin className="h-5 w-5 mr-3 text-accent" />
+                        <MapPin className="h-5 w-5 mr-3 text-amber-500" />
                         My Markets
                       </Link>
                     </DropdownMenuItem>
@@ -317,7 +319,7 @@ export function Header() {
                     <Menu className="h-6 w-6" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-96 bg-surface/95 backdrop-blur-xl border-0 rounded-2xl glow-accent-sm" align="end">
+                <DropdownMenuContent className="w-48 bg-surface border border-surface-3 rounded-lg shadow-lg" align="end">
                   <DropdownMenuItem onClick={() => setLocationModalOpen(true)} className="flex items-center">
                     <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
                     Set Location

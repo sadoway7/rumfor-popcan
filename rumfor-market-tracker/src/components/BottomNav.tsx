@@ -91,11 +91,11 @@ export function BottomNav({ role }: BottomNavProps) {
 
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-[70] bg-background/95 backdrop-blur-xl supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
+      "fixed bottom-0 left-0 right-0 z-[70] bg-surface border-t border-surface-3 supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
       !isMobile && "hidden",
       isHidden && "translate-y-[200%]"
     )}>
-      <nav className="flex justify-around items-end py-2 px-4 max-w-md mx-auto">
+      <nav className="flex justify-around items-end py-2 px-4 max-w-md mx-auto shadow-[0_-4px_16px_-3px_rgba(0,0,0,0.15)]">
         {navigation.map((item: any) => {
           const isActive = location.pathname === item.href
           const isPrimary = item.isPrimary
@@ -110,14 +110,14 @@ export function BottomNav({ role }: BottomNavProps) {
                   ? 'min-h-[64px] min-w-[64px]'
                   : 'min-h-[56px] min-w-[56px]',
                 isActive && !isPrimary
-                  ? 'text-accent'
+                  ? 'text-amber-500'
                   : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {isPrimary ? (
                 <div className={cn(
                   'h-16 w-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 -mt-8',
-                  isActive ? 'bg-accent shadow-accent/30' : 'bg-accent'
+                  isActive ? 'bg-amber-500' : 'bg-amber-500'
                 )}>
                   <item.icon className="h-8 w-8 text-white" />
                 </div>
@@ -126,17 +126,17 @@ export function BottomNav({ role }: BottomNavProps) {
                   <item.icon
                     className={cn(
                       'h-6 w-6 transition-transform duration-150',
-                      isActive ? 'text-accent scale-105' : 'text-muted-foreground group-hover:scale-105'
+                      isActive ? 'text-amber-500 scale-105' : 'text-muted-foreground group-hover:scale-105'
                     )}
                   />
                   <span className={cn(
                     'truncate text-[10px] mt-1',
-                    isActive ? 'text-accent' : 'text-muted-foreground group-hover:text-foreground'
+                    isActive ? 'text-amber-500' : 'text-muted-foreground group-hover:text-foreground'
                   )}>{item.name}</span>
                   {/* Animated underline */}
                   <div className={cn(
                     'absolute bottom-0 h-1.5 bg-accent rounded-full transition-all duration-300 ease-out',
-                    isActive ? 'w-6 opacity-100' : 'w-0 opacity-0'
+                    isActive ? 'w-4 opacity-100' : 'w-0 opacity-0'
                   )} />
                 </>
               )}
