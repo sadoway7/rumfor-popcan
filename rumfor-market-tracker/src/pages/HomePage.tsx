@@ -176,7 +176,6 @@ export function HomePage() {
                         </button>
                       </form>
                       <p className="text-center text-sm text-muted-foreground space-x-2">
-                        <span>No account?</span>
                         <Link to="/auth/register" className="text-amber-500 font-medium hover:underline">Register</Link>
                         <span>|</span>
                         <Link to="/auth/forgot-password" className="text-amber-500 font-medium hover:underline">Forgot password?</Link>
@@ -282,7 +281,6 @@ export function HomePage() {
                         </button>
                       </form>
                       <p className="text-center text-sm text-muted-foreground space-x-2">
-                        <span>No account?</span>
                         <Link to="/auth/register" className="text-amber-500 font-medium hover:underline">Register</Link>
                         <span>|</span>
                         <Link to="/auth/forgot-password" className="text-amber-500 font-medium hover:underline">Forgot password?</Link>
@@ -297,10 +295,6 @@ export function HomePage() {
             <div className="hidden md:flex flex-col flex-1 pt-6 pb-6 px-6">
               {/* Quick Actions */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center">
-                  <span className="w-2 h-2 bg-amber-500 mr-2 transform rotate-45"></span>
-                  Quick Actions
-                </h3>
                 <div className="space-y-3">
                   <Link to="/markets" className="block">
                     <div className="w-full py-3 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-colors text-center">
@@ -356,12 +350,6 @@ export function HomePage() {
                   Sell Stuff.<br />
                   <span className="text-amber-600">Build Your Empire.</span>
                 </h1>
-                
-                <Link to="/markets">
-                  <button className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-md uppercase text-sm tracking-wide transition-colors">
-                    Explore Markets →
-                  </button>
-                </Link>
               </div>
               
               {/* Second Column - YOUR MARKET ORGANIZER */}
