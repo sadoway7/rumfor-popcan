@@ -36,33 +36,30 @@ export function usePasswordReset() {
   const confirmPasswordReset = async (token: string, newPassword: string, confirmPassword: string) => {
     // Validate passwords match
     if (newPassword !== confirmPassword) {
-      return { 
-        success: false, 
-        error: 'Passwords do not match' 
+      return {
+        success: false,
+        error: 'Passwords do not match'
       }
     }
 
-    // Validate password strength
-    if (newPassword.length < 6) {
-      return { 
-        success: false, 
-        error: 'Password must be at least 6 characters long' 
+    // Validate password strength (must match backend requirement of 8 characters)
+    if (newPassword.length < 8) {
+      return {
+        success: false,
+        error: 'Password must be at least 8 characters long'
       }
     }
 
     setIsConfirmingReset(true)
     try {
-      const request: PasswordResetConfirm = { 
-        token, 
-        newPassword, 
-        confirmPassword 
-      }
+      // Send to backend with expected format: PasswordResetConfirm object
+      const request: PasswordResetConfirm = { token, newPassword }
       await auth.resetPassword(request)
       return { success: true }
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Password reset failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Password reset failed'
       }
     } finally {
       setIsConfirmingReset(false)
@@ -105,13 +102,6 @@ export function usePasswordReset() {
   }
 
   /**
-   * Check if password reset was successful
-   */
-  const isPasswordResetSuccessful = (): boolean => {
-    return auth.passwordResetSuccess
-  }
-
-  /**
    * Reset all password reset state
    */
   const resetPasswordResetState = () => {
@@ -122,11 +112,11 @@ export function usePasswordReset() {
   }
 
   return {
-    // State
+    // State - Direct references to Zustand store for proper reactivity
     isRequestingReset: isResetRequestInProgress(),
     isConfirmingReset: isResetConfirmationInProgress(),
     error: getPasswordResetError(),
-    success: isPasswordResetSuccessful(),
+    success: auth.passwordResetSuccess,
     isLoading: auth.isPasswordResetLoading,
 
     // Methods

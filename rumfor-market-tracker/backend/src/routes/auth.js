@@ -26,13 +26,14 @@ const {
 
 const { verifyToken, verifyRefreshToken } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
+const { passwordResetLimiter } = require('../middleware/rateLimiter')
 
 // Public routes
 router.post('/register', validateUserRegistration, register)
 router.post('/login', validateUserLogin, login)
 router.post('/refresh-token', verifyRefreshToken, refreshToken)
-router.post('/forgot-password', forgotPassword)
-router.post('/reset-password', resetPassword)
+router.post('/forgot-password', passwordResetLimiter, forgotPassword)
+router.post('/reset-password', passwordResetLimiter, resetPassword)
 router.post('/verify-email', verifyEmail)
 
 // Development helper - never expose in production!

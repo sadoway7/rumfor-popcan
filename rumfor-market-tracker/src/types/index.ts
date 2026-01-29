@@ -56,7 +56,7 @@ export interface PasswordResetRequest {
 export interface PasswordResetConfirm {
   token: string
   newPassword: string
-  confirmPassword: string
+  confirmPassword?: string // Optional - only used for client-side validation
 }
 
 export interface EmailVerificationRequest {

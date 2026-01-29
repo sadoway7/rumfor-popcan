@@ -71,6 +71,23 @@
   
   html {
     scroll-behavior: smooth;
+    
+    /* Slower scroll physics for a more deliberate feel */
+    /* This affects the momentum/ramp of scrolling */
+    @supports (scroll-behavior: smooth) {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  /* Smooth scroll container for market lists and grids */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Even gentler scroll for content-heavy areas */
+  .scroll-gentle {
+    scroll-behavior: smooth;
+    scroll-padding-top: 1rem;
   }
 }
 

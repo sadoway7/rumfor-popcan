@@ -183,7 +183,7 @@ const sendEmail = async (to, subject, html, text, options = {}) => {
  * Send password reset email using template
  */
 const sendPasswordResetEmail = async (email, resetToken, user = {}) => {
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`
+  const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`
   
   try {
     await sendTemplatedEmail(email, 'password-reset', {
@@ -236,7 +236,7 @@ const sendPasswordResetEmail = async (email, resetToken, user = {}) => {
  * Send email verification using template
  */
 const sendEmailVerification = async (email, verificationToken, user = {}) => {
-  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`
+  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`
   
   try {
     await sendTemplatedEmail(email, 'email-verification', {

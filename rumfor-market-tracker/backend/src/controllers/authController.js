@@ -250,6 +250,9 @@ const forgotPassword = catchAsync(async (req, res, next) => {
 
   await user.save({ validateBeforeSave: false })
 
+  // Log password reset request for security audit
+  console.log(`[PASSWORD RESET REQUEST] User ${user.email} requested password reset at ${new Date().toISOString()}`)
+
   // Send password reset email
   try {
     await sendPasswordResetEmail(user.email, resetToken)
@@ -297,12 +300,13 @@ const resetPassword = catchAsync(async (req, res, next) => {
 
   await user.save()
 
-  // Generate tokens
-  const tokens = generateTokens(user._id, user.tokenVersion)
+  // Log token usage for security audit
+  console.log(`[PASSWORD RESET] User ${user.email} successfully reset password at ${new Date().toISOString()}`)
 
+  // Security: Do NOT automatically log user in after password reset
+  // Return success message only - user must log in manually with new password
   sendSuccess(res, {
-    user,
-    tokens
+    message: 'Password has been reset successfully. Please log in with your new password.'
   }, 'Password reset successful')
 })
 
