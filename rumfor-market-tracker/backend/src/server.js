@@ -153,16 +153,25 @@ const corsOptions = {
         process.env.FRONTEND_URL
       ].filter(Boolean) // Remove undefined values
 
+      // Log for debugging
+      console.log(`[CORS] Checking origin: ${origin}`)
+      console.log(`[CORS] Allowed production origins:`, productionOrigins)
+      console.log(`[CORS] FRONTEND_URL env var:`, process.env.FRONTEND_URL)
+
       if (productionOrigins.includes(origin)) {
+        console.log(`[CORS] ✅ Origin ${origin} allowed`)
         return callback(null, true)
       }
+      console.log(`[CORS] ❌ Origin ${origin} not allowed in production`)
       return callback(new Error(`CORS policy violation: Origin ${origin} not allowed in production`))
     }
 
     // Development: Allow configured origins
     if (allowedOrigins.includes(origin)) {
+      console.log(`[CORS] ✅ Development origin ${origin} allowed`)
       callback(null, true)
     } else {
+      console.log(`[CORS] ❌ Development origin ${origin} not allowed`)
       callback(new Error(`Not allowed by CORS: ${origin}`))
     }
   },
@@ -329,6 +338,18 @@ const startServer = async () => {
       console.log(`🚀 Server running on port ${PORT}`)
       console.log(`📱 Environment: ${process.env.NODE_ENV}`)
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL}`)
+      
+      // Log CORS configuration for production
+      if (process.env.NODE_ENV === 'production') {
+        const productionOrigins = [
+          'https://rumfor.sadoway.ca',
+          'https://www.rumfor.sadoway.ca',
+          process.env.FRONTEND_URL
+        ].filter(Boolean)
+        console.log(`🌐 CORS - Allowed production origins:`, productionOrigins)
+        console.log(`✅ rumfor.sadoway.ca is ${productionOrigins.includes('https://rumfor.sadoway.ca') ? 'ALLOWED' : 'NOT ALLOWED'} in CORS`)
+      }
+      
       console.log(`🔒 CSRF protection enabled`)
       console.log(`⚡ Enhanced user-based rate limiting enabled`)
       console.log(`🛡️ Security headers (HSTS, CSP, etc.) configured`)
