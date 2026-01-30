@@ -333,6 +333,8 @@ export function AdminSettingsPage() {
 
     try {
       const result = await handleSendTestEmail(testEmail, testConfigToSend)
+      // Refresh email config to get updated connection status from database
+      await refreshEmailConfig()
       if (result.success) {
         addToast({
           variant: 'success',

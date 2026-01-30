@@ -34,22 +34,19 @@ export function PasswordRecoveryPage() {
     resolver: zodResolver(passwordRecoverySchema),
   })
 
-  // Remove the problematic useEffect entirely and handle error clearing differently
-  // const watchedEmail = watch('email')
-
   // Clear errors when user starts typing (on input change)
   const handleInputChange = () => {
     if (error) {
       clearErrors()
     }
   }
-
+  
+  // Clear success state when component unmounts
   React.useEffect(() => {
-    // Clear success state when component unmounts
     return () => {
       resetState()
     }
-  }, [resetState])
+  }, [])
 
   const onSubmit = async (data: PasswordRecoveryFormData) => {
     setEmail(data.email)
