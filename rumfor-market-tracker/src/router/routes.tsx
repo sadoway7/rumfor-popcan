@@ -92,10 +92,7 @@ export function AppRoutes() {
       <Route path="/auth/login" element={<AuthLayout><Suspense fallback={<PageLoader />}><LoginPage /></Suspense></AuthLayout>} />
       <Route path="/auth/register" element={<AuthLayout><Suspense fallback={<PageLoader />}><RegisterPage /></Suspense></AuthLayout>} />
       <Route path="/auth/forgot-password" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordRecoveryPage /></Suspense></AuthLayout>} />
-<<<<<<< HEAD
-=======
       <Route path="/auth/reset-password" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
->>>>>>> 4d567dac8bee57b968a66f36085870853403ef4f
       <Route path="/auth/reset-password/:token" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
       <Route path="/auth/verify-email" element={<AuthLayout><Suspense fallback={<PageLoader />}><EmailVerificationPage /></Suspense></AuthLayout>} />
 

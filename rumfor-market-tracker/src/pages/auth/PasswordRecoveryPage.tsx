@@ -33,23 +33,13 @@ export function PasswordRecoveryPage() {
     resolver: zodResolver(passwordRecoverySchema),
   })
 
-<<<<<<< HEAD
-  // Clear errors when user starts typing (on input change)
-  const handleInputChange = () => {
-    if (error) {
-      clearErrors()
-    }
-  }
-  
   // Clear success state when component unmounts
   React.useEffect(() => {
     return () => {
-      resetState()
+      clearSuccess()
     }
   }, [])
 
-=======
->>>>>>> 4d567dac8bee57b968a66f36085870853403ef4f
   const onSubmit = async (data: PasswordRecoveryFormData) => {
     console.log('Password recovery form submitted:', { email: data.email })
     setEmail(data.email)
