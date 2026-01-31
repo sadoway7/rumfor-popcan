@@ -11,15 +11,14 @@
     --surface-2: 220 8% 94%;            /* Light grey for cards */
     --surface-3: 220 8% 90%;            /* Slightly darker light grey */
     
-    /* Unique & Sophisticated Color Palette */
-    --accent: 160 35% 28%;              /* Deep sage green - organic & unique */
+    /* Brand Color - Warm Orange */
+    --accent: 38 92% 50%;               /* Amber - warm and inviting */
     --accent-foreground: 0 0% 100%;
-    --accent-light: 160 35% 38%;        /* Lighter sage for hovers */
-    --accent-glow: 160 35% 28% / 0.12;  /* Subtle glow effect */
+    --accent-light: 38 92% 60%;         /* Lighter amber for hovers */
+    --accent-glow: 38 92% 50% / 0.12;   /* Subtle glow effect */
     
-    /* Secondary & Tertiary Accents - Warm & Natural */
+    /* Secondary Accent - Rich Amber */
     --accent-secondary: 35 75% 52%;     /* Warm amber - earthy & distinctive */
-    --accent-tertiary: 18 45% 38%;      /* Soft terracotta - organic warmth */
     
     /* Text Hierarchy - High contrast for light theme */
     --muted: 220 8% 45%;               /* Darker muted text for better readability */
@@ -56,6 +55,23 @@
     --muted-foreground: 220 8% 80%;    /* Better hierarchy */
   }
   
+  /* Orange accent colors for components */
+  .text-accent {
+    color: hsl(var(--accent));
+  }
+  
+  .text-accent-light {
+    color: hsl(var(--accent-light));
+  }
+  
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+  
+  .bg-accent-light {
+    background-color: hsl(var(--accent-light));
+  }
+  
   /* Removed global border rule - using organic design */
   
   body {
@@ -71,6 +87,23 @@
   
   html {
     scroll-behavior: smooth;
+    
+    /* Slower scroll physics for a more deliberate feel */
+    /* This affects the momentum/ramp of scrolling */
+    @supports (scroll-behavior: smooth) {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  /* Smooth scroll container for market lists and grids */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+  
+  /* Even gentler scroll for content-heavy areas */
+  .scroll-gentle {
+    scroll-behavior: smooth;
+    scroll-padding-top: 1rem;
   }
 }
 

@@ -21,7 +21,6 @@ export function PasswordRecoveryPage() {
     requestPasswordReset,
     clearErrors,
     clearSuccess,
-    resetState,
   } = usePasswordReset()
 
   const [email, setEmail] = React.useState('')
@@ -34,6 +33,7 @@ export function PasswordRecoveryPage() {
     resolver: zodResolver(passwordRecoverySchema),
   })
 
+<<<<<<< HEAD
   // Clear errors when user starts typing (on input change)
   const handleInputChange = () => {
     if (error) {
@@ -48,17 +48,32 @@ export function PasswordRecoveryPage() {
     }
   }, [])
 
+=======
+>>>>>>> 4d567dac8bee57b968a66f36085870853403ef4f
   const onSubmit = async (data: PasswordRecoveryFormData) => {
+    console.log('Password recovery form submitted:', { email: data.email })
     setEmail(data.email)
     clearErrors()
     clearSuccess()
     
-    const result = await requestPasswordReset(data.email)
-    
-    if (!result.success) {
-      // Error is already set in the hook
-      console.error('Password reset request failed:', result.error)
+    try {
+      console.log('Calling requestPasswordReset...')
+      const result = await requestPasswordReset(data.email)
+      console.log('Password reset request result:', result)
+      
+      if (!result.success) {
+        // Error is already set in the hook
+        console.error('Password reset request failed:', result.error)
+      }
+    } catch (err) {
+      console.error('Password reset request error:', err)
     }
+  }
+
+  const handleTryAgain = () => {
+    clearSuccess()
+    clearErrors()
+    setEmail('')
   }
 
   if (success) {
@@ -88,10 +103,7 @@ export function PasswordRecoveryPage() {
                 <p className="text-sm text-muted-foreground">
                   Didn't receive the email? Check your spam folder or{' '}
                   <button
-                    onClick={() => {
-                      clearSuccess()
-                      setEmail('')
-                    }}
+                    onClick={handleTryAgain}
                     className="text-accent hover:text-accent/80 transition-colors font-medium"
                   >
                     try again
@@ -141,27 +153,26 @@ export function PasswordRecoveryPage() {
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email Address
+                  {/* Debug: show form errors */}
+                  {errors.email && <span className="ml-2 text-xs text-red-500">(Validation Error)</span>}
                 </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className={`pl-10 ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
-                    {...register('email')}
-                    onChange={handleInputChange}
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  leftIcon={<Mail className="h-4 w-4" />}
+                  {...register('email')}
+                />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email.message}</p>
                 )}
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={isRequestingReset}
+                onClick={() => console.log('Password Recovery Button clicked!')}
               >
                 {isRequestingReset ? (
                   <>

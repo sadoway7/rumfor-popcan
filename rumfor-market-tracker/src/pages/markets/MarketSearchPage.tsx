@@ -151,14 +151,14 @@ export const MarketSearchPage: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Auth Message - Sales Pitch */}
       {!isAuthenticated && (
-        <div className="w-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground py-2 px-4 text-center text-sm">
+        <div className="w-full bg-gradient-to-r from-amber-500 to-amber-500/80 text-white py-2.5 px-4 text-center text-sm sm:text-base">
           <span className="font-medium">Free market tools</span>
           <span className="mx-2">·</span>
-          <Link to="/auth/register" className="text-primary-foreground underline font-medium hover:no-underline">
+          <Link to="/auth/register" className="text-white underline font-medium hover:no-underline">
             Register
           </Link>
           <span className="mx-2">or</span>
-          <Link to="/auth/login" className="text-primary-foreground underline font-medium hover:no-underline">
+          <Link to="/auth/login" className="text-white underline font-medium hover:no-underline">
             Sign In
           </Link>
         </div>
@@ -262,7 +262,7 @@ export const MarketSearchPage: React.FC = () => {
                                 }}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
                                   filters.category?.includes(category.value)
-                                    ? 'bg-accent text-accent-foreground'
+                                    ? 'bg-amber-500 text-white'
                                     : 'bg-surface-2 hover:bg-surface text-foreground'
                                 }`}
                               >
@@ -313,7 +313,7 @@ export const MarketSearchPage: React.FC = () => {
                                 }}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
                                   filters.status?.includes(status as any)
-                                    ? 'bg-accent text-accent-foreground'
+                                    ? 'bg-amber-500 text-white'
                                     : 'bg-surface-2 hover:bg-surface text-foreground'
                                 }`}
                               >
@@ -349,7 +349,7 @@ export const MarketSearchPage: React.FC = () => {
                     onClick={() => setSortBy('date')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
                       sortBy === 'date'
-                        ? 'bg-accent/10 text-accent border-accent/30'
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
                         : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
@@ -360,7 +360,7 @@ export const MarketSearchPage: React.FC = () => {
                     onClick={() => setSortBy('name')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
                       sortBy === 'name'
-                        ? 'bg-accent/10 text-accent border-accent/30'
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
                         : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
@@ -371,7 +371,7 @@ export const MarketSearchPage: React.FC = () => {
                     onClick={() => setSortBy('distance')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
                       sortBy === 'distance'
-                        ? 'bg-accent/10 text-accent border-accent/30'
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
                         : 'border-transparent hover:bg-surface-2'
                     }`}
                   >
@@ -404,7 +404,7 @@ export const MarketSearchPage: React.FC = () => {
                         }}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
                           filters.status?.includes(status as any)
-                            ? 'bg-accent text-accent-foreground'
+                            ? 'bg-amber-500 text-white'
                             : 'bg-surface-2 hover:bg-surface text-foreground'
                         }`}
                       >
