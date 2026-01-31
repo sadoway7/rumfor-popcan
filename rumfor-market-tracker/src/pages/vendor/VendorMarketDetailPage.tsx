@@ -30,8 +30,7 @@ import { format } from 'date-fns'
 
 // Lazy load heavy components for better performance
 const VendorTodoList = React.lazy(() => import('@/components/VendorTodoList').then(module => ({ default: module.VendorTodoList })))
-const VendorExpenseTracker = React.lazy(() => import('@/components/VendorExpenseTracker').then(module => ({ default: module.VendorExpenseTracker })))
-const VendorAnalyticsDashboard = React.lazy(() => import('@/components/VendorAnalyticsDashboard').then(module => ({ default: module.VendorAnalyticsDashboard })))
+const VendorBudgetList = React.lazy(() => import('@/components/VendorBudgetList').then(module => ({ default: module.VendorBudgetList })))
 
 // Loading component for lazy-loaded content
 const TabContentLoader: React.FC = () => (
@@ -311,15 +310,10 @@ export const VendorMarketDetailPage: React.FC = () => {
   )
 
   const BudgetingTabContent = () => (
-    <div className="space-y-4 -mt-2">
+    <div className="-mt-2">
       <ErrorBoundary fallback={<TabErrorFallback />}>
         <Suspense fallback={<TabContentLoader />}>
-          <VendorExpenseTracker marketId={market.id} />
-        </Suspense>
-      </ErrorBoundary>
-      <ErrorBoundary fallback={<TabErrorFallback />}>
-        <Suspense fallback={<TabContentLoader />}>
-          <VendorAnalyticsDashboard marketId={market.id} marketData={market} applicationData={existingApplication} />
+          <VendorBudgetList marketId={market.id} />
         </Suspense>
       </ErrorBoundary>
     </div>

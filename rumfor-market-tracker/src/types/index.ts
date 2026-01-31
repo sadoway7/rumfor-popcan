@@ -345,17 +345,24 @@ export interface Expense {
   updatedAt: string
 }
 
-export type ExpenseCategory = 
+export type ExpenseCategory =
   | 'booth-fee'
   | 'transportation'
   | 'accommodation'
   | 'supplies'
   | 'equipment'
   | 'marketing'
-  | 'food'
-  | 'fuel'
+  | 'food-meals'
+  | 'gasoline'
   | 'insurance'
-  | 'other'
+  | 'permits-licenses'
+  | 'parking'
+  | 'storage'
+  | 'shipping'
+  | 'utilities'
+  | 'miscellaneous'
+  | 'revenue'
+]
 
 // Notification Types
 export interface Notification {

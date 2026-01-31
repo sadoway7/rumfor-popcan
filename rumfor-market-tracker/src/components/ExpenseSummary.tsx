@@ -37,10 +37,10 @@ const categoryConfig = {
   'supplies': { label: 'Supplies', color: 'bg-green-100 text-green-700', icon: '📦' },
   'equipment': { label: 'Equipment', color: 'bg-yellow-100 text-yellow-700', icon: '🔧' },
   'marketing': { label: 'Marketing', color: 'bg-pink-100 text-pink-700', icon: '📢' },
-  'food': { label: 'Food', color: 'bg-orange-100 text-orange-700', icon: '🍽️' },
-  'fuel': { label: 'Fuel', color: 'bg-red-100 text-red-700', icon: '⛽' },
+  'food-meals': { label: 'Food', color: 'bg-orange-100 text-orange-700', icon: '🍽️' },
+  'gasoline': { label: 'Fuel', color: 'bg-red-100 text-red-700', icon: '⛽' },
   'insurance': { label: 'Insurance', color: 'bg-gray-100 text-gray-700', icon: '🛡️' },
-  'other': { label: 'Other', color: 'bg-slate-100 text-slate-700', icon: '📋' }
+  'miscellaneous': { label: 'Other', color: 'bg-slate-100 text-slate-700', icon: '📋' }
 }
 
 export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({

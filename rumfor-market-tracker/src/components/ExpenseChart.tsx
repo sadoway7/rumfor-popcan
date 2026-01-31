@@ -43,10 +43,10 @@ const categoryConfig = {
   'supplies': { label: 'Supplies', color: COLORS[3] },
   'equipment': { label: 'Equipment', color: COLORS[4] },
   'marketing': { label: 'Marketing', color: COLORS[5] },
-  'food': { label: 'Food', color: COLORS[6] },
-  'fuel': { label: 'Fuel', color: COLORS[7] },
+  'food-meals': { label: 'Food', color: COLORS[6] },
+  'gasoline': { label: 'Fuel', color: COLORS[7] },
   'insurance': { label: 'Insurance', color: COLORS[8] },
-  'other': { label: 'Other', color: COLORS[9] }
+  'miscellaneous': { label: 'Other', color: COLORS[9] }
 }
 
 export const ExpenseChart: React.FC<ExpenseChartProps> = React.memo(({

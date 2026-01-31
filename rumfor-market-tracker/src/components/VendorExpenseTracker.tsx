@@ -32,10 +32,10 @@ const categoryLabels: Record<ExpenseCategory, string> = {
   'supplies': 'Supplies',
   'equipment': 'Equipment',
   'marketing': 'Marketing',
-  'food': 'Food',
-  'fuel': 'Fuel',
+  'food-meals': 'Food',
+  'gasoline': 'Fuel',
   'insurance': 'Insurance',
-  'other': 'Other'
+  'miscellaneous': 'Other'
 }
 
 export const VendorExpenseTracker: React.FC<VendorExpenseTrackerProps> = React.memo(({

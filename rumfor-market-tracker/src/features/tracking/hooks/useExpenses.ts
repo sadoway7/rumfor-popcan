@@ -1,29 +1,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { trackingApi } from '../trackingApi'
 import { useAuthStore } from '@/features/auth/authStore'
-import { Expense } from '@/types'
+import { Expense, PaginatedResponse } from '@/types'
 
 export const useExpenses = (marketId?: string) => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
 
   // Query for expenses using TanStack Query for server state
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
+  const queryResult = useQuery({
     queryKey: ['expenses', user?.id, marketId],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
-      const response = await trackingApi.getExpenses(marketId)
-      return response.data
+      try {
+        const response = await trackingApi.getExpenses(marketId)
+        return response.data || { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
+      } catch (err) {
+        console.error('Failed to fetch expenses:', err)
+        // Return empty paginated response on error (e.g., access denied when not tracking market yet)
+        return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
+      }
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   })
+
+  const paginatedData = queryResult.data as PaginatedResponse<Expense> | undefined
 
   // Create expense mutation
   const createExpenseMutation = useMutation({
@@ -85,16 +88,18 @@ export const useExpenses = (marketId?: string) => {
   }
 
   const refreshExpenses = () => {
-    refetch()
+    if (queryResult.refetch) {
+      queryResult.refetch()
+    }
   }
 
   return {
     // Data from TanStack Query
-    expenses: data || [],
+    expenses: paginatedData?.data || [],
     
     // States from TanStack Query
-    isLoading,
-    error: error?.message || null,
+    isLoading: queryResult.isLoading,
+    error: queryResult.error?.message || null,
     
     // Mutation states
     isCreating: createExpenseMutation.isPending,
@@ -105,7 +110,7 @@ export const useExpenses = (marketId?: string) => {
     createExpense,
     updateExpense: updateExpenseById,
     deleteExpense: deleteExpenseById,
-    refresh: refreshExpenses,
+    refresh: () => queryResult.refetch(),
     
     // Mutations
     createExpenseMutation,
@@ -128,7 +133,7 @@ export const useExpenseSummary = (marketId?: string) => {
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
       const response = await trackingApi.getExpenseSummary(marketId)
-      return response.data
+      return response.data || null
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes

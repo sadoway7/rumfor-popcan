@@ -501,7 +501,8 @@ const validateExpenseCreation = [
     .isIn(['cash', 'credit-card', 'debit-card', 'check', 'bank-transfer', 'paypal', 'other'])
     .withMessage('Invalid payment method'),
   
-  body('market')
+  body('marketId')
+    .optional()
     .isMongoId()
     .withMessage('Invalid market ID'),
   

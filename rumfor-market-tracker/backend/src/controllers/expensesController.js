@@ -1,11 +1,29 @@
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const Expense = require('../models/Expense')
 const Market = require('../models/Market')
+const UserMarketTracking = require('../models/UserMarketTracking')
 const { validateExpenseCreation, validateMongoId, validatePagination } = require('../middleware/validation')
+const { body, query } = require('express-validator')
 
 // Get expenses for vendor and market
 const getExpenses = catchAsync(async (req, res, next) => {
   const { marketId } = req.query
+  
+  // DIAGNOSTIC LOGGING
+  console.log('[EXPENSES DEBUG] getExpenses - Query marketId:', marketId)
+  console.log('[EXPENSES DEBUG] getExpenses - Current user ID:', req.user.id)
+  console.log('[EXPENSES DEBUG] getExpenses - Market query param:', req.query.marketId)
+  
+  // Validate marketId from query parameter
+  if (!marketId) {
+    return next(new AppError('Market ID is required', 400))
+  }
+  
+  // Verify it's a valid MongoDB ID
+  if (!require('mongoose').Types.ObjectId.isValid(marketId)) {
+    return next(new AppError('Invalid market ID format', 400))
+  }
+  
   const {
     page = 1,
     limit = 20,
@@ -25,11 +43,32 @@ const getExpenses = catchAsync(async (req, res, next) => {
   }
 
   // Verify user has access to this market (either owns it or is tracking it)
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const isPromoter = market.promoter && market.promoter.toString() === req.user.id
+  const isAdmin = req.user.role === 'admin'
+  const isTracking = await UserMarketTracking.findOne({ user: req.user.id, market: marketId })
+
+  // For GET operations: also require hasExpense, but for CREATE operations this would block first item
+  const hasExpense = await Expense.findOne({ vendor: req.user.id, market: marketId })
+
+  // For GET: allow if tracking or has expense or owns market or is admin
+  // For CREATE: allow if tracking or owns market or is admin (not hasExpense - that would block first item)
+  const hasAccess = isPromoter || isAdmin || isTracking || hasExpense
+
+  console.log('[EXPENSES DEBUG] getExpenses - Market lookup:', {
+    marketId,
+    marketExists: !!market,
+    promoterId: market.promoter?.toString(),
+    userId: req.user.id,
+    userRole: req.user.role,
+    isPromoter,
+    isAdmin,
+    isTracking: !!isTracking,
+    hasExpense: !!hasExpense,
+    hasAccess
+  })
 
   if (!hasAccess) {
+    console.log('[EXPENSES DEBUG] Access denied for user:', req.user.id, 'market:', marketId, 'isPromoter:', isPromoter, 'isAdmin:', isAdmin, 'isTracking:', !!isTracking, 'hasExpense:', !!hasExpense)
     return next(new AppError('Access denied to this market', 403))
   }
 
@@ -80,6 +119,11 @@ const getExpense = catchAsync(async (req, res, next) => {
 // Create new expense
 const createExpense = catchAsync(async (req, res, next) => {
   const { marketId, ...expenseData } = req.body
+  
+  // DIAGNOSTIC LOGGING
+  console.log('[EXPENSES DEBUG] createExpense - Request body:', JSON.stringify(req.body, null, 2))
+  console.log('[EXPENSES DEBUG] createExpense - Extracted marketId:', marketId)
+  console.log('[EXPENSES DEBUG] createExpense - Current user ID:', req.user.id)
 
   // Verify market exists
   const market = await Market.findById(marketId)
@@ -89,9 +133,12 @@ const createExpense = catchAsync(async (req, res, next) => {
   }
 
   // Verify user has access to this market
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const isPromoter = market.promoter && market.promoter.toString() === req.user.id
+  const isAdmin = req.user.role === 'admin'
+  const isTracking = await UserMarketTracking.findOne({ user: req.user.id, market: marketId })
+
+  // For CREATE: allow if tracking or owns market or is admin (NOT hasExpense - that would block first item)
+  const hasAccess = isPromoter || isAdmin || isTracking
 
   if (!hasAccess) {
     return next(new AppError('Access denied to this market', 403))
@@ -332,9 +379,13 @@ const getExpenseSummary = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const isPromoter = market.promoter && market.promoter.toString() === req.user.id
+  const isAdmin = req.user.role === 'admin'
+  const isTracking = await UserMarketTracking.findOne({ user: req.user.id, market: marketId })
+
+  // For GET operations: allow if tracking or has expense or owns market or is admin
+  const hasExpense = await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const hasAccess = isPromoter || isAdmin || isTracking || hasExpense
 
   if (!hasAccess) {
     return next(new AppError('Access denied to this market', 403))
@@ -408,9 +459,13 @@ const exportExpenses = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  const hasAccess = market.promoter.toString() === req.user.id || 
-                   req.user.role === 'admin' ||
-                   await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const isPromoter = market.promoter && market.promoter.toString() === req.user.id
+  const isAdmin = req.user.role === 'admin'
+  const isTracking = await UserMarketTracking.findOne({ user: req.user.id, market: marketId })
+
+  // For GET operations: allow if tracking or has expense or owns market or is admin
+  const hasExpense = await Expense.findOne({ vendor: req.user.id, market: marketId })
+  const hasAccess = isPromoter || isAdmin || isTracking || hasExpense
 
   if (!hasAccess) {
     return next(new AppError('Access denied to this market', 403))

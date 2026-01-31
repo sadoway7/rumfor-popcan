@@ -52,12 +52,12 @@ const categoryConfig = {
     color: 'bg-pink-100 text-pink-700 border-pink-200',
     icon: '📢'
   },
-  'food': {
+  'food-meals': {
     label: 'Food',
     color: 'bg-orange-100 text-orange-700 border-orange-200',
     icon: '🍽️'
   },
-  'fuel': {
+  'gasoline': {
     label: 'Fuel',
     color: 'bg-red-100 text-red-700 border-red-200',
     icon: '⛽'
@@ -67,7 +67,7 @@ const categoryConfig = {
     color: 'bg-gray-100 text-gray-700 border-gray-200',
     icon: '🛡️'
   },
-  'other': {
+  'miscellaneous': {
     label: 'Other',
     color: 'bg-slate-100 text-slate-700 border-slate-200',
     icon: '📋'

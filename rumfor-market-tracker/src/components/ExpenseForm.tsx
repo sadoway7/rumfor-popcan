@@ -26,10 +26,10 @@ const categories: { value: ExpenseCategory; label: string; description: string }
   { value: 'supplies', label: 'Supplies', description: 'Display materials, tablecloths' },
   { value: 'equipment', label: 'Equipment', description: 'Tools, machinery rental' },
   { value: 'marketing', label: 'Marketing', description: 'Flyers, business cards, ads' },
-  { value: 'food', label: 'Food', description: 'Meals during market events' },
-  { value: 'fuel', label: 'Fuel', description: 'Vehicle fuel costs' },
+  { value: 'food-meals', label: 'Food', description: 'Meals during market events' },
+  { value: 'gasoline', label: 'Fuel', description: 'Vehicle fuel costs' },
   { value: 'insurance', label: 'Insurance', description: 'Event or liability insurance' },
-  { value: 'other', label: 'Other', description: 'Miscellaneous expenses' }
+  { value: 'miscellaneous', label: 'Other', description: 'Miscellaneous expenses' }
 ]
 
 export const ExpenseForm: React.FC<ExpenseFormProps> = ({
@@ -138,8 +138,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
       case 'supplies': return 'border-green-300'
       case 'equipment': return 'border-yellow-300'
       case 'marketing': return 'border-pink-300'
-      case 'food': return 'border-orange-300'
-      case 'fuel': return 'border-red-300'
+      case 'food-meals': return 'border-orange-300'
+      case 'gasoline': return 'border-red-300'
       case 'insurance': return 'border-gray-300'
       default: return 'border-slate-300'
     }
