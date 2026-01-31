@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
 import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, TrendingUp, TrendingDown, Sparkles, Calendar } from 'lucide-react'
+import { useAuthStore } from '@/features/auth/authStore'
 
 interface VendorBudgetListProps {
   marketId: string
@@ -106,10 +107,10 @@ const categoryColors: Record<string, string> = {
 }
 
 export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, className }) => {
+  const { user } = useAuthStore()
   const { expenses, isLoading, error, createExpense, deleteExpense, updateExpense } = useExpenses(marketId)
   const [showPresets, setShowPresets] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
   const [newCategory, setNewCategory] = useState<ExpenseCategory>('booth-fee')
@@ -143,7 +144,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
     if (!newTitle.trim() || !newExpected) return
 
     const expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'> = {
-      vendorId: 'test', // TODO: Get from auth store
+      vendorId: user?.id || '',
       marketId,
       category: newCategory,
       title: newTitle,
@@ -169,7 +170,6 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
     setNewActual('')
     setNewDescription('')
     setNewDate('')
-    setSelectedPreset(null)
   }
 
   const handleSelectPreset = (preset: any) => {
@@ -179,7 +179,6 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
     setNewActual('')
     setNewDescription(preset.description)
     setNewDate('')
-    setSelectedPreset(preset.id)
     setShowPresets(false)
     setSelectedCategory(null)
     setShowForm(true)
@@ -197,8 +196,6 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
 
   // Ultra-compact budget item
   const BudgetCompactItem = ({ expense }: { expense: Expense }) => {
-    const variance = expense.amount - expense.amount // Always 0 until we track both values
-
     return (
       <div className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
         {/* Category badge */}

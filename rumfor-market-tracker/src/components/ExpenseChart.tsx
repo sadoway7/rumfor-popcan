@@ -36,7 +36,7 @@ const COLORS = [
   '#6B7280'  // gray
 ]
 
-const categoryConfig = {
+const categoryConfig: Record<ExpenseCategory, { label: string; color: string }> = {
   'booth-fee': { label: 'Booth Fee', color: COLORS[0] },
   'transportation': { label: 'Transportation', color: COLORS[1] },
   'accommodation': { label: 'Accommodation', color: COLORS[2] },
@@ -46,7 +46,13 @@ const categoryConfig = {
   'food-meals': { label: 'Food', color: COLORS[6] },
   'gasoline': { label: 'Fuel', color: COLORS[7] },
   'insurance': { label: 'Insurance', color: COLORS[8] },
-  'miscellaneous': { label: 'Other', color: COLORS[9] }
+  'permits-licenses': { label: 'Permits', color: COLORS[0] },
+  'parking': { label: 'Parking', color: COLORS[1] },
+  'storage': { label: 'Storage', color: COLORS[2] },
+  'shipping': { label: 'Shipping', color: COLORS[3] },
+  'utilities': { label: 'Utilities', color: COLORS[4] },
+  'miscellaneous': { label: 'Other', color: COLORS[9] },
+  'revenue': { label: 'Revenue', color: COLORS[2] }
 }
 
 export const ExpenseChart: React.FC<ExpenseChartProps> = React.memo(({

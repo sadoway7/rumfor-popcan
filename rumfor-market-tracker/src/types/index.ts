@@ -362,7 +362,6 @@ export type ExpenseCategory =
   | 'utilities'
   | 'miscellaneous'
   | 'revenue'
-]
 
 // Notification Types
 export interface Notification {

@@ -67,7 +67,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({
         title: '',
         description: '',
         amount: '',
-        category: 'other',
+        category: 'miscellaneous',
         date: format(new Date(), 'yyyy-MM-dd'),
         receipt: ''
       })

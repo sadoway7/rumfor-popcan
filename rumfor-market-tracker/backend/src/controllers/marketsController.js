@@ -124,7 +124,7 @@ const getMarket = catchAsync(async (req, res, next) => {
   // Get tracking status if user is authenticated
   let trackingStatus = null
   if (req.user) {
-    const userId = req.user._id || req.user.id
+    const userId = req.user._id
     const tracking = await UserMarketTracking.findOne({
       user: userId,
       market: id
@@ -156,7 +156,7 @@ const createMarket = catchAsync(async (req, res, next) => {
   }
 
   // Add promoter and creator type to market data
-  const userId = req.user._id || req.user.id
+  const userId = req.user._id
   const marketData = {
     ...req.body,
     promoter: userId,
@@ -172,7 +172,7 @@ const createMarket = catchAsync(async (req, res, next) => {
       url: getGenericMarketImage(tempId),
       alt: 'Community market',
       isHero: true,
-      uploadedBy: req.user.id
+      uploadedBy: req.user._id
     }];
   }
 
@@ -203,7 +203,7 @@ const updateMarket = catchAsync(async (req, res, next) => {
   }
 
   // Check if user owns this market or is admin
-  if (market.promoter.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (market.promoter.toString() !== req.user._id && req.user.role !== 'admin') {
     return next(new AppError('You can only update markets you created', 403))
   }
 
@@ -234,7 +234,7 @@ const deleteMarket = catchAsync(async (req, res, next) => {
   }
 
   // Check if user owns this market or is admin
-  if (market.promoter.toString() !== req.user.id && req.user.role !== 'admin') {
+  if (market.promoter.toString() !== req.user._id && req.user.role !== 'admin') {
     return next(new AppError('You can only delete markets you created', 403))
   }
 
@@ -264,7 +264,7 @@ const toggleTracking = catchAsync(async (req, res, next) => {
   const trackingStatus = status || defaultStatus
 
   // Get user ID - handle both _id and id
-  const userId = req.user._id || req.user.id
+  const userId = req.user._id
 
   // Find existing tracking
   let tracking = await UserMarketTracking.findOne({
@@ -313,7 +313,7 @@ const untrackMarket = catchAsync(async (req, res, next) => {
   }
 
   // Get user ID - handle both _id and id
-  const userId = req.user._id || req.user.id
+  const userId = req.user._id
 
   // Find existing tracking
   const tracking = await UserMarketTracking.findOne({
@@ -348,7 +348,7 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   } = req.query
 
   // Build query conditions
-  const userId = req.user._id || req.user.id
+  const userId = req.user._id
   console.log('[GET MY MARKETS] Querying with userId:', userId)
   const query = {
     user: userId,
@@ -358,6 +358,65 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   if (status) {
     query.status = status
   }
+
+  // Get all tracking records for the user
+  const allTracking = await UserMarketTracking.find(query)
+
+  // Get market IDs from tracking records
+  const marketIds = allTracking.map(t => t.market)
+
+  // Aggregate expenses for each market
+  const expenseAggregations = marketIds.length > 0 ? await Expense.aggregate([
+    {
+      $match: {
+        vendor: userId,
+        market: { $in: marketIds },
+        isDeleted: false
+      }
+    },
+    {
+      $group: {
+        _id: '$market',
+        totalExpenses: { $sum: { $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount'] } }
+      }
+    }
+  ]) : []
+
+  // Create expense totals map for quick lookup
+  const expenseTotalsMap = new Map()
+  expenseAggregations.forEach(result => {
+    if (result._id) {
+      expenseTotalsMap.set(result._id.toString(), result.totalExpenses)
+    }
+  })
+
+  // Aggregate todos for each market
+  const todoAggregations = marketIds.length > 0 ? await Todo.aggregate([
+    {
+      $match: {
+        vendor: userId,
+        market: { $in: marketIds },
+        isDeleted: false
+      }
+    },
+    {
+      $group: {
+        _id: '$market',
+        totalTodos: { $sum: 1 },
+        completedTodos: { $sum: { $cond: [{ $eq: ['$completed', true] }, 1, 0] } }
+      }
+    }
+  ]) : []
+
+  // Create todo totals map for quick lookup
+  const todoTotalsMap = new Map()
+  todoAggregations.forEach(result => {
+    if (result._id) {
+      const completed = result.completedTodos || 0
+      const total = result.totalTodos || 0
+      todoTotalsMap.set(result._id.toString(), { total, completed, progress: total > 0 ? Math.round((completed / total) * 100) : 0 })
+    }
+  })
 
   // OPTIMIZED QUERY: Using .find() with .populate() and .lean() for 60-70% faster performance
   const tracking = await UserMarketTracking.find(query)
@@ -379,82 +438,19 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   // Filter out tracking records where market was deleted or made private
   const validTracking = tracking.filter(t => t.market !== null)
 
-  /* ORIGINAL COMPLEX AGGREGATION (COMMENTED OUT FOR ROLLBACK)
-  // This approach uses nested $lookup which causes 250-550ms response times
-  const tracking = await UserMarketTracking.aggregate([
-    { $match: matchConditions },
-    {
-      $lookup: {
-        from: 'markets',
-        localField: 'market',
-        foreignField: '_id',
-        as: 'market',
-        pipeline: [
-          {
-            $match: {
-              status: 'active',
-              isPublic: true
-            }
-          },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'promoter',
-              foreignField: '_id',
-              as: 'promoter',
-              pipeline: [
-                {
-                  $project: {
-                    username: 1,
-                    'profile.firstName': 1,
-                    'profile.lastName': 1
-                  }
-                }
-              ]
-            }
-          },
-          {
-            $unwind: {
-              path: '$promoter',
-              preserveNullAndEmptyArrays: true
-            }
-          }
-        ]
-      }
-    },
-    {
-      $unwind: {
-        path: '$market',
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $match: {
-        market: { $exists: true, $ne: null }
-      }
-    },
-    {
-      $sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
-    },
-    {
-      $skip: (page - 1) * limit
-    },
-    {
-      $limit: limit
-    }
-  ])
-  */
-
   // Get total count (use query object, not matchConditions)
   const total = await UserMarketTracking.countDocuments(query)
 
   // Get status counts (this is already efficient with aggregation)
-  const statusCounts = await UserMarketTracking.getUserStatusCounts(req.user._id || req.user.id)
+  const statusCounts = await UserMarketTracking.getUserStatusCounts(req.user._id)
 
   // Re-enable serializer for proper frontend data formatting
   const serializedTracking = validTracking.map(t => ({
     ...t,
-    market: serializeMarket(t.market)
+    market: serializeMarket(t.market),
+    totalExpenses: expenseTotalsMap.get(t.market?.toString()) || 0,
+    todoCount: todoTotalsMap.get(t.market?.toString())?.total || 0,
+    todoProgress: todoTotalsMap.get(t.market?.toString())?.progress || 0
   }))
 
   sendSuccess(res, {
@@ -716,7 +712,7 @@ const getVendorView = catchAsync(async (req, res, next) => {
 
   // Get vendor-specific tracking info
   const tracking = await UserMarketTracking.findOne({
-    user: req.user.id,
+    user: req.user._id,
     market: id
   })
 
@@ -730,7 +726,7 @@ const getVendorView = catchAsync(async (req, res, next) => {
   })
 
   // Get vendor's expense summary for this market
-  const expenseSummary = await Expense.getVendorMarketSummary(req.user.id, id)
+  const expenseSummary = await Expense.getVendorMarketSummary(req.user._id, id)
 
   sendSuccess(res, {
     market: {
@@ -760,13 +756,13 @@ const trackVendorInteraction = catchAsync(async (req, res, next) => {
 
   // Find or create tracking record
   let tracking = await UserMarketTracking.findOne({
-    user: req.user.id,
+    user: req.user._id,
     market: id
   })
 
   if (!tracking) {
     tracking = await UserMarketTracking.create({
-      user: req.user.id,
+      user: req.user._id,
       market: id,
       status: 'interested'
     })
@@ -792,7 +788,7 @@ const getVendorHistory = catchAsync(async (req, res, next) => {
 
   // Get all tracking records for this vendor and market
   const history = await UserMarketTracking.find({
-    user: req.user.id,
+    user: req.user._id,
     market: id
   })
   .populate('market', 'name category location.city location.state dates')
@@ -829,7 +825,7 @@ const getApplicationStatus = catchAsync(async (req, res, next) => {
 
   // Get current application/tracking status
   const tracking = await UserMarketTracking.findOne({
-    user: req.user.id,
+    user: req.user._id,
     market: id
   }).populate('applicationData.reviewedBy', 'username profile.firstName profile.lastName')
 
@@ -861,8 +857,8 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
   const analyticsResult = await Expense.aggregate([
     {
       $match: {
-        vendor: mongoose.Types.ObjectId(req.user.id),
-        market: mongoose.Types.ObjectId(id),
+        vendor: req.user._id,
+        market: new mongoose.Types.ObjectId(id),
         isDeleted: false
       }
     },
@@ -871,8 +867,8 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
     },
     {
       $match: {
-        vendor: mongoose.Types.ObjectId(req.user.id),
-        market: mongoose.Types.ObjectId(id),
+        vendor: req.user._id,
+        market: new mongoose.Types.ObjectId(id),
         isDeleted: false
       }
     },
@@ -984,7 +980,7 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
 const getVendorComparison = catchAsync(async (req, res, next) => {
   // Get all markets where vendor has participated
   const participations = await UserMarketTracking.find({
-    user: req.user.id,
+    user: req.user._id,
     status: 'completed'
   }).populate('market', 'name category location.city location.state')
 
@@ -994,7 +990,7 @@ const getVendorComparison = catchAsync(async (req, res, next) => {
   const expenseSummaries = await Expense.aggregate([
     {
       $match: {
-        vendor: mongoose.Types.ObjectId(req.user.id),
+        vendor: req.user._id,
         market: { $in: marketIds },
         isDeleted: false
       }
@@ -1073,7 +1069,7 @@ const getPromoterMessages = catchAsync(async (req, res, next) => {
     return next(new AppError('Access denied. You can only see messages for markets you own or applied to.', 403))
   }
 
-  const messages = await Message.getUserMarketMessages(req.user.id, id, { page: parseInt(page), limit: parseInt(limit) })
+  const messages = await Message.getUserMarketMessages(req.user._id, id, { page: parseInt(page), limit: parseInt(limit) })
 
   sendSuccess(res, {
     messages,
@@ -1127,7 +1123,7 @@ const sendPromoterMessage = catchAsync(async (req, res, next) => {
 
   const message = await Message.create({
     content: content.trim(),
-    sender: req.user.id,
+    sender: req.user._id,
     recipient,
     market: id,
     messageType: req.user.role === 'vendor' ? 'vendor-to-promoter' : 'promoter-to-vendor'
@@ -1156,7 +1152,7 @@ const getVendorTodos = catchAsync(async (req, res, next) => {
   if (category) options.category = category
   if (priority) options.priority = priority
 
-  const todos = await Todo.getVendorMarketTodos(req.user.id, id, options)
+  const todos = await Todo.getVendorMarketTodos(req.user._id, id, options)
 
   sendSuccess(res, {
     todos,
@@ -1183,7 +1179,7 @@ const getVendorExpenses = catchAsync(async (req, res, next) => {
   if (dateFrom) options.dateFrom = dateFrom
   if (dateTo) options.dateTo = dateTo
 
-  const expenses = await Expense.getVendorMarketExpenses(req.user.id, id, options)
+  const expenses = await Expense.getVendorMarketExpenses(req.user._id, id, options)
 
   sendSuccess(res, {
     expenses,

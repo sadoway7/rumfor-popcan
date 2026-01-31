@@ -40,6 +40,19 @@ const userMarketTrackingSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // Vendor tracking statistics
+  todoCount: {
+    type: Number,
+    default: 0
+  },
+  todoProgress: {
+    type: Number,
+    default: 0
+  },
+  totalExpenses: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now

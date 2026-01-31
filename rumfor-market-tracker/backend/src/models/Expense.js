@@ -64,7 +64,7 @@ const expenseSchema = new mongoose.Schema({
     filename: String,
     uploadedAt: Date
   },
-  vendor: {
+  vendorContact: {  // Renamed from 'vendor' to avoid conflict with vendor ObjectId ref
     name: String,
     address: String,
     phone: String,

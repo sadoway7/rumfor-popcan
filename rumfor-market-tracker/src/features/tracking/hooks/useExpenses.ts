@@ -87,31 +87,25 @@ export const useExpenses = (marketId?: string) => {
     deleteExpenseMutation.mutate(id)
   }
 
-  const refreshExpenses = () => {
-    if (queryResult.refetch) {
-      queryResult.refetch()
-    }
-  }
-
   return {
     // Data from TanStack Query
     expenses: paginatedData?.data || [],
-    
+
     // States from TanStack Query
     isLoading: queryResult.isLoading,
     error: queryResult.error?.message || null,
-    
+
     // Mutation states
     isCreating: createExpenseMutation.isPending,
     isUpdating: updateExpenseMutation.isPending,
     isDeleting: deleteExpenseMutation.isPending,
-    
+
     // Actions
     createExpense,
     updateExpense: updateExpenseById,
     deleteExpense: deleteExpenseById,
     refresh: () => queryResult.refetch(),
-    
+
     // Mutations
     createExpenseMutation,
     updateExpenseMutation,

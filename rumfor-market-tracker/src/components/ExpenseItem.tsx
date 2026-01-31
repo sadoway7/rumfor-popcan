@@ -21,7 +21,7 @@ interface ExpenseItemProps {
   isLoading?: boolean
 }
 
-const categoryConfig = {
+const categoryConfig: Record<string, { label: string; color: string; icon: string }> = {
   'booth-fee': {
     label: 'Booth Fee',
     color: 'bg-purple-100 text-purple-700 border-purple-200',
@@ -67,10 +67,40 @@ const categoryConfig = {
     color: 'bg-gray-100 text-gray-700 border-gray-200',
     icon: '🛡️'
   },
+  'permits-licenses': {
+    label: 'Permits',
+    color: 'bg-purple-100 text-purple-700 border-purple-200',
+    icon: '📄'
+  },
+  'parking': {
+    label: 'Parking',
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    icon: '🅿️'
+  },
+  'storage': {
+    label: 'Storage',
+    color: 'bg-green-100 text-green-700 border-green-200',
+    icon: '📦'
+  },
+  'shipping': {
+    label: 'Shipping',
+    color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    icon: '🚢'
+  },
+  'utilities': {
+    label: 'Utilities',
+    color: 'bg-sky-100 text-sky-700 border-sky-200',
+    icon: '💡'
+  },
   'miscellaneous': {
     label: 'Other',
     color: 'bg-slate-100 text-slate-700 border-slate-200',
     icon: '📋'
+  },
+  'revenue': {
+    label: 'Revenue',
+    color: 'bg-green-100 text-green-700 border-green-200',
+    icon: '💰'
   }
 }
 
@@ -107,7 +137,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({
     }).format(amount)
   }
 
-  const category = categoryConfig[expense.category] || categoryConfig['other']
+  const category = categoryConfig[expense.category] || categoryConfig['miscellaneous']
 
   return (
     <Card 

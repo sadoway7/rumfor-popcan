@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
-import { 
-  Calendar, 
-  MapPin, 
-  CheckSquare, 
+import { useExpenses } from '@/features/tracking/hooks/useExpenses'
+import {
+  Calendar,
+  MapPin,
+  CheckSquare,
+  DollarSign,
   X,
   ChevronDown,
   Trash2
@@ -73,8 +75,9 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   className
 }) => {
   const { todos, toggleTodo } = useTodos(market.id)
+  const { expenses } = useExpenses(market.id)
   const [showStatusModal, setShowStatusModal] = useState(false)
-  
+
   const formatSchedule = (schedule: Market['schedule']): string => {
     if (!schedule || schedule.length === 0) return 'TBD'
     const firstSchedule = schedule[0]
@@ -87,6 +90,7 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   const incompleteTodos = todos.filter(t => !t.completed)
   const completedTodos = todos.filter(t => t.completed)
   const recentTodos = [...incompleteTodos.slice(0, 3), ...completedTodos.slice(0, 2)].slice(0, 5)
+  const recentExpenses = expenses.slice(0, 3)  // Show up to 3 recent expenses
 
   const handleToggleTodo = (todoId: string) => {
     if (onToggleTodo) {
@@ -207,6 +211,28 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
               </div>
             </div>
           )}
+
+          {/* Expense list - show after todos */}
+          {recentExpenses.length > 0 && (
+            <div className="p-3 border-t border-border" onClick={(e) => e.stopPropagation()}>
+              <div className="space-y-1.5">
+                {recentExpenses.map((expense) => (
+                  <div key={expense.id} className="flex items-center gap-2.5 py-1 rounded">
+                    <div className="w-4 h-4 rounded bg-accent/10 flex items-center justify-center shrink-0">
+                      <DollarSign className="w-3 h-3 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate">{expense.title}</div>
+                      {expense.description && (
+                        <div className="text-xs text-muted-foreground truncate">{expense.description}</div>
+                      )}
+                    </div>
+                    <div className="text-sm font-semibold">${expense.amount.toLocaleString()}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Desktop */}
@@ -269,22 +295,26 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
             </div>
           </div>
 
-          {/* Tasks panel */}
+          {/* Tasks panel - now shows both tasks and expenses */}
           <div className="flex-1 p-3 min-w-0 bg-surface/50 rounded-r-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <CheckSquare className="w-3.5 h-3.5" />
-                {completedTodos.length}/{todos.length} · ${tracking?.totalExpenses || 0}
+                {completedTodos.length}/{todos.length}
+                <span className="text-muted-foreground/50">·</span>
+                <DollarSign className="w-3.5 h-3.5" />
+                ${tracking?.totalExpenses || 0}
               </span>
               <Link to={`/vendor/markets/${market.id}`} className="text-xs font-medium text-accent hover:underline">
                 + Add
               </Link>
             </div>
-  
-            {recentTodos.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No tasks</p>
+
+            {recentTodos.length === 0 && recentExpenses.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">No tasks or expenses</p>
             ) : (
               <div className="space-y-1">
+                {/* Show todos */}
                 {recentTodos.map((todo) => (
                   <label key={todo.id} className="flex items-center gap-2 py-0.5 rounded hover:bg-surface cursor-pointer">
                     <input
@@ -301,12 +331,22 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
                     )}
                   </label>
                 ))}
+                {/* Show expenses */}
+                {recentExpenses.map((expense) => (
+                  <div key={expense.id} className="flex items-center gap-2 py-0.5 rounded">
+                    <div className="w-3.5 h-3.5 rounded bg-accent/10 flex items-center justify-center shrink-0">
+                      <DollarSign className="w-2.5 h-2.5 text-accent" />
+                    </div>
+                    <span className="text-xs flex-1 truncate">{expense.title}</span>
+                    <span className="text-xs font-semibold">${expense.amount.toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
             )}
-            
-            {todos.length > 5 && (
+
+            {(todos.length > 5 || expenses.length > 5) && (
               <Link to={`/vendor/markets/${market.id}`} className="block mt-2 text-xs text-accent hover:underline">
-                +{todos.length - 5} more
+                +{(todos.length - 5) + (expenses.length - 5)} more
               </Link>
             )}
           </div>
