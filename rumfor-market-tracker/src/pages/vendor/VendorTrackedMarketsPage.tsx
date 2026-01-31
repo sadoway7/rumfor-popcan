@@ -4,7 +4,7 @@ import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Button, EmptyState } from '@/components/ui'
 import { VendorTrackedMarketRow } from '@/components/VendorTrackedMarketRow'
 import { VendorMarketCard } from '@/components/VendorMarketCard'
-import { MapPin, List, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MapPin, List, LayoutGrid, Plus } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export function VendorTrackedMarketsPage() {
@@ -97,11 +97,11 @@ export function VendorTrackedMarketsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Redesigned header matching main site */}
-      <div className="sticky top-0 z-20 bg-surface shadow-sm -mt-px">
+      <div className="sticky top-0 z-20 bg-background shadow-sm py-2.5">
         {/* Main controls row */}
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-surface -mx-4 sm:mx-0 sm:px-3">
+        <div className="flex items-center gap-2 px-4 bg-background">
           {/* View toggle - hidden on mobile, visible on larger screens */}
-          <div className="hidden sm:flex border border-border rounded shrink-0 h-10">
+          <div className="hidden sm:flex rounded shrink-0 h-10">
             <button
               onClick={() => setViewMode('list')}
               className={cn(
@@ -139,11 +139,10 @@ export function VendorTrackedMarketsPage() {
         </div>
 
         {/* Status filters row */}
-        <div className="relative flex flex-nowrap items-center gap-2 px-4 py-3 bg-background -mx-4 overflow-x-auto scrollbar-hide sm:mx-0 sm:px-3 border-b border-border">
+        <div className="relative flex flex-nowrap items-center gap-2 px-4 bg-background">
           <span className="text-xs font-medium text-muted-foreground shrink-0 hidden sm:block">{trackedMarkets.length} Markets:</span>
 
           {/* Left arrow indicator */}
-          <ChevronLeft className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
 
           {/* Scrollable filters */}
           <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
@@ -151,7 +150,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('all')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               All ({statusCounts.all})
@@ -160,7 +159,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('interested')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               {statusCounts.interested} interested
@@ -169,7 +168,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('applied')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               {statusCounts.applied} applied
@@ -178,7 +177,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('approved')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               {statusCounts.approved} approved
@@ -187,7 +186,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('attending')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               {statusCounts.attending} attending
@@ -196,7 +195,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('completed')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
+                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
               )}
             >
               {statusCounts.completed} done
@@ -204,7 +203,6 @@ export function VendorTrackedMarketsPage() {
           </div>
 
           {/* Right arrow indicator */}
-          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
         </div>
         
         <style>{`
@@ -219,7 +217,7 @@ export function VendorTrackedMarketsPage() {
       </div>
 
       {/* Content */}
-      <div className="pt-4 sm:p-0 sm:container sm:mx-auto sm:px-3 sm:py-3">
+      <div className="pt-0 sm:pt-3 sm:container sm:mx-auto sm:px-3 sm:py-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent border-t-transparent" />
@@ -245,7 +243,7 @@ export function VendorTrackedMarketsPage() {
           <>
             {/* List view */}
             {viewMode === 'list' && (
-              <div className="space-y-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:space-y-3">
+              <div className="space-y-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:space-y-3 sm:py-0">
                 {sortedMarkets.map((market) => (
                   <div key={market.id}>
                     <VendorTrackedMarketRow
@@ -262,7 +260,7 @@ export function VendorTrackedMarketsPage() {
 
             {/* Grid view */}
             {viewMode === 'grid' && (
-              <div className="grid grid-cols-1 gap-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 -mt-px -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid-cols-2 lg:grid-cols-3 sm:py-0">
                 {sortedMarkets.map((market) => (
                   <VendorMarketCard
                     key={market.id}

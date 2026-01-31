@@ -233,9 +233,9 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
           "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
           categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
         )}>
-          {categories.find(c => c.id === expense.category)?.label.split(' ')[0] || expense.category}
+          {categories.find(c => c.id === expense.category)?.label.split(' ')[0]?.substring(0, 4) || expense.category}
         </span>
-
+  
         {/* Title and description */}
         <div className="flex-1 min-w-0">
           <span className="block text-sm font-medium truncate">{expense.title}</span>
@@ -243,12 +243,12 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
             <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>
           )}
         </div>
-
+  
         {/* Expected amount */}
         <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
           ${expense.amount.toLocaleString()}
         </div>
-
+  
         {/* Actual amount - editable */}
         {isEditingActual ? (
           <input
@@ -265,17 +265,19 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
           <button
             onClick={startEditing}
             className={cn(
-              "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right hover:text-accent transition-colors",
-              actualAmount === undefined && "text-muted-foreground italic"
+              "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right px-2 py-0.5 rounded transition-colors border",
+              actualAmount === undefined
+                ? "text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
+                : "border-border hover:text-accent hover:bg-accent/10"
             )}
           >
             {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
           </button>
         )}
-
-        {/* Variance */}
+  
+        {/* Variance - hidden on mobile */}
         <div className={cn(
-          "text-xs font-medium min-w-[50px] text-right whitespace-nowrap",
+          "text-xs font-medium min-w-[50px] text-right whitespace-nowrap hidden md:block",
           variance === null && "text-muted-foreground/30",
           variance === 0 && "text-muted-foreground",
           variance && variance > 0 && "text-red-600",
@@ -285,7 +287,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
            variance === 0 ? '$0' :
            (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
         </div>
-
+  
         {/* Actions menu */}
         <div className="relative">
           <button
@@ -294,7 +296,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
-
+  
           {openMenuId === expense.id && (
             <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
               <button
@@ -402,7 +404,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
             <div className="flex-1">Item</div>
             <div className="min-w-[60px] text-right">Budget</div>
             <div className="min-w-[60px] text-right">Actual</div>
-            <div className="min-w-[50px] text-right">Diff</div>
+            <div className="min-w-[50px] text-right hidden md:block">Diff</div>
             <div className="w-8"></div>
           </div>
           {expenses.map((expense: Expense) => (

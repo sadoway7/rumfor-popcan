@@ -153,7 +153,7 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
                     e.stopPropagation()
                     onUntrack?.(market.id)
                   }}
-                  className="p-2 rounded-full bg-white/40 text-gray-600 hover:bg-white hover:text-red-600 transition-colors shadow"
+                  className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-red-600 transition-colors shadow"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -265,7 +265,7 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
                   e.stopPropagation()
                   onUntrack?.(market.id)
                 }}
-                className="p-2 rounded-full bg-white/40 text-gray-600 hover:bg-white hover:text-red-600 transition-colors shadow"
+                className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-red-600 transition-colors shadow"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
