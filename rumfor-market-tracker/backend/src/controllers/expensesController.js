@@ -119,13 +119,32 @@ const getExpenses = catchAsync(async (req, res, next) => {
 
   const expenses = await Expense.getVendorMarketExpenses(req.user._id, marketId, options)
 
+  // Transform expenses to match frontend types
+  const transformedExpenses = expenses.map(expense => ({
+    id: expense._id.toString(),
+    vendorId: expense.vendor?._id?.toString() || expense.vendor?.toString(),
+    marketId: expense.market?._id?.toString() || expense.market?.toString(),
+    title: expense.title,
+    description: expense.description || '',
+    amount: expense.amount,
+    actualAmount: expense.actualAmount, // Keep undefined if not set
+    category: expense.category,
+    date: expense.date,
+    receipt: expense.receipt?.url,
+    createdAt: expense.createdAt,
+    updatedAt: expense.updatedAt
+  }))
+
+  // Wrap properly - sendSuccess will spread this object, so we need an extra nesting level
   sendSuccess(res, {
-    data: expenses,  // Changed from "expenses" to "data" to match frontend expectations
-    pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total: expenses.length,
-      totalPages: Math.ceil(expenses.length / limit)
+    data: {
+      data: transformedExpenses,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: transformedExpenses.length,
+        totalPages: Math.ceil(transformedExpenses.length / limit)
+      }
     }
   }, 'Expenses retrieved successfully')
 })
@@ -194,8 +213,24 @@ const createExpense = catchAsync(async (req, res, next) => {
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')
 
+  // Transform expense to match frontend types
+  const transformedExpense = {
+    id: populatedExpense._id.toString(),
+    vendorId: populatedExpense.vendor?._id?.toString() || populatedExpense.vendor?.toString(),
+    marketId: populatedExpense.market?._id?.toString() || populatedExpense.market?.toString(),
+    title: populatedExpense.title,
+    description: populatedExpense.description || '',
+    amount: populatedExpense.amount,
+    actualAmount: populatedExpense.actualAmount, // Keep undefined if not set
+    category: populatedExpense.category,
+    date: populatedExpense.date,
+    receipt: populatedExpense.receipt?.url,
+    createdAt: populatedExpense.createdAt,
+    updatedAt: populatedExpense.updatedAt
+  }
+
   sendSuccess(res, {
-    expense: populatedExpense
+    expense: transformedExpense
   }, 'Expense created successfully', 201)
 })
 
@@ -210,7 +245,7 @@ const updateExpense = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -230,8 +265,24 @@ const updateExpense = catchAsync(async (req, res, next) => {
   // Update totalExpenses in UserMarketTracking
   await updateTrackingExpenses(expense.vendor.toString(), expense.market.toString())
 
+  // Transform expense to match frontend types
+  const transformedExpense = {
+    id: updatedExpense._id.toString(),
+    vendorId: updatedExpense.vendor?._id?.toString() || updatedExpense.vendor?.toString(),
+    marketId: updatedExpense.market?._id?.toString() || updatedExpense.market?.toString(),
+    title: updatedExpense.title,
+    description: updatedExpense.description || '',
+    amount: updatedExpense.amount,
+    actualAmount: updatedExpense.actualAmount, // Keep undefined if not set
+    category: updatedExpense.category,
+    date: updatedExpense.date,
+    receipt: updatedExpense.receipt?.url,
+    createdAt: updatedExpense.createdAt,
+    updatedAt: updatedExpense.updatedAt
+  }
+
   sendSuccess(res, {
-    expense: updatedExpense
+    expense: transformedExpense
   }, 'Expense updated successfully')
 })
 
@@ -246,7 +297,7 @@ const deleteExpense = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -274,7 +325,7 @@ const updateMileage = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -305,7 +356,7 @@ const markAsTaxDeductible = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -336,7 +387,7 @@ const addReceipt = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -367,7 +418,7 @@ const setTaxYear = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 
@@ -398,7 +449,7 @@ const createRecurring = catchAsync(async (req, res, next) => {
   }
 
   // Check access
-  if (expense.vendor.toString() !== req.user._id && req.user.role !== 'admin') {
+  if (expense.vendor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     return next(new AppError('Access denied', 403))
   }
 

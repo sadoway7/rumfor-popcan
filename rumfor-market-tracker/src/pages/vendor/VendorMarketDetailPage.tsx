@@ -17,6 +17,7 @@ import {
 import { useMarket } from '@/features/markets/hooks/useMarkets'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
+import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Todo } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -80,7 +81,8 @@ const trackingStatusColors: Record<string, string> = {
   'attending': 'bg-emerald-500',
   'declined': 'bg-orange-500',
   'cancelled': 'bg-red-500',
-  'completed': 'bg-gray-500'
+  'completed': 'bg-gray-500',
+  'archived': 'bg-slate-500'
 }
 
 const trackingStatusLabels: Record<string, string> = {
@@ -88,6 +90,8 @@ const trackingStatusLabels: Record<string, string> = {
   'applied': 'Applied',
   'approved': 'Approved',
   'attending': 'Attending',
+  'declined': 'Declined',
+  'cancelled': 'Cancelled',
   'completed': 'Completed'
 }
 
@@ -96,6 +100,8 @@ const trackingStatusOptions = [
   { value: 'applied', label: 'Applied', color: 'bg-yellow-500' },
   { value: 'approved', label: 'Approved', color: 'bg-green-500' },
   { value: 'attending', label: 'Attending', color: 'bg-emerald-500' },
+  { value: 'declined', label: 'Declined', color: 'bg-orange-500' },
+  { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500' },
   { value: 'completed', label: 'Completed', color: 'bg-gray-500' }
 ]
 
@@ -135,22 +141,21 @@ export const VendorMarketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [activeTab, setActiveTab] = useState('info')
+  const [activeTab, setActiveTab] = useState('tasks')
   const [showStatusModal, setShowStatusModal] = useState(false)
 
   const { market, isLoading, error } = useMarket(id!)
   const { myApplications } = useVendorApplications()
   const { todos } = useTodos(id!)
+  const { getTrackingStatus, trackMarket } = useTrackedMarkets()
 
   const existingApplication = myApplications.find(app => app.marketId === id)
   const completedTodos = todos.filter((t: Todo) => t.completed)
 
-  // Get tracking status (from application or default to interested)
-  const trackingStatus: 'interested' | 'applied' | 'approved' | 'attending' | 'completed' = 
-    existingApplication?.status === 'approved' ? 'approved' 
-    : existingApplication?.status === 'submitted' ? 'applied'
-    : existingApplication?.status ? 'applied'
-    : 'interested'
+  // Get tracking status from tracking store (same as the list)
+  const tracking = getTrackingStatus(id!)
+  const trackingStatus: 'interested' | 'applied' | 'approved' | 'attending' | 'completed' =
+    (tracking?.status as any) || 'interested'
 
   if (isLoading) {
     return (
@@ -177,9 +182,12 @@ export const VendorMarketDetailPage: React.FC = () => {
 
   const nextDate = getNextMarketDate(market.schedule)
 
-  const handleStatusChange = (newStatus: string) => {
-    // TODO: Hook up to update tracking status API
-    console.log('Status changed to:', newStatus)
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      await trackMarket(id!, newStatus)
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    }
     setShowStatusModal(false)
   }
 
@@ -322,7 +330,7 @@ export const VendorMarketDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background -m-4">
       {/* Hero Image with Overlay - like VendorTrackedMarketRow */}
-      <div className="relative w-full h-56 bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className="relative w-full h-40 bg-gradient-to-br from-gray-800 to-gray-900">
         {market.images && market.images.length > 0 ? (
           <img 
             src={market.images[selectedImageIndex]} 
@@ -340,7 +348,11 @@ export const VendorMarketDetailPage: React.FC = () => {
         <div className={cn(
           "absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent",
           trackingStatus === 'applied' && "from-yellow-500/20",
-          trackingStatus === 'approved' && "from-green-500/20"
+          trackingStatus === 'approved' && "from-green-500/20",
+          trackingStatus === 'attending' && "from-emerald-500/20",
+          trackingStatus === 'declined' && "from-orange-500/20",
+          trackingStatus === 'cancelled' && "from-red-500/20",
+          trackingStatus === 'completed' && "from-gray-500/20"
         )} />
         
         <div className="absolute inset-0 p-4 flex flex-col">
@@ -364,14 +376,14 @@ export const VendorMarketDetailPage: React.FC = () => {
           
           {/* Bottom info - market name and details */}
           <div className="text-white mt-auto">
-            <h1 className="font-bold text-2xl leading-tight mb-2 drop-shadow-lg">{market.name}</h1>
-            <div className="flex items-center gap-4 text-sm">
+            <h1 className="font-bold text-xl leading-tight mb-2 drop-shadow-lg">{market.name}</h1>
+            <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+                <MapPin className="w-3.5 h-3.5" />
                 <span>{market.location.city}, {market.location.state}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-3.5 h-3.5" />
                 <span>{formatSchedule(market.schedule).split('·')[0] || formatSchedule(market.schedule)}</span>
               </div>
             </div>
@@ -411,25 +423,23 @@ export const VendorMarketDetailPage: React.FC = () => {
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
-          size="lg"
+          variant="pills"
+          size="md"
           items={[
-            {
-              key: 'info',
-              label: 'Info',
-              icon: <MapPin className="w-4 h-4" />,
-              content: <MarketInfoTabContent />
-            },
             {
               key: 'tasks',
               label: 'Tasks',
-              icon: <CheckCircle className="w-4 h-4" />,
               content: <TasksTabContent />
             },
             {
               key: 'budgeting',
               label: 'Budget',
-              icon: <DollarSign className="w-4 h-4" />,
               content: <BudgetingTabContent />
+            },
+            {
+              key: 'info',
+              label: 'Stats',
+              content: <MarketInfoTabContent />
             }
           ]}
         />

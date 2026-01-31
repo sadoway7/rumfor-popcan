@@ -133,7 +133,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
     setNewCategory(expense.category)
     setNewTitle(expense.title)
     setNewExpected(expense.amount.toString())
-    setNewActual(expense.amount.toString()) // For now, actual = expected in expense system
+    setNewActual(expense.actualAmount !== undefined ? expense.actualAmount.toString() : '')
     setNewDescription(expense.description || '')
     setNewDate(expense.date ? expense.date.split('T')[0] : '')
     setShowForm(true)
@@ -148,7 +148,8 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
       marketId,
       category: newCategory,
       title: newTitle,
-      amount: parseFloat(newActual || newExpected),
+      amount: parseFloat(newExpected),
+      actualAmount: newActual !== '' ? parseFloat(newActual) : undefined, // Keep undefined if empty
       description: newDescription,
       date: newDate || new Date().toISOString().split('T')[0]
     }
@@ -189,13 +190,42 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
     setShowPresets(true)
   }
 
-  // Calculate totals
+  // Calculate totals (only include actual amounts that have been set)
   const totalExpected = expenses.reduce((sum, item) => sum + item.amount, 0)
-  const totalActual = expenses.reduce((sum, item) => sum + item.amount, 0) // For now, actual = expected
+  const totalActual = expenses.reduce((sum, item) => sum + (item.actualAmount !== undefined ? item.actualAmount : 0), 0)
   const variance = totalActual - totalExpected
 
   // Ultra-compact budget item
   const BudgetCompactItem = ({ expense }: { expense: Expense }) => {
+    const [isEditingActual, setIsEditingActual] = useState(false)
+    const [actualValue, setActualValue] = useState('')
+    const actualAmount = expense.actualAmount // Can be undefined
+
+    // Initialize actualValue when starting to edit (not on every render)
+    const startEditing = () => {
+      setActualValue(actualAmount !== undefined ? actualAmount.toString() : '')
+      setIsEditingActual(true)
+    }
+
+    const handleActualSave = () => {
+      const newActual = actualValue === '' ? undefined : parseFloat(actualValue)
+      if (newActual === undefined || (!isNaN(newActual) && newActual >= 0)) {
+        updateExpense(expense.id, { actualAmount: newActual })
+      }
+      setIsEditingActual(false)
+    }
+
+    const handleActualKeyPress = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        handleActualSave()
+      } else if (e.key === 'Escape') {
+        setIsEditingActual(false)
+      }
+    }
+
+    // Only show variance if actual has been set
+    const variance = actualAmount !== undefined ? actualAmount - expense.amount : null
+
     return (
       <div className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
         {/* Category badge */}
@@ -215,18 +245,45 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
         </div>
 
         {/* Expected amount */}
-        <div className="text-xs text-muted-foreground whitespace-nowrap">
+        <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
           ${expense.amount.toLocaleString()}
         </div>
 
-        {/* Actual amount */}
-        <div className="text-sm font-semibold whitespace-nowrap">
-          ${expense.amount.toLocaleString()}
-        </div>
+        {/* Actual amount - editable */}
+        {isEditingActual ? (
+          <input
+            type="number"
+            value={actualValue}
+            onChange={(e) => setActualValue(e.target.value)}
+            onBlur={handleActualSave}
+            onKeyDown={handleActualKeyPress}
+            placeholder="0"
+            className="w-16 text-sm font-semibold text-right px-1 py-0.5 border-2 border-accent rounded bg-background focus:outline-none"
+            autoFocus
+          />
+        ) : (
+          <button
+            onClick={startEditing}
+            className={cn(
+              "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right hover:text-accent transition-colors",
+              actualAmount === undefined && "text-muted-foreground italic"
+            )}
+          >
+            {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
+          </button>
+        )}
 
-        {/* Variance - shows 0 for now */}
-        <div className="text-xs text-muted-foreground font-medium min-w-[40px] text-right">
-          $0
+        {/* Variance */}
+        <div className={cn(
+          "text-xs font-medium min-w-[50px] text-right whitespace-nowrap",
+          variance === null && "text-muted-foreground/30",
+          variance === 0 && "text-muted-foreground",
+          variance && variance > 0 && "text-red-600",
+          variance && variance < 0 && "text-emerald-600"
+        )}>
+          {variance === null ? '-' :
+           variance === 0 ? '$0' :
+           (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
         </div>
 
         {/* Actions menu */}
@@ -237,7 +294,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
-          
+
           {openMenuId === expense.id && (
             <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
               <button
@@ -305,31 +362,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
         </div>
       </div>
 
-      {/* Budget Items */}
-      {expenses.length > 0 && (
-        <div className="space-y-1">
-          {expenses.map((expense: Expense) => (
-            <BudgetCompactItem key={expense.id} expense={expense} />
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {expenses.length === 0 && (
-        <div className="text-center py-6 text-muted-foreground">
-          <p className="text-sm">No budget items yet</p>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setShowPresets(true)}
-            className="mt-1 text-xs"
-          >
-            Add from presets
-          </Button>
-        </div>
-      )}
-
-      {/* Footer Summary */}
+      {/* Summary at Top - Only show when there are expenses */}
       {expenses.length > 0 && (
         <Card className="p-3 bg-surface border border-border">
           <div className="flex items-center justify-between">
@@ -358,6 +391,39 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
             </div>
           </div>
         </Card>
+      )}
+
+      {/* Budget Items */}
+      {expenses.length > 0 && (
+        <div className="space-y-1">
+          {/* Column Headers */}
+          <div className="flex items-center gap-2 px-2.5 py-1 text-xs text-muted-foreground">
+            <div className="w-12 flex-shrink-0">Cat</div>
+            <div className="flex-1">Item</div>
+            <div className="min-w-[60px] text-right">Budget</div>
+            <div className="min-w-[60px] text-right">Actual</div>
+            <div className="min-w-[50px] text-right">Diff</div>
+            <div className="w-8"></div>
+          </div>
+          {expenses.map((expense: Expense) => (
+            <BudgetCompactItem key={expense.id} expense={expense} />
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {expenses.length === 0 && (
+        <div className="text-center py-6 text-muted-foreground">
+          <p className="text-sm">No budget items yet</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPresets(true)}
+            className="mt-1 text-xs"
+          >
+            Add from presets
+          </Button>
+        </div>
       )}
 
       {/* Presets Modal */}

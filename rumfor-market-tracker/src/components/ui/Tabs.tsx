@@ -54,20 +54,20 @@ const Tabs: React.FC<TabsProps> = ({
     lg: 'px-6 py-4 min-h-[48px]',
   }
 
-  const tabBaseClasses = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:pointer-events-none disabled:opacity-50'
+  const tabBaseClasses = 'inline-flex items-center justify-center font-medium disabled:pointer-events-none disabled:opacity-50 outline-none'
 
   const variants = {
     default: 'border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground data-[state=active]:border-accent data-[state=active]:text-foreground',
     underline: 'border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 data-[state=active]:border-accent data-[state=active]:text-foreground',
-    pills: 'rounded-md text-muted-foreground hover:text-foreground hover:bg-surface/50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground',
+    pills: 'px-4 py-2 rounded-full text-muted-foreground hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground',
   }
 
   return (
     <div className={cn('w-full', className)}>
       <div
         className={cn(
-          'flex border-b border-border',
-          fullWidth && 'w-full'
+          'flex gap-2',
+          variant !== 'pills' && 'border-b border-border'
         )}
         role="tablist"
       >
@@ -82,7 +82,7 @@ const Tabs: React.FC<TabsProps> = ({
             data-state={currentActiveKey === item.key ? 'active' : 'inactive'}
             className={cn(
               tabBaseClasses,
-              tabPaddingClasses[size],
+              variant === 'pills' ? '' : tabPaddingClasses[size],
               sizeClasses[size],
               variants[variant],
               fullWidth && 'flex-1',

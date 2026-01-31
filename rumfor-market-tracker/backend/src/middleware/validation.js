@@ -484,7 +484,12 @@ const validateExpenseCreation = [
   body('amount')
     .isFloat({ min: 0 })
     .withMessage('Amount must be a positive number'),
-  
+
+  body('actualAmount')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Actual amount must be a positive number'),
+
   body('currency')
     .optional()
     .isLength({ min: 3, max: 3 })

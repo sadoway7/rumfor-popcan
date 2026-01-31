@@ -337,7 +337,8 @@ export interface Expense {
   marketId: string
   title: string
   description?: string
-  amount: number
+  amount: number // Expected/budgeted amount
+  actualAmount?: number // Actual spent amount (optional, defaults to amount)
   category: ExpenseCategory
   date: string
   receipt?: string

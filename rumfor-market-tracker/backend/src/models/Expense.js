@@ -48,6 +48,11 @@ const expenseSchema = new mongoose.Schema({
     required: [true, 'Amount is required'],
     min: [0, 'Amount cannot be negative']
   },
+  actualAmount: {
+    type: Number,
+    default: undefined, // No default - let user set it when they actually spend
+    min: [0, 'Actual amount cannot be negative']
+  },
   currency: {
     type: String,
     default: 'USD',
