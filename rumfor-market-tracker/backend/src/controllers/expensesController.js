@@ -44,22 +44,38 @@ async function updateTrackingExpenses(vendorId, marketId) {
 // Get expenses for vendor and market
 const getExpenses = catchAsync(async (req, res, next) => {
   const { marketId } = req.query
-  
+
   // DIAGNOSTIC LOGGING
   console.log('[EXPENSES DEBUG] getExpenses - Query marketId:', marketId)
   console.log('[EXPENSES DEBUG] getExpenses - Current user ID:', req.user._id)
   console.log('[EXPENSES DEBUG] getExpenses - Market query param:', req.query.marketId)
-  
-  // Validate marketId from query parameter
-  if (!marketId) {
-    return next(new AppError('Market ID is required', 400))
+
+  // If marketId is provided, validate it
+  if (marketId) {
+    // Verify it's a valid MongoDB ID
+    if (!require('mongoose').Types.ObjectId.isValid(marketId)) {
+      return next(new AppError('Invalid market ID format', 400))
+    }
+
+    // Verify market exists
+    const market = await Market.findById(marketId)
+    if (!market) {
+      return next(new AppError('Market not found', 404))
+    }
+
+    // Verify user has access to this market
+    const isPromoter = market.promoter && market.promoter.toString() === req.user._id.toString()
+    const isAdmin = req.user.role === 'admin'
+    const isTracking = await UserMarketTracking.findOne({ user: req.user._id, market: marketId })
+    const hasExpense = await Expense.findOne({ vendor: req.user._id, market: marketId })
+
+    const hasAccess = isPromoter || isAdmin || isTracking || hasExpense
+
+    if (!hasAccess) {
+      return next(new AppError('Access denied to this market', 403))
+    }
   }
-  
-  // Verify it's a valid MongoDB ID
-  if (!require('mongoose').Types.ObjectId.isValid(marketId)) {
-    return next(new AppError('Invalid market ID format', 400))
-  }
-  
+
   const {
     page = 1,
     limit = 20,
@@ -71,8 +87,7 @@ const getExpenses = catchAsync(async (req, res, next) => {
     sortOrder = 'desc'
   } = req.query
 
-  // Verify market exists
-  const market = await Market.findById(marketId)
+  const market = marketId ? await Market.findById(marketId) : null
 
   if (!market) {
     return next(new AppError('Market not found', 404))

@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import { Plus, CheckSquare, AlertCircle, Clock, Check, Edit2, Trash2, MoreVertical } from 'lucide-react'
+import { AlertCircle, Clock, Check, Edit2, Trash2, MoreVertical, DollarSign } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
-import { useAuthStore } from '@/features/auth/authStore'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { useAllTodos } from '@/features/tracking/hooks/useAllTodos'
+import { useExpenses } from '@/features/tracking/hooks/useExpenses'
 
 export function VendorDashboardPage() {
-  const { user } = useAuthStore()
   const { todos, isLoading: todosLoading } = useTodos()
   const { trackedMarkets, isLoading: marketsLoading, getTrackingStatus } = useTrackedMarkets()
   const { toggleTodo, deleteTodo, updateTodo } = useAllTodos()
+  const { isLoading: expensesLoading } = useExpenses()
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingTodo, setEditingTodo] = useState<any>(null)
@@ -22,7 +22,7 @@ export function VendorDashboardPage() {
   const [editDescription, setEditDescription] = useState('')
   const [editPriority, setEditPriority] = useState('medium')
   const [editDueDate, setEditDueDate] = useState('')
-  const [editMarketId, setEditMarketId] = useState<string | null>(null)
+  const [editMarketId, setEditMarketId] = useState<string | undefined>(undefined)
 
   // Calculate task stats
   const pendingTodos = todos.filter(todo => !todo.completed)
@@ -54,7 +54,7 @@ export function VendorDashboardPage() {
     setEditDescription(todo.description || '')
     setEditPriority(todo.priority)
     setEditDueDate(todo.dueDate ? todo.dueDate.split('T')[0] : '')
-    setEditMarketId(todo.marketId || null)
+    setEditMarketId(todo.marketId || undefined)
     setShowEditModal(true)
     setOpenMenuId(null)
   }
@@ -81,7 +81,7 @@ export function VendorDashboardPage() {
     setEditingTodo(null)
   }
 
-  if (todosLoading || marketsLoading) {
+  if (todosLoading || marketsLoading || expensesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -93,104 +93,74 @@ export function VendorDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header - Hero Style - Toned Down */}
-      <div className="relative overflow-hidden rounded-2xl bg-accent p-6 md:p-8 shadow-[4px_4px_0px_0px] shadow-black/10 dark:shadow-white/10 mb-6">
-        {/* Background texture - much more subtle */}
-        <div className="absolute inset-0 opacity-8" style={{
-          backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 12px, hsl(var(--accent-foreground)) 12px, hsl(var(--accent-foreground)) 24px)`
-        }}></div>
-        
-        <div className="relative z-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-accent-foreground mb-2">
-            Welcome back, {user?.firstName}!
-          </h1>
-          <p className="text-lg text-accent-foreground/80">
-            Manage your market participation and tasks
-          </p>
+    <div className="space-y-4">
+      {/* Markets Overview - Clean List Style */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Markets</h2>
+          <Link to="/vendor/tracked-markets" className="block">
+            <Button size="sm" className="h-8 text-xs rounded-full">
+              View All
+            </Button>
+          </Link>
         </div>
-      </div>
-
-      {/* Markets Status Overview - Similar to Task Overview metrics */}
-      <Card variant="default" padding="none">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Markets Overview</h2>
-            <Link to="/vendor/tracked-markets" className="block">
-              <Button size="sm" className="h-9">
-                <Plus className="h-4 w-4 mr-2" />
-                View My Markets
-              </Button>
-            </Link>
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-semibold">{trackedMarkets.length}</span>
           </div>
-          <div className="grid grid-cols-4 md:grid-cols-2 gap-4">
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-foreground">{trackedMarkets.length}</div>
-              <div className="text-sm text-muted-foreground mt-1">All Markets</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{interestedCount}</div>
-              <div className="text-sm text-muted-foreground mt-1">Interested</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">{appliedCount}</div>
-              <div className="text-sm text-muted-foreground mt-1">Applied</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
-              <div className="text-sm text-muted-foreground mt-1">Approved</div>
-            </Card>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Interested</span>
+            <span className="font-semibold">{interestedCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Applied</span>
+            <span className="font-semibold">{appliedCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Approved</span>
+            <span className="font-semibold text-green-600">{approvedCount}</span>
           </div>
         </div>
       </Card>
 
-      {/* Task Metrics and Overdue Section - Updated with proper structure */}
-      <Card variant="default" padding="none">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Task Overview</h2>
-            <Link to="/vendor/todos" className="block">
-              <Button size="sm" className="h-9">
-                <Plus className="h-4 w-4 mr-2" />
-                View All Tasks
-              </Button>
-            </Link>
+      {/* Tasks Overview - Clean List Style */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Tasks</h2>
+          <Link to="/vendor/todos" className="block">
+            <Button size="sm" className="h-8 text-xs rounded-full">
+              View All
+            </Button>
+          </Link>
+        </div>
+        <div className="flex items-center gap-3 text-sm mb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-semibold">{todos.length}</span>
           </div>
-
-          {/* Task Metrics - Compact 4-column layout */}
-          <div className="grid grid-cols-4 md:grid-cols-2 gap-4 mb-6">
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-foreground">{todos.length}</div>
-              <div className="text-sm text-muted-foreground mt-1">Total</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-green-600">{completedTodos.length}</div>
-              <div className="text-sm text-muted-foreground mt-1">Done</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-red-600">{overdueTodos.length}</div>
-              <div className="text-sm text-muted-foreground mt-1">Overdue</div>
-            </Card>
-            <Card variant="default" padding="sm" className="text-center">
-              <div className="text-2xl font-bold text-foreground">{pendingTodos.length}</div>
-              <div className="text-sm text-muted-foreground mt-1">Pending</div>
-            </Card>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Done</span>
+            <span className="font-semibold text-green-600">{completedTodos.length}</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Pending</span>
+            <span className="font-semibold">{pendingTodos.length}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Overdue</span>
+            <span className="font-semibold text-red-600">{overdueTodos.length}</span>
+          </div>
+        </div>
 
-          <h3 className="text-base font-semibold text-foreground mb-3">Overdue Tasks</h3>
-          
-          {overdueTodos.length === 0 ? (
-            <div className="text-center py-6">
-              <CheckSquare className="w-12 h-12 text-green-200 mx-auto mb-4" />
-              <p className="text-muted-foreground">No overdue tasks</p>
-              <p className="text-sm text-muted-foreground mt-1">All tasks are up to date!</p>
-            </div>
-          ) : (
+        {overdueTodos.length > 0 && (
+          <>
+            <h3 className="text-xs font-medium text-muted-foreground mb-2">Overdue</h3>
             <div className="space-y-1">
               {overdueTodos.slice(0, 5).map((todo) => {
                 const days = todo.dueDate ? Math.ceil((new Date(todo.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null
                 const marketName = todo.marketId ? trackedMarkets.find(m => m.id === todo.marketId)?.name || 'General' : 'General'
-                
+
                 return (
                   <div key={todo.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px] border-red-200 bg-red-50/50">
                     {/* Checkbox with market indicator */}
@@ -209,7 +179,7 @@ export function VendorDashboardPage() {
                         <div className="absolute -bottom-1 -left-1 w-3 h-3 rounded-full border border-background" style={{backgroundColor: getMarketColor(todo.marketId)}} />
                       )}
                     </div>
-  
+
                     {/* Title and market name */}
                     <div className="flex-1 min-w-0">
                       <p className="block text-sm font-medium truncate text-foreground text-red-600">
@@ -219,7 +189,7 @@ export function VendorDashboardPage() {
                         {marketName}
                       </p>
                     </div>
-  
+
                     {/* Due date pill */}
                     {todo.dueDate && (
                       <span className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0 bg-red-100 text-red-700 font-medium">
@@ -227,14 +197,14 @@ export function VendorDashboardPage() {
                         {days !== null && days < 0 ? `${Math.abs(days)}d overdue` : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                       </span>
                     )}
-  
+
                     {/* Priority pill for urgent tasks */}
                     {todo.priority === 'urgent' && (
                       <span className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0 bg-red-100 text-red-700">
                         <AlertCircle className="w-3 h-3" />
                       </span>
                     )}
-  
+
                     {/* Actions menu */}
                     <div className="relative">
                       <button
@@ -244,7 +214,7 @@ export function VendorDashboardPage() {
                       >
                         <MoreVertical className="w-4 h-4 text-muted-foreground" />
                       </button>
-                      
+
                       {openMenuId === todo.id && (
                         <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
                           <button
@@ -268,7 +238,25 @@ export function VendorDashboardPage() {
                 )
               })}
             </div>
-          )}
+          </>
+        )}
+      </Card>
+
+      {/* Budget Overview - Clean List Style */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-foreground">Budget</h2>
+          <Link to="/vendor/budgets" className="block">
+            <Button size="sm" className="h-8 text-xs rounded-full">
+              View All
+            </Button>
+          </Link>
+        </div>
+
+        {/* Coming Soon Banner */}
+        <div className="text-center py-4">
+          <DollarSign className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+          <p className="text-sm font-medium text-muted-foreground">Master List Coming Soon</p>
         </div>
       </Card>
 
@@ -325,7 +313,7 @@ export function VendorDashboardPage() {
               <label className="block text-xs font-medium text-muted-foreground mb-1">Market</label>
               <select
                 value={editMarketId || ''}
-                onChange={e => setEditMarketId(e.target.value || null)}
+                onChange={e => setEditMarketId(e.target.value || undefined)}
                 className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
               >
                 <option value="">General</option>

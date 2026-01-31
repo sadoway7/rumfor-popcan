@@ -290,13 +290,17 @@ expenseSchema.statics.getVendorMarketExpenses = function(vendorId, marketId, opt
     sortBy = 'date',
     sortOrder = 'desc'
   } = options
-  
+
   const query = {
     vendor: vendorId,
-    market: marketId,
     isDeleted: false
   }
-  
+
+  // Only add market filter if marketId is provided
+  if (marketId) {
+    query.market = marketId
+  }
+
   if (category) query.category = category
   if (isTaxReport !== undefined) query.isTaxReport = isTaxReport
   if (dateFrom || dateTo) {
@@ -304,10 +308,10 @@ expenseSchema.statics.getVendorMarketExpenses = function(vendorId, marketId, opt
     if (dateFrom) query.date.$gte = new Date(dateFrom)
     if (dateTo) query.date.$lte = new Date(dateTo)
   }
-  
+
   const sortOptions = {}
   sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
-  
+
   return this.find(query)
     .populate('vendor', 'username profile.firstName profile.lastName')
     .populate('market', 'name location.city location.state')

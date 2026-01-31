@@ -115,13 +115,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       if (trackingStatus === 'applied') {
         return { text: 'Application Pending', action: 'untrack' }
       } else if (trackingStatus === 'booked') {
-        return { text: '✓ Approved', action: 'untrack' }
+        return { text: 'Approved', action: 'untrack' }
       } else if (trackingStatus === 'completed') {
-        return { text: '✓ Completed', action: 'untrack' }
+        return { text: 'Completed', action: 'untrack' }
       } else if (trackingStatus === 'cancelled') {
         return { text: 'Track Market', action: 'track' }
       } else {
-        return { text: '✓ Tracked', action: 'untrack' }
+        return { text: 'Tracked', action: 'untrack' }
       }
     }
   }

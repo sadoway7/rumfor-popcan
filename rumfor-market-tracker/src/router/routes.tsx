@@ -30,6 +30,7 @@ const AddMarketPage = React.lazy(() => import('@/pages/vendor/AddMarketPage').th
 const VendorAddMarketForm = React.lazy(() => import('@/pages/vendor/VendorAddMarketForm').then(module => ({ default: module.VendorAddMarketForm })))
 const VendorTrackedMarketsPage = React.lazy(() => import('@/pages/vendor/VendorTrackedMarketsPage').then(module => ({ default: module.VendorTrackedMarketsPage })))
 const VendorTodosPage = React.lazy(() => import('@/pages/vendor/VendorTodosPage').then(module => ({ default: module.VendorTodosPage })))
+const VendorBudgetsPage = React.lazy(() => import('@/pages/vendor/VendorBudgetsPage').then(module => ({ default: module.VendorBudgetsPage })))
 const VendorMarketDetailPage = React.lazy(() => import('@/pages/vendor/VendorMarketDetailPage').then(module => ({ default: module.VendorMarketDetailPage })))
 const VendorEditMarketPage = React.lazy(() => import('@/pages/vendors/VendorEditMarketPage').then(module => ({ default: module.VendorEditMarketPage })))
 
@@ -147,6 +148,14 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><BusinessPlanningPage /></Suspense></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/budgets" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorBudgetsPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />

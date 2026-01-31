@@ -5,7 +5,6 @@ import {
   Calendar,
   MapPin,
   Clock,
-  DollarSign,
   CheckCircle,
   MessageCircle,
   Cloud,
@@ -118,9 +117,13 @@ const formatSchedule = (schedule: any[]) => {
 }
 
 const formatLocation = (location: any) => {
-  if (!location || !location.address) return 'Address TBD'
-  const { street, city, state, zipCode } = location.address
-  return `${street || ''}, ${city || ''}, ${state || ''} ${zipCode || ''}`.trim().replace(/^, |, $/g, '')
+  if (!location) return 'Address TBD'
+  const parts = [
+    location.address || '',
+    location.city || '',
+    location.state || ''
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : 'Address TBD'
 }
 
 const getNextMarketDate = (schedule: any[]) => {
@@ -350,8 +353,6 @@ export const VendorMarketDetailPage: React.FC = () => {
           trackingStatus === 'applied' && "from-yellow-500/20",
           trackingStatus === 'approved' && "from-green-500/20",
           trackingStatus === 'attending' && "from-emerald-500/20",
-          trackingStatus === 'declined' && "from-orange-500/20",
-          trackingStatus === 'cancelled' && "from-red-500/20",
           trackingStatus === 'completed' && "from-gray-500/20"
         )} />
         

@@ -93,7 +93,7 @@ export const MarketDetailPage: React.FC = () => {
   const getButtonText = () => {
     const isTracked = isMarketTracked(market.id)
     if (isTracked) {
-      return '✓ Tracked'
+      return 'Tracked'
     }
     return 'Track this Market'
   }
@@ -350,10 +350,13 @@ export const MarketDetailPage: React.FC = () => {
 
         {/* Track Market Button - Full Width, Prominent */}
         <Button
-          className="w-full h-11 text-base font-medium"
+          className={cn(
+            "w-full h-11 text-base font-medium",
+            isMarketTracked(market.id) && "bg-green-500 hover:bg-green-600 text-white border-green-500"
+          )}
           onClick={handleTrackToggle}
           disabled={isTracking}
-          variant={isMarketTracked(market.id) ? "secondary" : "primary"}
+          variant={!isMarketTracked(market.id) ? "primary" : "outline"}
         >
           {getButtonIcon()}
           {getButtonText()}

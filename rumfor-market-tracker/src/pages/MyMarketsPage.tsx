@@ -214,14 +214,26 @@ export const MyMarketsPage: React.FC = () => {
             .filter(market => {
               // First filter by status
               if (activeFilter !== 'all' && market.status !== activeFilter) return false
-              // Then filter by search query
+              // Then filter by search query - searches name, location, address, category
               if (searchQuery.trim()) {
                 const query = searchQuery.toLowerCase()
-                return (
-                  market.name.toLowerCase().includes(query) ||
-                  market.location.city.toLowerCase().includes(query) ||
-                  market.location.state.toLowerCase().includes(query)
-                )
+
+                // Create array of all searchable content split into words
+                const searchableWords = [
+                  market.name,
+                  market.location.city,
+                  market.location.state,
+                  market.location.address || '',
+                  market.location.zipCode || '',
+                  market.category,
+                  market.description || ''
+                ]
+                  .join(' ')
+                  .toLowerCase()
+                  .split(/\s+/)
+
+                // Check if any word starts with the query (flexible matching)
+                return searchableWords.some(word => word.startsWith(query))
               }
               return true
             })

@@ -1,23 +1,24 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Button, EmptyState } from '@/components/ui'
 import { VendorTrackedMarketRow } from '@/components/VendorTrackedMarketRow'
 import { VendorMarketCard } from '@/components/VendorMarketCard'
-import { MapPin, Search, List, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MapPin, List, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export function VendorTrackedMarketsPage() {
-  const { trackedMarkets, isLoading, untrackMarket, getTrackingStatus, trackMarket } = useTrackedMarkets()
   const navigate = useNavigate()
-  
+  const [searchParams] = useSearchParams()
+  const { trackedMarkets, isLoading, untrackMarket, getTrackingStatus, trackMarket } = useTrackedMarkets()
+
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState('')
+  const searchQuery = searchParams.get('search') || ''
 
   // Scroll to top when filters change
   useEffect(() => {
-    if (statusFilter !== 'all' || searchQuery.trim()) {
+    if (statusFilter !== 'all' || searchQuery) {
       window.scrollTo(0, 0)
     }
   }, [statusFilter, searchQuery])
@@ -121,28 +122,6 @@ export function VendorTrackedMarketsPage() {
             </button>
           </div>
 
-          {/* Search - styled search box */}
-          <div className="flex-1 flex justify-center">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Filter search word"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-border rounded-full focus:border-accent focus:outline-none transition-all text-center sm:text-left placeholder:text-muted-foreground"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          </div>
-
           {/* Action buttons - far right, responsive text */}
           <Link to="/markets" className="shrink-0 hidden sm:block">
             <Button size="sm" className="h-10 whitespace-nowrap">
@@ -160,19 +139,19 @@ export function VendorTrackedMarketsPage() {
         </div>
 
         {/* Status filters row */}
-        <div className="relative flex flex-nowrap items-center gap-2 px-4 py-3 bg-surface -mx-4 overflow-x-auto scrollbar-hide sm:mx-0 sm:px-3">
+        <div className="relative flex flex-nowrap items-center gap-2 px-4 py-3 bg-background -mx-4 overflow-x-auto scrollbar-hide sm:mx-0 sm:px-3 border-b border-border">
           <span className="text-xs font-medium text-muted-foreground shrink-0 hidden sm:block">{trackedMarkets.length} Markets:</span>
-          
+
           {/* Left arrow indicator */}
           <ChevronLeft className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
-          
+
           {/* Scrollable filters */}
           <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setStatusFilter('all')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               All ({statusCounts.all})
@@ -181,7 +160,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('interested')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               {statusCounts.interested} interested
@@ -190,7 +169,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('applied')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               {statusCounts.applied} applied
@@ -199,7 +178,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('approved')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               {statusCounts.approved} approved
@@ -208,7 +187,7 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('attending')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               {statusCounts.attending} attending
@@ -217,13 +196,13 @@ export function VendorTrackedMarketsPage() {
               onClick={() => setStatusFilter('completed')}
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground border border-border hover:bg-surface-2'
+                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-background text-foreground border border-border hover:bg-surface'
               )}
             >
               {statusCounts.completed} done
             </button>
           </div>
-          
+
           {/* Right arrow indicator */}
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 sm:hidden" />
         </div>
