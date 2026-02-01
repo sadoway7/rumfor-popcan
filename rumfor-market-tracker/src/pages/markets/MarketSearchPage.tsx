@@ -2,18 +2,19 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
 
-import { Button, Input } from '@/components/ui'
+import { Button } from '@/components/ui'
+import { DatePicker } from '@/components/DatePicker'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useSidebarStore } from '@/features/theme/themeStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import type { MarketCategory, MarketFilters as MarketFilterType } from '@/types'
 
-import { Search, SlidersHorizontal, ArrowUpDown, MapPin, Calendar } from 'lucide-react'
+import { ArrowUpDown } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
+  const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
   const { isSidebarOpen } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
@@ -31,7 +32,6 @@ export const MarketSearchPage: React.FC = () => {
     isSearching,
     error,
     filters,
-    searchQuery,
     trackedMarketIds,
     isTracking,
     searchMarkets,
@@ -167,300 +167,112 @@ export const MarketSearchPage: React.FC = () => {
       <>
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0 lg:w-0'} transition-all duration-300 overflow-hidden bg-surface border-b lg:border-b-0 lg:border-r border-border ${!isSidebarOpen ? 'hidden lg:block' : ''}`}>
-            <div className="p-4 sm:p-6 w-full lg:w-80 space-y-6">
+          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0 lg:w-0'} transition-all duration-300 overflow-hidden bg-background ${!isSidebarOpen ? 'hidden lg:block' : ''}`}>
+            <div className="p-4 sm:p-6 w-full lg:w-80 space-y-5">
 
-              {/* Search */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-foreground">Start with location</h2>
-                  {getActiveFilterCount() > 0 && (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {getActiveFilterCount()} active
-                    </span>
-                  )}
+              {/* Header - Active Count */}
+              <div className="flex items-center justify-between">
+                {getActiveFilterCount() > 0 && (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {getActiveFilterCount()} active
+                  </span>
+                )}
+              </div>
+
+              {/* Sort By Dropdown */}
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">Sort By</div>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'date' | 'name' | 'distance')}
+                    className="w-full px-3 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20"
+                  >
+                    <option value="date">Date</option>
+                    <option value="name">Name</option>
+                    <option value="distance">Distance</option>
+                  </select>
+                  <ArrowUpDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
-                <div className="space-y-3">
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
-                    <Input
-                      placeholder="Location (city, state)"
-                      value={filters.location?.city || ''}
-                      onChange={(e) => handleFiltersChange({
-                        ...filters,
-                        location: { ...filters.location, city: e.target.value }
-                      })}
-                      className="pl-10 border border-border bg-surface/50 focus:bg-surface/80"
-                    />
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-muted-foreground" />
-                    <Input
-                      placeholder="Search markets or keywords..."
-                      value={searchQuery}
-                      onChange={(e) => handleSearch(e.target.value)}
-                      className="pl-10 border border-border bg-surface/50 focus:bg-surface/80"
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Location filters narrow results first, then keywords refine.
-                  </div>
-                  <div>
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Trending hashtags</div>
-                    <div className="flex flex-wrap gap-2">
-                      {trendingHashtags.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => handleTrendingTagClick(tag)}
-                          className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] bg-surface-2 hover:bg-surface text-foreground"
-                        >
-                          #{tag}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">Date Range</div>
+                <DatePicker
+                  value={dateRange}
+                  onChange={(newValue) => {
+                    setDateRange(newValue)
+                    handleFiltersChange({ ...filters, dateRange: { start: newValue.from, end: newValue.to } })
+                  }}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Market Categories */}
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
+                <div className="flex flex-wrap gap-2">
+                  {([
+                    { label: 'Farmers Markets', value: 'farmers-market' },
+                    { label: 'Arts & Crafts', value: 'arts-crafts' },
+                    { label: 'Flea Markets', value: 'flea-market' },
+                    { label: 'Food Festivals', value: 'food-festival' },
+                    { label: 'Vintage & Antique', value: 'vintage-antique' },
+                    { label: 'Craft Shows', value: 'craft-show' },
+                    { label: 'Night Markets', value: 'night-market' },
+                    { label: 'Street Fairs', value: 'street-fair' },
+                    { label: 'Holiday Markets', value: 'holiday-market' },
+                    { label: 'Community Events', value: 'community-event' }
+                  ] satisfies { label: string; value: MarketCategory }[]).map((category) => (
                     <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg bg-surface-2 hover:bg-surface transition-colors"
+                      key={category.value}
+                      onClick={() => {
+                        const currentCategories = filters.category || []
+                        const newCategories = currentCategories.includes(category.value)
+                          ? currentCategories.filter(c => c !== category.value)
+                          : [...currentCategories, category.value]
+                        handleFiltersChange({ ...filters, category: newCategories })
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] shadow shadow-black/20 ${
+                        filters.category?.includes(category.value)
+                          ? 'bg-amber-500 text-white'
+                          : 'bg-surface hover:bg-surface-2 text-foreground'
+                      }`}
                     >
-                      <span className="text-sm font-medium flex items-center gap-2">
-                        <SlidersHorizontal className="h-4 w-4" />
-                        Advanced Filters
-                      </span>
-                      <span className={`transform transition-transform ${showFilters ? 'rotate-180' : ''}`}>
-                        ▼
-                      </span>
+                      {category.label}
                     </button>
+                  ))}
+                </div>
+              </div>
 
-                    {showFilters && (
-                      <div className="mt-3 space-y-4">
-                        {/* Category Filter */}
-                        <div>
-                          <div className="text-xs font-medium text-muted-foreground mb-2">Market Categories</div>
-                          <div className="flex flex-wrap gap-2">
-                            {([
-                              { label: 'Farmers Markets', value: 'farmers-market' },
-                              { label: 'Arts & Crafts', value: 'arts-crafts' },
-                              { label: 'Flea Markets', value: 'flea-market' },
-                              { label: 'Food Festivals', value: 'food-festival' },
-                              { label: 'Vintage & Antique', value: 'vintage-antique' },
-                              { label: 'Craft Shows', value: 'craft-show' },
-                              { label: 'Night Markets', value: 'night-market' },
-                              { label: 'Street Fairs', value: 'street-fair' },
-                              { label: 'Holiday Markets', value: 'holiday-market' },
-                              { label: 'Community Events', value: 'community-event' }
-                            ] satisfies { label: string; value: MarketCategory }[]).map((category) => (
-                              <button
-                                key={category.value}
-                                onClick={() => {
-                                  const currentCategories = filters.category || []
-                                  const newCategories = currentCategories.includes(category.value)
-                                    ? currentCategories.filter(c => c !== category.value)
-                                    : [...currentCategories, category.value]
-                                  handleFiltersChange({ ...filters, category: newCategories })
-                                }}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
-                                  filters.category?.includes(category.value)
-                                    ? 'bg-amber-500 text-white'
-                                    : 'bg-surface-2 hover:bg-surface text-foreground'
-                                }`}
-                              >
-                                {category.label}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Date Range */}
-                        <div>
-                          <div className="text-xs font-medium text-muted-foreground mb-2">Date Range</div>
-                          <div className="space-y-2">
-                            <input
-                              type="date"
-                              placeholder="From date"
-                              className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
-                              onChange={(e) => {
-                                // Handle date range - this would need backend support
-                                console.log('Date from:', e.target.value)
-                              }}
-                            />
-                            <input
-                              type="date"
-                              placeholder="To date"
-                              className="w-full px-3 py-2 text-sm border border-border bg-surface/50 rounded-md focus:bg-surface/80"
-                              onChange={(e) => {
-                                // Handle date range - this would need backend support
-                                console.log('Date to:', e.target.value)
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Additional Status Options */}
-                        <div>
-                          <div className="text-xs font-medium text-muted-foreground mb-2">More Status Options</div>
-                          <div className="flex flex-wrap gap-2">
-                            {['cancelled', 'postponed'].map((status) => (
-                              <button
-                                key={status}
-                                onClick={() => {
-                                  const currentStatuses = filters.status || []
-                                  const newStatuses = currentStatuses.includes(status as any)
-                                    ? currentStatuses.filter(s => s !== status)
-                                    : [...currentStatuses, status as any]
-                                  handleFiltersChange({ ...filters, status: newStatuses })
-                                }}
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
-                                  filters.status?.includes(status as any)
-                                    ? 'bg-amber-500 text-white'
-                                    : 'bg-surface-2 hover:bg-surface text-foreground'
-                                }`}
-                              >
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {getActiveFilterCount() > 0 && (
-                    <Button
-                      onClick={handleClearFilters}
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
+              {/* Trending hashtags */}
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">Trending hashtags</div>
+                <div className="flex flex-wrap gap-2">
+                  {trendingHashtags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTrendingTagClick(tag)}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] bg-surface hover:bg-surface-2 text-foreground shadow shadow-black/20"
                     >
-                      Clear All Filters ({getActiveFilterCount()})
-                    </Button>
-                  )}
+                      #{tag}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Sort Options */}
-              <div>
-                <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4" />
-                  Sort By
-                </h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setSortBy('date')}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
-                      sortBy === 'date'
-                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-                        : 'border-transparent hover:bg-surface-2'
-                    }`}
-                  >
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Date</span>
-                  </button>
-                  <button
-                    onClick={() => setSortBy('name')}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
-                      sortBy === 'name'
-                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-                        : 'border-transparent hover:bg-surface-2'
-                    }`}
-                  >
-                    <Search className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Name</span>
-                  </button>
-                  <button
-                    onClick={() => setSortBy('distance')}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors border ${
-                      sortBy === 'distance'
-                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
-                        : 'border-transparent hover:bg-surface-2'
-                    }`}
-                  >
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Distance</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Filters */}
-              <div>
-                <h3 className="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  Filters
-                </h3>
-
-                {/* Status Filters */}
-                <div className="mb-4">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Market Status</div>
-                  <div className="flex flex-wrap gap-2">
-                    {['upcoming', 'active', 'completed'].map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => {
-                          const currentStatuses = filters.status || []
-                          const newStatuses = currentStatuses.includes(status as any)
-                            ? currentStatuses.filter(s => s !== status)
-                            : [...currentStatuses, status as any]
-                          handleFiltersChange({ ...filters, status: newStatuses })
-                        }}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors min-h-[36px] ${
-                          filters.status?.includes(status as any)
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-surface-2 hover:bg-surface text-foreground'
-                        }`}
-                      >
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Accessibility Filters */}
-                <div className="mb-4">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">Accessibility</div>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.accessibility?.wheelchairAccessible || false}
-                        onChange={(e) => handleFiltersChange({
-                          ...filters,
-                          accessibility: { ...filters.accessibility, wheelchairAccessible: e.target.checked }
-                        })}
-                        className="h-4 w-4 rounded border-border"
-                      />
-                      <span className="text-sm">Wheelchair Accessible</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.accessibility?.parkingAvailable || false}
-                        onChange={(e) => handleFiltersChange({
-                          ...filters,
-                          accessibility: { ...filters.accessibility, parkingAvailable: e.target.checked }
-                        })}
-                        className="h-4 w-4 rounded border-border"
-                      />
-                      <span className="text-sm">Parking Available</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer rounded-lg px-2 py-2 hover:bg-surface-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.accessibility?.restroomsAvailable || false}
-                        onChange={(e) => handleFiltersChange({
-                          ...filters,
-                          accessibility: { ...filters.accessibility, restroomsAvailable: e.target.checked }
-                        })}
-                        className="h-4 w-4 rounded border-border"
-                      />
-                      <span className="text-sm">Restrooms Available</span>
-                    </label>
-                  </div>
-                </div>
-
-
-              </div>
-
-
+              {/* Clear Filters */}
+              {getActiveFilterCount() > 0 && (
+                <Button
+                  onClick={handleClearFilters}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  Clear All Filters ({getActiveFilterCount()})
+                </Button>
+              )}
 
             </div>
           </aside>
@@ -469,23 +281,21 @@ export const MarketSearchPage: React.FC = () => {
           <main className="flex-1 py-4 px-0 sm:p-6">
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                {/* <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1 cursor-pointer" onClick={() => useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)}>    <span className={`transform transition-transform ${isSidebarOpen ? '' : 'rotate-90'}`}>▼</span> Advanced Search</p>
-
-                <p className="text-muted-foreground">
+              <div className="flex justify-center">
+                <div className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-default shadow shadow-black/20">
                   {isSearching ? 'Searching...' : `${markets.length} markets found`}
                   {filters.search && (
                     <>
                       {' · '}
                       <button
                         onClick={handleClearFilters}
-                        className="text-muted-foreground hover:text-foreground underline text-sm"
+                        className="text-muted-foreground hover:text-foreground underline"
                       >
                         Clear search
                       </button>
                     </>
                   )}
-                </p> */}
+                </div>
               </div>
 
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useThemeStore, useLocationStore } from '@/features/theme/themeStore'
+import { useThemeStore, useLocationStore, useSidebarStore } from '@/features/theme/themeStore'
 import { Button } from '@/components/ui'
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu } from 'lucide-react'
+import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu, SlidersHorizontal } from 'lucide-react'
 
 export function Header() {
   const navigate = useNavigate()
@@ -23,7 +23,9 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const { setLocationModalOpen } = useLocationStore()
+  const { isSidebarOpen } = useSidebarStore()
   const isHomePage = location.pathname === '/'
+  const isMarketsPage = location.pathname === '/markets'
 
   // Contextual placeholder based on current route
   const getSearchPlaceholder = () => {
@@ -109,10 +111,19 @@ export function Header() {
                   setSearchQuery(e.target.value)
                   handleSearch(e.target.value)
                 }}
-                className={`w-full pl-10 pr-4 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-surface-2 transition-all duration-200 ${
+                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light' ? 'shadow shadow-black/20' : 'shadow shadow-black/30'
                 }`}
               />
+              {isMarketsPage && (
+                <button
+                  onClick={() => useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Toggle advanced search"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
