@@ -4,14 +4,20 @@ import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
+import { ExpenseCategory } from '@/types'
 import {
   Calendar,
   MapPin,
   CheckSquare,
+  Check,
   DollarSign,
   X,
   ChevronDown,
-  Trash2
+  Trash2,
+  Clock,
+  TrendingUp,
+  MoreVertical,
+  AlertTriangle
 } from 'lucide-react'
 
 interface VendorMarketTracking {
@@ -74,9 +80,105 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   onChangeStatus,
   className
 }) => {
-  const { todos, toggleTodo } = useTodos(market.id)
-  const { expenses } = useExpenses(market.id)
+  const { todos, toggleTodo, updateTodo } = useTodos(market.id)
+  const { expenses, updateExpense } = useExpenses(market.id)
   const [showStatusModal, setShowStatusModal] = useState(false)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+  // Get days overdue for tasks
+  const getDaysOverdue = (dueDate?: string) => {
+    if (!dueDate) return null
+    const dueDateObj = new Date(dueDate)
+    const now = new Date()
+    const diffTime = dueDateObj.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
+  // Get variance amount for expenses
+  const getVariance = (expense: any) => {
+    const actual = expense.actualAmount || 0
+    const budget = expense.amount || 0
+    return actual - budget
+  }
+
+  const priorityConfig = {
+    urgent: { color: 'bg-red-100 text-red-700', icon: <AlertTriangle className="w-3 h-3" /> },
+    high: { color: 'bg-orange-100 text-orange-700', icon: null },
+    medium: { color: 'bg-yellow-100 text-yellow-700', icon: null },
+    low: { color: 'bg-gray-100 text-gray-600', icon: null }
+  }
+
+  // Categories for expense display
+  const categories: { id: string; label: string; icon: string }[] = [
+    { id: 'booth-fee', label: 'Booth Fee', icon: '🏠' },
+    { id: 'transportation', label: 'Transportation', icon: '🚚' },
+    { id: 'accommodation', label: 'Accommodation', icon: '🏨' },
+    { id: 'supplies', label: 'Supplies', icon: '📦' },
+    { id: 'equipment', label: 'Equipment', icon: '🔧' },
+    { id: 'marketing', label: 'Marketing', icon: '📣' },
+    { id: 'food-meals', label: 'Food', icon: '🍽️' },
+    { id: 'gasoline', label: 'Fuel', icon: '⛽' },
+    { id: 'insurance', label: 'Insurance', icon: '🛡️' },
+    { id: 'permits-licenses', label: 'Permits', icon: '📄' },
+    { id: 'parking', label: 'Parking', icon: '🅿️' },
+    { id: 'storage', label: 'Storage', icon: '📦' },
+    { id: 'shipping', label: 'Shipping', icon: '🚢' },
+    { id: 'utilities', label: 'Utilities', icon: '💡' },
+    { id: 'miscellaneous', label: 'Other', icon: '📋' },
+    { id: 'revenue', label: 'Revenue', icon: '💰' }
+  ]
+
+  const categoryColors: Record<string, string> = {
+    'booth-fee': 'bg-blue-100 text-blue-700',
+    'transportation': 'bg-purple-100 text-purple-700',
+    'accommodation': 'bg-teal-100 text-teal-700',
+    'supplies': 'bg-amber-100 text-amber-700',
+    'equipment': 'bg-rose-100 text-rose-700',
+    'marketing': 'bg-pink-100 text-pink-700',
+    'food-meals': 'bg-orange-100 text-orange-700',
+    'gasoline': 'bg-red-100 text-red-700',
+    'insurance': 'bg-cyan-100 text-cyan-700',
+    'permits-licenses': 'bg-indigo-100 text-indigo-700',
+    'parking': 'bg-yellow-100 text-yellow-700',
+    'storage': 'bg-violet-100 text-violet-700',
+    'shipping': 'bg-emerald-100 text-emerald-700',
+    'utilities': 'bg-sky-100 text-sky-700',
+    'miscellaneous': 'bg-gray-100 text-gray-700',
+    'revenue': 'bg-green-100 text-green-700'
+  }
+
+  const updateTodoById = (id: string, updates: any) => {
+    updateTodo(id, updates)
+  }
+
+  const updateExpenseById = (id: string, updates: any) => {
+    updateExpense(id, updates)
+  }
+
+  // Filter to show only overdue tasks (past due date, not completed)
+  const overdueTodos = todos.filter(todo => {
+    if (todo.completed || !todo.dueDate) return false
+    const dueDate = new Date(todo.dueDate)
+    const now = new Date()
+    return dueDate < now
+  })
+
+  // Get days until due for a todo
+  const getDaysUntilDue = (dueDate?: string) => {
+    if (!dueDate) return null
+    const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return days
+  }
+
+  // Filter to show only overdue expenses (actual > budgeted)
+  const overdueExpenses = expenses.filter(expense => {
+    const actual = expense.actualAmount || 0
+    const budget = expense.amount || 0
+    return actual > budget
+  })
+
+  const hasOverdueItems = overdueTodos.length > 0 || overdueExpenses.length > 0
 
   const formatSchedule = (schedule: Market['schedule']): string => {
     if (!schedule || schedule.length === 0) return 'TBD'
@@ -188,48 +290,167 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
             </div>
           </div>
 
-          {/* Todo list */}
-          {recentTodos.length > 0 && (
+          {/* Todo list - show only overdue */}
+          {overdueTodos.length > 0 && (
             <div className="p-3 border-t border-border" onClick={(e) => e.stopPropagation()}>
               <div className="space-y-1.5">
-                {recentTodos.map((todo) => (
-                  <label key={todo.id} className="flex items-center gap-2.5 py-1 rounded hover:bg-surface cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={todo.completed}
-                      onChange={() => handleToggleTodo(todo.id)}
-                      className="w-4 h-4 rounded border-border text-accent focus:ring-2 focus:ring-accent shrink-0"
-                    />
-                    <span className={cn("text-sm flex-1", todo.completed ? "line-through text-muted-foreground" : "text-foreground")}>
-                      {todo.title}
-                    </span>
-                    {todo.priority === 'urgent' && !todo.completed && (
-                      <span className="text-destructive font-bold">!</span>
-                    )}
-                  </label>
-                ))}
+                {overdueTodos.map((todo) => {
+                  const days = getDaysUntilDue(todo.dueDate)
+                  const isOverdue = days !== null && days < 0 && !todo.completed
+                  const overdueDays = days !== null && days < 0 ? Math.abs(days) : 0
+                  return (
+                    <div key={todo.id} className={cn(
+                      "flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]",
+                      todo.completed && "bg-muted/30 border-transparent opacity-60",
+                      isOverdue && "border-red-200 bg-red-50/50"
+                    )}>
+                      <button
+                        onClick={() => handleToggleTodo(todo.id)}
+                        className={cn(
+                          "w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center transition-all border-2",
+                          todo.completed
+                            ? 'bg-accent border-accent text-white'
+                            : 'border-muted-foreground/40 hover:border-accent bg-white'
+                        )}
+                      >
+                        {todo.completed && <Check className="w-4 h-4" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className={cn(
+                          "block text-sm font-medium truncate",
+                          todo.completed && "line-through text-muted-foreground"
+                        )}>
+                          {todo.title}
+                        </span>
+                        {todo.description && (
+                          <span className={cn(
+                            "block text-xs text-muted-foreground truncate",
+                            todo.completed && "line-through"
+                          )}>
+                            {todo.description}
+                          </span>
+                        )}
+                      </div>
+                      {todo.dueDate && (
+                        <span className={cn(
+                          "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
+                          isOverdue ? "bg-red-100 text-red-700 font-medium" : "text-foreground font-medium"
+                        )}>
+                          <Clock className="w-3 h-3" />
+                          {isOverdue ? `${overdueDays}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                      {todo.priority === 'urgent' && !todo.completed && (
+                        <span className={cn(
+                          "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
+                          priorityConfig[todo.priority]?.color
+                        )}>
+                          {priorityConfig[todo.priority]?.icon}
+                        </span>
+                      )}
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenMenuId(openMenuId === todo.id ? null : todo.id)}
+                          className="p-1.5 rounded hover:bg-surface/50 touch-manipulation"
+                        >
+                          <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                        {openMenuId === todo.id && (
+                          <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+                            <button
+                              onClick={() => handleToggleTodo(todo.id)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                            >
+                              <Check className="w-4 h-4" />
+                              Mark Complete
+                            </button>
+                            <button
+                              onClick={() => handleToggleTodo(todo.id)}
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Expense list - show after todos */}
-          {recentExpenses.length > 0 && (
+          {/* Expense list - show only overdue */}
+          {overdueExpenses.length > 0 && (
             <div className="p-3 border-t border-border" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  {overdueExpenses.length} Overdue Budgets
+                </span>
+              </div>
               <div className="space-y-1.5">
-                {recentExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center gap-2.5 py-1 rounded">
-                    <div className="w-4 h-4 rounded bg-accent/10 flex items-center justify-center shrink-0">
-                      <DollarSign className="w-3 h-3 text-accent" />
+                {overdueExpenses.map((expense) => {
+                  const categoryLabel = categories.find(c => c.id === expense.category)?.label.split(' ')[0]?.substring(0, 4) || expense.category
+                  const variance = expense.actualAmount !== undefined ? expense.actualAmount - expense.amount : null
+                  return (
+                    <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
+                      {/* Category badge */}
+                      <span className={cn(
+                        "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
+                        categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
+                      )}>
+                        {categoryLabel}
+                      </span>
+                      
+                      {/* Title and description */}
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium truncate">{expense.title}</span>
+                        {expense.description && (
+                          <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>
+                        )}
+                      </div>
+                      
+                      {/* Expected amount */}
+                      <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
+                        ${expense.amount.toLocaleString()}
+                      </div>
+                      
+                      {/* Actual amount - editable */}
+                      <button
+                        onClick={() => {
+                          if (expense.actualAmount === expense.amount) {
+                            updateExpenseById(expense.id, { actualAmount: undefined })
+                          } else {
+                            updateExpenseById(expense.id, { actualAmount: expense.amount })
+                          }
+                        }}
+                        className={cn(
+                          "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right px-2 py-0.5 rounded transition-colors border",
+                          expense.actualAmount === undefined
+                            ? "text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
+                            : "border-border hover:text-accent hover:bg-accent/10"
+                        )}
+                      >
+                        {expense.actualAmount !== undefined ? `$${expense.actualAmount.toLocaleString()}` : '-'}
+                      </button>
+                      
+                      {/* Variance */}
+                      <div className={cn(
+                        "text-xs font-medium min-w-[50px] text-right whitespace-nowrap",
+                        variance === null && "text-muted-foreground/30",
+                        variance === 0 && "text-muted-foreground",
+                        variance && variance > 0 && "text-red-600",
+                        variance && variance < 0 && "text-emerald-600"
+                      )}>
+                        {variance === null ? '-' :
+                         variance === 0 ? '$0' :
+                         (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{expense.title}</div>
-                      {expense.description && (
-                        <div className="text-xs text-muted-foreground truncate">{expense.description}</div>
-                      )}
-                    </div>
-                    <div className="text-sm font-semibold">${expense.amount.toLocaleString()}</div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -295,7 +516,7 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
             </div>
           </div>
 
-          {/* Tasks panel - now shows both tasks and expenses */}
+          {/* Tasks panel - shows only overdue items */}
           <div className="flex-1 p-3 min-w-0 bg-surface/50 rounded-r-lg">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
@@ -310,43 +531,151 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
               </Link>
             </div>
 
-            {recentTodos.length === 0 && recentExpenses.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic">No tasks or expenses</p>
-            ) : (
-              <div className="space-y-1">
-                {/* Show todos */}
-                {recentTodos.map((todo) => (
-                  <label key={todo.id} className="flex items-center gap-2 py-0.5 rounded hover:bg-surface cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={todo.completed}
-                      onChange={() => handleToggleTodo(todo.id)}
-                      className="w-3.5 h-3.5 rounded border-border text-accent focus:ring-1 focus:ring-accent shrink-0"
-                    />
-                    <span className={cn("text-xs flex-1 truncate", todo.completed ? "line-through text-muted-foreground" : "text-foreground")}>
-                      {todo.title}
-                    </span>
-                    {todo.priority === 'urgent' && !todo.completed && (
-                      <span className="text-destructive font-bold text-xs">!</span>
-                    )}
-                  </label>
-                ))}
-                {/* Show expenses */}
-                {recentExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center gap-2 py-0.5 rounded">
-                    <div className="w-3.5 h-3.5 rounded bg-accent/10 flex items-center justify-center shrink-0">
-                      <DollarSign className="w-2.5 h-2.5 text-accent" />
-                    </div>
-                    <span className="text-xs flex-1 truncate">{expense.title}</span>
-                    <span className="text-xs font-semibold">${expense.amount.toLocaleString()}</span>
-                  </div>
-                ))}
+            {overdueTodos.length > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {overdueTodos.length} Overdue Tasks
+                </span>
               </div>
             )}
 
-            {(todos.length > 5 || expenses.length > 5) && (
+            {overdueExpenses.length > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  {overdueExpenses.length} Overdue Budgets
+                </span>
+              </div>
+            )}
+
+            {overdueTodos.length === 0 && overdueExpenses.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">No overdue tasks or expenses</p>
+            ) : (
+              <div className="space-y-1">
+                {/* Show overdue todos */}
+                {overdueTodos.map((todo) => {
+                  const days = getDaysUntilDue(todo.dueDate)
+                  const isOverdue = days !== null && days < 0 && !todo.completed
+                  const overdueDays = days !== null && days < 0 ? Math.abs(days) : 0
+                  return (
+                    <div key={todo.id} className={cn(
+                      "flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]",
+                      todo.completed && "bg-muted/30 border-transparent opacity-60",
+                      isOverdue && "border-red-200 bg-red-50/50"
+                    )}>
+                      <button
+                        onClick={() => handleToggleTodo(todo.id)}
+                        className={cn(
+                          "w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center transition-all border-2",
+                          todo.completed
+                            ? 'bg-accent border-accent text-white'
+                            : 'border-muted-foreground/40 hover:border-accent bg-white'
+                        )}
+                      >
+                        {todo.completed && <Check className="w-4 h-4" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className={cn(
+                          "block text-sm font-medium truncate",
+                          todo.completed && "line-through text-muted-foreground"
+                        )}>
+                          {todo.title}
+                        </span>
+                        {todo.description && (
+                          <span className={cn(
+                            "block text-xs text-muted-foreground truncate",
+                            todo.completed && "line-through"
+                          )}>
+                            {todo.description}
+                          </span>
+                        )}
+                      </div>
+                      {todo.dueDate && (
+                        <span className={cn(
+                          "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
+                          isOverdue ? "bg-red-100 text-red-700 font-medium" : "text-foreground font-medium"
+                        )}>
+                          <Clock className="w-3 h-3" />
+                          {isOverdue ? `${overdueDays}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                      {todo.priority === 'urgent' && !todo.completed && (
+                        <span className={cn(
+                          "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
+                          priorityConfig[todo.priority]?.color
+                        )}>
+                          {priorityConfig[todo.priority]?.icon}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+                {/* Show overdue expenses */}
+                {overdueExpenses.map((expense) => {
+                  const categoryLabel = categories.find(c => c.id === expense.category)?.label.split(' ')[0]?.substring(0, 4) || expense.category
+                  const variance = expense.actualAmount !== undefined ? expense.actualAmount - expense.amount : null
+                  return (
+                    <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface">
+                      {/* Category badge */}
+                      <span className={cn(
+                        "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
+                        categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
+                      )}>
+                        {categoryLabel}
+                      </span>
+                      
+                      {/* Title and description */}
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium truncate">{expense.title}</span>
+                        {expense.description && (
+                          <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>
+                        )}
+                      </div>
+                      
+                      {/* Expected amount */}
+                      <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
+                        ${expense.amount.toLocaleString()}
+                      </div>
+                      
+                      {/* Actual amount - editable */}
+                      <button
+                        onClick={() => {
+                          if (expense.actualAmount === expense.amount) {
+                            updateExpenseById(expense.id, { actualAmount: undefined })
+                          } else {
+                            updateExpenseById(expense.id, { actualAmount: expense.amount })
+                          }
+                        }}
+                        className={cn(
+                          "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right px-2 py-0.5 rounded transition-colors border",
+                          expense.actualAmount === undefined
+                            ? "text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
+                            : "border-border hover:text-accent hover:bg-accent/10"
+                        )}
+                      >
+                        {expense.actualAmount !== undefined ? `$${expense.actualAmount.toLocaleString()}` : '-'}
+                      </button>
+                      
+                      {/* Variance */}
+                      <div className="text-xs font-medium min-w-[50px] text-right whitespace-nowrap">
+                        {variance !== null && variance > 0 ? (
+                          <span className="text-red-600">+${variance.toLocaleString()}</span>
+                        ) : variance !== null && variance < 0 ? (
+                          <span className="text-emerald-600">${variance.toLocaleString()}</span>
+                        ) : (
+                          <span className="text-muted-foreground/30">$0</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {(overdueTodos.length > 5 || overdueExpenses.length > 5) && (
               <Link to={`/vendor/markets/${market.id}`} className="block mt-2 text-xs text-accent hover:underline">
-                +{(todos.length - 5) + (expenses.length - 5)} more
+                +{(overdueTodos.length - 5) + (overdueExpenses.length - 5)} more
               </Link>
             )}
           </div>
