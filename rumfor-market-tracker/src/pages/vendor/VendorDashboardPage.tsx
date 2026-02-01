@@ -14,7 +14,7 @@ export function VendorDashboardPage() {
   const { todos, isLoading: todosLoading } = useTodos()
   const { trackedMarkets, isLoading: marketsLoading, getTrackingStatus } = useTrackedMarkets()
   const { toggleTodo, deleteTodo, updateTodo } = useAllTodos()
-  const { isLoading: expensesLoading } = useExpenses()
+  const { expenses, isLoading: expensesLoading } = useExpenses()
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingTodo, setEditingTodo] = useState<any>(null)
@@ -30,6 +30,13 @@ export function VendorDashboardPage() {
   const overdueTodos = todos.filter(todo =>
     !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()
   )
+
+  // Calculate overdue expenses (actual > budgeted)
+  const overdueExpenses = expenses.filter(expense => {
+    const actual = expense.actualAmount || 0
+    const budget = expense.amount || 0
+    return actual > budget
+  })
 
   // Calculate market tracking status counts
   const interestedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'interested').length
@@ -253,11 +260,77 @@ export function VendorDashboardPage() {
           </Link>
         </div>
 
-        {/* Coming Soon Banner */}
-        <div className="text-center py-4">
-          <DollarSign className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
-          <p className="text-sm font-medium text-muted-foreground">Master List Coming Soon</p>
+        <div className="flex items-center gap-3 text-sm mb-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Total</span>
+            <span className="font-semibold">{expenses.length}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Overdue</span>
+            <span className="font-semibold text-red-600">{overdueExpenses.length}</span>
+          </div>
         </div>
+
+        {overdueExpenses.length > 0 && (
+          <>
+            <h3 className="text-xs font-medium text-muted-foreground mb-2">Overdue Budgets</h3>
+            <div className="space-y-1">
+              {overdueExpenses.slice(0, 5).map((expense) => {
+                const marketName = expense.marketId ? trackedMarkets.find(m => m.id === expense.marketId)?.name || 'General' : 'General'
+                const variance = expense.actualAmount !== undefined ? expense.actualAmount - expense.amount : 0
+
+                return (
+                  <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px] border-red-200 bg-red-50/50">
+                    {/* Market indicator */}
+                    <div className="flex-shrink-0">
+                      {expense.marketId && (
+                        <div className="w-6 h-6 rounded-md flex items-center justify-center border-2" style={{backgroundColor: getMarketColor(expense.marketId), borderColor: getMarketColor(expense.marketId)}}>
+                          <span className="text-white text-xs font-semibold">{marketName.charAt(0)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title and market name */}
+                    <div className="flex-1 min-w-0">
+                      <p className="block text-sm font-medium truncate text-foreground">
+                        {expense.title || 'Untitled Budget'}
+                      </p>
+                      <p className="block text-xs text-muted-foreground truncate">
+                        {marketName}
+                      </p>
+                    </div>
+
+                    {/* Amounts */}
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        ${expense.amount.toLocaleString()}
+                      </div>
+                      <div className="text-xs font-semibold text-red-600">
+                        ${expense.actualAmount?.toLocaleString() || '0'}
+                      </div>
+                    </div>
+
+                    {/* Variance */}
+                    <div className="text-xs font-medium min-w-[50px] text-right whitespace-nowrap">
+                      {variance > 0 ? (
+                        <span className="text-red-600">+${variance.toLocaleString()}</span>
+                      ) : (
+                        <span className="text-muted-foreground">$0</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {overdueExpenses.length === 0 && (
+          <div className="text-center py-4">
+            <DollarSign className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-muted-foreground">No overdue budgets</p>
+          </div>
+        )}
       </Card>
 
       {/* Edit Task Modal */}

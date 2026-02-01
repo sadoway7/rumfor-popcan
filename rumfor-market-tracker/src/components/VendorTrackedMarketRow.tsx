@@ -4,7 +4,6 @@ import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
-import { ExpenseCategory } from '@/types'
 import {
   Calendar,
   MapPin,
@@ -80,27 +79,10 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   onChangeStatus,
   className
 }) => {
-  const { todos, toggleTodo, updateTodo } = useTodos(market.id)
+  const { todos, toggleTodo } = useTodos(market.id)
   const { expenses, updateExpense } = useExpenses(market.id)
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-
-  // Get days overdue for tasks
-  const getDaysOverdue = (dueDate?: string) => {
-    if (!dueDate) return null
-    const dueDateObj = new Date(dueDate)
-    const now = new Date()
-    const diffTime = dueDateObj.getTime() - now.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
-  }
-
-  // Get variance amount for expenses
-  const getVariance = (expense: any) => {
-    const actual = expense.actualAmount || 0
-    const budget = expense.amount || 0
-    return actual - budget
-  }
 
   const priorityConfig = {
     urgent: { color: 'bg-red-100 text-red-700', icon: <AlertTriangle className="w-3 h-3" /> },
@@ -148,37 +130,9 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
     'revenue': 'bg-green-100 text-green-700'
   }
 
-  const updateTodoById = (id: string, updates: any) => {
-    updateTodo(id, updates)
-  }
-
   const updateExpenseById = (id: string, updates: any) => {
     updateExpense(id, updates)
   }
-
-  // Filter to show only overdue tasks (past due date, not completed)
-  const overdueTodos = todos.filter(todo => {
-    if (todo.completed || !todo.dueDate) return false
-    const dueDate = new Date(todo.dueDate)
-    const now = new Date()
-    return dueDate < now
-  })
-
-  // Get days until due for a todo
-  const getDaysUntilDue = (dueDate?: string) => {
-    if (!dueDate) return null
-    const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return days
-  }
-
-  // Filter to show only overdue expenses (actual > budgeted)
-  const overdueExpenses = expenses.filter(expense => {
-    const actual = expense.actualAmount || 0
-    const budget = expense.amount || 0
-    return actual > budget
-  })
-
-  const hasOverdueItems = overdueTodos.length > 0 || overdueExpenses.length > 0
 
   const formatSchedule = (schedule: Market['schedule']): string => {
     if (!schedule || schedule.length === 0) return 'TBD'
@@ -189,10 +143,31 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   }
 
   const currentStatus = tracking?.status || 'interested'
-  const incompleteTodos = todos.filter(t => !t.completed)
+
+  // Get days until due for a todo
+  const getDaysUntilDue = (dueDate?: string) => {
+    if (!dueDate) return null
+    const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    return days
+  }
+
+  // Filter to show only overdue tasks (past due date, not completed)
+  const overdueTodos = todos.filter(todo => {
+    if (todo.completed || !todo.dueDate) return false
+    const dueDate = new Date(todo.dueDate)
+    const now = new Date()
+    return dueDate < now
+  })
+
+  // Filter to show only overdue expenses (actual > budgeted)
+  const overdueExpenses = expenses.filter(expense => {
+    const actual = expense.actualAmount || 0
+    const budget = expense.amount || 0
+    return actual > budget
+  })
+
+  // Get completed todos count
   const completedTodos = todos.filter(t => t.completed)
-  const recentTodos = [...incompleteTodos.slice(0, 3), ...completedTodos.slice(0, 2)].slice(0, 5)
-  const recentExpenses = expenses.slice(0, 3)  // Show up to 3 recent expenses
 
   const handleToggleTodo = (todoId: string) => {
     if (onToggleTodo) {
