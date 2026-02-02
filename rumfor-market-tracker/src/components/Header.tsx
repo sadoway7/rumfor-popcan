@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu, SlidersHorizontal } from 'lucide-react'
+import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu, SlidersHorizontal, LayoutDashboard, Store } from 'lucide-react'
 
 export function Header() {
   const navigate = useNavigate()
@@ -137,7 +137,7 @@ export function Header() {
               className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
               title="Set location"
             >
-              <Navigation className="h-4 w-4" />
+              <MapPin className="h-4 w-4" />
             </Button>
 
             {/* Theme Toggle */}
@@ -156,7 +156,7 @@ export function Header() {
                 {user?.role !== 'vendor' && (
                   <Link to={`/${user?.role}/dashboard`}>
                     <Button variant="outline" size="sm" className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200">
-                      <MapPin className="h-4 w-4 mr-2" />
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
                       Dashboard
                     </Button>
                   </Link>
@@ -175,7 +175,7 @@ export function Header() {
                 {user?.role === 'vendor' && (
                   <Link to="/vendor/tracked-markets">
                     <Button variant="outline" size="sm" className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200">
-                      <MapPin className="h-4 w-4 mr-2" />
+                      <Store className="h-4 w-4 mr-2" />
                       My Markets
                     </Button>
                   </Link>
