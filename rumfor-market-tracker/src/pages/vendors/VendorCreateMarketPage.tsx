@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card, CardHeader, CardTitle, CardContent, Input, Textarea, Select } from '@/components/ui'
 import { ArrowLeft, MapPin, Calendar, Loader2, Plus, Trash2 } from 'lucide-react'
-import { getCategoryDefaultImage } from '@/config/constants'
+import { getCategoryImage } from '@/assets/images'
 import { useCreateMarketMutation, CreateMarketData } from '@/features/markets/hooks/useMarkets'
 import { MarketCategory, MarketStatus } from '@/types'
 
@@ -11,7 +11,7 @@ const marketCategories = [
   { value: 'arts-crafts', label: 'Arts & Crafts' },
   { value: 'flea-market', label: 'Flea Market' },
   { value: 'food-festival', label: 'Food Festival' },
-  { value: 'craft-show', label: 'Craft Show' },
+  { value: 'craft-fair', label: 'Craft Show' },
   { value: 'community-event', label: 'Community Event' },
   { value: 'holiday-market', label: 'Holiday Market' },
   { value: 'night-market', label: 'Night Market' },
@@ -150,7 +150,7 @@ export function VendorCreateMarketPage() {
 
     try {
       // Get default image based on category
-      const defaultImage = getCategoryDefaultImage(formData.category)
+      const defaultImage = getCategoryImage(formData.category)
       
       // Transform event dates to backend format
       const events = formData.eventDates.map(event => ({
@@ -210,7 +210,16 @@ export function VendorCreateMarketPage() {
           parkingAvailable: false,
           restroomsAvailable: false,
           familyFriendly: false,
-          petFriendly: false
+          petFriendly: false,
+          covered: false,
+          indoor: false,
+          outdoorSeating: false,
+          wifi: false,
+          atm: false,
+          foodCourt: false,
+          liveMusic: false,
+          handicapParking: false,
+          alcoholAvailable: false
         },
         applicationFields: []
       }

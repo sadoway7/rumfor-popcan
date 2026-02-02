@@ -56,7 +56,16 @@ const mockMarkets: Market[] = [
       parkingAvailable: true,
       restroomsAvailable: true,
       familyFriendly: true,
-      petFriendly: true
+      petFriendly: true,
+      covered: false,
+      indoor: false,
+      outdoorSeating: true,
+      wifi: false,
+      atm: false,
+      foodCourt: false,
+      liveMusic: false,
+      handicapParking: false,
+      alcoholAvailable: false
     },
     contact: {
       phone: '(555) 123-4567',
@@ -129,7 +138,16 @@ const mockMarkets: Market[] = [
       parkingAvailable: false,
       restroomsAvailable: true,
       familyFriendly: true,
-      petFriendly: false
+      petFriendly: false,
+      covered: true,
+      indoor: true,
+      outdoorSeating: false,
+      wifi: false,
+      atm: true,
+      foodCourt: false,
+      liveMusic: false,
+      handicapParking: false,
+      alcoholAvailable: false
     },
     contact: {
       phone: '(555) 987-6543',
@@ -208,7 +226,16 @@ const mockMarkets: Market[] = [
       parkingAvailable: true,
       restroomsAvailable: true,
       familyFriendly: true,
-      petFriendly: true
+      petFriendly: true,
+      covered: true,
+      indoor: false,
+      outdoorSeating: false,
+      wifi: false,
+      atm: true,
+      foodCourt: true,
+      liveMusic: false,
+      handicapParking: false,
+      alcoholAvailable: false
     },
     contact: {
       phone: '(555) 456-7890',

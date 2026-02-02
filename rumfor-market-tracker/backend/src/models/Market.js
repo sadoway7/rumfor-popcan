@@ -10,7 +10,8 @@ const marketSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    required: false,
+    default: 'A great market for vendors and visitors.',
     maxlength: 2000
   },
   shortDescription: {
@@ -42,18 +43,19 @@ const marketSchema = new mongoose.Schema({
   // Location information
   location: {
     address: {
-      street: { type: String, required: true },
+      street: { type: String, required: false, default: 'TBD' },
       city: { type: String, required: true },
       state: { type: String, required: true },
-      zipCode: { type: String, required: true },
+      zipCode: { type: String, required: false, default: '00000' },
       country: { type: String, default: 'USA' }
     },
     coordinates: {
       type: [Number], // [lng, lat]
-      required: true,
+      required: false,
+      default: [0, 0],
       validate: {
         validator: function(v) {
-          return v.length === 2 && v.every(n => typeof n === 'number')
+          return !v || (v.length === 2 && v.every(n => typeof n === 'number'))
         },
         message: 'Coordinates must be [longitude, latitude]'
       }
@@ -86,11 +88,13 @@ const marketSchema = new mongoose.Schema({
     }],
     startTime: {
       type: String, // "HH:MM" format
-      required: true
+      required: false,
+      default: '08:00'
     },
     endTime: {
       type: String, // "HH:MM" format
-      required: true
+      required: false,
+      default: '14:00'
     },
     specialDates: [{
       date: { type: Date, required: true },

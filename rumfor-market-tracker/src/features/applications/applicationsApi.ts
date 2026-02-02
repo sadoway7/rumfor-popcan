@@ -79,7 +79,16 @@ const mockApplications: Application[] = [
         parkingAvailable: true,
         restroomsAvailable: true,
         familyFriendly: true,
-        petFriendly: true
+        petFriendly: true,
+        covered: true,
+        indoor: false,
+        outdoorSeating: true,
+        wifi: false,
+        atm: true,
+        foodCourt: true,
+        liveMusic: false,
+        handicapParking: true,
+        alcoholAvailable: false
       },
       contact: {
         phone: '(555) 123-4567',
@@ -193,7 +202,16 @@ const mockApplications: Application[] = [
         parkingAvailable: true,
         restroomsAvailable: true,
         familyFriendly: true,
-        petFriendly: false
+        petFriendly: false,
+        covered: true,
+        indoor: true,
+        outdoorSeating: false,
+        wifi: true,
+        atm: true,
+        foodCourt: false,
+        liveMusic: true,
+        handicapParking: true,
+        alcoholAvailable: true
       },
       contact: {
         phone: '(555) 987-6543',

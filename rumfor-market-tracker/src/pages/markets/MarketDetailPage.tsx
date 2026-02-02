@@ -12,8 +12,9 @@ import TagVoting from '@/components/TagVoting'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
+import { formatCurrency } from '@/utils/formatCurrency'
 import { MARKET_STATUS_COLORS, MARKET_CATEGORY_COLORS, MARKET_CATEGORY_LABELS } from '@/config/constants'
-import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image } from 'lucide-react'
+import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image, DollarSign } from 'lucide-react'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryColors = MARKET_CATEGORY_COLORS
@@ -432,12 +433,48 @@ export const MarketDetailPage: React.FC = () => {
                   <span className={market.accessibility?.wheelchairAccessible ? '' : 'text-muted-foreground'}>Wheelchair</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.handicapParking ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.handicapParking ? '' : 'text-muted-foreground'}>Handicap Parking</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
                   <span>{market.accessibility?.parkingAvailable ? '✓' : '—'}</span>
                   <span className={market.accessibility?.parkingAvailable ? '' : 'text-muted-foreground'}>Parking</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
                   <span>{market.accessibility?.restroomsAvailable ? '✓' : '—'}</span>
                   <span className={market.accessibility?.restroomsAvailable ? '' : 'text-muted-foreground'}>Restrooms</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.covered ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.covered ? '' : 'text-muted-foreground'}>Covered</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.indoor ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.indoor ? '' : 'text-muted-foreground'}>Indoor</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.outdoorSeating ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.outdoorSeating ? '' : 'text-muted-foreground'}>Outdoor Seating</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.wifi ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.wifi ? '' : 'text-muted-foreground'}>WiFi</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.atm ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.atm ? '' : 'text-muted-foreground'}>ATM</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.foodCourt ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.foodCourt ? '' : 'text-muted-foreground'}>Food Court</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.liveMusic ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.liveMusic ? '' : 'text-muted-foreground'}>Live Music</span>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span>{market.accessibility?.alcoholAvailable ? '✓' : '—'}</span>
+                  <span className={market.accessibility?.alcoholAvailable ? '' : 'text-muted-foreground'}>Alcohol</span>
                 </div>
                 <div className="flex items-center gap-1 text-xs">
                   <span>{market.accessibility?.familyFriendly ? '✓' : '—'}</span>
@@ -451,6 +488,22 @@ export const MarketDetailPage: React.FC = () => {
             </div>
           )}
         </Card>
+
+        {/* Booth Fee - Optional Display */}
+        {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
+          <Card className="p-2">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-4 h-4 text-accent" />
+              <h2 className="font-medium text-sm">Pricing Information</h2>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Booth Fee</span>
+              <span className="text-sm font-medium text-foreground">
+                {market.pricing.isFree ? 'Free' : formatCurrency(market.pricing.boothFee)}
+              </span>
+            </div>
+          </Card>
+        )}
 
         {/* Vendors Attending - Collapsed by Default */}
         <Card className="overflow-hidden">

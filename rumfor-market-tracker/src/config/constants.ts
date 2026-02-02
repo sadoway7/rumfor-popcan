@@ -102,40 +102,62 @@ export const getGenericMarketImage = (marketId: string): string => {
 }
 
 // Category-specific default banner images
-// Each image matches the category theme and color scheme from MARKET_CATEGORY_COLORS
+// Using local placeholder images for consistency
 export const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-  'farmers-market': 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&h=400&fit=crop',
-  // Fresh produce, vegetables - green theme
-  
-  'arts-crafts': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=1200&h=400&fit=crop',
-  // Handmade crafts, artisan work - purple theme
-  
-  'flea-market': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=400&fit=crop',
-  // Vintage items, collectibles - orange theme
-  
-  'food-festival': 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200&h=400&fit=crop',
-  // Food, culinary - red theme
-  
-  'craft-show': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&h=400&fit=crop',
-  // Handcrafted items - pink theme
-  
-  'community-event': 'https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=1200&h=400&fit=crop',
-  // Community gathering - indigo theme
-  
-  'holiday-market': 'https://images.unsplash.com/photo-1512389142860-9c449e58a814?w=1200&h=400&fit=crop',
-  // Festive, seasonal - blue theme
-  
-  'night-market': 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=1200&h=400&fit=crop',
-  // Evening ambiance, lights - gray theme
-  
-  'street-fair': 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&h=400&fit=crop',
-  // Outdoor festival - yellow theme
-  
-  'vintage-antique': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=400&fit=crop',
-  // Antiques, vintage - brown theme
+  'farmers-market': new URL('/assets/images/farmermarket.png', import.meta.url).href,
+  'arts-crafts': new URL('/assets/images/artandcraft.png', import.meta.url).href,
+  'flea-market': new URL('/assets/images/fleamarket.png', import.meta.url).href,
+  'food-festival': new URL('/assets/images/foodfestival.png', import.meta.url).href,
+  'craft-fair': new URL('/assets/images/craftshow.png', import.meta.url).href,
+  'community-event': new URL('/assets/images/communityevent.png', import.meta.url).href,
+  'holiday-market': new URL('/assets/images/holidaymarket.png', import.meta.url).href,
+  'night-market': new URL('/assets/images/nightmarket.png', import.meta.url).href,
+  'street-fair': new URL('/assets/images/streetfair.png', import.meta.url).href,
+  'vintage-antique': new URL('/assets/images/vintageandantique.jpeg', import.meta.url).href,
 }
 
 // Function to get the default image for a category
 export const getCategoryDefaultImage = (category: string): string => {
-  return CATEGORY_DEFAULT_IMAGES[category] || GENERIC_MARKET_IMAGES[0]
+  // Use the category default image from CATEGORY_DEFAULT_IMAGES
+  return CATEGORY_DEFAULT_IMAGES[category]
 }
+
+// Allowed market tags
+export const ALLOWED_MARKET_TAGS = [
+  'handmade',
+  'vintage',
+  'crafts',
+  'fresh-produce',
+  'local',
+  'family-friendly',
+  'wheelchair-accessible',
+  'pet-friendly',
+  'live-music',
+  'food-trucks',
+  'baked-goods',
+  'artisan',
+  'organic',
+  'farm-to-table',
+  'eco-friendly',
+  'seasonal',
+  'holiday-themed',
+  'indoor',
+  'outdoor',
+  'covered',
+  'art',
+  'jewelry',
+  'clothing',
+  'antiques',
+  'furniture',
+  'plants',
+  'flowers',
+  'home-decor',
+  'kids-friendly',
+  'weekend-market',
+  'morning-market',
+  'evening-market',
+  'night-market',
+  'community'
+] as const
+
+export type MarketTag = typeof ALLOWED_MARKET_TAGS[number]

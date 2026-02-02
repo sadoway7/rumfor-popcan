@@ -131,6 +131,12 @@ export interface Market {
   isLocked?: boolean       // Whether the market is locked from editing
   createdBy?: string       // User ID of the creator
   canEdit?: boolean        // Computed field from backend - whether the market can still be edited
+  
+  // Pricing information (optional)
+  pricing?: {
+    boothFee?: number
+    isFree: boolean
+  }
 }
 
 export type MarketCategory =
@@ -207,6 +213,15 @@ export interface AccessibilityFeatures {
   restroomsAvailable: boolean
   familyFriendly: boolean
   petFriendly: boolean
+  covered: boolean
+  indoor: boolean
+  outdoorSeating: boolean
+  wifi: boolean
+  atm: boolean
+  foodCourt: boolean
+  liveMusic: boolean
+  handicapParking: boolean
+  alcoholAvailable: boolean
 }
 
 export interface ContactInfo {

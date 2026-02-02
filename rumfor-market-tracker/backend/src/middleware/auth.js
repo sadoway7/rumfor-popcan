@@ -387,6 +387,12 @@ const requirePromoter = requireRole('promoter', 'admin')
 
 // Middleware to check if user is verified promoter or admin
 const requireVerifiedPromoter = async (req, res, next) => {
+  console.log('[DEBUG requireVerifiedPromoter] Called with:', {
+    hasUser: !!req.user,
+    userRole: req.user?.role,
+    bodyMarketType: req.body?.marketType
+  })
+  
   if (!req.user) {
     return res.status(401).json({
       success: false,
@@ -396,13 +402,28 @@ const requireVerifiedPromoter = async (req, res, next) => {
   
   // Admin can do anything
   if (req.user.role === 'admin') {
+    console.log('[DEBUG requireVerifiedPromoter] Admin allowed')
     return next()
+  }
+  
+  // Allow vendors to create vendor-created markets
+  if (req.user.role === 'vendor') {
+    const marketType = req.body?.marketType
+    console.log('[DEBUG requireVerifiedPromoter] Vendor role, marketType:', marketType)
+    if (marketType === 'vendor-created') {
+      console.log('[MARKET CREATION] Vendor creating vendor-created market, bypassing promoter verification')
+      return next()
+    }
+    console.log('[DEBUG requireVerifiedPromoter] Vendor rejected: marketType not vendor-created')
+    return res.status(403).json({
+      success: false,
+      message: 'Vendors can only create vendor-created markets.'
+    })
   }
   
   // Check if promoter is verified
   if (req.user.role === 'promoter') {
-    // In a real implementation, you'd have a separate verification status
-    // For now, we'll assume all promoters are verified
+    console.log('[DEBUG requireVerifiedPromoter] Promoter role, allowing')
     return next()
   }
   

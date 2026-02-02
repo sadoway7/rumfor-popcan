@@ -15,7 +15,7 @@ export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
-  const { isSidebarOpen } = useSidebarStore()
+  const { isSidebarOpen, toggleSidebar } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
     'handmade',
@@ -77,11 +77,9 @@ export const MarketSearchPage: React.FC = () => {
     }
   }, [searchParams]) // Re-run when URL params change
 
-  // Close sidebar by default on mobile
+  // Close sidebar by default
   useEffect(() => {
-    if (window.innerWidth < 768) {
-      useSidebarStore.getState().setSidebarOpen(false)
-    }
+    useSidebarStore.getState().setSidebarOpen(false)
   }, [])
 
   // Update URL when filters change
@@ -282,13 +280,19 @@ export const MarketSearchPage: React.FC = () => {
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex justify-center">
-                <div className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-default shadow shadow-black/20">
+                <div
+                  onClick={toggleSidebar}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                >
                   {isSearching ? 'Searching...' : `${markets.length} markets found`}
                   {filters.search && (
                     <>
                       {' · '}
                       <button
-                        onClick={handleClearFilters}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleClearFilters()
+                        }}
                         className="text-muted-foreground hover:text-foreground underline"
                       >
                         Clear search

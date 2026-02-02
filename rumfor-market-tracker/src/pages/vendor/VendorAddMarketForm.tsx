@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -10,18 +10,18 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { cn } from '@/utils/cn'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '@/features/markets/marketsApi'
-import { Market, MarketCategory } from '@/types'
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Calendar, 
-  Store, 
-  Phone, 
-  DollarSign, 
+import { getCategoryImage, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE, ALLOWED_MARKET_TAGS } from '@/assets/images'
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Store,
+  Phone,
   Accessibility,
   CheckCircle,
   Plus,
-  X
+  X,
+  Upload
 } from 'lucide-react'
 
 interface MarketFormData {
@@ -42,6 +42,7 @@ interface MarketFormData {
     startDate: string
     endDate: string
     isRecurring: boolean
+    eventDate: string
   }>
   contact: {
     phone?: string
@@ -54,17 +55,21 @@ interface MarketFormData {
     restroomsAvailable: boolean
     familyFriendly: boolean
     petFriendly: boolean
-  }
-  pricing: {
-    boothFee?: number
-    isFree: boolean
+    covered: boolean
+    indoor: boolean
+    outdoorSeating: boolean
+    wifi: boolean
+    atm: boolean
+    foodCourt: boolean
+    liveMusic: boolean
+    handicapParking: boolean
+    alcoholAvailable: boolean
   }
   additionalInfo: {
     tags: string[]
     vendorCount?: number
     attendanceEstimate?: string
-    paymentMethods: string[]
-    setupRequirements: string[]
+    marketImage?: string
   }
 }
 
@@ -81,14 +86,70 @@ const categories = [
   { value: 'vintage-antique', label: 'Vintage & Antique' }
 ]
 
-const daysOfWeek = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' }
+const provincesAndStates = [
+  { label: 'Alberta', value: 'AB' },
+  { label: 'British Columbia', value: 'BC' },
+  { label: 'Manitoba', value: 'MB' },
+  { label: 'New Brunswick', value: 'NB' },
+  { label: 'Newfoundland and Labrador', value: 'NL' },
+  { label: 'Northwest Territories', value: 'NT' },
+  { label: 'Nova Scotia', value: 'NS' },
+  { label: 'Nunavut', value: 'NU' },
+  { label: 'Ontario', value: 'ON' },
+  { label: 'Prince Edward Island', value: 'PE' },
+  { label: 'Quebec', value: 'QC' },
+  { label: 'Saskatchewan', value: 'SK' },
+  { label: 'Yukon', value: 'YT' },
+  { label: 'Alabama', value: 'AL' },
+  { label: 'Alaska', value: 'AK' },
+  { label: 'Arizona', value: 'AZ' },
+  { label: 'Arkansas', value: 'AR' },
+  { label: 'California', value: 'CA' },
+  { label: 'Colorado', value: 'CO' },
+  { label: 'Connecticut', value: 'CT' },
+  { label: 'Delaware', value: 'DE' },
+  { label: 'Florida', value: 'FL' },
+  { label: 'Georgia', value: 'GA' },
+  { label: 'Hawaii', value: 'HI' },
+  { label: 'Idaho', value: 'ID' },
+  { label: 'Illinois', value: 'IL' },
+  { label: 'Indiana', value: 'IN' },
+  { label: 'Iowa', value: 'IA' },
+  { label: 'Kansas', value: 'KS' },
+  { label: 'Kentucky', value: 'KY' },
+  { label: 'Louisiana', value: 'LA' },
+  { label: 'Maine', value: 'ME' },
+  { label: 'Maryland', value: 'MD' },
+  { label: 'Massachusetts', value: 'MA' },
+  { label: 'Michigan', value: 'MI' },
+  { label: 'Minnesota', value: 'MN' },
+  { label: 'Mississippi', value: 'MS' },
+  { label: 'Missouri', value: 'MO' },
+  { label: 'Montana', value: 'MT' },
+  { label: 'Nebraska', value: 'NE' },
+  { label: 'Nevada', value: 'NV' },
+  { label: 'New Hampshire', value: 'NH' },
+  { label: 'New Jersey', value: 'NJ' },
+  { label: 'New Mexico', value: 'NM' },
+  { label: 'New York', value: 'NY' },
+  { label: 'North Carolina', value: 'NC' },
+  { label: 'North Dakota', value: 'ND' },
+  { label: 'Ohio', value: 'OH' },
+  { label: 'Oklahoma', value: 'OK' },
+  { label: 'Oregon', value: 'OR' },
+  { label: 'Pennsylvania', value: 'PA' },
+  { label: 'Rhode Island', value: 'RI' },
+  { label: 'South Carolina', value: 'SC' },
+  { label: 'South Dakota', value: 'SD' },
+  { label: 'Tennessee', value: 'TN' },
+  { label: 'Texas', value: 'TX' },
+  { label: 'Utah', value: 'UT' },
+  { label: 'Vermont', value: 'VT' },
+  { label: 'Virginia', value: 'VA' },
+  { label: 'Washington', value: 'WA' },
+  { label: 'West Virginia', value: 'WV' },
+  { label: 'Wisconsin', value: 'WI' },
+  { label: 'Wyoming', value: 'WY' }
 ]
 
 const attendanceOptions = [
@@ -97,18 +158,26 @@ const attendanceOptions = [
   { value: 'large', label: 'Large (200+ vendors)' }
 ]
 
-const paymentMethods = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'credit-card', label: 'Credit Card' },
-  { value: 'debit', label: 'Debit' },
-  { value: 'mobile-pay', label: 'Mobile Payment (Venmo, etc.)' },
-  { value: 'check', label: 'Check' }
-]
-
 export function VendorAddMarketForm() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(1)
+  const [tagInputValue, setTagInputValue] = useState('')
+  const [marketImage, setMarketImage] = useState<string | undefined>(undefined)
+  const tagSuggestionsRef = useRef<HTMLDivElement>(null)
+  const tagInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tagSuggestionsRef.current && !tagSuggestionsRef.current.contains(event.target as Node)) {
+        setTagInputValue('')
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   const [formData, setFormData] = useState<MarketFormData>({
     name: '',
     description: '',
@@ -118,7 +187,7 @@ export function VendorAddMarketForm() {
       city: '',
       state: '',
       zipCode: '',
-      country: 'USA'
+      country: ''
     },
     schedule: [{
       dayOfWeek: 6, // Saturday default
@@ -126,28 +195,45 @@ export function VendorAddMarketForm() {
       endTime: '14:00',
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-      isRecurring: true
+      eventDate: new Date().toISOString().split('T')[0],
+      isRecurring: false
     }],
     contact: {},
     accessibility: {
       wheelchairAccessible: false,
-      parkingAvailable: true,
-      restroomsAvailable: true,
-      familyFriendly: true,
-      petFriendly: false
-    },
-    pricing: {
-      isFree: false
+      parkingAvailable: false,
+      restroomsAvailable: false,
+      familyFriendly: false,
+      petFriendly: false,
+      covered: false,
+      indoor: false,
+      outdoorSeating: false,
+      wifi: false,
+      atm: false,
+      foodCourt: false,
+      liveMusic: false,
+      handicapParking: false,
+      alcoholAvailable: false
     },
     additionalInfo: {
-      tags: [],
-      paymentMethods: ['cash', 'credit-card'],
-      setupRequirements: []
+      tags: []
     }
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [apiErrors, setApiErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Clear API error when user starts editing a field
+  const clearFieldError = (field: string) => {
+    if (apiErrors[field]) {
+      setApiErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
 
   const validateStep = (step: number) => {
     const newErrors: Record<string, string> = {}
@@ -179,23 +265,74 @@ export function VendorAddMarketForm() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return
-    
+
     setIsSubmitting(true)
-    
+    setApiErrors({})
+
     try {
-      const marketData: Omit<Market, 'id' | 'createdAt' | 'updatedAt'> = {
+      const finalImages = marketImage
+        ? [marketImage]
+        : [getCategoryImage(formData.category)]
+
+      const amenities = []
+      if (formData.accessibility.wheelchairAccessible) amenities.push('accessible')
+      if (formData.accessibility.parkingAvailable) amenities.push('parking')
+      if (formData.accessibility.restroomsAvailable) amenities.push('restrooms')
+      if (formData.accessibility.familyFriendly) amenities.push('playground')
+      if (formData.accessibility.petFriendly) amenities.push('pet_friendly')
+      if (formData.accessibility.covered) amenities.push('covered_area')
+      if (formData.accessibility.indoor) amenities.push('electricity')
+      if (formData.accessibility.outdoorSeating) amenities.push('food_court')
+      if (formData.accessibility.wifi) amenities.push('wifi')
+      if (formData.accessibility.atm) amenities.push('atm')
+      if (formData.accessibility.foodCourt) amenities.push('food_court')
+      if (formData.accessibility.liveMusic) amenities.push('playground')
+
+      const city = formData.location.city?.trim() || 'Unknown'
+      const state = formData.location.state?.trim() || 'NA'
+
+      const marketData: any = {
         name: formData.name,
-        description: formData.description,
-        category: formData.category as MarketCategory,
-        promoterId: user?.id || '',
-        location: formData.location,
-        schedule: formData.schedule.map(scheduleItem => ({
-          ...scheduleItem,
-          id: `schedule-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        })),
-        status: 'draft',
+        description: formData.description || 'A great market for vendors and visitors.',
+        promoter: user?.id || '',
+        createdBy: user?.id || '',
+        createdByType: 'vendor',
         marketType: 'vendor-created',
+        location: {
+          address: {
+            street: formData.location.address?.trim() || 'TBD',
+            city: city,
+            state: state,
+            zipCode: formData.location.zipCode?.trim() || '00000',
+            country: formData.location.country?.trim() || 'USA'
+          },
+          coordinates: [0, 0]
+        },
+        category: formData.category,
+        schedule: {
+          recurring: formData.schedule[0]?.isRecurring || false,
+          daysOfWeek: ['saturday'],
+          startTime: formData.schedule[0]?.startTime || '08:00',
+          endTime: formData.schedule[0]?.endTime || '14:00',
+          seasonStart: formData.schedule[0]?.startDate || new Date().toISOString(),
+          seasonEnd: formData.schedule[0]?.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        status: 'active',
+        isPublic: true,
         applicationsEnabled: false,
+        acceptVendors: true,
+        applicationSettings: {
+          acceptVendors: true,
+          maxVendors: undefined,
+          applicationFee: 0,
+          boothFee: 0
+        },
+        images: finalImages.map(url => ({ url, isHero: true })),
+        tags: formData.additionalInfo.tags,
+        amenities,
+        contact: formData.contact,
+        accessibility: formData.accessibility,
+        applicationFields: [],
         stats: {
           viewCount: 0,
           favoriteCount: 0,
@@ -203,26 +340,39 @@ export function VendorAddMarketForm() {
           commentCount: 0,
           rating: 0,
           reviewCount: 0
-        },
-        images: [],
-        tags: formData.additionalInfo.tags,
-        accessibility: formData.accessibility,
-        contact: formData.contact,
-        applicationFields: []
+        }
       }
 
       const response = await marketsApi.createMarket(marketData)
-      
+
       if (response.success && response.data) {
-        // Show success and redirect
         alert('Market added successfully! You can now track this market and plan your participation.')
         navigate('/vendor')
       } else {
         throw new Error(response.error || 'Failed to create market')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting market:', error)
-      alert('Failed to submit market. Please try again.')
+
+      if (error.details?.errors && Array.isArray(error.details.errors)) {
+        const newApiErrors: Record<string, string> = {}
+        error.details.errors.forEach((err: any) => {
+          const fieldKey = err.path.replace('location.', '').replace('additionalInfo.', '')
+          newApiErrors[fieldKey] = err.msg
+        })
+        setApiErrors(newApiErrors)
+
+        const errorCount = error.details.errors.length
+        alert(`Please fix ${errorCount} error${errorCount > 1 ? 's' : ''} before submitting.`)
+
+        if (newApiErrors.name || newApiErrors.category || newApiErrors.city || newApiErrors.state) {
+          setCurrentStep(1)
+        } else if (newApiErrors.schedule) {
+          setCurrentStep(2)
+        }
+      } else {
+        alert(error.message || 'Failed to submit market. Please try again.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -237,7 +387,8 @@ export function VendorAddMarketForm() {
         endTime: '14:00',
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        isRecurring: true
+        eventDate: new Date().toISOString().split('T')[0],
+        isRecurring: false
       }]
     }))
   }
@@ -250,7 +401,7 @@ export function VendorAddMarketForm() {
   }
 
   const addTag = (tag: string) => {
-    if (tag && !formData.additionalInfo.tags.includes(tag)) {
+    if (tag && !formData.additionalInfo.tags.includes(tag) && formData.additionalInfo.tags.length < 3) {
       setFormData(prev => ({
         ...prev,
         additionalInfo: {
@@ -271,6 +422,32 @@ export function VendorAddMarketForm() {
     }))
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert('Invalid file type. Please upload JPG, PNG, or WebP images.')
+      return
+    }
+    
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File too large. Maximum size is 10MB.')
+      return
+    }
+    
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string
+      setMarketImage(dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeImage = () => {
+    setMarketImage(undefined)
+  }
+
   const steps = [
     { number: 1, title: 'Basic Information', description: 'Market name, location, and category' },
     { number: 2, title: 'Schedule & Details', description: 'When the market operates' },
@@ -280,64 +457,94 @@ export function VendorAddMarketForm() {
   const formatScheduleDisplay = () => {
     if (formData.schedule.length === 0) return 'No schedule set'
     
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const schedules = formData.schedule.map(s => {
-      const dayName = dayNames[s.dayOfWeek]
-      return `${dayName} ${s.startTime}-${s.endTime}`
+      const eventDate = s.eventDate || s.startDate
+      const dateObj = new Date(eventDate)
+      const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      return `${formattedDate} ${s.startTime}-${s.endTime}`
     })
     
     return schedules.join(', ')
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/vendor')}
-          className="p-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Add Market</h1>
-          <p className="text-muted-foreground">Add a market to track and organize your participation</p>
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-4">
+      {/* Progress Steps - Compact with integrated back button */}
+      <Card className="p-3 sm:p-6">
+        <div className="flex items-center gap-2">
+          {/* Back Button */}
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/vendor')}
+            className="p-2 flex-shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
 
-      {/* Progress Steps */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.number} className="flex items-center">
-              <div className={cn(
-                "flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium",
-                currentStep >= step.number 
-                  ? "bg-accent text-accent-foreground" 
-                  : "bg-muted text-muted-foreground"
-              )}>
-                {currentStep > step.number ? <CheckCircle className="w-4 h-4" /> : step.number}
-              </div>
-              <div className="ml-3">
+          {/* Progress Steps */}
+          <div className="flex items-center flex-1 overflow-hidden">
+            {steps.map((step, index) => (
+              <div key={step.number} className="flex items-center flex-1 min-w-0">
                 <div className={cn(
-                  "text-sm font-medium",
-                  currentStep >= step.number ? "text-foreground" : "text-muted-foreground"
+                  "flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium flex-shrink-0",
+                  currentStep >= step.number 
+                    ? "bg-accent text-accent-foreground" 
+                    : "bg-muted text-muted-foreground"
                 )}>
-                  {step.title}
+                  {currentStep > step.number ? <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" /> : step.number}
                 </div>
-                <div className="text-xs text-muted-foreground">{step.description}</div>
+                <div className="ml-1.5 sm:ml-3 min-w-0 flex-1 hidden sm:block">
+                  <div className={cn(
+                    "text-xs sm:text-sm font-medium truncate",
+                    currentStep >= step.number ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {step.title}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{step.description}</div>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={cn(
+                    "flex-1 h-0.5 mx-1 sm:mx-4",
+                    currentStep > step.number ? "bg-accent" : "bg-muted"
+                  )} />
+                )}
               </div>
-              {index < steps.length - 1 && (
-                <div className={cn(
-                  "flex-1 h-0.5 mx-4",
-                  currentStep > step.number ? "bg-accent" : "bg-muted"
-                )} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </Card>
+
+      {/* API Error Display */}
+      {Object.keys(apiErrors).length > 0 && (
+        <Card className="p-4 border-red-500 bg-red-50 dark:bg-red-950/20">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 text-red-600">
+              <X className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+                Please fix the following errors:
+              </h4>
+              <ul className="space-y-1 text-sm text-red-800 dark:text-red-200">
+                {Object.entries(apiErrors).map(([field, message]) => (
+                  <li key={field} className="flex items-start gap-2">
+                    <span className="font-medium">{field}:</span>
+                    <span>{message}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setApiErrors({})}
+              className="text-red-600 hover:text-red-800"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Form Steps */}
       {currentStep === 1 && (
@@ -352,11 +559,16 @@ export function VendorAddMarketForm() {
             <label className="text-sm font-medium text-foreground">Market Name *</label>
             <Input
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, name: e.target.value }))
+                clearFieldError('name')
+              }}
               placeholder="e.g., Downtown Farmers Market"
-              className={cn(errors.name && "border-red-500")}
+              className={cn((errors.name || apiErrors.name) && "border-red-500")}
             />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            {(errors.name || apiErrors.name) && (
+              <p className="text-red-500 text-sm">{errors.name || apiErrors.name}</p>
+            )}
           </div>
 
           {/* Category */}
@@ -364,11 +576,62 @@ export function VendorAddMarketForm() {
             <label className="text-sm font-medium text-foreground">Category *</label>
             <Select
               value={formData.category}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+              onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, category: value }))
+                clearFieldError('category')
+              }}
               placeholder="Select market category"
               options={categories.map(category => ({ value: category.value, label: category.label }))}
             />
-            {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
+            {(errors.category || apiErrors.category) && (
+              <p className="text-red-500 text-sm">{errors.category || apiErrors.category}</p>
+            )}
+          </div>
+
+          {/* Market Image Upload - Optional */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Market Image (Optional)</label>
+            <div className="flex items-start gap-4">
+              <input
+                type="file"
+                id="market-image-upload"
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <label
+                htmlFor="market-image-upload"
+                className={cn(
+                  "flex-1 cursor-pointer",
+                  !marketImage && "w-full h-40 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50"
+                )}
+              >
+                {marketImage ? (
+                  <img 
+                    src={marketImage} 
+                    alt="Market preview" 
+                    className="w-full h-40 object-cover rounded-lg" 
+                  />
+                ) : (
+                  <div className="w-full h-40 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50">
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground ml-2">Click to upload image</span>
+                  </div>
+                )}
+              </label>
+              {marketImage && (
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={removeImage}
+                  className="text-destructive"
+                >
+                  <X className="w-4 h-4" />
+                  Remove Image
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -406,39 +669,49 @@ export function VendorAddMarketForm() {
                 <label className="text-sm font-medium text-foreground">City *</label>
                 <Input
                   value={formData.location.city}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, city: e.target.value }
-                  }))}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, city: e.target.value }
+                    }))
+                    clearFieldError('city')
+                  }}
                   placeholder="City"
-                  className={cn(errors.city && "border-red-500")}
+                  className={cn((errors.city || apiErrors.city) && "border-red-500")}
                 />
-                {errors.city && <p className="text-red-500 text-sm">{errors.city}</p>}
+                {(errors.city || apiErrors.city) && (
+                  <p className="text-red-500 text-sm">{errors.city || apiErrors.city}</p>
+                )}
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">State *</label>
-                <Input
+                <label className="text-sm font-medium text-foreground">Province/State *</label>
+                <Select
                   value={formData.location.state}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, state: e.target.value }
-                  }))}
-                  placeholder="State"
-                  className={cn(errors.state && "border-red-500")}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, state: value }
+                    }))
+                    clearFieldError('state')
+                  }}
+                  placeholder="Select province/state"
+                  options={provincesAndStates.map(ps => ({ value: ps.value, label: ps.label }))}
                 />
-                {errors.state && <p className="text-red-500 text-sm">{errors.state}</p>}
+                {(errors.state || apiErrors.state) && (
+                  <p className="text-red-500 text-sm">{errors.state || apiErrors.state}</p>
+                )}
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Zip Code</label>
+                <label className="text-sm font-medium text-foreground">Postal/Zip Code</label>
                 <Input
                   value={formData.location.zipCode}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     location: { ...prev.location, zipCode: e.target.value }
                   }))}
-                  placeholder="12345"
+                  placeholder="A1A 1A1 or 12345"
                 />
               </div>
             </div>
@@ -490,15 +763,17 @@ export function VendorAddMarketForm() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Day</label>
-                      <Select
-                        value={item.dayOfWeek.toString()}
-                        onValueChange={(value) => {
+                      <label className="text-sm font-medium text-foreground">Date</label>
+                      <Input
+                        type="date"
+                        value={item.eventDate || ''}
+                        onChange={(e) => {
                           const newSchedule = [...formData.schedule]
-                          newSchedule[index].dayOfWeek = parseInt(value)
+                          newSchedule[index].eventDate = e.target.value
                           setFormData(prev => ({ ...prev, schedule: newSchedule }))
                         }}
-                        options={daysOfWeek.map(day => ({ value: day.value.toString(), label: day.label }))}
+                        min={new Date().toISOString().split('T')[0]}
+                        required
                       />
                     </div>
                     
@@ -618,7 +893,7 @@ export function VendorAddMarketForm() {
             <div className="space-y-4">
               <h3 className="font-medium text-foreground flex items-center gap-2">
                 <Accessibility className="w-4 h-4" />
-                Accessibility Features
+                Accessibility & Amenities
               </h3>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -633,6 +908,20 @@ export function VendorAddMarketForm() {
                   />
                   <label htmlFor="wheelchair" className="text-sm text-foreground">
                     Wheelchair Accessible
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="handicap-parking"
+                    checked={formData.accessibility.handicapParking}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, handicapParking: checked }
+                    }))}
+                  />
+                  <label htmlFor="handicap-parking" className="text-sm text-foreground">
+                    Handicap Parking
                   </label>
                 </div>
                 
@@ -666,6 +955,118 @@ export function VendorAddMarketForm() {
                 
                 <div className="flex items-center gap-2">
                   <Checkbox
+                    id="covered"
+                    checked={formData.accessibility.covered}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, covered: checked }
+                    }))}
+                  />
+                  <label htmlFor="covered" className="text-sm text-foreground">
+                    Covered Area
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="indoor"
+                    checked={formData.accessibility.indoor}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, indoor: checked }
+                    }))}
+                  />
+                  <label htmlFor="indoor" className="text-sm text-foreground">
+                    Indoor
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="outdoor-seating"
+                    checked={formData.accessibility.outdoorSeating}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, outdoorSeating: checked }
+                    }))}
+                  />
+                  <label htmlFor="outdoor-seating" className="text-sm text-foreground">
+                    Outdoor Seating
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="wifi"
+                    checked={formData.accessibility.wifi}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, wifi: checked }
+                    }))}
+                  />
+                  <label htmlFor="wifi" className="text-sm text-foreground">
+                    WiFi Available
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="atm"
+                    checked={formData.accessibility.atm}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, atm: checked }
+                    }))}
+                  />
+                  <label htmlFor="atm" className="text-sm text-foreground">
+                    ATM On-Site
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="food-court"
+                    checked={formData.accessibility.foodCourt}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, foodCourt: checked }
+                    }))}
+                  />
+                  <label htmlFor="food-court" className="text-sm text-foreground">
+                    Food Court
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="live-music"
+                    checked={formData.accessibility.liveMusic}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, liveMusic: checked }
+                    }))}
+                  />
+                  <label htmlFor="live-music" className="text-sm text-foreground">
+                    Live Music
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="alcohol"
+                    checked={formData.accessibility.alcoholAvailable}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, alcoholAvailable: checked }
+                    }))}
+                  />
+                  <label htmlFor="alcohol" className="text-sm text-foreground">
+                    Alcohol Available
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Checkbox
                     id="family"
                     checked={formData.accessibility.familyFriendly}
                     onValueChange={(checked) => setFormData(prev => ({
@@ -694,47 +1095,15 @@ export function VendorAddMarketForm() {
               </div>
             </div>
 
-            {/* Pricing */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Pricing Information
-              </h3>
-              
-              <div className="flex items-center gap-2 mb-4">
-                <Checkbox
-                  id="free"
-                  checked={formData.pricing.isFree}
-                  onValueChange={(checked) => setFormData(prev => ({
-                    ...prev,
-                    pricing: { ...prev.pricing, isFree: checked }
-                  }))}
-                />
-                <label htmlFor="free" className="text-sm text-foreground">
-                  This market is free to attend
-                </label>
-              </div>
-              
-              {!formData.pricing.isFree && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Booth Fee (if known)</label>
-                  <Input
-                    type="number"
-                    value={formData.pricing.boothFee || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      pricing: { ...prev.pricing, boothFee: parseFloat(e.target.value) || undefined }
-                    }))}
-                    placeholder="50"
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Tags */}
             <div className="space-y-4">
-              <h3 className="font-medium text-foreground">Tags</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-foreground">Tags (max 3)</h3>
+                <span className="text-xs text-muted-foreground">
+                  {formData.additionalInfo.tags.length}/3 selected
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
                 {formData.additionalInfo.tags.map(tag => (
                   <Badge key={tag} variant="outline" className="flex items-center gap-1">
                     {tag}
@@ -744,17 +1113,59 @@ export function VendorAddMarketForm() {
                     />
                   </Badge>
                 ))}
-                <Input
-                  placeholder="Add a tag..."
-                  className="w-32"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addTag(e.currentTarget.value)
-                      e.currentTarget.value = ''
-                    }
-                  }}
-                />
               </div>
+              {formData.additionalInfo.tags.length < 3 && (
+                <div className="relative">
+                  <Input
+                    ref={tagInputRef}
+                    value={tagInputValue}
+                    onChange={(e) => setTagInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault()
+                        const value = tagInputValue.trim().replace(/,/g, '')
+                        if (value) {
+                          addTag(value)
+                          setTagInputValue('')
+                        }
+                      }
+                    }}
+                    placeholder="Type to search tags (comma to add)..."
+                    className="w-full"
+                  />
+                  {tagInputValue && formData.additionalInfo.tags.length < 3 && (
+                    <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      {ALLOWED_MARKET_TAGS
+                        .filter(tag => 
+                          !formData.additionalInfo.tags.includes(tag) &&
+                          tag.toLowerCase().includes(tagInputValue.toLowerCase())
+                        )
+                        .slice(0, 10)
+                        .map(tag => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              addTag(tag)
+                              setTagInputValue('')
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      {ALLOWED_MARKET_TAGS.filter(tag => 
+                        !formData.additionalInfo.tags.includes(tag) &&
+                        tag.toLowerCase().includes(tagInputValue.toLowerCase())
+                      ).length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No matching tags
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Market Size Estimate */}
@@ -769,43 +1180,6 @@ export function VendorAddMarketForm() {
                 placeholder="How many vendors typically participate?"
                 options={attendanceOptions.map(option => ({ value: option.value, label: option.label }))}
               />
-            </div>
-
-            {/* Payment Methods */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Payment Methods Accepted</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {paymentMethods.map(method => (
-                  <div key={method.value} className="flex items-center gap-2">
-                    <Checkbox
-                      id={method.value}
-                      checked={formData.additionalInfo.paymentMethods.includes(method.value)}
-                      onValueChange={(checked) => {
-                        if (checked) {
-                          setFormData(prev => ({
-                            ...prev,
-                            additionalInfo: {
-                              ...prev.additionalInfo,
-                              paymentMethods: [...prev.additionalInfo.paymentMethods, method.value]
-                            }
-                          }))
-                        } else {
-                          setFormData(prev => ({
-                            ...prev,
-                            additionalInfo: {
-                              ...prev.additionalInfo,
-                              paymentMethods: prev.additionalInfo.paymentMethods.filter(m => m !== method.value)
-                            }
-                          }))
-                        }
-                      }}
-                    />
-                    <label htmlFor={method.value} className="text-sm text-foreground">
-                      {method.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
             </div>
           </Card>
 

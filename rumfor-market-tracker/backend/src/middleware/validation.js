@@ -172,9 +172,20 @@ const validateMarketCreation = [
     }),
 
   body('description')
-    .isLength({ min: 10, max: 2000 })
-    .withMessage('Description must be between 10 and 2000 characters')
-    .customSanitizer(sanitizeString),
+    .optional({ checkFalsy: true })
+    .custom((value, { req }) => {
+      // Skip validation if description is empty or not provided
+      if (!value || (typeof value === 'string' && value.trim().length === 0)) {
+        return true
+      }
+      // Validate length if description is provided
+      const sanitized = sanitizeString(value)
+      if (sanitized.length > 2000) {
+        throw new Error('Description must be less than 2000 characters')
+      }
+      req.body.description = sanitized
+      return true
+    }),
 
   body('category')
     .isIn([
@@ -187,14 +198,24 @@ const validateMarketCreation = [
       'seasonal-event',
       'community-event',
       'holiday-market',
+      'craft-show',
+      'night-market',
+      'street-fair',
+      'vintage-antique',
       'other'
     ])
     .withMessage('Invalid market category'),
 
+  body('marketType')
+    .optional()
+    .isIn(['vendor-created', 'promoter-managed'])
+    .withMessage('Invalid market type'),
+
   // Enhanced location validation
   body('location.address.street')
-    .isLength({ min: 5, max: 100 })
-    .withMessage('Street address must be between 5 and 100 characters')
+    .optional()
+    .isLength({ min: 0, max: 100 })
+    .withMessage('Street address must be less than 100 characters')
     .customSanitizer(sanitizeString),
 
   body('location.address.city')
@@ -208,36 +229,68 @@ const validateMarketCreation = [
     .customSanitizer(sanitizeString),
 
   body('location.address.zipCode')
-    .isLength({ min: 5, max: 10 })
-    .withMessage('ZIP code must be between 5 and 10 characters')
+    .optional()
+    .isLength({ min: 0, max: 10 })
+    .withMessage('ZIP code must be less than 10 characters')
     .customSanitizer(sanitizeAlphanumeric),
 
-  body('location.coordinates.lat')
-    .isFloat({ min: -90, max: 90 })
-    .withMessage('Latitude must be between -90 and 90'),
+  body('location.address.country')
+    .optional()
+    .isLength({ max: 50 })
+    .withMessage('Country must be less than 50 characters')
+    .customSanitizer(sanitizeString),
 
-  body('location.coordinates.lng')
-    .isFloat({ min: -180, max: 180 })
-    .withMessage('Longitude must be between -180 and 180'),
+  body('location.coordinates')
+    .optional()
+    .isArray({ min: 2, max: 2 })
+    .withMessage('Coordinates must be [longitude, latitude]'),
 
-  // Schedule validation
+  // Schedule validation - accept array of schedule items (vendor-created) or object with startTime/endTime (promoter-managed)
+  body('schedule')
+    .optional()
+    .isObject()
+    .withMessage('Schedule must be an object'),
+
+  body('schedule.recurring')
+    .optional()
+    .isBoolean()
+    .withMessage('Recurring must be a boolean'),
+
+  body('schedule.daysOfWeek')
+    .optional()
+    .isArray()
+    .withMessage('Days of week must be an array'),
+
+  body('schedule.daysOfWeek.*')
+    .optional()
+    .isIn(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+    .withMessage('Invalid day of week'),
+
   body('schedule.startTime')
+    .optional()
     .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .withMessage('Start time must be in HH:MM format'),
 
   body('schedule.endTime')
+    .optional()
     .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
-    .withMessage('End time must be in HH:MM format')
-    .custom((endTime, { req }) => {
-      if (req.body.schedule?.startTime && endTime <= req.body.schedule.startTime) {
-        throw new Error('End time must be after start time')
-      }
-      return true
-    }),
+    .withMessage('End time must be in HH:MM format'),
+
+  body('schedule.seasonStart')
+    .optional()
+    .isISO8601()
+    .withMessage('Season start must be a valid date'),
+
+  body('schedule.seasonEnd')
+    .optional()
+    .isISO8601()
+    .withMessage('Season end must be a valid date'),
+
 
   // Application settings validation with business rules
   body('applicationSettings.maxVendors')
-    .optional()
+    .optional({ nullable: true })
+    .if(body('applicationSettings.maxVendors').exists())
     .isInt({ min: 1, max: 1000 })
     .withMessage('Maximum vendors must be between 1 and 1000'),
 
@@ -268,6 +321,139 @@ const validateMarketCreation = [
     .optional()
     .isURL()
     .withMessage('Website must be a valid URL'),
+
+  // Accessibility features validation
+  body('accessibility')
+    .optional()
+    .isObject()
+    .withMessage('Accessibility must be an object'),
+
+  body('accessibility.wheelchairAccessible')
+    .optional()
+    .isBoolean()
+    .withMessage('wheelchairAccessible must be a boolean'),
+
+  body('accessibility.parkingAvailable')
+    .optional()
+    .isBoolean()
+    .withMessage('parkingAvailable must be a boolean'),
+
+  body('accessibility.restroomsAvailable')
+    .optional()
+    .isBoolean()
+    .withMessage('restroomsAvailable must be a boolean'),
+
+  body('accessibility.familyFriendly')
+    .optional()
+    .isBoolean()
+    .withMessage('familyFriendly must be a boolean'),
+
+  body('accessibility.petFriendly')
+    .optional()
+    .isBoolean()
+    .withMessage('petFriendly must be a boolean'),
+
+  body('accessibility.covered')
+    .optional()
+    .isBoolean()
+    .withMessage('covered must be a boolean'),
+
+  body('accessibility.indoor')
+    .optional()
+    .isBoolean()
+    .withMessage('indoor must be a boolean'),
+
+  body('accessibility.outdoorSeating')
+    .optional()
+    .isBoolean()
+    .withMessage('outdoorSeating must be a boolean'),
+
+  body('accessibility.wifi')
+    .optional()
+    .isBoolean()
+    .withMessage('wifi must be a boolean'),
+
+  body('accessibility.atm')
+    .optional()
+    .isBoolean()
+    .withMessage('atm must be a boolean'),
+
+  body('accessibility.foodCourt')
+    .optional()
+    .isBoolean()
+    .withMessage('foodCourt must be a boolean'),
+
+  body('accessibility.liveMusic')
+    .optional()
+    .isBoolean()
+    .withMessage('liveMusic must be a boolean'),
+
+  body('accessibility.handicapParking')
+    .optional()
+    .isBoolean()
+    .withMessage('handicapParking must be a boolean'),
+
+  body('accessibility.alcoholAvailable')
+    .optional()
+    .isBoolean()
+    .withMessage('alcoholAvailable must be a boolean'),
+
+  // Tags validation
+  body('tags')
+    .optional()
+    .isArray()
+    .withMessage('Tags must be an array'),
+
+  body('tags.*')
+    .optional()
+    .isLength({ max: 30 })
+    .withMessage('Each tag must be less than 30 characters'),
+
+  // Images validation
+  body('images')
+    .optional()
+    .isArray()
+    .withMessage('Images must be an array'),
+
+  body('promoter')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid promoter ID'),
+
+  body('createdBy')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid creator ID'),
+
+  body('createdByType')
+    .optional()
+    .isIn(['vendor', 'promoter', 'admin'])
+    .withMessage('Invalid creator type'),
+
+  body('amenities')
+    .optional()
+    .isArray()
+    .withMessage('Amenities must be an array'),
+
+  body('amenities.*')
+    .optional()
+    .isIn(['restrooms', 'parking', 'wifi', 'atm', 'food_court', 'playground', 'pet_friendly', 'accessible', 'covered_area', 'electricity', 'water'])
+    .withMessage('Invalid amenity'),
+
+  body('status')
+    .optional()
+    .isIn(['active', 'inactive', 'draft', 'pending_approval', 'suspended', 'cancelled'])
+    .withMessage('Invalid status'),
+
+  body('isPublic')
+    .optional()
+    .isBoolean()
+    .withMessage('isPublic must be a boolean'),
+
+  body('applicationsEnabled')
+    .optional()
+    .isBoolean()
+    .withMessage('applicationsEnabled must be a boolean'),
 
   handleValidationErrors
 ]

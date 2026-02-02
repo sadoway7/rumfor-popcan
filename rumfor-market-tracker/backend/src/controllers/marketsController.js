@@ -26,6 +26,10 @@ const getMarkets = catchAsync(async (req, res, next) => {
   // Build query
   let query = { status: 'active', isPublic: true }
 
+  // Debug logging
+  console.log('[DEBUG getMarkets] Query:', JSON.stringify(query, null, 2))
+  console.log('[DEBUG getMarkets] Query params:', req.query)
+
   if (category) {
     query.category = category
   }
@@ -60,6 +64,12 @@ const getMarkets = catchAsync(async (req, res, next) => {
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(limit * 1)
     .skip((page - 1) * limit)
+
+  console.log('[DEBUG getMarkets] Found', markets.length, 'markets')
+
+  markets.forEach(m => {
+    console.log('[DEBUG getMarkets] Market:', m.name, 'createdByType:', m.createdByType, 'isPublic:', m.isPublic, 'status:', m.status)
+  })
 
   // Get total count for pagination
   const total = await Market.countDocuments(query)
@@ -176,7 +186,12 @@ const createMarket = catchAsync(async (req, res, next) => {
     }];
   }
 
+  // Debug logging
+  console.log('[DEBUG createMarket] Creating market with data:', JSON.stringify(marketData, null, 2))
+
   const market = await Market.create(marketData)
+
+  console.log('[DEBUG createMarket] Market created:', market.name, 'createdByType:', market.createdByType, 'isPublic:', market.isPublic, 'status:', market.status)
 
   const populatedMarket = await Market.findById(market._id)
     .populate('promoter', 'username firstName lastName')
