@@ -240,7 +240,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
   if (variant === 'compact') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer !rounded-none', className)}>
+        <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] transition-all duration-300 cursor-pointer !rounded-none', className)}>
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 ? (
             <div className="relative h-48">
@@ -294,7 +294,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
   if (variant === 'featured') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
+        <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
           {market.images && market.images.length > 0 && (
             <div className="relative h-48">
               <img
@@ -550,7 +550,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
   // Default variant
   return (
     <Link to={detailPath || `/markets/${market.id}`} className="block">
-      <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer !rounded-none', className)}>
+      <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer !rounded-none shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_4px_20px_rgba(0,0,0,0.2)]', className)}>
         {market.images && market.images.length > 0 && (
           <div className="relative h-80">
             <img
