@@ -86,7 +86,7 @@ export interface Market {
   promoterId?: string // Optional - only for promoter-managed markets
   promoter?: User // Only exists for promoter-managed markets
   location: Location
-  schedule: MarketSchedule[]
+  schedule: MarketScheduleItem[]
   status: MarketStatus
   marketType: MarketType // NEW: user-created or promoter-managed
   
@@ -137,6 +137,19 @@ export interface Market {
     boothFee?: number
     isFree: boolean
   }
+
+  // Legacy date format (for old markets created before schedule migration)
+  dates?: {
+    type: 'one-time'
+    events: Array<{
+      startDate: string
+      endDate: string
+      time: {
+        start: string
+        end: string
+      }
+    }>
+  }
 }
 
 export type MarketCategory =
@@ -178,6 +191,7 @@ export interface UserMarketTracking {
   marketId: string
   status: 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived'
   notes?: string
+  attendingDates?: string[] // Array of market schedule IDs the vendor is attending
   todoCount: number
   todoProgress: number
   totalExpenses: number
@@ -195,15 +209,34 @@ export interface Location {
   longitude?: number
 }
 
-export interface MarketSchedule {
-  id: string
+export interface MarketScheduleItem {
+  id?: string
   dayOfWeek: number // 0 = Sunday, 1 = Monday, etc.
   startTime: string // HH:mm format
   endTime: string // HH:mm format
   startDate: string
   endDate: string
   isRecurring: boolean
+  eventDate?: string // Optional specific event date for single-date markets
 }
+
+export interface BackendScheduleFormat {
+  recurring: boolean
+  daysOfWeek: string[]
+  startTime: string
+  endTime: string
+  specialDates?: Array<{
+    date: string | Date
+    startTime?: string
+    endTime?: string
+    notes?: string
+  }>
+  seasonStart?: string | Date
+  seasonEnd?: string | Date
+}
+
+// Union type for schedule - can be array (frontend) or object (backend)
+export type MarketSchedule = MarketScheduleItem[] | BackendScheduleFormat
 
 
 

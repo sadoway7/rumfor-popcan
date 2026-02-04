@@ -8,8 +8,12 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import { Alert } from '@/components/ui/Alert'
 import { Badge } from '@/components/ui/Badge'
+import { Checkbox } from '@/components/ui/Checkbox'
 import { adminApi } from '@/features/admin/adminApi'
-import { Market, MarketStatus, MarketCategory, MarketSchedule } from '@/types'
+import { Market, MarketStatus, MarketCategory, MarketScheduleItem } from '@/types'
+import { formatLocalDate, parseLocalDate } from '@/utils/formatDate'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE, ALLOWED_MARKET_TAGS } from '@/assets/images'
 import {
   ArrowLeft,
   Save,
@@ -27,7 +31,10 @@ import {
   Crown,
   AlertTriangle,
   Eye,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload,
+  X,
+  Phone
 } from 'lucide-react'
 
 export function AdminEditMarketPage() {
@@ -46,19 +53,53 @@ export function AdminEditMarketPage() {
     description: '',
     category: '' as MarketCategory | '',
     status: '' as MarketStatus | '',
+    marketType: 'vendor-created' as 'vendor-created' | 'promoter-managed',
+    promoter: '',
     applicationsEnabled: false,
     isActive: true,
     address: '',
     city: '',
     state: '',
     zipCode: '',
-    country: 'USA'
+    country: 'USA',
+    // Contact info
+    phone: '',
+    email: '',
+    website: '',
+    // Accessibility features
+    accessibility: {
+      wheelchairAccessible: false,
+      parkingAvailable: false,
+      restroomsAvailable: false,
+      familyFriendly: false,
+      petFriendly: false,
+      covered: false,
+      indoor: false,
+      outdoorSeating: false,
+      wifi: false,
+      atm: false,
+      foodCourt: false,
+      liveMusic: false,
+      handicapParking: false,
+      alcoholAvailable: false
+    },
+    // Additional info
+    tags: [] as string[],
+    vendorCount: 0,
+    attendanceEstimate: '',
+    // Application settings
+    applicationSettings: {
+      acceptVendors: true,
+      maxVendors: undefined as number | undefined,
+      applicationFee: 0,
+      boothFee: 0
+    }
   })
 
   // Schedule state
-  const [schedules, setSchedules] = useState<MarketSchedule[]>([])
+  const [schedules, setSchedules] = useState<MarketScheduleItem[]>([])
   const [showScheduleForm, setShowScheduleForm] = useState(false)
-  const [editingSchedule, setEditingSchedule] = useState<MarketSchedule | null>(null)
+  const [editingSchedule, setEditingSchedule] = useState<MarketScheduleItem | null>(null)
   const [scheduleForm, setScheduleForm] = useState({
     dayOfWeek: 1,
     startTime: '08:00',
@@ -89,15 +130,67 @@ export function AdminEditMarketPage() {
           description: m.description || '',
           category: m.category || '',
           status: m.status || 'draft',
+          marketType: m.marketType || 'vendor-created',
+          promoter: m.promoter?.id || m.promoterId || '',
           applicationsEnabled: m.applicationsEnabled || false,
           isActive: m.status === 'active',
           address: m.location?.address || '',
           city: m.location?.city || '',
           state: m.location?.state || '',
           zipCode: m.location?.zipCode || '',
-          country: m.location?.country || 'USA'
+          country: m.location?.country || 'USA',
+          // Contact info
+          phone: m.contact?.phone || '',
+          email: m.contact?.email || '',
+          website: m.contact?.website || '',
+          // Accessibility features
+          accessibility: m.accessibility || {
+            wheelchairAccessible: false,
+            parkingAvailable: false,
+            restroomsAvailable: false,
+            familyFriendly: false,
+            petFriendly: false,
+            covered: false,
+            indoor: false,
+            outdoorSeating: false,
+            wifi: false,
+            atm: false,
+            foodCourt: false,
+            liveMusic: false,
+            handicapParking: false,
+            alcoholAvailable: false
+          },
+          // Additional info
+          tags: m.tags || [],
+          vendorCount: m.applicationSettings?.maxVendors || 0,
+          attendanceEstimate: '',
+          // Application settings
+          applicationSettings: {
+            acceptVendors: m.applicationSettings?.acceptVendors ?? true,
+            maxVendors: m.applicationSettings?.maxVendors,
+            applicationFee: m.applicationSettings?.applicationFee || 0,
+            boothFee: m.applicationSettings?.boothFee || 0
+          }
         })
-        setSchedules(m.schedule || [])
+        console.log('Loaded market schedule:', m.schedule)
+        // Handle both array format and backend object format
+        let loadedSchedules: MarketScheduleItem[] = []
+        if (Array.isArray(m.schedule)) {
+          loadedSchedules = m.schedule
+        } else if (m.schedule && typeof m.schedule === 'object' && m.schedule.seasonStart) {
+          // Convert from backend format to array format
+          const seasonStart = parseLocalDate(m.schedule.seasonStart)
+          const seasonEnd = parseLocalDate(m.schedule.seasonEnd || m.schedule.seasonStart)
+          loadedSchedules = [{
+            dayOfWeek: m.schedule.daysOfWeek?.[0] ? ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(m.schedule.daysOfWeek[0].toLowerCase()) : 6,
+            startTime: m.schedule.startTime || '08:00',
+            endTime: m.schedule.endTime || '14:00',
+            startDate: formatLocalDate(seasonStart.toISOString()),
+            endDate: formatLocalDate(seasonEnd.toISOString()),
+            isRecurring: m.schedule.recurring || false
+          }]
+        }
+        setSchedules(loadedSchedules)
         setImages(m.images || [])
         setHeroImage(m.images?.[0] || '')
       } else {
@@ -126,6 +219,8 @@ export function AdminEditMarketPage() {
     setError(null)
     setSuccessMessage(null)
     
+    console.log('Saving market with schedules:', schedules.length, schedules)
+    
     try {
       // Save basic market info
       await adminApi.updateAdminMarket(marketId, {
@@ -133,6 +228,8 @@ export function AdminEditMarketPage() {
         description: formData.description,
         category: formData.category,
         status: formData.status,
+        marketType: formData.marketType,
+        promoter: formData.promoter,
         applicationsEnabled: formData.applicationsEnabled,
         isActive: formData.isActive,
         // Save location
@@ -144,7 +241,21 @@ export function AdminEditMarketPage() {
         // Save schedules
         schedule: schedules,
         // Save images
-        images: images
+        images: images,
+        // Save contact info
+        contact: {
+          phone: formData.phone,
+          email: formData.email,
+          website: formData.website
+        },
+        // Save accessibility
+        accessibility: formData.accessibility,
+        // Save additional info
+        tags: formData.tags,
+        vendorCount: formData.vendorCount,
+        attendanceEstimate: formData.attendanceEstimate,
+        // Save application settings
+        applicationSettings: formData.applicationSettings
       })
       setSuccessMessage('Market saved successfully!')
       fetchMarket()
@@ -175,15 +286,17 @@ export function AdminEditMarketPage() {
   }, [market, navigate])
 
   // Schedule management functions
-  const openScheduleForm = (schedule?: MarketSchedule) => {
+  const openScheduleForm = (schedule?: MarketScheduleItem) => {
     if (schedule) {
       setEditingSchedule(schedule)
+      const startDate = schedule.startDate ? parseLocalDate(schedule.startDate) : null
+      const endDate = schedule.endDate ? parseLocalDate(schedule.endDate) : null
       setScheduleForm({
         dayOfWeek: schedule.dayOfWeek,
         startTime: schedule.startTime,
         endTime: schedule.endTime,
-        startDate: schedule.startDate ? schedule.startDate.split('T')[0] : '',
-        endDate: schedule.endDate ? schedule.endDate.split('T')[0] : '',
+        startDate: startDate ? startDate.toISOString().split('T')[0] : '',
+        endDate: endDate ? endDate.toISOString().split('T')[0] : '',
         isRecurring: schedule.isRecurring
       })
     } else {
@@ -212,14 +325,16 @@ export function AdminEditMarketPage() {
       return
     }
     
-    const newSchedule: MarketSchedule = {
+    console.log('Saving schedule:', scheduleForm)
+    const parsedDate = parseLocalDate(scheduleForm.startDate)
+    const newSchedule: MarketScheduleItem = {
       id: editingSchedule?.id || `temp_${Date.now()}`,
       dayOfWeek: scheduleForm.dayOfWeek,
       startTime: scheduleForm.startTime,
       endTime: scheduleForm.endTime,
-      startDate: new Date(scheduleForm.startDate).toISOString(),
-      endDate: new Date(scheduleForm.startDate).toISOString(), // Use same date for start/end for single-day events
-      isRecurring: false // Single specific dates are always non-recurring
+      startDate: formatLocalDate(parsedDate.toISOString()),
+      endDate: formatLocalDate(parsedDate.toISOString()),
+      isRecurring: false
     }
 
     if (editingSchedule) {
@@ -270,6 +385,51 @@ export function AdminEditMarketPage() {
       return [imageUrl, ...filtered]
     })
   }, [])
+
+  // Image upload function
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert('Invalid file type. Please upload JPG, PNG, or WebP images.')
+      return
+    }
+    
+    if (file.size > MAX_FILE_SIZE) {
+      alert('File too large. Maximum size is 10MB.')
+      return
+    }
+    
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string
+      setImages(prev => [...prev, dataUrl])
+      if (!heroImage) {
+        setHeroImage(dataUrl)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Tag management functions
+  const removeTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }))
+  }
+
+  // Accessibility toggle handler
+  const handleAccessibilityToggle = (field: keyof typeof formData.accessibility) => {
+    setFormData(prev => ({
+      ...prev,
+      accessibility: {
+        ...prev.accessibility,
+        [field]: !prev.accessibility[field]
+      }
+    }))
+  }
 
   const categoryOptions: SelectOption[] = [
     { value: '', label: 'Select Category' },
@@ -397,13 +557,36 @@ export function AdminEditMarketPage() {
                     options={categoryOptions}
                   />
                 </div>
-                
+                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Status</label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => handleInputChange('status', value)}
                     options={statusOptions}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Market Type</label>
+                  <Select
+                    value={formData.marketType}
+                    onValueChange={(value) => handleInputChange('marketType', value)}
+                    options={[
+                      { value: 'vendor-created', label: 'Vendor Created' },
+                      { value: 'promoter-managed', label: 'Promoter Managed' }
+                    ]}
+                  />
+                </div>
+                 
+                <div>
+                  <label className="block text-sm font-medium mb-1">Promoter ID</label>
+                  <Input
+                    value={formData.promoter}
+                    onChange={(e) => handleInputChange('promoter', e.target.value)}
+                    placeholder="Enter promoter user ID"
                   />
                 </div>
               </div>
@@ -423,43 +606,46 @@ export function AdminEditMarketPage() {
               </Button>
             </div>
             
-            {schedules.length === 0 ? (
+              {schedules.length === 0 ? (
               <p className="text-muted-foreground text-sm">No dates added. Click "Add Date" to add specific market dates.</p>
             ) : (
               <div className="space-y-2">
-                {schedules.map((schedule) => (
-                  <div key={schedule.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-center min-w-[60px]">
-                        <div className="text-xs font-medium">
-                          {new Date(schedule.startDate).toLocaleDateString('en-US', { month: 'short' })}
+                {schedules.map((schedule, index) => {
+                  const dateObj = parseLocalDate(schedule.startDate)
+                  return (
+                    <div key={schedule.id || index} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-center min-w-[60px]">
+                          <div className="text-xs font-medium">
+                            {dateObj.toLocaleDateString('en-US', { month: 'short' })}
+                          </div>
+                          <div className="text-lg font-bold">
+                            {dateObj.getDate()}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {dateObj.toLocaleDateString('en-US', { weekday: 'short' })}
+                          </div>
                         </div>
-                        <div className="text-lg font-bold">
-                          {new Date(schedule.startDate).getDate()}
-                        </div>
-                        <div className="text-xs opacity-75">
-                          {new Date(schedule.startDate).toLocaleDateString('en-US', { weekday: 'short' })}
+                        <div>
+                          <p className="font-medium">
+                            {dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <p className="font-medium">
-                          {new Date(schedule.startDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {schedule.startTime} - {schedule.endTime}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => openScheduleForm(schedule)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => schedule.id && deleteSchedule(schedule.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openScheduleForm(schedule)}>
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => deleteSchedule(schedule.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </Card>
@@ -511,6 +697,116 @@ export function AdminEditMarketPage() {
             </div>
           </Card>
 
+          {/* Contact Information */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">
+              <Phone className="h-5 w-5 inline mr-2" />
+              Contact Information
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone</label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="contact@example.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Website</label>
+                <Input
+                  type="url"
+                  value={formData.website}
+                  onChange={(e) => handleInputChange('website', e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Accessibility Features */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Accessibility & Amenities</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                { key: 'wheelchairAccessible', label: 'Wheelchair Accessible', icon: '♿' },
+                { key: 'parkingAvailable', label: 'Parking Available', icon: '🅿️' },
+                { key: 'restroomsAvailable', label: 'Restrooms Available', icon: '🚻' },
+                { key: 'familyFriendly', label: 'Family Friendly', icon: '👨‍👩‍👧‍👦' },
+                { key: 'petFriendly', label: 'Pet Friendly', icon: '🐕' },
+                { key: 'covered', label: 'Covered Area', icon: '🏠' },
+                { key: 'indoor', label: 'Indoor', icon: '🏢' },
+                { key: 'outdoorSeating', label: 'Outdoor Seating', icon: '🪑' },
+                { key: 'wifi', label: 'WiFi Available', icon: '📶' },
+                { key: 'atm', label: 'ATM On Site', icon: '💳' },
+                { key: 'foodCourt', label: 'Food Court', icon: '🍽️' },
+                { key: 'liveMusic', label: 'Live Music', icon: '🎵' },
+                { key: 'handicapParking', label: 'Handicap Parking', icon: '♿' },
+                { key: 'alcoholAvailable', label: 'Alcohol Available', icon: '🍺' }
+              ].map((item) => (
+                <label key={item.key} className="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <Checkbox
+                    checked={formData.accessibility[item.key as keyof typeof formData.accessibility]}
+                    onChange={() => handleAccessibilityToggle(item.key as keyof typeof formData.accessibility)}
+                  />
+                  <span className="text-sm">{item.icon} {item.label}</span>
+                </label>
+              ))}
+            </div>
+          </Card>
+
+          {/* Tags */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4">Tags (up to 3)</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Add Tags</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.tags.join(', ')}
+                    onChange={(e) => {
+                      const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t)
+                      if (tags.length <= 3) {
+                        handleInputChange('tags', tags)
+                      }
+                    }}
+                    placeholder="Enter tags separated by commas"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Suggested: {ALLOWED_MARKET_TAGS.slice(0, 5).join(', ')}
+                </p>
+              </div>
+              
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                      {tag}
+                      <button
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+
           {/* Application Settings */}
           <Card className="p-6">
             <h2 className="text-lg font-semibold mb-4">
@@ -545,10 +841,82 @@ export function AdminEditMarketPage() {
               </div>
 
               {formData.applicationsEnabled && (
-                <Alert variant="warning">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span>Application system is enabled. Vendor applications will be required.</span>
-                </Alert>
+                <div className="space-y-4">
+                  <Alert variant="warning">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Application system is enabled. Vendor applications will be required.</span>
+                  </Alert>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Max Vendors</label>
+                      <Input
+                        type="number"
+                        value={formData.applicationSettings.maxVendors || ''}
+                        onChange={(e) => handleInputChange('applicationSettings', {
+                          ...formData.applicationSettings,
+                          maxVendors: e.target.value ? parseInt(e.target.value) : undefined
+                        })}
+                        placeholder="Leave empty for unlimited"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Application Fee ($)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.applicationSettings.applicationFee}
+                        onChange={(e) => handleInputChange('applicationSettings', {
+                          ...formData.applicationSettings,
+                          applicationFee: parseFloat(e.target.value) || 0
+                        })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Booth Fee ($)</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.applicationSettings.boothFee}
+                        onChange={(e) => handleInputChange('applicationSettings', {
+                          ...formData.applicationSettings,
+                          boothFee: parseFloat(e.target.value) || 0
+                        })}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Vendor Count</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={formData.vendorCount}
+                        onChange={(e) => handleInputChange('vendorCount', parseInt(e.target.value) || 0)}
+                        placeholder="Estimated vendor count"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Attendance Estimate</label>
+                      <Select
+                        value={formData.attendanceEstimate}
+                        onValueChange={(value) => handleInputChange('attendanceEstimate', value)}
+                        options={[
+                          { value: '', label: 'Select estimate' },
+                          { value: 'small', label: 'Small (Under 50 vendors)' },
+                          { value: 'medium', label: 'Medium (50-200 vendors)' },
+                          { value: 'large', label: 'Large (200+ vendors)' }
+                        ]}
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </Card>
@@ -560,10 +928,23 @@ export function AdminEditMarketPage() {
                 <ImageIcon className="h-5 w-5 inline mr-2" />
                 Market Images
               </h2>
-              <Button variant="outline" size="sm" onClick={openImageForm}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Image
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => document.getElementById('image-upload-input')?.click()}>
+                  <Upload className="h-4 w-4 mr-1" />
+                  Upload
+                </Button>
+                <input
+                  id="image-upload-input"
+                  type="file"
+                  accept={ALLOWED_IMAGE_TYPES.join(',')}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button variant="outline" size="sm" onClick={openImageForm}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add URL
+                </Button>
+              </div>
             </div>
             
             {/* Hero Image */}

@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -18,6 +18,8 @@ import { useVendorApplications } from '@/features/applications/hooks/useApplicat
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { Todo } from '@/types'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { formatLocalDate } from '@/utils/formatDate'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
@@ -113,7 +115,7 @@ const formatSchedule = (schedule: any[]) => {
     .filter((day: string, index: number, arr: string[]) => arr.indexOf(day) === index)
     .join(', ')
   const time = schedule[0]
-  return `${days} ${time.startTime}-${time.endTime}`
+  return `${days} ${formatTime12Hour(time.startTime)}-${formatTime12Hour(time.endTime)}`
 }
 
 const formatLocation = (location: any) => {
@@ -131,7 +133,8 @@ const getNextMarketDate = (schedule: any[]) => {
   const now = new Date()
   const upcomingDates = schedule
     .map(s => {
-      const startDate = new Date(s.startDate)
+      const localDate = formatLocalDate(s.startDate)
+      const startDate = new Date(localDate + 'T12:00:00')
       if (startDate >= now) return startDate
       return null
     })
@@ -143,14 +146,54 @@ const getNextMarketDate = (schedule: any[]) => {
 export const VendorMarketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [activeTab, setActiveTab] = useState('tasks')
   const [showStatusModal, setShowStatusModal] = useState(false)
+  const [selectedDates, setSelectedDates] = useState<string[]>([])
 
   const { market, isLoading, error } = useMarket(id!)
   const { myApplications } = useVendorApplications()
   const { todos } = useTodos(id!)
   const { getTrackingStatus, trackMarket } = useTrackedMarkets()
+
+  // Initialize selected dates from tracking data after mount
+  useEffect(() => {
+    if (id) {
+      const tracking = getTrackingStatus(id)
+      if (tracking?.attendingDates) {
+        setSelectedDates(tracking.attendingDates)
+      }
+    }
+  }, [id, getTrackingStatus])
+
+  // Toggle date selection for multi-date markets
+  const toggleDate = (scheduleId: string) => {
+    setSelectedDates(prev => 
+      prev.includes(scheduleId)
+        ? prev.filter(id => id !== scheduleId)
+        : [...prev, scheduleId]
+    )
+  }
+
+  // Save attendance dates to backend
+  const saveAttendanceDates = async () => {
+    try {
+      await trackMarket(id!, undefined, selectedDates)
+      // Show success toast if available
+      if (typeof window !== 'undefined' && (window as any).showToast) {
+        (window as any).showToast('Attendance dates saved successfully!', 'success')
+      } else {
+        alert('Attendance dates saved successfully!')
+      }
+    } catch (error) {
+      console.error('Failed to save attendance dates:', error)
+      if (typeof window !== 'undefined' && (window as any).showToast) {
+        (window as any).showToast('Failed to save attendance dates', 'error')
+      } else {
+        alert('Failed to save attendance dates')
+      }
+    }
+  }
 
   const existingApplication = myApplications.find(app => app.marketId === id)
   const completedTodos = todos.filter((t: Todo) => t.completed)
@@ -213,7 +256,7 @@ export const VendorMarketDetailPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Schedule & Location */}
+{/* Schedule & Location */}
       <Card className="p-4">
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
@@ -232,6 +275,60 @@ export const VendorMarketDetailPage: React.FC = () => {
           )}
         </div>
       </Card>
+
+      {/* Multi-date attendance selection */}
+      {Array.isArray(market.schedule) && market.schedule.length > 1 && (
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle className="w-4 h-4 text-muted-foreground" />
+            <h3 className="font-semibold text-sm">Attendance Dates</h3>
+            <Badge variant="outline" className="text-xs ml-auto">
+              {selectedDates.length}/{market.schedule.length} selected
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            {market.schedule.map((schedule, index) => {
+              const date = new Date(schedule.startDate)
+              const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][schedule.dayOfWeek]
+              const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+              const scheduleId = schedule.id
+              const isSelected = scheduleId ? selectedDates.includes(scheduleId) : false
+              
+              return (
+                <div
+                  key={scheduleId || index}
+                  className={cn(
+                    "flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-all",
+                    isSelected ? "bg-accent/10 border-accent" : "hover:bg-muted/50"
+                  )}
+                  onClick={() => scheduleId && toggleDate(scheduleId)}
+                >
+                  <div className={cn(
+                    "w-5 h-5 rounded border flex items-center justify-center",
+                    isSelected ? "bg-accent border-accent text-white" : "border-gray-300"
+                  )}>
+                    {isSelected && <CheckCircle className="w-3 h-3" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{dayName}, {dateStr}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTime12Hour(schedule.startTime)} - {formatTime12Hour(schedule.endTime)}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <Button 
+            className="w-full mt-3" 
+            size="sm" 
+            onClick={() => saveAttendanceDates()}
+            disabled={selectedDates.length === 0}
+          >
+            Save Attendance Dates
+          </Button>
+        </Card>
+      )}
 
       {/* Application Status */}
       <Card className="p-4">

@@ -6,8 +6,9 @@ import { X } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
+import { formatLocalDate } from '@/utils/formatDate'
 import { Todo, TodoPriority } from '@/types'
 
 const todoSchema = z.object({
@@ -59,7 +60,7 @@ export const TodoForm: React.FC<TodoFormProps> = ({
       setValue('description', editingTodo.description || '')
       setValue('priority', editingTodo.priority)
       setValue('category', editingTodo.category)
-      setValue('dueDate', editingTodo.dueDate ? new Date(editingTodo.dueDate).toISOString().split('T')[0] : '')
+      setValue('dueDate', editingTodo.dueDate ? formatLocalDate(new Date(editingTodo.dueDate).toISOString()) : '')
     } else {
       reset({
         title: '',
@@ -82,7 +83,7 @@ export const TodoForm: React.FC<TodoFormProps> = ({
         description: data.description || '',
         priority: data.priority,
         category: data.category,
-        dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+        dueDate: data.dueDate ? new Date(formatLocalDate(data.dueDate)).toISOString() : undefined,
         completed: false
       }
       

@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button, Card, CardHeader, CardTitle, CardContent, Input, Textarea, Select } from '@/components/ui'
 import { ArrowLeft, MapPin, Calendar, Loader2, Plus, Trash2 } from 'lucide-react'
 import { getCategoryImage } from '@/assets/images'
-import { useCreateMarketMutation, CreateMarketData } from '@/features/markets/hooks/useMarkets'
-import { MarketCategory, MarketStatus } from '@/types'
+import { useCreateMarketMutation } from '@/features/markets/hooks/useMarkets'
+import { formatLocalDate } from '@/utils/formatDate'
 
 const marketCategories = [
   { value: 'farmers-market', label: 'Farmers Market' },
@@ -154,17 +154,43 @@ export function VendorCreateMarketPage() {
       
       // Transform event dates to backend format
       const events = formData.eventDates.map(event => ({
-        startDate: new Date(event.date).toISOString(),
-        endDate: new Date(event.date).toISOString(),
+        startDate: new Date(event.date + 'T12:00:00').toISOString(),
+        endDate: new Date(event.date + 'T12:00:00').toISOString(),
         time: {
           start: event.startTime,
           end: event.endTime
         }
       }))
-      
-      const marketData: CreateMarketData = {
+
+      // Create schedule in backend format (object with recurring/specialDates)
+      const specialDates = formData.eventDates.map((event) => ({
+        date: new Date(event.date + 'T12:00:00'),
+        startTime: event.startTime,
+        endTime: event.endTime,
+        notes: ''
+      }))
+
+      // Get the first date's day of week for recurring
+      const firstEvent = formData.eventDates[0]
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      const daysOfWeek = formData.eventDates.map((event) => {
+        const dateObj = new Date(event.date + 'T12:00:00')
+        return dayNames[dateObj.getDay()]
+      })
+
+      const scheduleData = {
+        recurring: false,
+        daysOfWeek: daysOfWeek,
+        startTime: firstEvent?.startTime || '09:00',
+        endTime: firstEvent?.endTime || '17:00',
+        specialDates: specialDates,
+        seasonStart: formData.eventDates.length > 0 ? new Date(formData.eventDates[0].date + 'T12:00:00') : new Date(),
+        seasonEnd: formData.eventDates.length > 0 ? new Date(formData.eventDates[formData.eventDates.length - 1].date + 'T12:00:00') : new Date()
+      }
+
+      const marketData: any = {
         name: formData.name,
-        category: formData.category as MarketCategory,
+        category: formData.category,
         description: formData.description || 'No description provided',
         comments: formData.comments,
         location: {
@@ -177,7 +203,7 @@ export function VendorCreateMarketPage() {
           longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
         },
         dates: {
-          type: 'one-time' as const,
+          type: 'one-time',
           events
         },
         contact: {
@@ -191,11 +217,11 @@ export function VendorCreateMarketPage() {
         },
         images: [defaultImage],
         vendorAttendance: formData.vendorAttendance,
-        marketType: 'vendor-created' as const,
-        status: 'active' as MarketStatus,
-        editableUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+        marketType: 'vendor-created',
+        status: 'active',
+        editableUntil: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         tags: [],
-        schedule: [],
+        schedule: scheduleData,
         applicationsEnabled: false,
         stats: {
           viewCount: 0,
@@ -225,7 +251,9 @@ export function VendorCreateMarketPage() {
       }
       
       // Create the market
+      console.log('[CreateMarket] Sending marketData:', JSON.stringify(marketData, null, 2))
       const newMarket = await createMarketMutation.mutateAsync(marketData)
+      console.log('[CreateMarket] Created market:', newMarket)
       
       // Show success with edit window notice
       navigate('/my-markets', {
@@ -405,7 +433,7 @@ export function VendorCreateMarketPage() {
                     type="date"
                     value={event.date}
                     onChange={(e) => updateEventDate(event.id, 'date', e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={formatLocalDate(new Date().toISOString())}
                     required
                   />
                 </div>

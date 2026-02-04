@@ -33,10 +33,10 @@ export function HomePage() {
 
   const [showLoginForm, setShowLoginForm] = useState(false)
 
-  // Fetch featured markets for homepage
+  // Fetch recently added markets for homepage
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
     queryKey: ['markets', 'featured'],
-    queryFn: () => marketsApi.getMarkets({}, 1, 12),
+    queryFn: () => marketsApi.getMarkets({}, 1, 4),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -302,10 +302,10 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Happening This Week */}
+        {/* Recently Added */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Happening This Week</h2>
+            <h2 className="text-2xl font-bold text-foreground">Recently Added</h2>
             <Link to="/markets">
               <Button variant="ghost" size="sm" className="text-amber-500">
                 See All

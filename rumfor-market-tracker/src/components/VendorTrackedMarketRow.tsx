@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { parseLocalDate } from '@/utils/formatDate'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
 import {
@@ -134,12 +136,12 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
     updateExpense(id, updates)
   }
 
-  const formatSchedule = (schedule: Market['schedule']): string => {
+const formatSchedule = (schedule: Market['schedule']): string => {
     if (!schedule || schedule.length === 0) return 'TBD'
     const firstSchedule = schedule[0]
-    const startDate = new Date(firstSchedule.startDate)
-    const dateStr = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    return `${dateStr} · ${firstSchedule.startTime}`
+    const dateObj = parseLocalDate(firstSchedule.startDate)
+    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    return `${dateStr} · ${formatTime12Hour(firstSchedule.startTime)}`
   }
 
   const currentStatus = tracking?.status || 'interested'

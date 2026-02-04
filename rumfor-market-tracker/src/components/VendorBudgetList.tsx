@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
 import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, TrendingUp, TrendingDown, Sparkles, Calendar } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
+import { formatLocalDate } from '@/utils/formatDate'
 
 interface VendorBudgetListProps {
   marketId: string
@@ -151,7 +152,7 @@ export const VendorBudgetList: React.FC<VendorBudgetListProps> = ({ marketId, cl
       amount: parseFloat(newExpected),
       actualAmount: newActual !== '' ? parseFloat(newActual) : undefined, // Keep undefined if empty
       description: newDescription,
-      date: newDate || new Date().toISOString().split('T')[0]
+      date: newDate || formatLocalDate(new Date().toISOString())
     }
 
     if (editingExpense) {

@@ -1067,6 +1067,8 @@ export const adminApi = {
     name?: string
     description?: string
     category?: string
+    marketType?: 'vendor-created' | 'promoter-managed'
+    promoter?: string
     address?: string
     city?: string
     state?: string
@@ -1082,6 +1084,36 @@ export const adminApi = {
       isRecurring: boolean
     }>
     images?: string[]
+    contact?: {
+      phone?: string
+      email?: string
+      website?: string
+    }
+    accessibility?: {
+      wheelchairAccessible: boolean
+      parkingAvailable: boolean
+      restroomsAvailable: boolean
+      familyFriendly: boolean
+      petFriendly: boolean
+      covered: boolean
+      indoor: boolean
+      outdoorSeating: boolean
+      wifi: boolean
+      atm: boolean
+      foodCourt: boolean
+      liveMusic: boolean
+      handicapParking: boolean
+      alcoholAvailable: boolean
+    }
+    tags?: string[]
+    vendorCount?: number
+    attendanceEstimate?: string
+    applicationSettings?: {
+      acceptVendors: boolean
+      maxVendors?: number
+      applicationFee?: number
+      boothFee?: number
+    }
   }): Promise<ApiResponse<Market>> {
     if (isMockMode) {
       return new Promise((resolve) => {
@@ -1110,7 +1142,9 @@ export const adminApi = {
     } else {
       const queryParams = new URLSearchParams()
       if (reason) queryParams.append('reason', reason)
-      const response = await httpClient.delete<ApiResponse<any>>(`/admin/markets/${marketId}?${queryParams}`)
+      const queryString = queryParams.toString()
+      const endpoint = queryString ? `/admin/markets/${marketId}?${queryString}` : `/admin/markets/${marketId}`
+      const response = await httpClient.delete<ApiResponse<any>>(endpoint)
       return response
     }
   }

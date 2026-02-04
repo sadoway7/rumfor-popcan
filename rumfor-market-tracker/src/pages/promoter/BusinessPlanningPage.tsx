@@ -15,6 +15,7 @@ import {
   BarChart3,
   Save
 } from 'lucide-react'
+import { formatLocalDate } from '@/utils/formatDate'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -26,6 +27,7 @@ import { useToast } from '@/components/ui/Toast'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatDate } from '@/utils/formatDate'
+import { formatTime12Hour } from '@/utils/formatTime'
 import { cn } from '@/utils/cn'
 
 interface TodoItem {
@@ -206,7 +208,7 @@ export function BusinessPlanningPage() {
       category: newTodo.category || 'General',
       dueDate: newTodo.dueDate || undefined,
       assignedTo: newTodo.assignedTo || undefined,
-      createdAt: new Date().toISOString().split('T')[0]
+      createdAt: formatLocalDate(new Date().toISOString())
     }
 
     setTodos([...todos, todo])
@@ -452,7 +454,7 @@ export function BusinessPlanningPage() {
                         <div className="text-sm text-muted-foreground">
                           <p><strong>Type:</strong> {currentMarket.schedule[0].isRecurring ? 'Recurring' : 'One-time'}</p>
                           <p><strong>Date:</strong> {formatDate(currentMarket.schedule[0].startDate)}</p>
-                          <p><strong>Time:</strong> {currentMarket.schedule[0].startTime} - {currentMarket.schedule[0].endTime}</p>
+                          <p><strong>Time:</strong> {formatTime12Hour(currentMarket.schedule[0].startTime)} - {formatTime12Hour(currentMarket.schedule[0].endTime)}</p>
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">No schedule set</p>

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'
-import { Market, MarketFilters, MarketCategory, MarketStatus, MarketSchedule, AccessibilityFeatures, CustomField, ContactInfo } from '@/types'
+import { Market, MarketFilters, MarketCategory, MarketStatus, MarketScheduleItem, AccessibilityFeatures, CustomField, ContactInfo } from '@/types'
 
 interface UseMarketsOptions {
   autoLoad?: boolean
@@ -140,10 +140,10 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     })
   }, [queryClient])
 
-  // Track market function
-  const trackMarket = useCallback(async (marketId: string, status?: string) => {
+// Track market function
+  const trackMarket = useCallback(async (marketId: string, status?: string, attendingDates?: string[]) => {
     return new Promise<void>((resolve, reject) => {
-      trackMutation.mutate({ marketId, status }, {
+      trackMutation.mutate({ marketId, status, attendingDates } as { marketId: string; status?: string; attendingDates?: string[] }, {
         onSuccess: () => resolve(),
         onError: (error) => reject(error)
       })
@@ -320,9 +320,9 @@ const useTrackMarketMutation = () => {
   const queryClient = useQueryClient()
   const userId = useAuthStore(state => state.user?.id)
 
-  return useMutation({
-    mutationFn: async ({ marketId, status }: { marketId: string; status?: string }) => {
-      const response = await marketsApi.trackMarket(marketId, status)
+return useMutation({
+    mutationFn: async ({ marketId, status, attendingDates }: { marketId: string; status?: string; attendingDates?: string[] }) => {
+      const response = await marketsApi.trackMarket(marketId, status, attendingDates)
       if (!response.success) {
         throw new Error(response.error || 'Failed to track market')
       }
@@ -426,7 +426,7 @@ export interface CreateMarketData {
   editableUntil: string
   // Add missing fields from Market type
   tags: string[]
-  schedule: MarketSchedule[]
+  schedule: MarketScheduleItem[]
   applicationsEnabled: boolean
   stats: {
     viewCount: number
@@ -476,6 +476,7 @@ interface TrackingData {
   marketId: string
   status: 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived'
   notes?: string
+  attendingDates?: string[]
   todoCount: number
   todoProgress: number
   totalExpenses: number
@@ -507,7 +508,7 @@ interface UseTrackedMarketsReturn {
   trackingData: TrackingData[]
   isLoading: boolean
   error: string | null
-  trackMarket: (marketId: string, status?: string) => void
+  trackMarket: (marketId: string, status?: string, attendingDates?: string[]) => void
   untrackMarket: (marketId: string) => void
   isMarketTracked: (marketId: string) => boolean
   getTrackingStatus: (marketId: string) => TrackingData | undefined
@@ -522,21 +523,22 @@ export const useTrackedMarkets = (): UseTrackedMarketsReturn => {
   const trackMutation = useTrackMarketMutation()
   const untrackMutation = useUntrackMarketMutation()
 
-  const handleTrackMarket = useCallback((marketId: string, status?: string) => {
-    trackMutation.mutate({ marketId, status })
+const handleTrackMarket = useCallback((marketId: string, status?: string, attendingDates?: string[]) => {
+    trackMutation.mutate({ marketId, status, attendingDates } as { marketId: string; status?: string; attendingDates?: string[] })
   }, [trackMutation])
 
   const handleUntrackMarket = useCallback((marketId: string) => {
     untrackMutation.mutate(marketId)
   }, [untrackMutation])
 
-  const trackingData = Array.isArray(trackedMarketsQuery.data)
+const trackingData = Array.isArray(trackedMarketsQuery.data)
     ? trackedMarketsQuery.data.map((t: any) => ({
         id: t._id || t.id,
         userId: t.user,
         marketId: t.market?.id || t.marketId,
         status: t.status as 'interested' | 'applied' | 'approved' | 'attending' | 'declined' | 'cancelled' | 'completed' | 'archived',
         notes: t.personalNotes,
+        attendingDates: t.attendingDates || [],
         todoCount: t.todoCount || 0,
         todoProgress: t.todoProgress || 0,
         totalExpenses: t.totalExpenses || 0,

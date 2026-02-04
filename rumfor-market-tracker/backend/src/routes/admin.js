@@ -11,6 +11,7 @@ const {
   getMarkets,
   getMarket,
   updateMarket,
+  deleteMarket,
   getModerationQueue,
   moderateContent,
   getSettings,
@@ -37,6 +38,7 @@ router.get('/users/:id/activity', validateMongoId('id'), getUserActivity)
 router.get('/markets', validatePagination, getMarkets)
 router.get('/markets/:id', validateMongoId('id'), getMarket)
 router.patch('/markets/:id', validateMongoId('id'), updateMarket)
+router.delete('/markets/:id', validateMongoId('id'), deleteMarket)
 
 // Content moderation
 router.get('/moderation', getModerationQueue)

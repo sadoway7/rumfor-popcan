@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { Progress } from '@/components/ui/Progress'
 import { cn } from '@/utils/cn'
 import { Calendar, MapPin, DollarSign, CheckSquare, Users, Car, Accessibility, Heart } from 'lucide-react'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { parseLocalDate } from '@/utils/formatDate'
 
 // Interface for vendor market tracking relationship
 interface VendorMarketTracking {
@@ -52,35 +54,47 @@ export const VendorMarketCard: React.FC<VendorMarketCardProps> = ({
   onAddExpense,
   className
 }) => {
-  const formatSchedule = (schedule: Market['schedule']) => {
-    if (!schedule || schedule.length === 0) return 'Schedule TBD'
-    
+const formatSchedule = (schedule: Market['schedule']) => {
+    if (!schedule || schedule.length === 0) return { displayText: 'Schedule TBD', allDates: [], isMulti: false }
+
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dates = schedule
       .map(s => {
-        const startDate = new Date(s.startDate)
-        const endDate = new Date(s.endDate)
-        
+        const dateObj = parseLocalDate(s.startDate)
+
         return {
           dayName: dayNames[s.dayOfWeek],
-          startDate: startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          endDate: endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          startDate: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          endDate: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
           startTime: s.startTime,
           endTime: s.endTime
         }
       })
-      .filter((item, index, arr) => 
+      .filter((item, index, arr) =>
         arr.findIndex(t => t.dayName === item.dayName) === index
       )
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-    
+
+    if (dates.length === 0) return { displayText: 'Schedule TBD', allDates: [], isMulti: false }
+
     if (dates.length === 1) {
-      return `${dates[0].startDate} ${dates[0].startTime}-${dates[0].endTime}`
+      return {
+        displayText: `${dates[0].startDate} ${formatTime12Hour(dates[0].startTime)}-${formatTime12Hour(dates[0].endTime)}`,
+        allDates: dates,
+        isMulti: false
+      }
     } else {
-      const times = dates[0].startTime === dates[dates.length - 1].startTime && 
+      const times = dates[0].startTime === dates[dates.length - 1].startTime &&
                    dates[0].endTime === dates[dates.length - 1].endTime
-      const dateList = dates.map(d => d.startDate).join(', ')
-      return times ? `${dateList} ${dates[0].startTime}-${dates[0].endTime}` : `${dateList} (var. times)`
+
+      const displayText = `${dates[0].startDate} - ${dates[dates.length - 1].startDate} (Multi)`
+
+      return {
+        displayText: displayText,
+        allDates: dates,
+        isMulti: true,
+        times: times ? `${formatTime12Hour(dates[0].startTime)}-${formatTime12Hour(dates[0].endTime)}` : 'var. times'
+      }
     }
   }
 
@@ -139,9 +153,21 @@ export const VendorMarketCard: React.FC<VendorMarketCardProps> = ({
             <MapPin className="w-4 h-4" />
             {formatLocation(market.location)}
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+<div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            {formatSchedule(market.schedule)}
+            <div className="relative group">
+              <span>{formatSchedule(market.schedule).displayText}</span>
+              {formatSchedule(market.schedule).isMulti && (
+                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 min-w-48">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">All Dates:</p>
+                  {formatSchedule(market.schedule).allDates.map((date, index) => (
+                    <div key={index} className="text-sm py-1">
+                      <span className="font-medium">{date.dayName}:</span> {date.startDate} {formatTime12Hour(date.startTime)}-{formatTime12Hour(date.endTime)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

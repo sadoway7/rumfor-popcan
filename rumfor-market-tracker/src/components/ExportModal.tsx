@@ -7,6 +7,7 @@ import { Market } from '@/types'
 import { format, parseISO } from 'date-fns'
 import { Download, FileText, Table, Code, CheckCircle, AlertCircle } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { formatTime12Hour } from '@/utils/formatTime'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import Papa from 'papaparse'
@@ -104,7 +105,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
       if (options.includeSchedule && market.schedule) {
         data['Schedule'] = market.schedule.map(s => 
-          `${s.dayOfWeek}: ${s.startTime}-${s.endTime} (${s.startDate} to ${s.endDate})`
+          `${s.dayOfWeek}: ${formatTime12Hour(s.startTime)}-${formatTime12Hour(s.endTime)} (${s.startDate} to ${s.endDate})`
         ).join('; ')
       }
 

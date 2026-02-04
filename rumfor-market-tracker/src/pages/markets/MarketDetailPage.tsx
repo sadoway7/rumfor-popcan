@@ -13,8 +13,10 @@ import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
 import { formatCurrency } from '@/utils/formatCurrency'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_STATUS_COLORS, MARKET_CATEGORY_COLORS, MARKET_CATEGORY_LABELS } from '@/config/constants'
-import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image, DollarSign } from 'lucide-react'
+import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image, DollarSign, Calendar } from 'lucide-react'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryColors = MARKET_CATEGORY_COLORS
@@ -115,14 +117,26 @@ export const MarketDetailPage: React.FC = () => {
     )
   }
 
-  const formatSchedule = (schedule: any) => {
+const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
+
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     let days: string[] = []
     let startTime: string = ''
     let endTime: string = ''
+    let allDates: { date: string; dayName: string }[] = []
+
     if (Array.isArray(schedule)) {
       if (schedule.length === 0) return 'Schedule TBD'
+
+      allDates = schedule.map((s: any) => {
+        const dateObj = parseLocalDate(s.startDate)
+        return {
+          date: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          dayName: dayNames[s.dayOfWeek] || 'Unknown'
+        }
+      })
+
       days = schedule
         .map((s: any) => dayNames[s.dayOfWeek])
         .filter((day: string, index: number, arr: string[]) => arr.indexOf(day) === index)
@@ -142,7 +156,16 @@ export const MarketDetailPage: React.FC = () => {
     } else {
       return 'Schedule TBD'
     }
-    return `${days.join(', ')} ${startTime}-${endTime}`
+
+    if (allDates.length > 0) {
+      if (allDates.length === 1) {
+        return `${allDates[0].date} ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
+      } else {
+        return allDates.map(d => d.date).join(', ') + ` ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
+      }
+    }
+
+    return `${days.join(', ')} ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
   }
 
   const formatLocation = (location: any) => {
@@ -505,7 +528,7 @@ export const MarketDetailPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Vendors Attending - Collapsed by Default */}
+{/* Vendors Attending - Collapsed by Default */}
         <Card className="overflow-hidden">
           <button
             onClick={() => setIsVendorsCollapsed(!isVendorsCollapsed)}
@@ -522,31 +545,71 @@ export const MarketDetailPage: React.FC = () => {
             )}
           </button>
           {!isVendorsCollapsed && (
-            <div className="px-2 pb-2 space-y-1">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5" />
-                <input
-                  type="text"
-                  placeholder="Filter..."
-                  value={vendorSearchTerm}
-                  onChange={(e) => setVendorSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-              </div>
-              {/* Vendor List */}
-              {filteredVendors.length > 0 ? (
-                <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
-                  {filteredVendors.map((vendor, index) => (
-                    <div key={index} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
-                      <span className="font-medium">{vendor.name}</span>
-                    </div>
-                  ))}
+            <div className="px-2 pb-2 space-y-2">
+              {/* Multi-date vendor grouping */}
+              {Array.isArray(market.schedule) && market.schedule.length > 1 ? (
+                <div className="space-y-3">
+                  {market.schedule.map((schedule, index) => {
+                    const date = new Date(schedule.startDate)
+                    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][schedule.dayOfWeek]
+                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                    
+                    // Get vendors attending this specific date (mock data for now)
+                    const vendorsForDate = filteredVendors.filter((_, i) => i % market.schedule.length === index)
+                    
+                    return (
+                      <div key={schedule.id || index} className="border rounded-lg p-2">
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b">
+                          <Calendar className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-xs font-medium">{dayName}, {dateStr}</span>
+                          <Badge variant="outline" className="text-xs ml-auto">
+                            {vendorsForDate.length} vendors
+                          </Badge>
+                        </div>
+                        {vendorsForDate.length > 0 ? (
+                          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                            {vendorsForDate.map((vendor, vIndex) => (
+                              <div key={vIndex} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
+                                <span className="font-medium">{vendor.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground text-center py-2">No vendors for this date</p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  {vendorSearchTerm ? 'No matches' : 'No vendors yet'}
-                </p>
+                /* Single date - original layout */
+                <>
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5" />
+                    <input
+                      type="text"
+                      placeholder="Filter..."
+                      value={vendorSearchTerm}
+                      onChange={(e) => setVendorSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  {/* Vendor List */}
+                  {filteredVendors.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                      {filteredVendors.map((vendor, index) => (
+                        <div key={index} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
+                          <span className="font-medium">{vendor.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      {vendorSearchTerm ? 'No matches' : 'No vendors yet'}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}

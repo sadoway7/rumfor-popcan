@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin, MessageSquare } from 'lucide-react'
+import { Calendar, MapPin, Clock, MessageSquare } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { CommentList } from './CommentList'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
@@ -313,7 +313,8 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                     +{market.images.length - 1} more
                   </Badge>
                 </div>
-              )}
+                )}
+              </div>
 
               {/* Bottom right - Comments button */}
               <div className="absolute bottom-4 right-4">
@@ -417,34 +418,35 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
 
   // Minimal modern variant - SIMPLE REDESIGN
   if (variant === 'minimal') {
-    const getScheduleDates = (schedule: Market['schedule']): string[] => {
-      if (!schedule) return []
-
+    const formatScheduleDate = (schedule: Market['schedule']) => {
+      if (!schedule) return null
+      
       // Handle backend format with specialDates
       if (typeof schedule === 'object' && !Array.isArray(schedule)) {
         const schedObj = schedule as any
         if (schedObj.specialDates && Array.isArray(schedObj.specialDates) && schedObj.specialDates.length > 0) {
-          return schedObj.specialDates.map((s: any) => {
+          const dates = schedObj.specialDates.map((s: any) => {
             const d = new Date(s.date)
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           })
+          return dates.join(', ')
         }
       }
-
+      
       // Handle array format
-      if (!Array.isArray(schedule) || schedule.length === 0) return []
-
-      return schedule
-        .map((s: any) => {
-          if (!s || !s.startDate) return null
-          const dateObj = parseLocalDate(s.startDate)
-          if (isNaN(dateObj.getTime())) return null
-          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        })
-        .filter(Boolean) as string[]
+      if (!Array.isArray(schedule) || schedule.length === 0) return null
+      
+      const dates = schedule.map((s: any) => {
+        if (!s || !s.startDate) return null
+        const dateObj = parseLocalDate(s.startDate)
+        if (isNaN(dateObj.getTime())) return null
+        return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      }).filter(Boolean)
+      
+      if (dates.length === 0) return null
+      
+      return dates.join(', ')
     }
-
-    const scheduleDates = getScheduleDates(market.schedule)
 
     return (
       <div className={cn(
@@ -464,64 +466,83 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
 
               {/* Top overlays */}
               <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
-                {/* Left side - Location and Dates stacked */}
-                <div className="flex flex-col gap-1">
+                <div className="space-y-2">
+                  {/* Category badge */}
+                  <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1 text-white text-xs font-medium">
+                    {MARKET_CATEGORY_LABELS[market.category]}
+                  </div>
                   {/* Location */}
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#ffffff] shadow text-zinc-900">
+                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-xs">
                     <MapPin className="w-3 h-3" />
                     <span>{formatLocation(market.location)}</span>
                   </div>
-                  {/* Dates - stacked */}
-                  {scheduleDates.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      {scheduleDates.map((date, index) => (
-                        <div key={index} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-[#ffffff] shadow text-zinc-900 w-fit">
-                          <Calendar className="w-3 h-3" />
-                          <span>{date}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                {/* Right side - Category */}
-                <div className="px-3 py-1 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900">
-                  {MARKET_CATEGORY_LABELS[market.category]}
-                </div>
+                {/* Date */}
+                {formatScheduleDate(market.schedule) && (
+                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-xs">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatScheduleDate(market.schedule)}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Footer - two rows: top row (info text + comments button), bottom row (title + description) */}
-              <div className="absolute bottom-0 left-0 right-0">
-                {/* Top row - Info text (left) + Comments button (right) */}
-                <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-xs text-white/80">Tap for details</span>
-                  <div
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setIsCommentsModalOpen(true)
-                    }}
-                    className="cursor-pointer flex items-center gap-1.5 bg-amber-500 rounded-full shadow shadow-black/20 px-4 py-1.5 text-white hover:bg-amber-600 transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {market.stats?.commentCount || 0}
-                    </span>
-                  </div>
-                </div>
-                {/* Bottom row - Title + description */}
-                <div className="relative bg-gradient-to-r from-white via-white to-transparent shadow shadow-black/10 px-4 py-3">
-                  <h3 className="text-zinc-900 font-bold text-2xl leading-tight line-clamp-2">
-                    {market.name}
-                  </h3>
-                  <p className="text-zinc-600 text-sm leading-relaxed line-clamp-2">
-                    {market.description}
-                  </p>
-                </div>
+              {/* Top right - Comments button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsCommentsModalOpen(true)
+                }}
+                className="bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white text-xs px-2 py-1"
+              >
+                <MessageSquare className="w-3 h-3 mr-1" />
+                Comments
+              </Button>
+            </div>
+
+              {/* Solid dark bar at bottom for title */}
+              <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
+                <h3 className="text-white font-semibold text-lg leading-tight line-clamp-2">
+                  {market.name}
+                </h3>
               </div>
             </div>
           )}
+
+          {/* Description under image */}
+          <div className="p-4 space-y-2">
+            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
+              {market.description}
+            </p>
+
+            {/* Simple details row */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <Clock className="w-3 h-3" />
+                <span>{formatSchedule(market.schedule, market.dates).displayText}</span>
+              </div>
+              
+              {/* Comments button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsCommentsModalOpen(true)
+                }}
+                className="text-xs text-muted-foreground hover:text-amber-500 px-2 py-1"
+              >
+                <MessageSquare className="w-3 h-3 mr-1" />
+                Comments
+              </Button>
+            </div>
+          </div>
         </Link>
+
+        
 
         {/* Comments Modal - Fullscreen on mobile, normal modal on desktop */}
         <Modal

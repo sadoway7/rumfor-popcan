@@ -116,7 +116,7 @@ function serializeMarket(marketDoc) {
       if (Array.isArray(market.schedule)) {
         return market.schedule.map(s => ({
           id: s.id || '1',
-          dayOfWeek: s.dayOfWeek ?? 6, // Default Saturday
+          dayOfWeek: s.dayOfWeek ?? 6,
           startTime: s.startTime,
           endTime: s.endTime,
           startDate: s.startDate || '2024-01-01',
@@ -125,38 +125,66 @@ function serializeMarket(marketDoc) {
         }))
       }
 
+      // Handle specialDates array from vendor submissions
+      if (market.schedule.specialDates && Array.isArray(market.schedule.specialDates) && market.schedule.specialDates.length > 0) {
+        const results = []
+        for (let i = 0; i < market.schedule.specialDates.length; i++) {
+          const d = market.schedule.specialDates[i]
+          let dateStr = '2024-01-01'
+          if (d.date) {
+            if (typeof d.date === 'string') {
+              dateStr = d.date.split('T')[0]
+            } else {
+              dateStr = d.date.toISOString().split('T')[0]
+            }
+          }
+          results.push({
+            id: String(i + 1),
+            dayOfWeek: new Date(dateStr).getDay(),
+            startTime: d.startTime || market.schedule.startTime || '08:00',
+            endTime: d.endTime || market.schedule.endTime || '14:00',
+            startDate: dateStr,
+            endDate: dateStr,
+            isRecurring: false
+          })
+        }
+        return results
+      }
+
       // Handle backend object format with daysOfWeek array
-      if (market.schedule.daysOfWeek && Array.isArray(market.schedule.daysOfWeek)) {
-        return market.schedule.daysOfWeek.map((day, index) => ({
-          id: (index + 1).toString(),
-          dayOfWeek: day === 'monday' ? 1 :
-                    day === 'tuesday' ? 2 :
-                    day === 'wednesday' ? 3 :
-                    day === 'thursday' ? 4 :
-                    day === 'friday' ? 5 :
-                    day === 'saturday' ? 6 :
-                    day === 'sunday' ? 0 : 6, // Default Saturday
-          startTime: market.schedule.startTime,
-          endTime: market.schedule.endTime,
-          startDate: market.schedule.seasonStart || '2024-01-01',
-          endDate: market.schedule.seasonEnd || '2024-12-31',
-          isRecurring: market.schedule.recurring ?? true
-        }))
+      if (market.schedule.daysOfWeek && Array.isArray(market.schedule.daysOfWeek) && market.schedule.daysOfWeek.length > 0) {
+        const results = []
+        for (let i = 0; i < market.schedule.daysOfWeek.length; i++) {
+          const day = market.schedule.daysOfWeek[i]
+          const dayNum = day === 'monday' ? 1 :
+                        day === 'tuesday' ? 2 :
+                        day === 'wednesday' ? 3 :
+                        day === 'thursday' ? 4 :
+                        day === 'friday' ? 5 :
+                        day === 'saturday' ? 6 :
+                        day === 'sunday' ? 0 : 6
+          results.push({
+            id: String(i + 1),
+            dayOfWeek: dayNum,
+            startTime: market.schedule.startTime || '08:00',
+            endTime: market.schedule.endTime || '14:00',
+            startDate: market.schedule.seasonStart || '2024-01-01',
+            endDate: market.schedule.seasonEnd || '2024-12-31',
+            isRecurring: market.schedule.recurring ?? true
+          })
+        }
+        return results
       }
 
       // Handle single schedule object
       return [{
         id: '1',
-        dayOfWeek: typeof market.schedule.dayOfWeek === 'string' ?
-          (market.schedule.dayOfWeek === 'monday' ? 1 :
-           market.schedule.dayOfWeek === 'saturday' ? 6 :
-           market.schedule.dayOfWeek === 'sunday' ? 0 : 6) :
-          (market.schedule.dayOfWeek ?? 6),
-        startTime: market.schedule.startTime,
-        endTime: market.schedule.endTime,
-        startDate: market.schedule.startDate || market.schedule.seasonStart || '2024-01-01',
-        endDate: market.schedule.endDate || market.schedule.seasonEnd || '2024-12-31',
-        isRecurring: market.schedule.isRecurring ?? market.schedule.recurring ?? true
+        dayOfWeek: market.schedule.dayOfWeek ?? 6,
+        startTime: market.schedule.startTime || '08:00',
+        endTime: market.schedule.endTime || '14:00',
+        startDate: market.schedule.seasonStart || '2024-01-01',
+        endDate: market.schedule.seasonEnd || '2024-12-31',
+        isRecurring: market.schedule.recurring ?? true
       }]
     })(),
     

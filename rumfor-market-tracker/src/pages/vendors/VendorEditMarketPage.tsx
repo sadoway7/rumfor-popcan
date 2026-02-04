@@ -6,6 +6,7 @@ import { useMarket } from '@/features/markets/hooks/useMarkets'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '@/features/markets/marketsApi'
 import { MarketCategory } from '@/types'
+import { formatLocalDate } from '@/utils/formatDate'
 
 const marketCategories = [
   { value: 'farmers-market', label: 'Farmers Market' },
@@ -203,10 +204,10 @@ export function VendorEditMarketPage() {
     setIsSubmitting(true)
     
     try {
-      // Transform event dates to backend format
+// Transform event dates to backend format
       const events = formData.eventDates.map(event => ({
-        startDate: new Date(event.date).toISOString(),
-        endDate: new Date(event.date).toISOString(),
+        startDate: new Date(formatLocalDate(event.date)).toISOString(),
+        endDate: new Date(formatLocalDate(event.date)).toISOString(),
         time: {
           start: event.startTime,
           end: event.endTime
@@ -394,7 +395,7 @@ export function VendorEditMarketPage() {
                     type="date"
                     value={event.date}
                     onChange={(e) => updateEventDate(event.id, 'date', e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={formatLocalDate(new Date().toISOString())}
                     required
                   />
                 </div>

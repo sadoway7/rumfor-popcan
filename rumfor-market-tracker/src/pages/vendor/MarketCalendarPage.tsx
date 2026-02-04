@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useApplications } from '@/features/applications/hooks/useApplications'
+import { formatTime12Hour } from '@/utils/formatTime'
 
 export function MarketCalendarPage() {
   const { user } = useAuthStore()
@@ -259,7 +260,7 @@ export function MarketCalendarPage() {
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {market.schedule[0]?.startTime} - {market.schedule[0]?.endTime}
+                          {formatTime12Hour(market.schedule[0]?.startTime)} - {formatTime12Hour(market.schedule[0]?.endTime)}
                         </span>
                       </div>
                       <Badge 

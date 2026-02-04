@@ -658,6 +658,36 @@ const updateMarket = catchAsync(async (req, res, next) => {
   sendSuccess(res, { market }, 'Market updated successfully')
 })
 
+const deleteMarket = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  const { reason } = req.query
+
+  const market = await Market.findById(id)
+  if (!market) {
+    return sendError(res, 'Market not found', 404)
+  }
+
+  // Soft delete: set isActive to false and status to cancelled
+  market.isActive = false
+  market.status = 'cancelled'
+  market.updatedAt = new Date()
+  await market.save()
+
+  // Notify promoter if market was deleted
+  if (market.promoter) {
+    await Notification.create({
+      recipient: market.promoter,
+      type: 'admin-action',
+      title: 'Market Deleted',
+      message: `Your market "${market.name}" has been deleted by an administrator${reason ? ` (Reason: ${reason})` : ''}`,
+      data: { marketId: market._id, reason, deletedBy: req.user.id },
+      priority: 'high'
+    })
+  }
+
+  sendSuccess(res, { id: market._id.toString(), deleted: true }, 'Market deleted successfully')
+})
+
 // Get single market for admin
 const getMarket = catchAsync(async (req, res, next) => {
   const { id } = req.params
@@ -697,7 +727,7 @@ const getMarket = catchAsync(async (req, res, next) => {
 
   // Flatten schedule for frontend
   const schedules = []
-  if (market.schedule) {
+  if (market.schedule && (market.schedule.recurring || market.schedule.specialDates)) {
     if (market.schedule.recurring && market.schedule.daysOfWeek && market.schedule.daysOfWeek.length > 0) {
       const dayMap = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 }
       market.schedule.daysOfWeek.forEach(day => {
@@ -916,6 +946,7 @@ module.exports = {
   getMarkets,
   getMarket,
   updateMarket,
+  deleteMarket,
   getModerationQueue,
   moderateContent,
   getSettings,

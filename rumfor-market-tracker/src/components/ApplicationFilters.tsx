@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { Card } from '@/components/ui/Card'
 import { ApplicationStatus } from '@/types'
 import { cn } from '@/utils/cn'
+import { formatLocalDate } from '@/utils/formatDate'
 
 
 export interface ApplicationFilters {
@@ -219,8 +220,8 @@ export const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const today = new Date().toISOString().split('T')[0]
-                  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+const today = formatLocalDate(new Date().toISOString())
+                  const weekAgo = formatLocalDate(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
                   updateFilter('dateRange', { from: weekAgo, to: today })
                 }}
               >
@@ -230,8 +231,8 @@ export const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const today = new Date().toISOString().split('T')[0]
-                  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+const today = formatLocalDate(new Date().toISOString())
+                  const monthAgo = formatLocalDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
                   updateFilter('dateRange', { from: monthAgo, to: today })
                 }}
               >
@@ -241,8 +242,8 @@ export const ApplicationFilters: React.FC<ApplicationFiltersProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const today = new Date().toISOString().split('T')[0]
-                  const yearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+const today = formatLocalDate(new Date().toISOString())
+                  const yearAgo = formatLocalDate(new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString())
                   updateFilter('dateRange', { from: yearAgo, to: today })
                 }}
               >

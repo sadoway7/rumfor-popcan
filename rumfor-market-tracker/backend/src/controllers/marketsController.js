@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
 const Market = require('../models/Market')
+const Comment = require('../models/Comment')
 const UserMarketTracking = require('../models/UserMarketTracking')
 const Todo = require('../models/Todo')
 const Expense = require('../models/Expense')
@@ -101,8 +102,27 @@ const getMarkets = catchAsync(async (req, res, next) => {
     { $limit: 10 }
   ])
 
+  // Get comment counts for all markets
+  const commentCounts = await Comment.aggregate([
+    { $match: { isDeleted: false, isModerated: false } },
+    { $group: { _id: '$market', count: { $sum: 1 } } }
+  ])
+  const commentCountMap = {}
+  commentCounts.forEach(c => {
+    commentCountMap[c._id.toString()] = c.count
+  })
+
   // Re-enable serializer for proper frontend data formatting
-  const serializedMarkets = markets.map(market => serializeMarket(market))
+  const serializedMarkets = markets.map(market => {
+    const serialized = serializeMarket(market)
+    // Add comment count to stats
+    if (serialized && serialized.stats) {
+      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+    } else if (serialized) {
+      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+    }
+    return serialized
+  })
 
   sendSuccess(res, {
     markets: serializedMarkets,
@@ -145,8 +165,18 @@ const getMarket = catchAsync(async (req, res, next) => {
   // Get recent photos from populated market
   const recentPhotos = market.images?.slice(0, 5) || []
 
+  // Get comment count
+  const commentCount = await Comment.countDocuments({ market: market._id, isDeleted: false, isModerated: false })
+
   // Serialize market data for frontend compatibility
   const serializedMarket = serializeMarket(market)
+  
+  // Add comment count to stats
+  if (serializedMarket && serializedMarket.stats) {
+    serializedMarket.stats.commentCount = commentCount
+  } else if (serializedMarket) {
+    serializedMarket.stats = { commentCount }
+  }
 
   sendSuccess(res, {
     market: serializedMarket,
@@ -552,8 +582,26 @@ const searchMarkets = catchAsync(async (req, res, next) => {
 
   const total = await Market.countDocuments(query)
 
+  // Get comment counts
+  const commentCounts = await Comment.aggregate([
+    { $match: { isDeleted: false, isModerated: false } },
+    { $group: { _id: '$market', count: { $sum: 1 } } }
+  ])
+  const commentCountMap = {}
+  commentCounts.forEach(c => {
+    commentCountMap[c._id?.toString()] = c.count
+  })
+
   // Serialize market data for frontend compatibility
-  const serializedMarkets = markets.map(market => serializeMarket(market))
+  const serializedMarkets = markets.map(market => {
+    const serialized = serializeMarket(market)
+    if (serialized && serialized.stats) {
+      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+    } else if (serialized) {
+      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+    }
+    return serialized
+  })
 
   sendSuccess(res, {
     markets: serializedMarkets,
@@ -604,8 +652,26 @@ const getPopularMarkets = catchAsync(async (req, res, next) => {
   })
   .limit(parseInt(limit))
 
+  // Get comment counts
+  const commentCounts = await Comment.aggregate([
+    { $match: { isDeleted: false, isModerated: false } },
+    { $group: { _id: '$market', count: { $sum: 1 } } }
+  ])
+  const commentCountMap = {}
+  commentCounts.forEach(c => {
+    commentCountMap[c._id?.toString()] = c.count
+  })
+
   // Serialize market data for frontend compatibility
-  const serializedMarkets = popularMarkets.map(market => serializeMarket(market))
+  const serializedMarkets = popularMarkets.map(market => {
+    const serialized = serializeMarket(market)
+    if (serialized && serialized.stats) {
+      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+    } else if (serialized) {
+      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+    }
+    return serialized
+  })
 
   sendSuccess(res, {
     markets: serializedMarkets,
@@ -635,8 +701,26 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
 
   const total = await Market.countDocuments({ category, status: 'active', isPublic: true })
 
+  // Get comment counts
+  const commentCounts = await Comment.aggregate([
+    { $match: { isDeleted: false, isModerated: false } },
+    { $group: { _id: '$market', count: { $sum: 1 } } }
+  ])
+  const commentCountMap = {}
+  commentCounts.forEach(c => {
+    commentCountMap[c._id?.toString()] = c.count
+  })
+
   // Serialize market data for frontend compatibility
-  const serializedMarkets = markets.map(market => serializeMarket(market))
+  const serializedMarkets = markets.map(market => {
+    const serialized = serializeMarket(market)
+    if (serialized && serialized.stats) {
+      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+    } else if (serialized) {
+      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+    }
+    return serialized
+  })
 
   sendSuccess(res, {
     markets: serializedMarkets,

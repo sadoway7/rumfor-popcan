@@ -124,6 +124,7 @@ export function AdminMarketsPage() {
         fetchMarkets()
       } catch (err) {
         console.error('Failed to delete market:', err)
+        setError('Failed to delete market. Please try again.')
       }
     }
   }, [fetchMarkets])

@@ -11,10 +11,13 @@ import { cn } from '@/utils/cn'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '@/features/markets/marketsApi'
 import { getCategoryImage, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE, ALLOWED_MARKET_TAGS } from '@/assets/images'
-import {
+import { formatLocalDate } from '@/utils/formatDate'
+import { formatTime12Hour } from '@/utils/formatTime'
+import { 
   ArrowLeft,
   MapPin,
   Calendar,
+  Clock,
   Store,
   Phone,
   Accessibility,
@@ -193,9 +196,9 @@ export function VendorAddMarketForm() {
       dayOfWeek: 6, // Saturday default
       startTime: '08:00',
       endTime: '14:00',
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-      eventDate: new Date().toISOString().split('T')[0],
+startDate: formatLocalDate(new Date().toISOString()),
+      endDate: formatLocalDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()), // 1 year from now
+      eventDate: formatLocalDate(new Date().toISOString()),
       isRecurring: false
     }],
     contact: {},
@@ -310,12 +313,17 @@ export function VendorAddMarketForm() {
         },
         category: formData.category,
         schedule: {
-          recurring: formData.schedule[0]?.isRecurring || false,
-          daysOfWeek: ['saturday'],
+          recurring: false,
+          daysOfWeek: [],
           startTime: formData.schedule[0]?.startTime || '08:00',
           endTime: formData.schedule[0]?.endTime || '14:00',
-          seasonStart: formData.schedule[0]?.startDate || new Date().toISOString(),
-          seasonEnd: formData.schedule[0]?.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+          seasonStart: formatLocalDate(formData.schedule[0]?.eventDate || new Date().toISOString()),
+          seasonEnd: formatLocalDate(formData.schedule[formData.schedule.length - 1]?.eventDate || formData.schedule[0]?.eventDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()),
+          specialDates: formData.schedule.map(s => ({
+            date: new Date(s.eventDate || s.startDate || new Date()).toISOString().split('T')[0],
+            startTime: s.startTime || '08:00',
+            endTime: s.endTime || '14:00'
+          }))
         },
         status: 'active',
         isPublic: true,
@@ -347,7 +355,7 @@ export function VendorAddMarketForm() {
 
       if (response.success && response.data) {
         alert('Market added successfully! You can now track this market and plan your participation.')
-        navigate('/vendor')
+        navigate('/vendor/tracked-markets')
       } else {
         throw new Error(response.error || 'Failed to create market')
       }
@@ -385,9 +393,9 @@ export function VendorAddMarketForm() {
         dayOfWeek: 6,
         startTime: '08:00',
         endTime: '14:00',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        eventDate: new Date().toISOString().split('T')[0],
+startDate: formatLocalDate(new Date().toISOString()),
+        endDate: formatLocalDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()),
+        eventDate: formatLocalDate(new Date().toISOString()),
         isRecurring: false
       }]
     }))
@@ -457,11 +465,16 @@ export function VendorAddMarketForm() {
   const formatScheduleDisplay = () => {
     if (formData.schedule.length === 0) return 'No schedule set'
     
-    const schedules = formData.schedule.map(s => {
+const schedules = formData.schedule.map(s => {
       const eventDate = s.eventDate || s.startDate
-      const dateObj = new Date(eventDate)
+      // Parse date directly without timezone conversion
+      const dateParts = eventDate.split('-')
+      const year = parseInt(dateParts[0])
+      const month = parseInt(dateParts[1]) - 1
+      const day = parseInt(dateParts[2])
+      const dateObj = new Date(year, month, day)
       const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      return `${formattedDate} ${s.startTime}-${s.endTime}`
+      return `${formattedDate} ${formatTime12Hour(s.startTime)}-${formatTime12Hour(s.endTime)}`
     })
     
     return schedules.join(', ')
@@ -555,7 +568,7 @@ export function VendorAddMarketForm() {
           </div>
 
           {/* Market Name */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Market Name *</label>
             <Input
               value={formData.name}
@@ -572,7 +585,7 @@ export function VendorAddMarketForm() {
           </div>
 
           {/* Category */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Category *</label>
             <Select
               value={formData.category}
@@ -589,9 +602,9 @@ export function VendorAddMarketForm() {
           </div>
 
           {/* Market Image Upload - Optional */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Market Image (Optional)</label>
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3">
               <input
                 type="file"
                 id="market-image-upload"
@@ -603,19 +616,19 @@ export function VendorAddMarketForm() {
                 htmlFor="market-image-upload"
                 className={cn(
                   "flex-1 cursor-pointer",
-                  !marketImage && "w-full h-40 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50"
+                  !marketImage && "w-full h-28 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50"
                 )}
               >
                 {marketImage ? (
                   <img 
                     src={marketImage} 
                     alt="Market preview" 
-                    className="w-full h-40 object-cover rounded-lg" 
+                    className="w-full h-28 object-cover rounded-lg" 
                   />
                 ) : (
-                  <div className="w-full h-40 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50">
-                    <Upload className="w-8 h-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground ml-2">Click to upload image</span>
+                  <div className="w-full h-28 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50">
+                    <Upload className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground ml-2">Click to upload</span>
                   </div>
                 )}
               </label>
@@ -625,35 +638,34 @@ export function VendorAddMarketForm() {
                   variant="ghost" 
                   size="sm" 
                   onClick={removeImage}
-                  className="text-destructive"
+                  className="text-destructive h-8"
                 >
-                  <X className="w-4 h-4" />
-                  Remove Image
+                  <X className="w-3 h-3" />
                 </Button>
               )}
             </div>
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-foreground">Description</label>
             <Textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of the market, what it offers, or what makes it special..."
-              rows={3}
+              placeholder="Brief description of the market..."
+              rows={2}
             />
           </div>
 
           {/* Location */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-foreground flex items-center gap-2">
+          <div className="space-y-3">
+            <h3 className="font-medium text-foreground flex items-center gap-2 text-sm">
               <MapPin className="w-4 h-4" />
               Location *
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="md:col-span-2 space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Address</label>
                 <Input
                   value={formData.location.address}
@@ -665,7 +677,7 @@ export function VendorAddMarketForm() {
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">City *</label>
                 <Input
                   value={formData.location.city}
@@ -684,7 +696,7 @@ export function VendorAddMarketForm() {
                 )}
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Province/State *</label>
                 <Select
                   value={formData.location.state}
@@ -703,7 +715,7 @@ export function VendorAddMarketForm() {
                 )}
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium text-foreground">Postal/Zip Code</label>
                 <Input
                   value={formData.location.zipCode}
@@ -733,15 +745,6 @@ export function VendorAddMarketForm() {
                 <Calendar className="w-4 h-4" />
                 Schedule *
               </h3>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={addScheduleItem}
-                className="flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                Add Time
-              </Button>
             </div>
 
             <div className="space-y-3">
@@ -761,24 +764,48 @@ export function VendorAddMarketForm() {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Date</label>
-                      <Input
-                        type="date"
-                        value={item.eventDate || ''}
-                        onChange={(e) => {
-                          const newSchedule = [...formData.schedule]
-                          newSchedule[index].eventDate = e.target.value
-                          setFormData(prev => ({ ...prev, schedule: newSchedule }))
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        const input = (e.currentTarget.parentElement?.querySelector('input[type="date"]') as HTMLInputElement)
+                        if (input) input.showPicker()
+                      }}
+                      className="w-full h-10 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-center gap-2"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {item.eventDate ? new Date(item.eventDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select Date'}
+                      </span>
+                    </button>
+                    <Input
+                      type="date"
+                      value={item.eventDate || ''}
+                      onChange={(e) => {
+                        const newSchedule = [...formData.schedule]
+                        newSchedule[index].eventDate = e.target.value
+                        setFormData(prev => ({ ...prev, schedule: newSchedule }))
+                      }}
+                      min={formatLocalDate(new Date().toISOString())}
+                      required
+                      className="w-0 h-0 p-0 border-0 opacity-0 absolute"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Start</label>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.parentElement?.querySelector('input[type="time"]') as HTMLInputElement)
+                          if (input) input.showPicker()
                         }}
-                        min={new Date().toISOString().split('T')[0]}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">Start Time</label>
+                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2"
+                      >
+                        <span className="truncate">{item.startTime ? formatTime12Hour(item.startTime) : '--:--'}</span>
+                        <Clock className="w-3 h-3 opacity-50" />
+                      </button>
                       <Input
                         type="time"
                         value={item.startTime}
@@ -787,11 +814,23 @@ export function VendorAddMarketForm() {
                           newSchedule[index].startTime = e.target.value
                           setFormData(prev => ({ ...prev, schedule: newSchedule }))
                         }}
+                        className="w-0 h-0 p-0 border-0 opacity-0 absolute"
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">End Time</label>
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">End</label>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.parentElement?.querySelector('input[type="time"]') as HTMLInputElement)
+                          if (input) input.showPicker()
+                        }}
+                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2"
+                      >
+                        <span className="truncate">{item.endTime ? formatTime12Hour(item.endTime) : '--:--'}</span>
+                        <Clock className="w-3 h-3 opacity-50" />
+                      </button>
                       <Input
                         type="time"
                         value={item.endTime}
@@ -800,26 +839,24 @@ export function VendorAddMarketForm() {
                           newSchedule[index].endTime = e.target.value
                           setFormData(prev => ({ ...prev, schedule: newSchedule }))
                         }}
+                        className="w-0 h-0 p-0 border-0 opacity-0 absolute"
                       />
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id={`recurring-${index}`}
-                      checked={item.isRecurring}
-                      onValueChange={(checked) => {
-                        const newSchedule = [...formData.schedule]
-                        newSchedule[index].isRecurring = checked
-                        setFormData(prev => ({ ...prev, schedule: newSchedule }))
-                      }}
-                    />
-                    <label htmlFor={`recurring-${index}`} className="text-sm text-foreground">
-                      This is a recurring schedule
-                    </label>
-                  </div>
                 </div>
               ))}
+              
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={addScheduleItem}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Date
+                </Button>
+              </div>
             </div>
             
             {errors.schedule && <p className="text-red-500 text-sm">{errors.schedule}</p>}

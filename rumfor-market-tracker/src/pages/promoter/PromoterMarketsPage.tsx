@@ -27,6 +27,7 @@ import { useAuthStore } from '@/features/auth/authStore'
 import { adminApi } from '@/features/admin/adminApi'
 import { Market, MarketStatus, MarketCategory } from '@/types'
 import { cn } from '@/utils/cn'
+import { formatTime12Hour } from '@/utils/formatTime'
 
 export function PromoterMarketsPage() {
   const { user } = useAuthStore()
@@ -574,7 +575,7 @@ export function PromoterMarketsPage() {
                               {sched.isRecurring ? 'Recurring' : 'One-time'}: 
                             </span>
                             <span className="text-muted-foreground ml-2">
-                              {sched.startDate} ({sched.startTime} - {sched.endTime})
+                              {sched.startDate} ({formatTime12Hour(sched.startTime)} - {formatTime12Hour(sched.endTime)})
                             </span>
                           </div>
                         ))}

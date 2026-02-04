@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 import { Calendar as CalendarIcon, MapPin, Clock, Users } from 'lucide-react'
+import { formatTime12Hour } from '@/utils/formatTime'
 import 'react-calendar/dist/Calendar.css'
 
 interface MarketCalendarProps {
@@ -207,7 +208,7 @@ export const MarketCalendar: React.FC<MarketCalendarProps> = ({
                         <div className="flex items-center gap-2 mt-1">
                           <Clock className="w-3 h-3 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
-                            {market.schedule?.[0]?.startTime} - {market.schedule?.[0]?.endTime}
+                            {formatTime12Hour(market.schedule?.[0]?.startTime)} - {formatTime12Hour(market.schedule?.[0]?.endTime)}
                           </span>
                         </div>
                       </div>

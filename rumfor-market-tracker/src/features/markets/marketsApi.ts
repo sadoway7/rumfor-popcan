@@ -1,9 +1,80 @@
 import { Market, MarketFilters, PaginatedResponse, ApiResponse } from '@/types'
 import { httpClient } from '@/lib/httpClient'
+import { parseLocalDate } from '@/utils/formatDate'
 
 // Environment configuration
 const isDevelopment = import.meta.env.DEV
 const isMockMode = import.meta.env.VITE_USE_MOCK_API === 'true'
+
+function transformScheduleToArray(schedule: any): any[] {
+  if (!schedule) return []
+  if (Array.isArray(schedule)) return schedule
+  
+  // First, check if there are specialDates and use those
+  if (schedule.specialDates && Array.isArray(schedule.specialDates) && schedule.specialDates.length > 0) {
+    return schedule.specialDates.map((s: any, index: number) => ({
+      id: `schedule-${index}`,
+      dayOfWeek: new Date(s.date).getDay(),
+      startTime: s.startTime || schedule.startTime || '08:00',
+      endTime: s.endTime || schedule.endTime || '14:00',
+      startDate: s.date,
+      endDate: s.date,
+      isRecurring: false
+    }))
+  }
+  
+  // Convert from BackendScheduleFormat to array format
+  // For vendor-created markets with multiple dates, expand the season to individual dates
+  if (schedule.seasonStart && schedule.seasonEnd) {
+    const start = parseLocalDate(schedule.seasonStart)
+    const end = parseLocalDate(schedule.seasonEnd)
+    const dates: any[] = []
+    let current = new Date(start)
+    
+    // Map dayOfWeek from daysOfWeek array
+    const dayOfWeekMap: { [key: string]: number } = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+      'thursday': 4, 'friday': 5, 'saturday': 6
+    }
+    const targetDays = schedule.daysOfWeek?.map((d: string) => dayOfWeekMap[d.toLowerCase()]) || [6]
+    
+    // Generate a schedule entry for each day in the season
+    while (current <= end) {
+      if (targetDays.includes(current.getDay())) {
+        dates.push({
+          id: `schedule-${current.toISOString().split('T')[0]}`,
+          dayOfWeek: current.getDay(),
+          startTime: schedule.startTime || '08:00',
+          endTime: schedule.endTime || '14:00',
+          startDate: current.toISOString().split('T')[0],
+          endDate: current.toISOString().split('T')[0],
+          isRecurring: schedule.recurring || false
+        })
+      }
+      current.setDate(current.getDate() + 1)
+    }
+    
+    return dates.length > 0 ? dates : [{
+      id: 'schedule-default',
+      dayOfWeek: 6,
+      startTime: schedule.startTime || '08:00',
+      endTime: schedule.endTime || '14:00',
+      startDate: schedule.seasonStart,
+      endDate: schedule.seasonEnd,
+      isRecurring: schedule.recurring || false
+    }]
+  }
+  
+  return [{
+    id: 'schedule-default',
+    dayOfWeek: 6,
+    startTime: schedule.startTime || '08:00',
+    endTime: schedule.endTime || '14:00',
+    startDate: schedule.seasonStart || new Date().toISOString().split('T')[0],
+    endDate: schedule.seasonEnd || new Date().toISOString().split('T')[0],
+    isRecurring: schedule.recurring || false
+  }]
+}
 
 // Mock data for development
 const mockMarkets: Market[] = [
@@ -320,9 +391,15 @@ export const marketsApi = {
       const startIndex = (page - 1) * limit
       const endIndex = startIndex + limit
       const paginatedMarkets = filteredMarkets.slice(startIndex, endIndex)
+      
+      // Transform schedule format for each market
+      const transformedMarkets = paginatedMarkets.map(market => ({
+        ...market,
+        schedule: transformScheduleToArray(market.schedule)
+      }))
 
       return {
-        data: paginatedMarkets,
+        data: transformedMarkets,
         pagination: {
           page,
           limit,
@@ -349,11 +426,20 @@ export const marketsApi = {
       queryParams.append('limit', limit.toString())
 
       const response = await httpClient.get<ApiResponse<any>>(`/markets?${queryParams}`)
+      console.log('[getMarkets] Backend response:', response)
       if (!response.success) throw new Error(response.error || 'Failed to fetch markets')
 
       // Backend serializer now handles transformation
+      console.log('[getMarkets] markets from backend:', response.data!.markets)
+      
+      // Transform schedule format for each market
+      const transformedMarkets = (response.data!.markets as any[]).map(market => ({
+        ...market,
+        schedule: transformScheduleToArray(market.schedule)
+      }))
+      
       return {
-        data: response.data!.markets as Market[],
+        data: transformedMarkets,
         pagination: response.data!.pagination
       }
     }
@@ -375,16 +461,24 @@ export const marketsApi = {
 
       return {
         success: true,
-        data: market
+        data: {
+          ...market,
+          schedule: transformScheduleToArray(market.schedule)
+        }
       }
     } else {
       const response = await httpClient.get<ApiResponse<any>>(`/markets/${id}`)
       if (!response.success) throw new Error(response.error || 'Failed to fetch market')
       
-      // Backend serializer now handles transformation
+      // Transform schedule format
+      const transformedMarket = {
+        ...response.data.market,
+        schedule: transformScheduleToArray(response.data.market.schedule)
+      }
+      
       return {
         success: true,
-        data: response.data.market as Market
+        data: transformedMarket as Market
       }
     }
   },
@@ -458,7 +552,7 @@ export const marketsApi = {
     }
   },
 
-  // Create new market
+// Create new market
   async createMarket(marketData: Omit<Market, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Market>> {
     if (isDevelopment && isMockMode) {
       await delay(800)
@@ -467,16 +561,23 @@ export const marketsApi = {
         ...marketData,
         id: `market-${Date.now()}`,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        schedule: transformScheduleToArray(marketData.schedule)
       }
 
-      // Simulate market creation with ID generation
+      console.log('[createMarket] Mock created market:', newMarket)
+
+      // Add to mockMarkets so it shows up in listings
+      mockMarkets.unshift(newMarket)
+
       return {
         success: true,
         data: newMarket
       }
     } else {
+      console.log('[createMarket] Sending to backend:', marketData)
       const response = await httpClient.post<ApiResponse<Market>>('/markets', marketData)
+      console.log('[createMarket] Backend response:', response)
       if (!response.success) throw new Error(response.error || 'Failed to create market')
       return response
     }
@@ -503,19 +604,22 @@ export const marketsApi = {
     }
   },
 
-  // Track/untrack market (mock implementation)
-  async trackMarket(marketId: string, status?: string): Promise<ApiResponse<{ tracked: boolean }>> {
+// Track/untrack market (mock implementation)
+  async trackMarket(marketId: string, status?: string, attendingDates?: string[]): Promise<ApiResponse<{ tracked: boolean }>> {
     if (isDevelopment && isMockMode) {
       await delay(100)
 
-      console.log('Tracking market:', marketId, 'with status:', status || 'interested')
+      console.log('Tracking market:', marketId, 'with status:', status || 'interested', 'attendingDates:', attendingDates)
       // Simulate tracking action
       return {
         success: true,
         data: { tracked: true }
       }
     } else {
-      const body = status ? { status } : {}
+      const body: any = status ? { status } : {}
+      if (attendingDates && attendingDates.length > 0) {
+        body.attendingDates = attendingDates
+      }
       const response = await httpClient.post<ApiResponse<{ tracked: boolean }>>(`/markets/${marketId}/track`, body)
       if (!response.success) throw new Error(response.error || 'Failed to track market')
       return response
