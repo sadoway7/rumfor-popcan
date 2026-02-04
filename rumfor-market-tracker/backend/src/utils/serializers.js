@@ -51,10 +51,14 @@ function serializeMarket(marketDoc) {
         }
       }
 
-      // Try to parse formatted address string (e.g., "123 Main St, Test City, TX 75001")
+// Try to parse formatted address string (e.g., "123 Main St, Test City, TX 75001")
       const addressStr = market.location.address || market.location.formattedAddress || ''
       if (typeof addressStr === 'string' && addressStr.includes(',')) {
-        const parts = addressStr.split(',').map(p => p.trim())
+        const parts = []
+        const addressParts = addressStr.split(',')
+        for (let i = 0; i < addressParts.length; i++) {
+          parts.push(addressParts[i].trim())
+        }
         if (parts.length >= 3) {
           // Assume format: "street, city, state zip"
           const street = parts[0]
@@ -91,19 +95,27 @@ function serializeMarket(marketDoc) {
       }
     })(),
     
-    // Dates/Schedule transformation - Frontend expects "dates", backend has "schedule"
+// Dates/Schedule transformation - Frontend expects "dates", backend has "schedule"
     dates: market.schedule ? {
       type: market.schedule.recurring ? 'recurring' : 'one-time',
       recurring: market.schedule.recurring,
       daysOfWeek: market.schedule.daysOfWeek || [],
       startTime: market.schedule.startTime,
       endTime: market.schedule.endTime,
-      events: market.schedule.specialDates?.map(d => ({
-        startDate: d.date,
-        endDate: d.date,
-        startTime: d.startTime || market.schedule.startTime,
-        endTime: d.endTime || market.schedule.endTime
-      })) || [],
+      events: (() => {
+        if (!market.schedule.specialDates || !Array.isArray(market.schedule.specialDates)) return []
+        const events = []
+        for (let i = 0; i < market.schedule.specialDates.length; i++) {
+          const d = market.schedule.specialDates[i]
+          events.push({
+            startDate: d.date,
+            endDate: d.date,
+            startTime: d.startTime || market.schedule.startTime,
+            endTime: d.endTime || market.schedule.endTime
+          })
+        }
+        return events
+      })(),
       seasonStart: market.schedule.seasonStart,
       seasonEnd: market.schedule.seasonEnd
     } : null,
@@ -114,15 +126,20 @@ function serializeMarket(marketDoc) {
 
       // If schedule is already an array (frontend format), return as-is
       if (Array.isArray(market.schedule)) {
-        return market.schedule.map(s => ({
-          id: s.id || '1',
-          dayOfWeek: s.dayOfWeek ?? 6,
-          startTime: s.startTime,
-          endTime: s.endTime,
-          startDate: s.startDate || '2024-01-01',
-          endDate: s.endDate || '2024-12-31',
-          isRecurring: s.isRecurring ?? true
-        }))
+        const results = []
+        for (let i = 0; i < market.schedule.length; i++) {
+          const s = market.schedule[i]
+          results.push({
+            id: s.id || String(i + 1),
+            dayOfWeek: s.dayOfWeek ?? 6,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            startDate: s.startDate || '2024-01-01',
+            endDate: s.endDate || '2024-12-31',
+            isRecurring: s.isRecurring ?? true
+          })
+        }
+        return results
       }
 
       // Handle specialDates array from vendor submissions
@@ -191,10 +208,18 @@ function serializeMarket(marketDoc) {
     // Application settings
     applicationSettings: market.applicationSettings,
     
-    // Other fields
+// Other fields
     marketType: market.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
     createdByType: market.createdByType,
-    images: market.images?.map(img => typeof img === 'string' ? img : img.url) || [],
+    images: (() => {
+      if (!market.images || !Array.isArray(market.images)) return []
+      const images = []
+      for (let i = 0; i < market.images.length; i++) {
+        const img = market.images[i]
+        images.push(typeof img === 'string' ? img : img.url)
+      }
+      return images
+    })(),
     tags: market.tags || [],
     keywords: market.keywords || [],
     contact: market.contact || {},

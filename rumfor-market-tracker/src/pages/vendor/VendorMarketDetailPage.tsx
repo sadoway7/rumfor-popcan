@@ -144,27 +144,29 @@ const getNextMarketDate = (schedule: any[]) => {
 }
 
 export const VendorMarketDetailPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
+const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [activeTab, setActiveTab] = useState('tasks')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedDates, setSelectedDates] = useState<string[]>([])
+  const [hasInitializedDates, setHasInitializedDates] = useState(false)
 
   const { market, isLoading, error } = useMarket(id!)
   const { myApplications } = useVendorApplications()
   const { todos } = useTodos(id!)
-  const { getTrackingStatus, trackMarket } = useTrackedMarkets()
+  const { getTrackingStatus, trackMarket, trackingData } = useTrackedMarkets()
 
-  // Initialize selected dates from tracking data after mount
+  // Initialize selected dates from tracking data once after mount
   useEffect(() => {
-    if (id) {
-      const tracking = getTrackingStatus(id)
+    if (id && trackingData && !hasInitializedDates) {
+      const tracking = trackingData.find((t: any) => t.marketId === id)
       if (tracking?.attendingDates) {
         setSelectedDates(tracking.attendingDates)
       }
+      setHasInitializedDates(true)
     }
-  }, [id, getTrackingStatus])
+  }, [id, trackingData, hasInitializedDates])
 
   // Toggle date selection for multi-date markets
   const toggleDate = (scheduleId: string) => {
