@@ -43,19 +43,19 @@ export { default as nightMarketImage } from './nightmarket.png';
 export { default as streetFairImage } from './streetfair.png';
 export { default as vintageAntiqueImage } from './vintageandantique.jpeg';
 
-// Helper to get image by category
+// Helper to get image by category - returns relative URL for database storage
 export const getCategoryImage = (category: string): string => {
   const imageMap: Record<string, string> = {
-    'farmers-market': new URL('./farmermarket.png', import.meta.url).href,
-    'arts-crafts': new URL('./artandcraft.png', import.meta.url).href,
-    'flea-market': new URL('./fleamarket.png', import.meta.url).href,
-    'food-festival': new URL('./foodfestival.png', import.meta.url).href,
-    'craft-fair': new URL('./craftshow.png', import.meta.url).href,
-    'community-event': new URL('./communityevent.png', import.meta.url).href,
-    'holiday-market': new URL('./holidaymarket.png', import.meta.url).href,
-    'night-market': new URL('./nightmarket.png', import.meta.url).href,
-    'street-fair': new URL('./streetfair.png', import.meta.url).href,
-    'vintage-antique': new URL('./vintageandantique.jpeg', import.meta.url).href,
+    'farmers-market': '/assets/images/farmermarket.png',
+    'arts-crafts': '/assets/images/artandcraft.png',
+    'flea-market': '/assets/images/fleamarket.png',
+    'food-festival': '/assets/images/foodfestival.png',
+    'craft-fair': '/assets/images/craftshow.png',
+    'community-event': '/assets/images/communityevent.png',
+    'holiday-market': '/assets/images/holidaymarket.png',
+    'night-market': '/assets/images/nightmarket.png',
+    'street-fair': '/assets/images/streetfair.png',
+    'vintage-antique': '/assets/images/vintageandantique.jpeg',
   };
-  return imageMap[category] || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"%3E%3Crect x="3" y="3" width="18" height="18" rx="2" ry="2"/%3E%3Ccircle cx="8.5" cy="8.5" r="1.5"/%3E%3Cpath d="M21 15l-5-5L5 21"/%3E%3C/svg%3E';
+  return imageMap[category] || '/assets/images/no-image-placeholder.svg';
 };

@@ -316,7 +316,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
               )}
 
               {/* Bottom right - Comments button */}
-              <div className="absolute bottom-4 right-4">
+              <div className="absolute bottom-4 right-3">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -325,10 +325,16 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                     e.stopPropagation()
                     setIsCommentsModalOpen(true)
                   }}
-                  className="bg-black/60 backdrop-blur-sm hover:bg-black/80 text-white text-xs px-2 py-1"
+                  className="bg-white hover:bg-zinc-100 rounded-2xl shadow-lg relative py-2 px-3"
                 >
-                  <MessageSquare className="w-3 h-3 mr-1" />
-                  Comments
+                  {/* Chat bubble pointer */}
+                  <div className="absolute -top-1 -left-1 w-2 h-2 bg-white rotate-45" />
+                  <div className="flex items-center gap-1.5">
+                    <MessageSquare className="w-5 h-5 text-zinc-800" />
+                    <span className="text-sm font-bold text-zinc-800">
+                      {market.stats?.commentCount || 0}
+                    </span>
+                  </div>
                 </Button>
               </div>
 
@@ -455,7 +461,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
         <Link to={detailPath || `/markets/${market.id}`} className="block group">
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-96">
+            <div className="relative h-80">
               <img
                 src={market.images[0]}
                 alt={market.name}
@@ -467,16 +473,16 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                 {/* Left side - Location and Dates stacked */}
                 <div className="flex flex-col gap-1">
                   {/* Location */}
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#ffffff] shadow text-zinc-900">
-                    <MapPin className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#ffffff] shadow text-zinc-900">
+                    <MapPin className="w-4 h-4" />
                     <span>{formatLocation(market.location)}</span>
                   </div>
                   {/* Dates - stacked */}
                   {scheduleDates.length > 0 && (
                     <div className="flex flex-col gap-1">
                       {scheduleDates.map((date, index) => (
-                        <div key={index} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-[#ffffff] shadow text-zinc-900 w-fit">
-                          <Calendar className="w-3 h-3" />
+                        <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
+                          <Calendar className="w-4 h-4" />
                           <span>{date}</span>
                         </div>
                       ))}
@@ -485,7 +491,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                 </div>
 
                 {/* Right side - Category */}
-                <div className="px-3 py-1 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900">
+                <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-[#ffffff] shadow text-zinc-900">
                   {MARKET_CATEGORY_LABELS[market.category]}
                 </div>
               </div>
@@ -501,12 +507,16 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                       e.stopPropagation()
                       setIsCommentsModalOpen(true)
                     }}
-                    className="cursor-pointer flex items-center gap-1.5 bg-amber-500 rounded-full shadow shadow-black/20 px-4 py-1.5 text-white hover:bg-amber-600 transition-colors"
+                    className="cursor-pointer flex items-center justify-center bg-white hover:bg-zinc-100 rounded-2xl shadow-lg transition-colors relative py-2 px-3 mr-1"
                   >
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {market.stats?.commentCount || 0}
-                    </span>
+                    {/* Chat bubble pointer */}
+                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-white rotate-45" />
+                    <div className="flex items-center gap-1.5">
+                      <MessageSquare className="w-5 h-5 text-zinc-800" />
+                      <span className="text-sm font-bold text-zinc-800">
+                        {market.stats?.commentCount || 0}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 {/* Bottom row - Title + description */}
