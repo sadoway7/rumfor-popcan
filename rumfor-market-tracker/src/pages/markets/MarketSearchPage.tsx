@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
 
@@ -9,12 +9,14 @@ import { useSidebarStore } from '@/features/theme/themeStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import type { MarketCategory, MarketFilters as MarketFilterType } from '@/types'
 
-import { ArrowUpDown } from 'lucide-react'
+import { ArrowUpDown, Layers, RotateCcw } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
+  const [isSortOpen, setIsSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
   const { isSidebarOpen, toggleSidebar } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
@@ -31,7 +33,7 @@ export const MarketSearchPage: React.FC = () => {
     isLoading,
     isSearching,
     error,
-    filters,
+filters,
     trackedMarketIds,
     isTracking,
     searchMarkets,
@@ -80,6 +82,17 @@ export const MarketSearchPage: React.FC = () => {
   // Close sidebar by default
   useEffect(() => {
     useSidebarStore.getState().setSidebarOpen(false)
+  }, [])
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   // Update URL when filters change
@@ -275,34 +288,75 @@ export const MarketSearchPage: React.FC = () => {
             </div>
           </aside>
 
-          {/* Main Content */}
-          <main className="flex-1 py-4 px-0 sm:p-6">
-            {/* Header */}
-            <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex justify-center">
-                <div
-                  onClick={toggleSidebar}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
-                >
-                  {isSearching ? 'Searching...' : `${markets.length} markets found`}
-                  {filters.search && (
-                    <>
-                      {' · '}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleClearFilters()
-                        }}
-                        className="text-muted-foreground hover:text-foreground underline"
+           {/* Main Content */}
+           <main className="flex-1 py-4 px-0 sm:p-6">
+             {/* Header */}
+             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+               <div className="flex justify-center">
+                 <div className="flex items-center gap-2">
+                   <div
+                     onClick={toggleSidebar}
+                     className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                   >
+                     {isSearching ? 'Searching...' : `${markets.length} markets found`}
+                     {filters.search && (
+                       <>
+                         {' · '}
+                         <button
+                           onClick={(e) => {
+                             e.stopPropagation()
+                             handleClearFilters()
+                           }}
+                           className="text-muted-foreground hover:text-foreground underline"
+                         >
+                           Clear search
+                         </button>
+                       </>
+                     )}
+                   </div>
+                   <div className="relative" ref={sortRef}>
+<button
+                        onClick={() => setIsSortOpen(!isSortOpen)}
+                        className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                        title="Sort"
                       >
-                        Clear search
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+                        <Layers className="w-4 h-4" />
+                     </button>
+{isSortOpen && (
+                        <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-50 py-1">
+                          <button
+                            onClick={() => { setSortBy('date'); setIsSortOpen(false); }}
+                            className={`w-full px-4 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'date' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            Date (Soonest First)
+                          </button>
+                          <button
+                            onClick={() => { setSortBy('name'); setIsSortOpen(false); }}
+                            className={`w-full px-4 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'name' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            Name (A-Z)
+                          </button>
+<div className="border-t border-border my-1" />
+                          <button
+                            disabled
+                            className="w-full px-4 py-2 text-left text-xs text-muted-foreground cursor-not-allowed"
+                          >
+                            Sorting Is Coming
+                          </button>
+                        </div>
+                      )}
+                   </div>
+<button
+                      onClick={() => window.location.reload()}
+                      className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                      title="Refresh"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                 </div>
+               </div>
 
-            </div>
+             </div>
 
             {/* Market Grid */}
             <MarketGrid

@@ -178,11 +178,9 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   // Refresh function
   const refresh = useCallback(async () => {
     if (searchQuery) {
-      await queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY(searchQuery) })
+      await queryClient.refetchQueries({ queryKey: SEARCH_QUERY_KEY(searchQuery), type: 'active' })
     } else {
-      await queryClient.invalidateQueries({
-        queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit)
-      })
+      await queryClient.refetchQueries({ queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit), type: 'active' })
     }
   }, [searchQuery, currentFilters, currentPage, limit, queryClient])
 
