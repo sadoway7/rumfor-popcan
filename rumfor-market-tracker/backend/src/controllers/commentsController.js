@@ -195,13 +195,20 @@ const updateComment = catchAsync(async (req, res, next) => {
 // Delete a comment
 const deleteComment = catchAsync(async (req, res, next) => {
   const { commentId } = req.params
-  const userId = req.user._id || req.user.id
+  const userId = (req.user._id || req.user.id).toString()
   const userRole = req.user.role
 
   const comment = await Comment.findById(commentId)
   if (!comment) {
     return next(new AppError('Comment not found', 404))
   }
+
+  // Debug logging
+  console.log('[DEBUG DELETE] comment.author:', comment.author, 'type:', typeof comment.author)
+  console.log('[DEBUG DELETE] userId:', userId, 'type:', typeof userId)
+  console.log('[DEBUG DELETE] comment.author.toString():', comment.author.toString())
+  console.log('[DEBUG DELETE] Are they equal?', comment.author.toString() === userId)
+  console.log('[DEBUG DELETE] userRole:', userRole)
 
   // Allow deletion if user is author or admin
   if (comment.author.toString() !== userId && userRole !== 'admin') {

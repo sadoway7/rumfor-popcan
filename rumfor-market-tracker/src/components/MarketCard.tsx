@@ -5,9 +5,11 @@ import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin, MessageSquare } from 'lucide-react'
+import { Calendar, MapPin } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { CommentList } from './CommentList'
+import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
+// import { FollowCountIcon } from '@/components/ui/FollowCountIcon'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
@@ -37,6 +39,20 @@ const marketTypeLabels = {
   'promoter-managed': 'Managed Market'
 }
 
+// Category flag colors tied to category themes
+const categoryFlagColors: Record<string, string> = {
+  'farmers-market': 'bg-white/60 text-green-700',
+  'arts-crafts': 'bg-white/60 text-purple-700',
+  'flea-market': 'bg-white/60 text-amber-700',
+  'food-festival': 'bg-white/60 text-orange-700',
+  'vintage-antique': 'bg-white/60 text-stone-700',
+  'craft-show': 'bg-white/60 text-blue-700',
+  'night-market': 'bg-white/60 text-indigo-700',
+  'street-fair': 'bg-white/60 text-pink-700',
+  'holiday-market': 'bg-white/60 text-red-700',
+  'community-event': 'bg-white/60 text-teal-700'
+}
+
 export const MarketCard: React.FC<MarketCardProps> = ({
   market,
   className,
@@ -49,7 +65,56 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   detailPath,
   trackingStatus
 }) => {
-const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false)
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false)
+  const [dominantColor, setDominantColor] = React.useState<string>('')
+  const [, setIsLightBackground] = React.useState(false)
+
+  // Extract dominant color from market image
+  React.useEffect(() => {
+    if (variant === 'minimal' && market.images && market.images.length > 0) {
+      const img = new Image()
+      img.crossOrigin = 'Anonymous'
+      img.src = market.images[0]
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return
+        
+        canvas.width = 100
+        canvas.height = 100
+        ctx.drawImage(img, 0, 0, 100, 100)
+        
+        // Sample center area for dominant color
+        const imageData = ctx.getImageData(25, 25, 50, 50)
+        const data = imageData.data
+        
+        let r = 0, g = 0, b = 0
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]
+          g += data[i + 1]
+          b += data[i + 2]
+        }
+        
+        const pixelCount = data.length / 4
+        r = Math.round(r / pixelCount)
+        g = Math.round(g / pixelCount)
+        b = Math.round(b / pixelCount)
+        
+        // Brighten the color by moving it closer to white
+        const brightenFactor = 0.8
+        r = Math.round(r + (255 - r) * brightenFactor)
+        g = Math.round(g + (255 - g) * brightenFactor)
+        b = Math.round(b + (255 - b) * brightenFactor)
+        
+        setDominantColor(`rgb(${r}, ${g}, ${b})`)
+        
+        // Determine if background is light or dark
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000
+        setIsLightBackground(brightness > 128)
+      }
+    }
+  }, [variant, market.images])
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -315,32 +380,47 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                 </div>
               )}
 
-              {/* Bottom right - Comments button */}
-              <div className="absolute bottom-4 right-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
+              {/* Bottom right - Follow and Comments buttons */}
+              {/*
+              <div className="absolute bottom-6 right-2 flex flex-col items-end gap-1 z-50">
+                <div
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    // Handle follow click - could open follow modal or toggle follow
+                  }}
+                >
+                  <FollowCountIcon count={market.stats?.vendorFollowCount || 0} />
+                </div>
+                <div
+                  className="cursor-pointer"
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     setIsCommentsModalOpen(true)
                   }}
-                  className="bg-white hover:bg-zinc-100 rounded-2xl shadow-lg relative py-2 px-3"
                 >
-                  {/* Chat bubble pointer */}
-                  <div className="absolute -top-1 -left-1 w-2 h-2 bg-white rotate-45" />
-                  <div className="flex items-center gap-1.5">
-                    <MessageSquare className="w-5 h-5 text-zinc-800" />
-                    <span className="text-sm font-bold text-zinc-800">
-                      {market.stats?.commentCount || 0}
-                    </span>
-                  </div>
-                </Button>
+                  <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                </div>
+              </div>
+              */}
+              
+              {/* Bottom right - Comments button */}
+              <div 
+                className="absolute bottom-6 right-2 cursor-pointer z-50"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsCommentsModalOpen(true)
+                }}
+              >
+                <ChatNotificationIcon count={market.stats?.commentCount || 0} />
               </div>
 
               {/* Solid dark bar at bottom for title */}
               <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
-                <h3 className="text-white font-semibold text-lg leading-tight line-clamp-2">
+                <h3 className="text-white font-quicksand font-bold text-lg leading-tight line-clamp-2">
                   {market.name}
                 </h3>
               </div>
@@ -349,7 +429,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
           
           <div className="p-6">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-xl font-bold line-clamp-2">{market.name}</h3>
+              <h3 className="text-xl font-quicksand font-bold line-clamp-2">{market.name}</h3>
               <Badge variant="outline" className={cn('ml-2 flex-shrink-0 text-base font-medium px-4 py-1.5 min-w-[80px] text-center', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
@@ -456,6 +536,7 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
       <div className={cn(
         'cursor-pointer',
         'overflow-hidden !rounded-none',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]',
         className
       )}>
         <Link to={detailPath || `/markets/${market.id}`} className="block group">
@@ -469,14 +550,9 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
               />
 
               {/* Top overlays */}
-              <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
-                {/* Left side - Location and Dates stacked */}
+              <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
+                {/* Left side - Dates stacked */}
                 <div className="flex flex-col gap-1">
-                  {/* Location */}
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-[#ffffff] shadow text-zinc-900">
-                    <MapPin className="w-4 h-4" />
-                    <span>{formatLocation(market.location)}</span>
-                  </div>
                   {/* Dates - stacked */}
                   {scheduleDates.length > 0 && (
                     <div className="flex flex-col gap-1">
@@ -489,45 +565,84 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                     </div>
                   )}
                 </div>
-
-                {/* Right side - Category */}
-                <div className="px-3 py-1.5 rounded-full text-sm font-medium bg-[#ffffff] shadow text-zinc-900">
-                  {MARKET_CATEGORY_LABELS[market.category]}
-                </div>
               </div>
+
+              {/* Location - Flag style at left edge */}
+              <div className="absolute top-0 -left-2 pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <span>{formatLocation(market.location)}</span>
+              </div>
+
+              {/* Category - Flag style at right edge */}
+              <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
 
               {/* Footer - two rows: top row (info text + comments button), bottom row (title + description) */}
               <div className="absolute bottom-0 left-0 right-0">
-                {/* Top row - Info text (left) + Comments button (right) */}
-                <div className="flex items-center justify-between px-3 py-2">
-                  <span className="text-xs text-white/80">Tap for details</span>
-                  <div
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setIsCommentsModalOpen(true)
-                    }}
-                    className="cursor-pointer flex items-center justify-center bg-white hover:bg-zinc-100 rounded-2xl shadow-lg transition-colors relative py-2 px-3 mr-1"
-                  >
-                    {/* Chat bubble pointer */}
-                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-white rotate-45" />
-                    <div className="flex items-center gap-1.5">
-                      <MessageSquare className="w-5 h-5 text-zinc-800" />
-                      <span className="text-sm font-bold text-zinc-800">
-                        {market.stats?.commentCount || 0}
-                      </span>
+                  {/* Top row - Info text (left) + Icons (right) */}
+                  {/*
+                  <div className="flex items-center justify-between px-3 py-2 relative">
+                    <span className="text-xs text-white/80">Tap for details</span>
+                    <div className="flex flex-col items-end gap-1 z-50">
+                      <div
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          // Handle follow click
+                        }}
+                      >
+                        <FollowCountIcon count={market.stats?.vendorFollowCount || 0} />
+                      </div>
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setIsCommentsModalOpen(true)
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                      </div>
                     </div>
                   </div>
-                </div>
-                {/* Bottom row - Title + description */}
-                <div className="relative bg-gradient-to-r from-white via-white to-transparent shadow shadow-black/10 px-4 py-3">
-                  <h3 className="text-zinc-900 font-bold text-2xl leading-tight line-clamp-2">
-                    {market.name}
-                  </h3>
-                  <p className="text-zinc-600 text-sm leading-relaxed line-clamp-2">
-                    {market.description}
-                  </p>
-                </div>
+                  */}
+                  
+                  {/* Top row - Info text (left) + Comments button (right) */}
+                  <div className="flex items-center justify-between px-3 py-2 relative">
+                    <span className="text-xs text-white/80">Tap for details</span>
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setIsCommentsModalOpen(true)
+                      }}
+                      className="absolute top-2 right-2 cursor-pointer z-50"
+                    >
+                      <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                    </div>
+                  </div>
+                   {/* Bottom row - Title + description */}
+                  <div 
+                     className="relative shadow shadow-black/10 px-4 py-3"
+                     style={{
+                       background: dominantColor 
+                          ? `linear-gradient(to right, rgb(255,255,255) 25%, ${dominantColor} 66.67%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 100%)`
+                          : 'linear-gradient(to right, rgb(255,255,255) 25%, rgb(255,255,255) 66.67%, rgba(255,255,255,0.7) 100%)'
+                     }}
+                   >
+                       <div className="relative pt-0.5">
+                           <div className="absolute inset-0 blur-md bg-white/20"></div>
+                           <h3 className="relative text-zinc-900 font-quicksand font-bold text-xl leading-tight line-clamp-2">
+                             {market.name}
+                           </h3>
+                        </div>
+                       <div className="relative mt-1">
+                          <div className="absolute inset-0 blur-sm bg-white/10"></div>
+                          <p className="relative text-zinc-600 text-base font-medium leading-relaxed line-clamp-2">
+                            {market.description}
+                          </p>
+                       </div>
+                   </div>
               </div>
             </div>
           )}

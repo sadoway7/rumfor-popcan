@@ -242,14 +242,17 @@ const updateMarket = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  // Check if market is vendor-created (immutable)
-  if (market.createdByType === 'vendor') {
-    return next(new AppError('Vendor-created markets cannot be modified after creation to ensure data integrity', 403))
-  }
-
-  // Check if user owns this market or is admin
-  if (market.promoter.toString() !== req.user._id && req.user.role !== 'admin') {
-    return next(new AppError('You can only update markets you created', 403))
+  // Admins can edit any market
+  if (req.user.role !== 'admin') {
+    // Check if market is vendor-created (immutable)
+    if (market.createdByType === 'vendor') {
+      return next(new AppError('Vendor-created markets cannot be modified after creation to ensure data integrity', 403))
+    }
+    
+    // Check if user owns this market
+    if (market.promoter.toString() !== req.user._id) {
+      return next(new AppError('You can only update markets you created', 403))
+    }
   }
 
   const updatedMarket = await Market.findByIdAndUpdate(
@@ -273,14 +276,17 @@ const deleteMarket = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404))
   }
 
-  // Check if market is vendor-created (immutable)
-  if (market.createdByType === 'vendor') {
-    return next(new AppError('Vendor-created markets cannot be deleted to maintain data integrity and vendor accountability', 403))
-  }
-
-  // Check if user owns this market or is admin
-  if (market.promoter.toString() !== req.user._id && req.user.role !== 'admin') {
-    return next(new AppError('You can only delete markets you created', 403))
+  // Admins can delete any market
+  if (req.user.role !== 'admin') {
+    // Check if market is vendor-created (immutable)
+    if (market.createdByType === 'vendor') {
+      return next(new AppError('Vendor-created markets cannot be deleted to maintain data integrity and vendor accountability', 403))
+    }
+    
+    // Check if user owns this market
+    if (market.promoter.toString() !== req.user._id) {
+      return next(new AppError('You can only delete markets you created', 403))
+    }
   }
 
   // Soft delete

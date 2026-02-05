@@ -435,6 +435,8 @@ export function VendorCreateMarketPage() {
                     onChange={(e) => updateEventDate(event.id, 'date', e.target.value)}
                     min={formatLocalDate(new Date().toISOString())}
                     required
+                    style={{ minHeight: '44px', touchAction: 'manipulation' }}
+                    className="ios-date-input"
                   />
                 </div>
                 <div className="w-32">

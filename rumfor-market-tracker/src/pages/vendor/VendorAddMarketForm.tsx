@@ -445,11 +445,44 @@ startDate: formatLocalDate(new Date().toISOString()),
     }
     
     const reader = new FileReader()
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string
-      setMarketImage(dataUrl)
+    reader.onload = async () => {
+      try {
+        const dataUrl = reader.result as string
+        const compressedDataUrl = await compressImage(dataUrl)
+        setMarketImage(compressedDataUrl)
+      } catch (error) {
+        console.error('Image compression failed:', error)
+        alert('Failed to process image. Please try again.')
+      }
+    }
+    reader.onerror = () => {
+      alert('Failed to read file. Please try again.')
     }
     reader.readAsDataURL(file)
+  }
+
+  const compressImage = (dataUrl: string, quality = 0.7): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.src = dataUrl
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'))
+          return
+        }
+        
+        ctx.drawImage(img, 0, 0)
+        const compressedDataUrl = canvas.toDataURL('image/webp', quality)
+        resolve(compressedDataUrl)
+      }
+      img.onerror = (error) => {
+        reject(error)
+      }
+    })
   }
 
   const removeImage = () => {

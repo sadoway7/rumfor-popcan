@@ -32,30 +32,30 @@ export const ALLOWED_MARKET_TAGS = [
 ];
 
 // Category placeholder images
-export { default as farmersMarketImage } from './farmermarket.png';
-export { default as artsCraftsImage } from './artandcraft.png';
-export { default as fleaMarketImage } from './fleamarket.png';
-export { default as foodFestivalImage } from './foodfestival.png';
-export { default as craftShowImage } from './craftshow.png';
-export { default as communityEventImage } from './communityevent.png';
-export { default as holidayMarketImage } from './holidaymarket.png';
-export { default as nightMarketImage } from './nightmarket.png';
-export { default as streetFairImage } from './streetfair.png';
-export { default as vintageAntiqueImage } from './vintageandantique.jpeg';
+export { default as farmersMarketImage } from './farmermarket.webp';
+export { default as artsCraftsImage } from './artandcraft.webp';
+export { default as fleaMarketImage } from './fleamarket.webp';
+export { default as foodFestivalImage } from './foodfestival.webp';
+export { default as craftShowImage } from './craftshow.webp';
+export { default as communityEventImage } from './communityevent.webp';
+export { default as holidayMarketImage } from './holidaymarket.webp';
+export { default as nightMarketImage } from './nightmarket.webp';
+export { default as streetFairImage } from './streetfair.webp';
+export { default as vintageAntiqueImage } from './vintageandantique.webp';
 
 // Helper to get image by category - returns relative URL for database storage
 export const getCategoryImage = (category: string): string => {
   const imageMap: Record<string, string> = {
-    'farmers-market': '/assets/images/farmermarket.png',
-    'arts-crafts': '/assets/images/artandcraft.png',
-    'flea-market': '/assets/images/fleamarket.png',
-    'food-festival': '/assets/images/foodfestival.png',
-    'craft-fair': '/assets/images/craftshow.png',
-    'community-event': '/assets/images/communityevent.png',
-    'holiday-market': '/assets/images/holidaymarket.png',
-    'night-market': '/assets/images/nightmarket.png',
-    'street-fair': '/assets/images/streetfair.png',
-    'vintage-antique': '/assets/images/vintageandantique.jpeg',
+    'farmers-market': '/assets/images/farmermarket.webp',
+    'arts-crafts': '/assets/images/artandcraft.webp',
+    'flea-market': '/assets/images/fleamarket.webp',
+    'food-festival': '/assets/images/foodfestival.webp',
+    'craft-fair': '/assets/images/craftshow.webp',
+    'community-event': '/assets/images/communityevent.webp',
+    'holiday-market': '/assets/images/holidaymarket.webp',
+    'night-market': '/assets/images/nightmarket.webp',
+    'street-fair': '/assets/images/streetfair.webp',
+    'vintage-antique': '/assets/images/vintageandantique.webp',
   };
   return imageMap[category] || '/assets/images/no-image-placeholder.svg';
 };

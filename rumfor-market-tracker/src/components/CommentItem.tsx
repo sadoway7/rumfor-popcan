@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { CommentReactions } from './CommentReactions'
 import { useComments } from '@/features/community/hooks/useComments'
@@ -89,7 +88,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       await createComment(replyContent.trim(), comment.id)
       setIsReplying(false)
       setReplyContent('')
-      onReply?.(comment.id)
     } catch (error) {
       console.error('Failed to reply to comment:', error)
     }
@@ -154,20 +152,14 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   return (
-    <li className={cn('relative', depth > 0 ? 'mt-3' : 'mt-4 first:mt-0', className)} data-depth={depth}>
-      {/* Curved Connector Line for nested replies - TALLER */}
-      {depth > 0 && (
-        <div className="absolute left-[-12px] top-[-58px] w-[12px] h-[78px] pointer-events-none z-0">
-          <svg width="12" height="78" viewBox="0 0 12 78" fill="none" className="text-zinc-200">
-            <path
-              d="M1 0V64C1 69.5228 5.47715 74 4 74H12"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-      )}
+      <li className={cn('relative', depth > 0 ? 'mt-3' : 'mt-4 first:mt-0', className)} data-depth={depth}>
+        {depth > 0 && (
+          <div className="absolute left-[-8px] top-[-38px] w-[8px] h-[58px] pointer-events-none z-0">
+            <svg width="8" height="58" viewBox="0 0 8 58" fill="none" className="text-zinc-200/80">
+              <path d="M1 0V44C1 49.5228 5.47715 54 4 54H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
 
       <div className="group/thread flex gap-4 relative">
         {/* Avatar & Vertical Line Column */}
@@ -267,25 +259,22 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 className="text-sm"
               />
               <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
+                <button
                   onClick={handleEdit}
                   disabled={isUpdating || !editContent.trim()}
+                  className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider bg-zinc-900 text-white hover:bg-black shadow-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
                 >
                   Save
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
+                </button>
+                <button
                   onClick={() => {
                     setIsEditing(false)
                     setEditContent(comment.content)
                   }}
+                  className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-zinc-100 transition-all active:scale-95"
                 >
                   Cancel
-                </Button>
+                </button>
               </div>
             </div>
           ) : (
@@ -294,7 +283,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               depth === 0 ? 'ring-[4px] ring-zinc-50/30 font-medium' : 'font-normal'
             )}>
               {/* Floating Reaction Button */}
-              <div className="absolute -top-3 -right-2 z-10">
+              <div className="absolute -bottom-3 -right-2 z-10">
                 <CommentReactions
                   commentId={comment.id}
                   reactions={comment.reactions}
@@ -331,25 +320,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               {(canEdit || canDelete) && (
                 <div className="ml-auto flex items-center gap-1">
                   {canEdit && !isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+                    <button
                       onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider transition-all py-1.5 px-3 rounded-full h-auto active:scale-95 text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-zinc-100"
                     >
                       Edit
-                    </Button>
+                    </button>
                   )}
                   {canDelete && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    <button
                       onClick={handleDelete}
                       disabled={isUpdating}
+                      className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider transition-all py-1.5 px-3 rounded-full h-auto active:scale-95 text-red-600 hover:text-red-700 hover:bg-white hover:shadow-sm border border-transparent hover:border-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       Delete
-                    </Button>
+                    </button>
                   )}
                 </div>
               )}
@@ -361,10 +346,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             {/* Reply Form */}
             {isReplying && (
               <div className="mt-3">
-                <div className="pl-[12px] relative">
-                  <div className="absolute left-0 top-[-48px] w-[12px] h-[68px] pointer-events-none z-0">
-                    <svg width="12" height="68" viewBox="0 0 12 68" fill="none" className="text-zinc-200">
-                      <path d="M1 0V54C1 59.5228 5.47715 64 4 64H12" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+                <div className="pl-[8px] relative">
+                  <div className="absolute left-0 top-[-48px] w-[8px] h-[68px] pointer-events-none z-0">
+                    <svg width="8" height="68" viewBox="0 0 8 68" fill="none" className="text-zinc-200">
+                      <path d="M1 0V54C1 59.5228 5.47715 64 4 64H8" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div className="bg-white rounded-[22px] px-4 py-3 border border-zinc-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -376,26 +361,26 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                       className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[14px] leading-normal resize-none py-0 text-zinc-900 placeholder-zinc-400 font-medium min-h-0"
                       autoFocus
                     />
-                    <div className="flex items-center justify-end gap-2.5 mt-2 pt-2 border-t border-zinc-100">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsReplying(false)
-                          setReplyContent('')
-                        }}
-                        className="text-zinc-600 hover:text-zinc-900 text-[12px] font-bold px-3.5 py-1.5 rounded-full hover:bg-zinc-50 transition-all active:scale-95"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleReply}
-                        disabled={!replyContent.trim()}
-                        className="bg-zinc-900 text-white text-[12px] font-bold px-4 py-2 rounded-full hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-zinc-200 disabled:shadow-none active:scale-95"
-                      >
-                        Reply
-                      </button>
-                    </div>
+                     <div className="flex items-center justify-end gap-2.5 mt-2 pt-2 border-t border-zinc-100 pr-1">
+                       <button
+                         type="button"
+                         onClick={() => {
+                           setIsReplying(false)
+                           setReplyContent('')
+                         }}
+                         className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-zinc-100 transition-all active:scale-95"
+                       >
+                         Cancel
+                       </button>
+                       <button
+                         type="button"
+                         onClick={handleReply}
+                         disabled={!replyContent.trim()}
+                         className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider bg-zinc-900 text-white hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-zinc-200 disabled:shadow-none active:scale-95"
+                       >
+                         Reply
+                       </button>
+                     </div>
                   </div>
                 </div>
               </div>
@@ -403,7 +388,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
             {/* Nested Replies */}
             {hasChildren && (
-              <ul className="pl-[12px] mt-3 space-y-0">
+              <ul className="pl-[8px] mt-3 space-y-0">
                 {comment.replies.map((reply) => (
                   <CommentItem
                     key={reply.id}

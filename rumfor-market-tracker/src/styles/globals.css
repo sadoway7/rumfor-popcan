@@ -486,13 +486,51 @@
     p, li { font-size: 11pt !important; }
   }
   
-  @keyframes float {
+@keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
   }
-  
+
   @keyframes glow {
     from { box-shadow: 0 0 10px hsl(var(--shadow-glow)); }
     to { box-shadow: 0 0 20px hsl(var(--shadow-glow)); }
+  }
+
+  /* iOS Date Input Fix */
+  @supports (-webkit-touch-callout: none) {
+    input[type="date"],
+    input[type="time"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background-color: transparent;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 16px;
+      min-height: 44px;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      display: block;
+      background: transparent;
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      opacity: 1;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input[type="date"]:focus,
+    input[type="time"]:focus {
+      outline: none;
+      border-color: hsl(var(--accent));
+      box-shadow: 0 0 0 2px hsl(var(--accent) / 0.2);
+    }
+
+    .ios-date-input {
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
   }
 }

@@ -93,10 +93,9 @@ export const CommentReactions: React.FC<CommentReactionsProps> = ({
             hoveredReaction === 'picker' ? 'bg-zinc-900 text-white shadow-lg border-zinc-900' : 'text-zinc-500 hover:text-zinc-900 bg-zinc-100/50 hover:bg-zinc-100 border-transparent hover:border-zinc-200/50'
           )}
         >
-          <svg className={cn("w-3.5 h-3.5", hoveredReaction === 'picker' ? 'text-white' : 'text-zinc-400')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={cn("w-3.5 h-3.5", hoveredReaction === 'picker' ? 'text-white' : 'text-zinc-800')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          React
         </button>
       )}
 
