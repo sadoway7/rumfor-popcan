@@ -168,6 +168,8 @@ export const useComments = (marketId: string) => {
       communityApi.addReaction(commentId, type),
     onMutate: async ({ commentId, type }) => {
       void commentId
+
+      await queryClient.cancelQueries({ queryKey: ['comments', marketId] })
       await queryClient.cancelQueries({ queryKey: ['comments', marketId] })
       
       const previousComments = queryClient.getQueriesData({ queryKey: ['comments', marketId] })
