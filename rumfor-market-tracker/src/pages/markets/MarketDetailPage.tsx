@@ -385,6 +385,24 @@ export const MarketDetailPage: React.FC = () => {
 
                     {/* Right Column: Action Links */}
                     <div className="space-y-4 text-right flex flex-col items-end">
+                      {market.promoter && (
+                        <>
+                          <button
+                            className="text-base font-medium text-accent hover:underline inline-flex items-center gap-2 cursor-pointer"
+                            onClick={() => navigate('/fake-404')}
+                          >
+                            {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Submitted'}
+                            <Users className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
+                            onClick={() => navigate('/fake-404')}
+                          >
+                            Official Link
+                            <Globe className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                       {market.location?.address && (
                         <button
                           className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
@@ -397,24 +415,6 @@ export const MarketDetailPage: React.FC = () => {
                           <MapPin className="w-4 h-4" />
                         </button>
                       )}
-                      {market.promoter && (
-                        <>
-                          <button
-                            className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
-                            onClick={() => navigate('/fake-404')}
-                          >
-                            Official Link
-                            <Globe className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-base font-medium text-orange-500 hover:underline inline-flex items-center gap-2 cursor-pointer"
-                            onClick={() => navigate('/fake-404')}
-                          >
-                            {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Created'}
-                            <Users className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
                     </div>
                   </div>
 
@@ -423,12 +423,13 @@ export const MarketDetailPage: React.FC = () => {
                     <TagVoting
                       marketTags={market.tags || []}
                       marketId={id!}
+                      className="mt-8 mb-6"
                     />
                   )}
 
-                  {/* Booth Fee */}
+{/* Booth Fee */}
                   {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
-                    <div className="space-y-2">
+                    <div className="mt-10 space-y-2">
                       <h2 className="font-semibold text-sm flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
                         Booth Fee
@@ -439,9 +440,12 @@ export const MarketDetailPage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Spacer before Accessibility */}
+                  <div className="h-2" />
+
                   {/* Accessibility - Grid */}
-                  <div className="space-y-2">
-                    <h2 className="font-semibold text-sm">Accessibility & Amenities</h2>
+                  <div className="mt-12 space-y-2">
+                    <h2 className="text-lg font-medium">Accessibility & Amenities</h2>
                       <div className="grid grid-cols-2 gap-2">
                         {market.accessibility?.wheelchairAccessible && (
                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
@@ -495,11 +499,11 @@ export const MarketDetailPage: React.FC = () => {
                   </div>
 
                   {/* Quick Actions - Share, Report & Update */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="mt-8 grid grid-cols-3 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-9"
+                      className="h-10"
                       onClick={() => {
                         if (navigator.share) {
                           navigator.share({ title: market.name, url: window.location.href })
@@ -512,16 +516,16 @@ export const MarketDetailPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-9"
+                      className="h-10"
                       onClick={() => setShowReportModal(true)}
                     >
                       <Flag className="w-4 h-4 mr-2" />
                       Report
                     </Button>
                     <Button
-                      variant="outline"
+variant="outline"
                       size="sm"
-                      className="h-9"
+                      className="h-10"
                       onClick={() => setShowUpdateModal(true)}
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />

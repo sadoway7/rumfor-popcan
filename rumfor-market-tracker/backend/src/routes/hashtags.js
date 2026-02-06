@@ -94,7 +94,7 @@ router.get('/trending', hashtagController.getTrendingHashtags)
 router.use(verifyToken)
 
 // Add tag to market
-router.post('/market/:marketId/add', (req, res) => {
+router.post('/market/:marketId/add', async (req, res) => {
   try {
     const { marketId } = req.params
     const { tagName } = req.body
@@ -115,11 +115,33 @@ router.post('/market/:marketId/add', (req, res) => {
       })
     }
 
-    // Add tag to market if not already there
-    // Implementation would go here...
+    // Find the market
+    const Market = require('../models/Market')
+    const market = await Market.findById(marketId)
+    if (!market) {
+      return res.status(404).json({
+        success: false,
+        message: 'Market not found'
+      })
+    }
 
+    // Add tag to market's tags array if not already there
+    const normalizedTag = tagName.toLowerCase()
+    if (!market.tags) {
+      market.tags = []
+    }
+    
+    if (!market.tags.includes(normalizedTag)) {
+      market.tags.push(normalizedTag)
+      await market.save()
+    }
+
+    // Return the updated market with hashtags
     res.json({
       success: true,
+      data: {
+        hashtags: market.tags
+      },
       message: 'Tag added to market successfully'
     })
   } catch (error) {

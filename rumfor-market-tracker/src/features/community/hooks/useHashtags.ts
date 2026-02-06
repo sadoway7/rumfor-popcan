@@ -1,6 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { communityApi } from '../communityApi'
 
+interface HashtagVote {
+  userId: string
+  value: number
+  createdAt?: string
+}
+
+interface Hashtag {
+  id: string
+  name: string
+  votes: HashtagVote[]
+  createdAt: string
+}
+
 export const useHashtags = (marketId: string) => {
   const queryClient = useQueryClient()
 
@@ -10,9 +23,9 @@ export const useHashtags = (marketId: string) => {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<{ success: boolean; data: (string | any)[] }>({
     queryKey: ['hashtags', marketId],
-    queryFn: () => communityApi.getHashtags(marketId),
+    queryFn: () => communityApi.getHashtags(marketId) as Promise<{ success: boolean; data: (string | any)[] }>,
     enabled: !!marketId,
     staleTime: 60000, // 1 minute
   })
@@ -21,14 +34,40 @@ export const useHashtags = (marketId: string) => {
   const {
     data: predefinedResponse,
     isLoading: isLoadingPredefined,
-  } = useQuery({
+  } = useQuery<{ success: boolean; data: string[] }>({
     queryKey: ['predefinedHashtags'],
-    queryFn: () => communityApi.getPredefinedHashtags(),
+    queryFn: () => communityApi.getPredefinedHashtags() as Promise<{ success: boolean; data: string[] }>,
     staleTime: 300000, // 5 minutes
   })
 
-  // Get hashtags from response
-  const hashtags = hashtagsResponse?.success ? hashtagsResponse.data || [] : []
+  const hashtags: Hashtag[] = useMemo(() => {
+    const rawTags = hashtagsResponse?.success ? hashtagsResponse.data || [] : []
+    const processed = rawTags.map((tag) => {
+      // Handle string tags
+      if (typeof tag === 'string') {
+        return {
+          id: `tag-${tag}`,
+          name: tag,
+          votes: [],
+          createdAt: new Date().toISOString()
+        }
+      }
+      // Handle object tags - check all possible fields
+      const tagName = tag.name || tag.text || tag.tag || tag.label || tag.value || ''
+      return {
+        id: tag.id || tag._id || `tag-${tagName}`,
+        name: tagName,
+        votes: (tag.votes || []).map((v: any) => ({
+          userId: v.userId || v.user || '',
+          value: v.value === 'down' ? -1 : (v.value || 1),
+          createdAt: v.createdAt || v.timestamp || new Date().toISOString()
+        })),
+        createdAt: tag.createdAt || new Date().toISOString()
+      }
+    })
+    // Filter out tags without valid names
+    return processed.filter(tag => tag.name && tag.name.trim())
+  }, [hashtagsResponse])
 
   // Mutations
   const createHashtagMutation = useMutation({

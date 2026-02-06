@@ -66,19 +66,46 @@ const mapHashtagVote = (vote: any): HashtagVote => ({
   createdAt: vote?.timestamp || vote?.createdAt || new Date().toISOString(),
 })
 
-const mapHashtag = (hashtag: any, marketId: string): Hashtag => ({
-  id: hashtag?._id || hashtag?.id || '',
-  name: hashtag?.text || hashtag?.name || '',
-  marketId: hashtag?.marketId || marketId,
-  userId: hashtag?.suggestedBy?._id || hashtag?.suggestedBy?.id || hashtag?.userId || '',
-  user: mapUser(hashtag?.suggestedBy || hashtag?.user || {}),
-  votes: Array.isArray(hashtag?.voters)
-    ? hashtag.voters.map(mapHashtagVote)
-    : Array.isArray(hashtag?.votes)
-      ? hashtag.votes.map(mapHashtagVote)
-      : [],
-  createdAt: hashtag?.createdAt || new Date().toISOString(),
-})
+const mapHashtag = (hashtag: any, marketId: string): Hashtag => {
+  // Handle string tags (when market.tags is array of strings)
+  if (typeof hashtag === 'string') {
+    return {
+      id: `tag-${hashtag}`,
+      name: hashtag,
+      marketId: marketId,
+      userId: '',
+      user: {
+        id: '',
+        email: '',
+        firstName: '',
+        lastName: '',
+        role: 'visitor',
+        avatar: undefined,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isEmailVerified: false,
+        isActive: true,
+      },
+      votes: [],
+      createdAt: new Date().toISOString(),
+    }
+  }
+  
+  // Handle object tags
+  return {
+    id: hashtag?._id || hashtag?.id || '',
+    name: hashtag?.text || hashtag?.name || '',
+    marketId: hashtag?.marketId || marketId,
+    userId: hashtag?.suggestedBy?._id || hashtag?.suggestedBy?.id || hashtag?.userId || '',
+    user: mapUser(hashtag?.suggestedBy || hashtag?.user || {}),
+    votes: Array.isArray(hashtag?.voters)
+      ? hashtag.voters.map(mapHashtagVote)
+      : Array.isArray(hashtag?.votes)
+        ? hashtag.votes.map(mapHashtagVote)
+        : [],
+    createdAt: hashtag?.createdAt || new Date().toISOString(),
+  }
+}
 
 export const communityApi = {
   // Comments API
@@ -224,8 +251,8 @@ export const communityApi = {
   },
 
   // Add tag to market
-  async addTagToMarket(marketId: string, tagName: string): Promise<ApiResponse<void>> {
-    const response = await httpClient.post<ApiResponse<void>>(`/hashtags/market/${marketId}/add`, { tagName })
+  async addTagToMarket(marketId: string, tagName: string): Promise<ApiResponse<{ hashtags: string[] }>> {
+    const response = await httpClient.post<ApiResponse<{ hashtags: string[] }>>(`/hashtags/market/${marketId}/add`, { tagName })
     if (!response.success) throw new Error(response.error || 'Failed to add tag to market')
     return response
   }
