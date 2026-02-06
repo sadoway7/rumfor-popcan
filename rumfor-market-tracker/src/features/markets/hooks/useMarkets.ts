@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'
 import { Market, MarketFilters, MarketCategory, MarketStatus, MarketScheduleItem, AccessibilityFeatures, CustomField, ContactInfo } from '@/types'
@@ -7,6 +7,7 @@ import { Market, MarketFilters, MarketCategory, MarketStatus, MarketScheduleItem
 interface UseMarketsOptions {
   autoLoad?: boolean
   limit?: number
+  infiniteScroll?: boolean
 }
 
 interface UseMarketsReturn {
@@ -23,6 +24,8 @@ interface UseMarketsReturn {
   currentPage: number
   totalPages: number
   hasMore: boolean
+  hasNextPage: boolean
+  fetchNextPage: () => void
 
   // Error handling
   error: string | null
@@ -39,7 +42,7 @@ interface UseMarketsReturn {
 
   // Market actions
   getMarketById: (id: string) => Market | undefined
-  trackMarket: (marketId: string, status?: string) => Promise<void>
+  trackMarket: (marketId: string, status?: string, attendingDates?: string[]) => Promise<void>
   untrackMarket: (marketId: string) => Promise<void>
   isMarketTracked: (marketId: string) => boolean
 
@@ -49,13 +52,14 @@ interface UseMarketsReturn {
   previousPage: () => void
 
   // Utility
-  refresh: () => Promise<void>
+  refresh: () => Promise<any>
 }
 
 export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const {
     autoLoad = true,
-    limit = 20
+    limit = 20,
+    infiniteScroll = false
   } = options || {}
 
   const queryClient = useQueryClient()
@@ -87,13 +91,35 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       }
       return response.data
     },
-    enabled: autoLoad && !searchQuery,
+    enabled: autoLoad && !searchQuery && !infiniteScroll,
     staleTime: 15 * 60 * 1000, // 15 minutes (optimized cache duration)
     gcTime: 30 * 60 * 1000, // 30 minutes garbage collection
     refetchOnWindowFocus: false, // Don't refetch on tab focus
     refetchOnMount: false, // Use cache on mount
     refetchOnReconnect: true, // DO refetch when internet reconnects
     retry: 1 // Only retry once on failure
+  })
+
+  // Infinite scroll markets query
+  const infiniteMarketsQuery = useInfiniteQuery({
+    queryKey: ['markets-infinite', currentFilters, limit],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await marketsApi.getMarkets(currentFilters, pageParam as number, limit)
+      return {
+        data: response.data,
+        nextPage: (pageParam as number) + 1,
+        hasMore: response.pagination ? (pageParam as number) < response.pagination.totalPages : false
+      }
+    },
+    initialPageParam: 1,
+    enabled: autoLoad && !searchQuery && infiniteScroll,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: true,
+    retry: 1,
+    getNextPageParam: (lastPage: any) => (lastPage as any).hasMore ? (lastPage as any).nextPage : undefined
   })
 
   // Search query (shorter cache for dynamic search results)
@@ -179,10 +205,12 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const refresh = useCallback(async () => {
     if (searchQuery) {
       await queryClient.refetchQueries({ queryKey: SEARCH_QUERY_KEY(searchQuery), type: 'active' })
+    } else if (infiniteScroll) {
+      await queryClient.refetchQueries({ queryKey: ['markets-infinite', currentFilters, limit], type: 'active' })
     } else {
       await queryClient.refetchQueries({ queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit), type: 'active' })
     }
-  }, [searchQuery, currentFilters, currentPage, limit, queryClient])
+  }, [searchQuery, currentFilters, currentPage, limit, queryClient, infiniteScroll])
 
   // Set filters function
   const setFilters = useCallback((filters: MarketFilters) => {
@@ -224,11 +252,16 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   }, [trackedMarketIds])
 
   // Determine current data and loading states
-  const isLoading = marketsQuery.isLoading || searchQueryResult.isLoading
-  const isSearching = searchQueryResult.isFetching
+  const isLoading = marketsQuery.isLoading || searchQueryResult.isLoading || infiniteMarketsQuery.isLoading
+  const isSearching = searchQueryResult.isFetching || infiniteMarketsQuery.isFetching
   const isTracking = trackMutation.isPending || untrackMutation.isPending
-  const error = marketsQuery.error?.message || searchQueryResult.error?.message || null
-  const markets = searchQuery ? (searchQueryResult.data?.data || []) : (marketsQuery.data || [])
+  const error = marketsQuery.error?.message || searchQueryResult.error?.message || infiniteMarketsQuery.error?.message || null
+  
+  const markets = searchQuery 
+    ? (searchQueryResult.data?.data || [])
+    : infiniteScroll 
+      ? (infiniteMarketsQuery.data?.pages.flatMap((page: any) => page.data) || [])
+      : (marketsQuery.data || [])
 
   return {
     // Data
@@ -240,37 +273,39 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     isSearching,
     isTracking,
 
-    // Pagination
-    currentPage,
-    totalPages,
-    hasMore,
+  // Pagination
+  currentPage,
+  totalPages,
+  hasMore,
+  hasNextPage: infiniteScroll ? infiniteMarketsQuery.hasNextPage : currentPage < totalPages,
+  fetchNextPage: infiniteScroll ? infiniteMarketsQuery.fetchNextPage : nextPage,
 
-    // Error handling
-    error,
+  // Error handling
+  error,
 
-    // Filters and search
-    filters: currentFilters,
-    searchQuery,
+  // Filters and search
+  filters: currentFilters,
+  searchQuery,
 
-    // Actions
-    loadMarkets,
-    searchMarkets,
-    setFilters,
-    clearFilters,
+  // Actions
+  loadMarkets,
+  searchMarkets,
+  setFilters,
+  clearFilters,
 
-    // Market actions
-    getMarketById,
-    trackMarket,
-    untrackMarket,
-    isMarketTracked,
+  // Market actions
+  getMarketById,
+  trackMarket,
+  untrackMarket,
+  isMarketTracked,
 
-    // Pagination
-    setCurrentPage: setCurrentPageDirect,
-    nextPage,
-    previousPage,
+  // Pagination
+  setCurrentPage: setCurrentPageDirect,
+  nextPage,
+  previousPage,
 
-    // Utility
-    refresh
+  // Utility
+  refresh
   }
 }
 
@@ -326,39 +361,66 @@ return useMutation({
       }
       return { marketId, response }
     },
-    onMutate: async ({ marketId }) => {
-      // Optimistic update - add market ID immediately
+    onMutate: async ({ marketId, status }) => {
+      // Optimistic update - add market to tracked list immediately
       const queryKey = TRACKED_MARKETS_QUERY_KEY(userId)
       await queryClient.cancelQueries({ queryKey })
       
       const previousData = queryClient.getQueryData(queryKey)
       
-      // Optimistically update tracked IDs
+      // Optimistically add the market to tracked list
       queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old || !Array.isArray(old)) return old
-        // Add a placeholder for this market if not already present
-        const hasMarket = old.some((m: any) => m.id === marketId || m._id === marketId)
-        if (hasMarket) return old
+        if (!old || !Array.isArray(old)) {
+          // If no data, create new array with this market
+          return [{
+            _id: `temp-${marketId}`,
+            user: userId,
+            market: { id: marketId },
+            marketId,
+            status: status || 'interested',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }]
+        }
         
-        // Return existing data - actual market will come from refetch
-        return old
+        // Check if market is already tracked
+        const hasMarket = old.some((m: any) => 
+          (m.market?.id === marketId) || (m.marketId === marketId)
+        )
+        
+        if (hasMarket) {
+          // Update existing tracking entry
+          return old.map((m: any) => {
+            if ((m.market?.id === marketId) || (m.marketId === marketId)) {
+              return { ...m, status: status || 'interested', updatedAt: new Date().toISOString() }
+            }
+            return m
+          })
+        } else {
+          // Add new tracking entry
+          return [...old, {
+            _id: `temp-${marketId}`,
+            user: userId,
+            market: { id: marketId },
+            marketId,
+            status: status || 'interested',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }]
+        }
       })
       
       return { previousData }
     },
     onSuccess: () => {
-      console.log('[TRACK] Mutation successful, refetching tracked markets for userId:', userId)
-      // Invalidate ALL tracked markets queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['trackedMarkets'] })
+      // Refetch to get complete data from server
       if (userId) {
         queryClient.invalidateQueries({ queryKey: TRACKED_MARKETS_QUERY_KEY(userId) })
       }
-      // Force immediate refetch with await
-      queryClient.refetchQueries({ queryKey: ['trackedMarkets'], type: 'active' })
     },
     onError: (err, _variables, context: any) => {
       // Rollback optimistic update on error
-      if (context?.previousData && userId) {
+      if (context?.previousData !== undefined && userId) {
         queryClient.setQueryData(TRACKED_MARKETS_QUERY_KEY(userId), context.previousData)
       }
       console.error('Failed to track market:', err)
@@ -378,13 +440,36 @@ const useUntrackMarketMutation = () => {
       }
       return { marketId, response }
     },
+    onMutate: async (marketId) => {
+      // Optimistic update - remove market from tracked list immediately
+      const queryKey = TRACKED_MARKETS_QUERY_KEY(userId)
+      await queryClient.cancelQueries({ queryKey })
+      
+      const previousData = queryClient.getQueryData(queryKey)
+      
+      // Optimistically remove the market from tracked list
+      queryClient.setQueryData(queryKey, (old: any) => {
+        if (!old || !Array.isArray(old)) return old
+        
+        // Filter out the market being untracked
+        return old.filter((m: any) => 
+          (m.market?.id !== marketId) && (m.marketId !== marketId)
+        )
+      })
+      
+      return { previousData }
+    },
     onSuccess: () => {
-      // Invalidate tracked markets query
+      // Refetch to ensure consistency with server
       if (userId) {
         queryClient.invalidateQueries({ queryKey: TRACKED_MARKETS_QUERY_KEY(userId) })
       }
     },
-    onError: (err) => {
+    onError: (err, _variables, context: any) => {
+      // Rollback optimistic update on error
+      if (context?.previousData !== undefined && userId) {
+        queryClient.setQueryData(TRACKED_MARKETS_QUERY_KEY(userId), context.previousData)
+      }
       console.error('Failed to untrack market:', err)
     }
   })

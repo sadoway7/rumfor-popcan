@@ -2,8 +2,9 @@ import React, { useMemo } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
 import { useHashtags } from '@/features/community/hooks/useHashtags'
 import { useAuthStore } from '@/features/auth/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/utils/cn'
-import { ThumbsUp, ThumbsDown } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, Check, X } from 'lucide-react'
 
 interface TagVotingProps {
   marketTags: string[]
@@ -17,6 +18,7 @@ export const TagVoting: React.FC<TagVotingProps> = ({
   className
 }) => {
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
   const {
     hashtags,
     isLoading,
@@ -25,11 +27,15 @@ export const TagVoting: React.FC<TagVotingProps> = ({
     getUserVote,
     getVoteCount,
     isVoting,
-    predefinedHashtags
+    predefinedHashtags,
+    addTagToMarket,
+    isAddingTag,
+    addTagError
   } = useHashtags(marketId)
 
   // Convert market tags to hashtag objects for voting
   const marketHashtags = useMemo(() => {
+    console.log('TagVoting - marketTags:', marketTags, 'hashtags from API:', hashtags)
     return marketTags.map(tag => {
       const existingHashtag = hashtags.find(h => h.name === tag)
       if (existingHashtag) {
@@ -86,13 +92,28 @@ export const TagVoting: React.FC<TagVotingProps> = ({
 
   const handleAddSuggestedTag = async (tagName: string) => {
     if (!user) return
-
+    
     try {
-      // This would need to be implemented - add tag to market
-      console.log('Adding suggested tag:', tagName)
-      // Would call an API to add the tag to the market
-    } catch (error) {
-      console.error('Failed to add tag:', error)
+      // Add tag to market
+      await addTagToMarket(tagName)
+      
+      // Brief wait for cache invalidation
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Find newly created hashtag in refreshed list
+      const updatedHashtags = queryClient.getQueryData(['hashtags', marketId]) as any[]
+      const newTag = updatedHashtags?.find((h: any) => h.name === tagName)
+      
+      if (newTag) {
+        // Vote up newly created tag
+        await voteHashtag(newTag.id, 1)
+      }
+    } catch (error: any) {
+      console.error('Failed to add and vote on tag:', error)
+      // Show error to user
+      if (error?.message === 'Tag not in predefined list') {
+        alert('This tag is not available for this market.')
+      }
     }
   }
 
@@ -168,17 +189,21 @@ export const TagVoting: React.FC<TagVotingProps> = ({
       {/* Suggested Tags */}
       {suggestedTags.length > 0 && user && (
         <div className="border-t pt-4 space-y-3">
-          <div className="text-center">
+          <div>
             <h3 className="text-lg font-medium mb-1">Do any of these tags match?</h3>
-            <p className="text-sm text-muted-foreground">Click to add relevant tags to this market</p>
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2">
             {suggestedTags.map((tag) => (
               <button
                 key={tag}
                 onClick={() => handleAddSuggestedTag(tag)}
-                className="relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-border rounded-full text-sm shadow-sm hover:bg-muted/50 transition-colors"
+                disabled={isAddingTag}
+                className={cn(
+                  "relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white border border-border rounded-full text-sm shadow-sm transition-colors",
+                  "hover:bg-muted/50",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
               >
                 <span className="text-primary font-bold text-xs">+</span>
                 <span className="font-medium">{tag}</span>

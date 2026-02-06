@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
@@ -15,25 +14,38 @@ import { cn } from '@/utils/cn'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
-import { MARKET_STATUS_COLORS, MARKET_CATEGORY_COLORS, MARKET_CATEGORY_LABELS } from '@/config/constants'
-import { Search, MapPin, Clock, Globe, Phone, Mail, User, ChevronDown, ChevronUp, Share2, Flag, MessageSquare, Image, DollarSign, Calendar } from 'lucide-react'
+import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw } from 'lucide-react'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
-const categoryColors = MARKET_CATEGORY_COLORS
-const statusColors = MARKET_STATUS_COLORS
+const categoryFlagColors: Record<string, string> = {
+  'farmers-market': 'bg-white/60 text-green-700',
+  'arts-crafts': 'bg-white/60 text-purple-700',
+  'flea-market': 'bg-white/60 text-amber-700',
+  'food-festival': 'bg-white/60 text-orange-700',
+  'vintage-antique': 'bg-white/60 text-stone-700',
+  'craft-show': 'bg-white/60 text-blue-700',
+  'night-market': 'bg-white/60 text-indigo-700',
+  'street-fair': 'bg-white/60 text-pink-700',
+  'holiday-market': 'bg-white/60 text-red-700',
+  'community-event': 'bg-white/60 text-teal-700'
+}
 
 export const MarketDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [showFullDescription, setShowFullDescription] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const [showStatusModal, setShowStatusModal] = useState(false)
-  const [isAccessibilityCollapsed, setIsAccessibilityCollapsed] = useState(true)
-  const [isVendorsCollapsed, setIsVendorsCollapsed] = useState(true)
+  const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [vendorSearchTerm, setVendorSearchTerm] = useState('')
+  const [isPageLoaded, setIsPageLoaded] = useState(false)
   
   const { market, isLoading, error, refetch } = useMarket(id!)
+  
+  useEffect(() => {
+    setIsPageLoaded(true)
+  }, [])
   const {
     trackMarket,
     untrackMarket,
@@ -43,7 +55,6 @@ export const MarketDetailPage: React.FC = () => {
   const { vendors: marketVendors } = useMarketVendors(id!)
   const { user } = useAuthStore()
 
-  // Scroll to top when market ID changes
   React.useEffect(() => {
     window.scrollTo(0, 0)
   }, [id])
@@ -86,54 +97,42 @@ export const MarketDetailPage: React.FC = () => {
   }
 
   const handleTrackToggle = async () => {
-    if (isMarketTracked(market.id)) {
-      await untrackMarket(market.id)
-    } else {
-      await trackMarket(market.id)
+    const currentlyTracked = isMarketTracked(market.id)
+    
+    try {
+      if (currentlyTracked) {
+        await untrackMarket(market.id)
+      } else {
+        await trackMarket(market.id)
+      }
+    } catch (error) {
+      console.error('Failed to toggle tracking:', error)
     }
   }
 
-  const getButtonText = () => {
-    const isTracked = isMarketTracked(market.id)
-    if (isTracked) {
-      return 'Tracked'
-    }
-    return 'Track this Market'
-  }
-
-  const getButtonIcon = () => {
-    const isTracked = isMarketTracked(market.id)
-    if (isTracked) {
-      return (
-        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      )
-    }
-    return (
-      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-      </svg>
-    )
-  }
-
-const formatSchedule = (schedule: any) => {
+  const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     let days: string[] = []
     let startTime: string = ''
     let endTime: string = ''
-    let allDates: { date: string; dayName: string }[] = []
+    let allDates: { date: string; dayName: string; startTime: string; endTime: string; displayDate: string }[] = []
 
     if (Array.isArray(schedule)) {
       if (schedule.length === 0) return 'Schedule TBD'
 
       allDates = schedule.map((s: any) => {
         const dateObj = parseLocalDate(s.startDate)
+        const monthDay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        const fullDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+        
         return {
-          date: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-          dayName: dayNames[s.dayOfWeek] || 'Unknown'
+          date: monthDay,
+          displayDate: fullDate,
+          dayName: dayNames[s.dayOfWeek] || 'Unknown',
+          startTime: s.startTime,
+          endTime: s.endTime
         }
       })
 
@@ -159,9 +158,9 @@ const formatSchedule = (schedule: any) => {
 
     if (allDates.length > 0) {
       if (allDates.length === 1) {
-        return `${allDates[0].date} ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
+        return `${allDates[0].displayDate} ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
       } else {
-        return allDates.map(d => d.date).join(', ') + ` ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
+        return allDates.map(d => d.displayDate).join(', ') + ` ${formatTime12Hour(startTime)}-${formatTime12Hour(endTime)}`
       }
     }
 
@@ -178,498 +177,449 @@ const formatSchedule = (schedule: any) => {
     vendor.user.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
   )
 
+  const scheduleDates = Array.isArray(market.schedule) ? market.schedule : []
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Image with Overlaid Info - MarketCard Style */}
-      {market.images && market.images.length > 0 ? (
-        <div className="relative">
-          {/* Main Image */}
-          <div className="aspect-[4/3] md:aspect-video relative overflow-hidden bg-muted">
-            <img
-              src={market.images[selectedImageIndex]}
-              alt={market.name}
-              className="w-full h-full object-cover"
-            />
+    <div className={cn(
+      "min-h-screen bg-background",
+      isPageLoaded && "animate-in fade-in-0 slide-in-from-top-full duration-500"
+    )}>
+      <div className="w-full max-w-6xl mx-auto sm:px-4">
+      {/* HERO SECTION - Matching MarketCard minimal variant */}
+      <div className="relative h-96 md:h-[28rem] overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]">
+        {/* Market Image */}
+        {market.images && market.images.length > 0 ? (
+          <img
+            src={market.images[selectedImageIndex]}
+            alt={market.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground">No image</span>
+          </div>
+        )}
 
-            {/* Back Button - Top Left */}
-            <div className="absolute top-3 left-3 z-10">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/markets')}
-                className="bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm h-9 px-3"
+        {/* Back Button - Top Left */}
+        <div className="absolute top-0 left-0 p-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/markets')}
+            className="bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm h-8 px-3"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Category - Flag style at right edge */}
+        <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
+          {categoryLabels[market.category]}
+        </div>
+
+        {/* Track/Follow - Bottom right of hero */}
+        <div className="absolute bottom-4 right-4 z-20">
+          {isMarketTracked(market.id) ? (
+            <button
+              onClick={handleTrackToggle}
+              disabled={isTracking}
+              type="button"
+            >
+              <svg
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-12 h-12 drop-shadow-md"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Button>
-            </div>
-
-            {/* Category Badge - Top Right */}
-            <div className="absolute top-3 right-3 z-10">
-              <Badge className={cn(categoryColors[market.category], "bg-black/60 backdrop-blur-sm text-white border-0")}>
-                {categoryLabels[market.category]}
-              </Badge>
-            </div>
-
-            {/* Location - Above title, floating */}
-            <div className="absolute bottom-16 left-3 right-3 z-10">
-              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-lg px-2 py-1 text-white text-xs inline-flex">
-                <MapPin className="w-3 h-3" />
-                <span>{formatLocation(market.location)}</span>
-              </div>
-            </div>
-
-            {/* Solid dark bar at bottom for title */}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
-              <h1 className="text-white font-semibold text-lg md:text-2xl leading-tight line-clamp-2">
-                {market.name}
-              </h1>
-            </div>
-          </div>
-
-          {/* Thumbnail Strip */}
-          {market.images.length > 1 && (
-            <div className="flex gap-2 p-2 overflow-x-auto bg-muted/50">
-              {market.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={cn(
-                    "flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all",
-                    selectedImageIndex === index
-                      ? "border-accent ring-2 ring-accent/30"
-                      : "border-transparent hover:border-muted-foreground/30"
-                  )}
-                >
-                  <img
-                    src={image}
-                    alt={`${market.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Description - After image, before main content (like MarketCard) */}
-          {market.description && (
-            <div className="px-2 md:px-4 py-3">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {showFullDescription ? market.description : market.description.length > 200 ? market.description.substring(0, 200) + '...' : market.description}
-              </p>
-              {market.description.length > 200 && (
-                <button
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-sm text-accent hover:underline mt-1"
-                >
-                  {showFullDescription ? 'Show Less' : 'Read More'}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Schedule - After description */}
-          <div className="px-2 md:px-4 pb-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span>{formatSchedule(market.schedule)}</span>
-            </div>
-          </div>
-
-          {/* Tags - After schedule */}
-          {market.tags && market.tags.length > 0 && (
-            <div className="px-2 md:px-4 pb-3">
-              <div className="flex flex-wrap gap-1.5">
-                {market.tags.slice(0, 8).map((tag, index) => (
-                  <span key={index} className="flex-shrink-0 px-3 py-1.5 bg-white text-foreground rounded-full text-sm font-medium border">
-                    #{tag}
-                  </span>
-                ))}
-                {market.tags.length > 8 && (
-                  <span className="flex-shrink-0 px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-sm">
-                    +{market.tags.length - 8}
-                  </span>
-                )}
-              </div>
-            </div>
+                <rect
+                  x="4"
+                  y="4"
+                  width="40"
+                  height="40"
+                  rx="12"
+                  fill="white"
+                  stroke="white"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M15 24L21 30L33 18"
+                  stroke="#22C55E"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={handleTrackToggle}
+              disabled={isTracking}
+              type="button"
+            >
+              <svg
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-12 h-12 drop-shadow-md"
+              >
+                <rect
+                  x="4"
+                  y="4"
+                  width="40"
+                  height="40"
+                  rx="12"
+                  fill="white"
+                  stroke="white"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M24 14V34M12 24H36"
+                  stroke="#E67E22"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
           )}
         </div>
-      ) : (
-        /* No Image - Show Name and Back Button */
-        <div className="bg-muted px-4 py-6">
-          <div className="flex items-center justify-between max-w-2xl mx-auto mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/markets')}
-              className="h-9"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </Button>
-            <div className="flex gap-2">
-              <Badge variant="outline" className={statusColors[market.status]}>
-                {market.status}
-              </Badge>
-              <Badge variant="outline" className={categoryColors[market.category]}>
-                {categoryLabels[market.category]}
-              </Badge>
-            </div>
+
+        {/* Title + Description - Same as MarketCard */}
+        <div className="absolute bottom-0 left-0 right-0">
+          {/* Dark gradient overlay */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+            }}
+          />
+          {/* Dark overlay for readability */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+            }}
+          />
+          {/* Content */}
+          <div className="relative px-4 pt-4 pb-6 pr-16 z-10">
+            <h1 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+              {market.name}
+            </h1>
+            <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+              {market.description}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-center max-w-2xl mx-auto px-4">
-            {market.name}
-          </h1>
-          <div className="flex items-center justify-center text-muted-foreground mt-2 text-sm max-w-2xl mx-auto px-4">
-            <MapPin className="w-4 h-4 mr-2" />
-            <span>{formatLocation(market.location)}</span>
-          </div>
-          {/* Description for no-image case */}
-          {market.description && (
-            <div className="max-w-2xl mx-auto mt-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {showFullDescription ? market.description : market.description.length > 200 ? market.description.substring(0, 200) + '...' : market.description}
-              </p>
-              {market.description.length > 200 && (
-                <button
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-sm text-accent hover:underline mt-1"
-                >
-                  {showFullDescription ? 'Show Less' : 'Read More'}
-                </button>
+        </div>
+      </div>
+
+      {/* Thumbnail Strip */}
+      {market.images && market.images.length > 1 && (
+        <div className="flex gap-1.5 p-2 overflow-x-auto bg-muted/30">
+          {market.images.map((image, index) => (
+            <button
+              key={index}
+              onClick={() => setSelectedImageIndex(index)}
+              className={cn(
+                "flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
+                selectedImageIndex === index
+                  ? "border-accent ring-2 ring-accent/30"
+                  : "border-transparent hover:border-muted-foreground/30"
               )}
-            </div>
-          )}
-          {/* Schedule for no-image case */}
-          <div className="max-w-2xl mx-auto mt-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              <span>{formatSchedule(market.schedule)}</span>
-            </div>
-          </div>
-          {/* Tags for no-image case */}
-          {market.tags && market.tags.length > 0 && (
-            <div className="max-w-2xl mx-auto mt-3">
-              <div className="flex flex-wrap gap-1.5">
-                {market.tags.slice(0, 8).map((tag, index) => (
-                  <span key={index} className="flex-shrink-0 px-3 py-1.5 bg-white text-foreground rounded-full text-sm font-medium border">
-                    #{tag}
-                  </span>
-                ))}
-                {market.tags.length > 8 && (
-                  <span className="flex-shrink-0 px-3 py-1.5 bg-muted text-muted-foreground rounded-full text-sm">
-                    +{market.tags.length - 8}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+            >
+              <img
+                src={image}
+                alt={`${market.name} ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Main Content - Single Column Stack */}
-      <div className="max-w-2xl mx-auto px-2 md:px-4 py-4 space-y-3">
+      {/* TABS */}
+      <div className="mb-2 sm:mb-2">
+        <Tabs
+          inactiveTextColor="text-gray-400"
+          variant="pills"
+          size="md"
+          listClassName="bg-black px-4 py-3"
+          items={[
+            {
+              key: 'details',
+              label: 'Details',
+              content: (
+                <div className="space-y-4 pb-4 pt-4 px-4">
+                  {/* Left: Location + Schedule / Right: Action Links */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Left Column */}
+                    <div className="space-y-4">
+                      {/* Location */}
+                      <div className="flex items-center gap-3">
+                        <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                        <p className="text-sm">{formatLocation(market.location)}</p>
+                      </div>
 
-        {/* Track Market Button - Full Width, Prominent */}
-        <Button
-          className={cn(
-            "w-full h-11 text-base font-medium",
-            isMarketTracked(market.id) && "bg-green-500 hover:bg-green-600 text-white border-green-500"
-          )}
-          onClick={handleTrackToggle}
-          disabled={isTracking}
-          variant={!isMarketTracked(market.id) ? "primary" : "outline"}
-        >
-          {getButtonIcon()}
-          {getButtonText()}
-        </Button>
-
-        {/* Official Market Contact - With email, phone, website grouped */}
-        {market.promoter && (
-          <Card className="p-2">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">
-                  {market.promoter.firstName || ''} {market.promoter.lastName || ''}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">{market.promoter.email}</p>
-              </div>
-            </div>
-            {/* Contact Actions */}
-            <div className="flex gap-1">
-              {market.contact?.website && (
-                <a
-                  href={market.contact.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
-                >
-                  <Globe className="w-3 h-3" />
-                  Website
-                </a>
-              )}
-              {market.contact?.phone && (
-                <a
-                  href={`tel:${market.contact.phone}`}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
-                >
-                  <Phone className="w-3 h-3" />
-                  Call
-                </a>
-              )}
-              {market.contact?.email && (
-                <a
-                  href={`mailto:${market.contact.email}`}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-muted/50 rounded text-xs hover:bg-muted"
-                >
-                  <Mail className="w-3 h-3" />
-                  Email
-                </a>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {/* Accessibility & Amenities - Compact Collapsible */}
-        <Card className="overflow-hidden">
-          <button
-            onClick={() => setIsAccessibilityCollapsed(!isAccessibilityCollapsed)}
-            className="w-full flex items-center justify-between p-2 min-h-[36px]"
-          >
-            <h2 className="font-medium text-sm">Accessibility & Amenities</h2>
-            {isAccessibilityCollapsed ? (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            )}
-          </button>
-          {!isAccessibilityCollapsed && (
-            <div className="px-2 pb-2 space-y-1">
-              <div className="flex flex-wrap gap-x-4 gap-y-0.5">
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.wheelchairAccessible ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.wheelchairAccessible ? '' : 'text-muted-foreground'}>Wheelchair</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.handicapParking ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.handicapParking ? '' : 'text-muted-foreground'}>Handicap Parking</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.parkingAvailable ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.parkingAvailable ? '' : 'text-muted-foreground'}>Parking</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.restroomsAvailable ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.restroomsAvailable ? '' : 'text-muted-foreground'}>Restrooms</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.covered ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.covered ? '' : 'text-muted-foreground'}>Covered</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.indoor ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.indoor ? '' : 'text-muted-foreground'}>Indoor</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.outdoorSeating ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.outdoorSeating ? '' : 'text-muted-foreground'}>Outdoor Seating</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.wifi ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.wifi ? '' : 'text-muted-foreground'}>WiFi</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.atm ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.atm ? '' : 'text-muted-foreground'}>ATM</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.foodCourt ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.foodCourt ? '' : 'text-muted-foreground'}>Food Court</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.liveMusic ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.liveMusic ? '' : 'text-muted-foreground'}>Live Music</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.alcoholAvailable ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.alcoholAvailable ? '' : 'text-muted-foreground'}>Alcohol</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.familyFriendly ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.familyFriendly ? '' : 'text-muted-foreground'}>Family</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs">
-                  <span>{market.accessibility?.petFriendly ? '✓' : '—'}</span>
-                  <span className={market.accessibility?.petFriendly ? '' : 'text-muted-foreground'}>Pets</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* Booth Fee - Optional Display */}
-        {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
-          <Card className="p-2">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-accent" />
-              <h2 className="font-medium text-sm">Pricing Information</h2>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Booth Fee</span>
-              <span className="text-sm font-medium text-foreground">
-                {market.pricing.isFree ? 'Free' : formatCurrency(market.pricing.boothFee)}
-              </span>
-            </div>
-          </Card>
-        )}
-
-{/* Vendors Attending - Collapsed by Default */}
-        <Card className="overflow-hidden">
-          <button
-            onClick={() => setIsVendorsCollapsed(!isVendorsCollapsed)}
-            className="w-full flex items-center justify-between p-2 min-h-[36px]"
-          >
-            <div className="flex items-center gap-2">
-              <h2 className="font-medium text-sm">Vendors</h2>
-              <Badge variant="outline" className="text-xs">{filteredVendors.length}</Badge>
-            </div>
-            {isVendorsCollapsed ? (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            )}
-          </button>
-          {!isVendorsCollapsed && (
-            <div className="px-2 pb-2 space-y-2">
-              {/* Multi-date vendor grouping */}
-              {Array.isArray(market.schedule) && market.schedule.length > 1 ? (
-                <div className="space-y-3">
-                  {market.schedule.map((schedule, index) => {
-                    const date = new Date(schedule.startDate)
-                    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][schedule.dayOfWeek]
-                    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                    
-                    // Get vendors attending this specific date (mock data for now)
-                    const vendorsForDate = filteredVendors.filter((_, i) => i % market.schedule.length === index)
-                    
-                    return (
-                      <div key={schedule.id || index} className="border rounded-lg p-2">
-                        <div className="flex items-center gap-2 mb-2 pb-2 border-b">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-xs font-medium">{dayName}, {dateStr}</span>
-                          <Badge variant="outline" className="text-xs ml-auto">
-                            {vendorsForDate.length} vendors
-                          </Badge>
-                        </div>
-                        {vendorsForDate.length > 0 ? (
-                          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
-                            {vendorsForDate.map((vendor, vIndex) => (
-                              <div key={vIndex} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
-                                <span className="font-medium">{vendor.name}</span>
+                      {/* Schedule */}
+                      <div className="space-y-2">
+                        {scheduleDates.length > 0 ? (
+                          scheduleDates.map((scheduleItem: any, index) => {
+                            const dateObj = parseLocalDate(scheduleItem.startDate)
+                            const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                            
+                            return (
+                              <div key={index} className="flex items-start gap-3">
+                                <Calendar className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                                <div>
+                                  <p className="font-medium text-sm">{displayDate}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatTime12Hour(scheduleItem.startTime)} - {formatTime12Hour(scheduleItem.endTime)}
+                                  </p>
+                                </div>
                               </div>
-                            ))}
-                          </div>
+                            )
+                          })
                         ) : (
-                          <p className="text-xs text-muted-foreground text-center py-2">No vendors for this date</p>
+                          <p className="text-sm text-muted-foreground">Schedule not available</p>
                         )}
                       </div>
-                    )
-                  })}
+                    </div>
+
+                    {/* Right Column: Action Links */}
+                    <div className="space-y-4 text-right flex flex-col items-end">
+                      {market.location?.address && (
+                        <button
+                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
+                          onClick={() => {
+                            const address = formatLocation(market.location)
+                            window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+                          }}
+                        >
+                          Directions
+                          <MapPin className="w-4 h-4" />
+                        </button>
+                      )}
+                      {market.promoter && (
+                        <>
+                          <button
+                            className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
+                            onClick={() => navigate('/fake-404')}
+                          >
+                            Official Link
+                            <Globe className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-base font-medium text-orange-500 hover:underline inline-flex items-center gap-2 cursor-pointer"
+                            onClick={() => navigate('/fake-404')}
+                          >
+                            {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Created'}
+                            <Users className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {user && (
+                    <TagVoting
+                      marketTags={market.tags || []}
+                      marketId={id!}
+                    />
+                  )}
+
+                  {/* Booth Fee */}
+                  {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
+                    <div className="space-y-2">
+                      <h2 className="font-semibold text-sm flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        Booth Fee
+                      </h2>
+                      <p className="text-lg font-semibold">
+                        {market.pricing.isFree ? 'Free' : formatCurrency(market.pricing.boothFee)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Accessibility - Grid */}
+                  <div className="space-y-2">
+                    <h2 className="font-semibold text-sm">Accessibility & Amenities</h2>
+                      <div className="grid grid-cols-2 gap-2">
+                        {market.accessibility?.wheelchairAccessible && (
+                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                            <span className="text-green-600">✓</span>
+                            <span>Wheelchair</span>
+                          </div>
+                        )}
+                        {market.accessibility?.parkingAvailable && (
+                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                            <span className="text-green-600">✓</span>
+                            <span>Parking</span>
+                          </div>
+                        )}
+                        {market.accessibility?.restroomsAvailable && (
+                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                            <span className="text-green-600">✓</span>
+                            <span>Restrooms</span>
+                          </div>
+                        )}
+                       {market.accessibility?.familyFriendly && (
+                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                           <span className="text-green-600">✓</span>
+                           <span>Family</span>
+                         </div>
+                       )}
+                       {market.accessibility?.indoor && (
+                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                           <span className="text-green-600">✓</span>
+                           <span>Indoor</span>
+                         </div>
+                       )}
+                       {market.accessibility?.petFriendly && (
+                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                           <span className="text-green-600">✓</span>
+                           <span>Pets</span>
+                         </div>
+                       )}
+                       {market.accessibility?.wifi && (
+                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                           <span className="text-green-600">✓</span>
+                           <span>WiFi</span>
+                         </div>
+                       )}
+                       {market.accessibility?.atm && (
+                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                           <span className="text-green-600">✓</span>
+                           <span>ATM</span>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+
+                  {/* Quick Actions - Share, Report & Update */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({ title: market.name, url: window.location.href })
+                        }
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      onClick={() => setShowReportModal(true)}
+                    >
+                      <Flag className="w-4 h-4 mr-2" />
+                      Report
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      onClick={() => setShowUpdateModal(true)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Update
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                /* Single date - original layout */
-                <>
-                  {/* Search */}
+              )
+            },
+            {
+              key: 'vendors',
+              label: 'Vendors',
+              content: (
+                <div className="space-y-4 pb-4 pt-4 px-4">
+                  {/* Vendors Header */}
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-semibold">
+                      {filteredVendors.length} Vendors Attending
+                    </h2>
+                  </div>
+
+                  {/* Search Input */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3.5 w-3.5" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <input
                       type="text"
-                      placeholder="Filter..."
+                      placeholder="Search vendors..."
                       value={vendorSearchTerm}
                       onChange={(e) => setVendorSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 text-xs bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="w-full pl-10 pr-4 py-2 text-sm bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
                     />
                   </div>
-                  {/* Vendor List */}
+
+                  {/* Vendor List - Homepage Mock Style */}
                   {filteredVendors.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 max-h-32 overflow-y-auto">
+                    <div className="space-y-3">
                       {filteredVendors.map((vendor, index) => (
-                        <div key={index} className={cn("flex items-center gap-1 px-2 py-1 rounded text-xs", vendor.color)}>
-                          <span className="font-medium">{vendor.name}</span>
+                        <div key={index} className="bg-surface border border-surface-3 rounded-lg overflow-hidden">
+                          <div className="flex items-start">
+                            <div className={`w-24 h-24 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-foreground ${vendor.color || 'bg-gradient-to-br from-amber-500/20 to-orange-500/20'}`}>
+                              {vendor.user.firstName?.[0]}{vendor.user.lastName?.[0]}
+                            </div>
+                            <div className="flex-1 min-w-0 p-3">
+                              <h3 className="font-bold text-foreground text-sm truncate">{vendor.name}</h3>
+                              {vendor.description && (
+                                <p className="text-xs text-amber-500 font-medium mb-1 line-clamp-2">{vendor.description}</p>
+                              )}
+                              {vendor.blurb && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{vendor.blurb}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      {vendorSearchTerm ? 'No matches' : 'No vendors yet'}
-                    </p>
+                    <div className="text-center py-8">
+                      <p className="text-sm text-muted-foreground">
+                        {vendorSearchTerm ? 'No vendors match your search' : 'No vendors yet'}
+                      </p>
+                    </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
-        </Card>
-
-        {/* Community Features - Comments/Photos Tabs (Comments Default) */}
-        <Card className="overflow-hidden bg-muted/20">
-          <Tabs
-            items={[
-              {
-                key: 'comments',
-                label: 'Comments',
-                icon: <MessageSquare className="w-4 h-4" />,
-                content: <CommentList marketId={id!} />
-              },
-              {
-                key: 'photos',
-                label: 'Photos',
-                icon: <Image className="w-4 h-4" />,
-                content: (
+                </div>
+              )
+            },
+            {
+              key: 'comments',
+              label: 'Comments',
+              icon: <MessageSquare className="w-4 h-4" />,
+              content: (
+                <div className="pb-4 pt-4 px-4">
+                  <CommentList marketId={id!} />
+                </div>
+              )
+            },
+            {
+              key: 'photos',
+              label: 'Photos',
+              icon: <Image className="w-4 h-4" />,
+              content: (
+                <div className="pb-4 pt-4 px-4">
                   <PhotoGallery
                     marketId={id!}
                     showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}
                   />
-                )
-              }
-            ]}
-            defaultActiveKey="comments"
-            className="w-full"
+                </div>
+              )
+            }
+          ]}
+          defaultActiveKey="details"
+          className="w-full"
+          fullWidth
           />
-        </Card>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: market.name, url: window.location.href })
-              }
-            }}
-          >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9"
-            onClick={() => setShowReportModal(true)}
-          >
-            <Flag className="w-4 h-4 mr-2" />
-            Report
-          </Button>
         </div>
 
-        {/* Update Status Button (for tracked markets) */}
-        {isMarketTracked(market.id) && (
+      {/* Update Status Button (for tracked markets) */}
+      {isMarketTracked(market.id) && (
+        <div className="px-4 py-4">
           <Button
             variant="outline"
             size="sm"
@@ -681,17 +631,8 @@ const formatSchedule = (schedule: any) => {
             </svg>
             Update My Status
           </Button>
-        )}
-
-        {/* Tags Voting - At bottom for user interaction */}
-        {user && (
-          <TagVoting
-            marketTags={market.tags || []}
-            marketId={id!}
-          />
-        )}
-
-      </div>
+        </div>
+      )}
 
       {/* Report Issue Modal */}
       <ReportIssueModal
@@ -700,6 +641,46 @@ const formatSchedule = (schedule: any) => {
         marketId={market.id}
         marketName={market.name}
       />
+
+      {/* Update Request Modal */}
+      {showUpdateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-t-xl sm:rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-4 border-b sticky top-0 bg-background">
+              <h3 className="font-semibold">Request Update</h3>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Help keep this market information up to date. Report any changes, updates, or corrections needed.
+              </p>
+              <textarea
+                className="w-full p-3 text-sm bg-surface rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px]"
+                placeholder="Describe what needs to be updated..."
+              />
+            </div>
+            <div className="p-4 border-t sticky bottom-0 bg-background">
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowUpdateModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    // TODO: Implement update submission
+                    setShowUpdateModal(false)
+                  }}
+                  className="flex-1"
+                >
+                  Submit
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Update Modal */}
       {showStatusModal && (
@@ -747,6 +728,7 @@ const formatSchedule = (schedule: any) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

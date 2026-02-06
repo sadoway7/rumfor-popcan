@@ -270,7 +270,7 @@ export function HomePage() {
 
         {/* Hero Banner - Refined & Subtle */}
         <div className="w-full">
-          <div className="relative overflow-hidden rounded-xl bg-surface-2 border border-surface-3 p-6 md:p-8">
+          <div className="max-w-5xl mx-auto relative overflow-hidden rounded-xl bg-surface-2 border border-surface-3 p-6 md:p-8">
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
               {/* First Column - Main Message */}
               <div className="flex flex-col">

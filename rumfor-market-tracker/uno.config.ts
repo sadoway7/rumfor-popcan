@@ -1,4 +1,4 @@
-import { defineConfig, presetUno, presetAttributify, presetIcons } from 'unocss'
+import { defineConfig, presetUno, presetAttributify, presetIcons, presetTypography, presetWebFonts } from 'unocss'
 import transformerDirective from '@unocss/transformer-directives'
 import transformerVariantGroup from '@unocss/transformer-variant-group'
 
@@ -222,6 +222,18 @@ export default defineConfig({
     presetIcons({
       scale: 1.2,
       warn: true,
+      extraProperties: {
+        'display': 'inline-block',
+        'width': '1.2em',
+        'height': '1.2em',
+      },
+    }),
+    presetTypography(),
+    presetWebFonts({
+      fonts: {
+        sans: 'Inter:400,500,600,700',
+        mono: 'JetBrains Mono:400,500',
+      },
     }),
   ],
   transformers: [

@@ -68,6 +68,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false)
   const [dominantColor, setDominantColor] = React.useState<string>('')
   const [, setIsLightBackground] = React.useState(false)
+  const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
 
   // Extract dominant color from market image
   React.useEffect(() => {
@@ -85,32 +86,65 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         canvas.height = 100
         ctx.drawImage(img, 0, 0, 100, 100)
         
-        // Sample center area for dominant color
-        const imageData = ctx.getImageData(25, 25, 50, 50)
+        // Sample center-bottom area for dominant color (where market activity is)
+        const imageData = ctx.getImageData(20, 60, 60, 30)
         const data = imageData.data
         
-        let r = 0, g = 0, b = 0
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i]
-          g += data[i + 1]
-          b += data[i + 2]
+        // Find the most vibrant/saturated color
+        let maxSaturation = 0
+        let vibrantR = 128, vibrantG = 128, vibrantB = 128
+        
+        for (let i = 0; i < data.length; i += 16) { // Sample every 4th pixel
+          const r = data[i]
+          const g = data[i + 1]
+          const b = data[i + 2]
+          
+          // Calculate saturation
+          const max = Math.max(r, g, b)
+          const min = Math.min(r, g, b)
+          const saturation = max === 0 ? 0 : (max - min) / max
+          
+          // Also consider brightness - avoid too dark or too light
+          const brightness = (r + g + b) / 3
+          
+          if (saturation > maxSaturation && brightness > 40 && brightness < 220) {
+            maxSaturation = saturation
+            vibrantR = r
+            vibrantG = g
+            vibrantB = b
+          }
         }
         
-        const pixelCount = data.length / 4
-        r = Math.round(r / pixelCount)
-        g = Math.round(g / pixelCount)
-        b = Math.round(b / pixelCount)
+        // If no vibrant color found, fall back to average
+        if (maxSaturation < 0.1) {
+          let totalR = 0, totalG = 0, totalB = 0
+          for (let i = 0; i < data.length; i += 4) {
+            totalR += data[i]
+            totalG += data[i + 1]
+            totalB += data[i + 2]
+          }
+          const pixelCount = data.length / 4
+          vibrantR = Math.round(totalR / pixelCount)
+          vibrantG = Math.round(totalG / pixelCount)
+          vibrantB = Math.round(totalB / pixelCount)
+        }
         
-        // Brighten the color by moving it closer to white
-        const brightenFactor = 0.8
-        r = Math.round(r + (255 - r) * brightenFactor)
-        g = Math.round(g + (255 - g) * brightenFactor)
-        b = Math.round(b + (255 - b) * brightenFactor)
+        // Enhance saturation and darken for overlay
+        const enhanceFactor = 1.2
+        vibrantR = Math.min(255, Math.round(vibrantR * enhanceFactor))
+        vibrantG = Math.min(255, Math.round(vibrantG * enhanceFactor))
+        vibrantB = Math.min(255, Math.round(vibrantB * enhanceFactor))
         
-        setDominantColor(`rgb(${r}, ${g}, ${b})`)
+        // Darken more for better contrast and less washout
+        const darkenFactor = 0.5
+        vibrantR = Math.round(vibrantR * (1 - darkenFactor))
+        vibrantG = Math.round(vibrantG * (1 - darkenFactor))
+        vibrantB = Math.round(vibrantB * (1 - darkenFactor))
+        
+        setDominantColor(`rgb(${vibrantR}, ${vibrantG}, ${vibrantB})`)
         
         // Determine if background is light or dark
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000
+        const brightness = (vibrantR * 299 + vibrantG * 587 + vibrantB * 114) / 1000
         setIsLightBackground(brightness > 128)
       }
     }
@@ -118,15 +152,20 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    setIsTrackedOptimistic(!isTrackedOptimistic)
     
-    if (isTracked && onUntrack) {
+    if (isTrackedOptimistic && onUntrack) {
       onUntrack(market.id)
-    } else if (!isTracked && onTrack) {
+    } else if (!isTrackedOptimistic && onTrack) {
       onTrack(market.id)
     }
   }
 
-const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
+  React.useEffect(() => {
+    setIsTrackedOptimistic(isTracked)
+  }, [isTracked])
+
+  const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
     // Handle new backend format: object with specialDates
     if (schedule && typeof schedule === 'object' && !Array.isArray(schedule)) {
       const schedObj = schedule as any
@@ -607,41 +646,90 @@ const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
                   </div>
                   */}
                   
-                  {/* Top row - Info text (left) + Comments button (right) */}
-                  <div className="flex items-center justify-between px-3 py-2 relative">
+                   {/* Top row - Info text (left) + Stacked buttons (right, anchored bottom, grows up) - Mobile only */}
+                  <div className="flex items-center justify-between px-3 py-2 relative md:hidden">
                     <span className="text-xs text-white/80">Tap for details</span>
-                    <div
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setIsCommentsModalOpen(true)
-                      }}
-                      className="absolute top-2 right-2 cursor-pointer z-50"
-                    >
-                      <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                    <div className="absolute bottom-4 right-2 z-50 flex flex-col items-end">
+                      {/* Comments Button */}
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          setIsCommentsModalOpen(true)
+                        }}
+                        className="cursor-pointer mb-2"
+                      >
+                        <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                      </div>
+                      {/* Track Button */}
+                      <button
+                        onClick={handleTrackClick}
+                        type="button"
+                        className="mr-1 mt-1"
+                      >
+                        <svg
+                          viewBox="0 0 48 48"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-10 h-10 drop-shadow-md"
+                        >
+                          <rect
+                            x="4"
+                            y="4"
+                            width="40"
+                            height="40"
+                            rx="10"
+                            fill="white"
+                            stroke="white"
+                            strokeWidth="3"
+                          />
+                          {isTrackedOptimistic ? (
+                            <path
+                              d="M15 24L21 30L33 18"
+                              stroke="#22C55E"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          ) : (
+                            <path
+                              d="M24 14V34M12 24H36"
+                              stroke="#E67E22"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          )}
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                   {/* Bottom row - Title + description */}
-                  <div 
-                     className="relative shadow shadow-black/10 px-4 py-3"
-                     style={{
-                       background: dominantColor 
-                          ? `linear-gradient(to right, rgb(255,255,255) 25%, ${dominantColor} 66.67%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 100%)`
-                          : 'linear-gradient(to right, rgb(255,255,255) 25%, rgb(255,255,255) 66.67%, rgba(255,255,255,0.7) 100%)'
-                     }}
-                   >
-                       <div className="relative pt-0.5">
-                           <div className="absolute inset-0 blur-md bg-white/20"></div>
-                           <h3 className="relative text-zinc-900 font-quicksand font-bold text-xl leading-tight line-clamp-2">
-                             {market.name}
-                           </h3>
-                        </div>
-                       <div className="relative mt-1">
-                          <div className="absolute inset-0 blur-sm bg-white/10"></div>
-                          <p className="relative text-zinc-600 text-base font-medium leading-relaxed line-clamp-2">
-                            {market.description}
-                          </p>
-                       </div>
+                   {/* Bottom row - Title + description with dark gradient and color accent */}
+                   <div className="relative">
+                      {/* Color accent layer */}
+                      <div 
+                        className="absolute inset-0"
+                        style={{
+                          background: dominantColor 
+                             ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.9)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.15)')} 85%, transparent 100%)`
+                             : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+                        }}
+                      />
+                      {/* Dark overlay for readability */}
+                      <div 
+                        className="absolute inset-0"
+                        style={{
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+                        }}
+                      />
+                       {/* Content */}
+                      <div className="relative px-4 pt-4 pb-6 z-10">
+                        <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                          {market.name}
+                        </h3>
+                        <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+                          {market.description}
+                        </p>
+                      </div>
                    </div>
               </div>
             </div>

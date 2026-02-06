@@ -42,6 +42,17 @@ export const useHashtags = (marketId: string) => {
     },
   })
 
+  const addTagToMarketMutation = useMutation({
+    mutationFn: (tagName: string) =>
+      communityApi.addTagToMarket(marketId, tagName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
+    },
+    onError: (error: any) => {
+      console.error('Failed to add tag to market:', error)
+    },
+  })
+
   const deleteHashtagMutation = useMutation({
     mutationFn: (hashtagId: string) => communityApi.deleteHashtag(hashtagId),
     onSuccess: () => {
@@ -72,6 +83,15 @@ export const useHashtags = (marketId: string) => {
     }
     
     await createHashtagMutation.mutateAsync({ name })
+  }
+
+  const addTagToMarket = async (tagName: string) => {
+    // Basic validation
+    if (!tagName.trim()) {
+      throw new Error('Tag name is required')
+    }
+    
+    await addTagToMarketMutation.mutateAsync(tagName)
   }
 
   const deleteHashtag = async (hashtagId: string) => {
@@ -198,6 +218,7 @@ export const useHashtags = (marketId: string) => {
     deleteHashtag,
     voteHashtag,
     refreshHashtags,
+    addTagToMarket,
     
     // Utilities
     validateHashtagName,
@@ -214,11 +235,13 @@ export const useHashtags = (marketId: string) => {
     isCreating: createHashtagMutation.isPending,
     isDeleting: deleteHashtagMutation.isPending,
     isVoting: voteOnHashtagMutation.isPending,
+    isAddingTag: addTagToMarketMutation.isPending,
     
     // Errors
     createError: createHashtagMutation.error?.message,
     deleteError: deleteHashtagMutation.error?.message,
     voteError: voteOnHashtagMutation.error?.message,
+    addTagError: addTagToMarketMutation.error?.message,
   }
 }
 

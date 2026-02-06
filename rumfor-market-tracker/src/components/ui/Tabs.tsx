@@ -18,6 +18,8 @@ export interface TabsProps {
   variant?: 'default' | 'underline' | 'pills'
   className?: string
   fullWidth?: boolean
+  listClassName?: string
+  inactiveTextColor?: string
 }
 
 const Tabs: React.FC<TabsProps> = ({
@@ -28,7 +30,9 @@ const Tabs: React.FC<TabsProps> = ({
   size = 'md',
   variant = 'default',
   className,
-  fullWidth = false
+  fullWidth = false,
+  listClassName,
+  inactiveTextColor
 }) => {
   const [internalActiveKey, setInternalActiveKey] = useState(defaultActiveKey || items[0]?.key)
   const currentActiveKey = activeKey !== undefined ? activeKey : internalActiveKey
@@ -57,9 +61,9 @@ const Tabs: React.FC<TabsProps> = ({
   const tabBaseClasses = 'inline-flex items-center justify-center font-medium disabled:pointer-events-none disabled:opacity-50 outline-none'
 
   const variants = {
-    default: 'border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground data-[state=active]:border-accent data-[state=active]:text-foreground',
-    underline: 'border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50 data-[state=active]:border-accent data-[state=active]:text-foreground',
-    pills: 'px-4 py-2 rounded-full text-muted-foreground hover:text-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground',
+    default: `border-b-2 border-transparent hover:text-foreground hover:border-muted-foreground data-[state=active]:border-accent data-[state=active]:text-foreground ${inactiveTextColor || 'text-muted-foreground'}`,
+    underline: `border-b-2 border-transparent hover:text-foreground hover:border-muted-foreground/50 data-[state=active]:border-accent data-[state=active]:text-foreground ${inactiveTextColor || 'text-muted-foreground'}`,
+    pills: `px-4 py-2 rounded-full font-medium data-[state=active]:bg-accent data-[state=active]:text-white ${inactiveTextColor || 'text-muted-foreground'}`,
   }
 
   return (
@@ -67,7 +71,8 @@ const Tabs: React.FC<TabsProps> = ({
       <div
         className={cn(
           'flex gap-2',
-          variant !== 'pills' && 'border-b border-border'
+          variant !== 'pills' && 'border-b border-border',
+          listClassName
         )}
         role="tablist"
       >

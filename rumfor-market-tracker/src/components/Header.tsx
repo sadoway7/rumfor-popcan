@@ -83,7 +83,7 @@ export function Header() {
   }, [lastScrollY])
 
   return (
-    <header className={`sticky top-0 z-50 bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? "-translate-y-full" : ""}`}>
+    <header className={`sticky top-0 z-[60] bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? "-translate-y-full" : ""}`}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Sidebar Toggle Group - Left side */}

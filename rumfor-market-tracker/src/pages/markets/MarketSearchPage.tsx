@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { MarketGrid } from '@/components/MarketGrid'
 
-import { Button } from '@/components/ui'
+import { Button, Spinner } from '@/components/ui'
 import { DatePicker } from '@/components/DatePicker'
 import { useMarkets } from '@/features/markets/hooks/useMarkets'
 import { useSidebarStore } from '@/features/theme/themeStore'
@@ -17,6 +17,7 @@ export const MarketSearchPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
   const [isSortOpen, setIsSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
+  const observerRef = useRef<HTMLDivElement>(null)
   const { isSidebarOpen, toggleSidebar } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
@@ -33,19 +34,18 @@ export const MarketSearchPage: React.FC = () => {
     isLoading,
     isSearching,
     error,
-filters,
+    filters,
     trackedMarketIds,
     isTracking,
     searchMarkets,
     setFilters,
     trackMarket,
     untrackMarket,
-    nextPage,
-    previousPage,
-    hasMore,
-    currentPage
+    hasNextPage,
+    fetchNextPage
   } = useMarkets({
-    autoLoad: true
+    autoLoad: true,
+    infiniteScroll: true
   })
 
   // Initialize filters from URL params when component mounts or URL changes
@@ -83,6 +83,33 @@ filters,
   useEffect(() => {
     useSidebarStore.getState().setSidebarOpen(false)
   }, [])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0]
+        if (target.isIntersecting && hasNextPage && !isSearching) {
+          fetchNextPage()
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px'
+      }
+    )
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observer.unobserve(observerRef.current)
+      }
+      observer.disconnect()
+    }
+  }, [hasNextPage, isSearching, fetchNextPage])
 
   // Close sort dropdown when clicking outside
   useEffect(() => {
@@ -359,45 +386,33 @@ filters,
              </div>
 
             {/* Market Grid */}
-            <MarketGrid
-              markets={markets}
-              isLoading={isLoading}
-              isSearching={isSearching}
-              error={error}
-              onTrack={handleTrackMarket}
-              onUntrack={handleUntrackMarket}
-              trackedMarketIds={trackedMarketIds}
-              isTracking={isTracking}
-              variant="grid"
-              emptyStateProps={{
-                title: "Oops, we didn't find any of those markets.",
-                description: "Try adjusting your search criteria or filters to find more markets.",
-                action: (
-                  <Button onClick={handleClearFilters} size="lg">
-                    Clear all filters
-                  </Button>
-                )
-              }}
-            />
+            <div ref={observerRef}>
+              <MarketGrid
+                markets={markets}
+                isLoading={isLoading}
+                isSearching={isSearching}
+                error={error}
+                onTrack={handleTrackMarket}
+                onUntrack={handleUntrackMarket}
+                trackedMarketIds={trackedMarketIds}
+                isTracking={isTracking}
+                variant="grid"
+                emptyStateProps={{
+                  title: "Oops, we didn't find any of those markets.",
+                  description: "Try adjusting your search criteria or filters to find more markets.",
+                  action: (
+                    <Button onClick={handleClearFilters} size="lg">
+                      Clear all filters
+                    </Button>
+                  )
+                }}
+              />
+            </div>
 
-            {/* Pagination */}
-            {markets.length > 0 && hasMore && (
+            {/* Loading more indicator */}
+            {isSearching && markets.length > 0 && (
               <div className="flex justify-center mt-8">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={previousPage}
-                    disabled={currentPage <= 1 || isLoading}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    onClick={nextPage}
-                    disabled={!hasMore || isLoading}
-                  >
-                    Next
-                  </Button>
-                </div>
+                <Spinner className="h-6 w-6" />
               </div>
             )}
           </main>
