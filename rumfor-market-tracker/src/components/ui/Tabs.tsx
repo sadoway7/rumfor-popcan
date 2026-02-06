@@ -74,6 +74,7 @@ const Tabs: React.FC<TabsProps> = ({
           variant !== 'pills' && 'border-b border-border',
           listClassName
         )}
+        style={variant === 'pills' ? { justifyContent: 'space-around' } : undefined}
         role="tablist"
       >
         {items.map((item) => (
@@ -90,7 +91,7 @@ const Tabs: React.FC<TabsProps> = ({
               variant === 'pills' ? '' : tabPaddingClasses[size],
               sizeClasses[size],
               variants[variant],
-              fullWidth && 'flex-1',
+              (fullWidth || variant === 'pills') && 'flex-1',
               item.disabled && 'cursor-not-allowed'
             )}
             onClick={() => handleTabClick(item.key, item.disabled)}

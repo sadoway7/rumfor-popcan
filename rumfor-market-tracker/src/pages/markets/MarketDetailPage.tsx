@@ -15,7 +15,7 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw } from 'lucide-react'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info } from 'lucide-react'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
@@ -345,7 +345,8 @@ export const MarketDetailPage: React.FC = () => {
           items={[
             {
               key: 'details',
-              label: 'Details',
+              label: 'Info',
+              icon: <Info className="w-4 h-4" />,
               content: (
                 <div className="space-y-4 pb-4 pt-4 px-4">
                   {/* Left: Location + Schedule / Right: Action Links */}
@@ -388,7 +389,7 @@ export const MarketDetailPage: React.FC = () => {
                       {market.promoter && (
                         <>
                           <button
-                            className="text-base font-medium text-accent hover:underline inline-flex items-center gap-2 cursor-pointer"
+                            className="text-xs font-bold text-accent hover:underline inline-flex items-center gap-2 cursor-pointer"
                             onClick={() => navigate('/fake-404')}
                           >
                             {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Submitted'}
@@ -536,6 +537,7 @@ variant="outline"
             {
               key: 'vendors',
               label: 'Vendors',
+              icon: <Users className="w-4 h-4" />,
               content: (
                 <div className="space-y-4 pb-4 pt-4 px-4">
                   {/* Vendors Header */}
