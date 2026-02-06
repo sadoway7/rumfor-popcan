@@ -100,9 +100,16 @@ export const TagVoting: React.FC<TagVotingProps> = ({
       // Brief wait for cache invalidation
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      // Find newly created hashtag in refreshed list
-      const updatedHashtags = queryClient.getQueryData(['hashtags', marketId]) as any[]
-      const newTag = updatedHashtags?.find((h: any) => h.name === tagName)
+      // Force refetch to get updated data
+      await queryClient.invalidateQueries({ queryKey: ['hashtags', marketId] })
+      
+      // Wait for refetch to complete
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Get fresh data from cache
+      const cacheData = queryClient.getQueryData(['hashtags', marketId]) as any
+      const updatedHashtags = cacheData?.data || cacheData || []
+      const newTag = Array.isArray(updatedHashtags) ? updatedHashtags.find((h: any) => h.name === tagName) : null
       
       if (newTag) {
         // Vote up newly created tag
