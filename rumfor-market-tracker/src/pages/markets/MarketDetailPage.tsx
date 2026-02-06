@@ -419,13 +419,11 @@ export const MarketDetailPage: React.FC = () => {
                   </div>
 
                   {/* Tags */}
-                  {user && (
-                    <TagVoting
-                      marketTags={market.tags || []}
-                      marketId={id!}
-                      className="mt-8 mb-6"
-                    />
-                  )}
+                  <TagVoting
+                    marketTags={market.tags || []}
+                    marketId={id!}
+                    className="mt-8 mb-6"
+                  />
 
 {/* Booth Fee */}
                   {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
