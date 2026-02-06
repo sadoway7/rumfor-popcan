@@ -797,14 +797,17 @@ const schedules = formData.schedule.map(s => {
                     )}
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="relative">
                     <button
                       type="button"
                       onClick={(e) => {
                         const input = (e.currentTarget.parentElement?.querySelector('input[type="date"]') as HTMLInputElement)
-                        if (input) input.showPicker()
+                        if (input) {
+                          input.focus()
+                          input.showPicker()
+                        }
                       }}
-                      className="w-full h-10 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-center gap-2"
+                      className="w-full h-10 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-center gap-2 relative z-10"
                     >
                       <Calendar className="w-4 h-4" />
                       <span>
@@ -821,20 +824,24 @@ const schedules = formData.schedule.map(s => {
                       }}
                       min={formatLocalDate(new Date().toISOString())}
                       required
-                      className="w-0 h-0 p-0 border-0 opacity-0 absolute"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      style={{ WebkitAppearance: 'none' }}
                     />
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative">
                       <label className="text-xs font-medium text-muted-foreground">Start</label>
                       <button
                         type="button"
                         onClick={(e) => {
                           const input = (e.currentTarget.parentElement?.querySelector('input[type="time"]') as HTMLInputElement)
-                          if (input) input.showPicker()
+                          if (input) {
+                            input.focus()
+                            input.showPicker()
+                          }
                         }}
-                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2"
+                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2 relative z-10"
                       >
                         <span className="truncate">{item.startTime ? formatTime12Hour(item.startTime) : '--:--'}</span>
                         <Clock className="w-3 h-3 opacity-50" />
@@ -847,19 +854,23 @@ const schedules = formData.schedule.map(s => {
                           newSchedule[index].startTime = e.target.value
                           setFormData(prev => ({ ...prev, schedule: newSchedule }))
                         }}
-                        className="w-0 h-0 p-0 border-0 opacity-0 absolute"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none' }}
                       />
                     </div>
                     
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative">
                       <label className="text-xs font-medium text-muted-foreground">End</label>
                       <button
                         type="button"
                         onClick={(e) => {
                           const input = (e.currentTarget.parentElement?.querySelector('input[type="time"]') as HTMLInputElement)
-                          if (input) input.showPicker()
+                          if (input) {
+                            input.focus()
+                            input.showPicker()
+                          }
                         }}
-                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2"
+                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2 relative z-10"
                       >
                         <span className="truncate">{item.endTime ? formatTime12Hour(item.endTime) : '--:--'}</span>
                         <Clock className="w-3 h-3 opacity-50" />
@@ -872,7 +883,8 @@ const schedules = formData.schedule.map(s => {
                           newSchedule[index].endTime = e.target.value
                           setFormData(prev => ({ ...prev, schedule: newSchedule }))
                         }}
-                        className="w-0 h-0 p-0 border-0 opacity-0 absolute"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none' }}
                       />
                     </div>
                   </div>
