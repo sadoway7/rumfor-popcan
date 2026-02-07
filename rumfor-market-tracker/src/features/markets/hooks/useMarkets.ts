@@ -271,8 +271,8 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   // Apply client-side sorting when sortBy is present
   const sortedMarkets = useMemo<Market[]>(() => {
-    if (!currentFilters.sortBy) {
-      return rawMarkets
+    if (!currentFilters.sortBy || !rawMarkets || !Array.isArray(rawMarkets)) {
+      return rawMarkets || []
     }
 
     const sorted = [...rawMarkets]

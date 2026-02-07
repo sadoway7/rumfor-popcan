@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Spinner } from '@/components/ui'
 
 // Lazy-loaded page imports for better performance
 const LoginPage = React.lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.default })))
@@ -74,10 +75,10 @@ const UIComponentsTestPage = React.lazy(() => import('@/pages/test/UIComponentsT
 
 // Loading component for Suspense
 const PageLoader: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="flex items-center justify-center py-12">
     <div className="text-center">
-      <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-      <p className="text-muted-foreground">Loading page...</p>
+      <Spinner className="h-8 w-8 mx-auto mb-4" />
+      <p className="text-muted-foreground">Loading...</p>
     </div>
   </div>
 )

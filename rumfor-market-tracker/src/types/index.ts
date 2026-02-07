@@ -496,7 +496,7 @@ export interface MarketFilters {
   status?: MarketStatus[]
   search?: string
   tags?: string[]
-  sortBy?: 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc' | 'date' | 'name' | 'distance' | 'createdAt' | 'popularity'
+  sortBy?: 'date-oldest' | 'date-newest' | 'recently-added' | 'name-asc' | 'name-desc' | 'date' | 'name' | 'distance' | 'createdAt' | 'popularity'
   sortOrder?: 'asc' | 'desc'
   accessibility?: {
     wheelchairAccessible?: boolean

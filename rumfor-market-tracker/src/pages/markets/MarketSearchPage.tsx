@@ -13,7 +13,7 @@ import { Layers, RotateCcw } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [sortBy, setSortBy] = useState<'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc'>('date-newest')
+  const [sortBy, setSortBy] = useState<'date-oldest' | 'date-newest' | 'recently-added' | 'name-asc' | 'name-desc'>('date-oldest')
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
   const [isSortOpen, setIsSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -187,7 +187,7 @@ export const MarketSearchPage: React.FC = () => {
     return count
   }
 
-  const handleSortChange = (newSortBy: 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc') => {
+  const handleSortChange = (newSortBy: 'date-oldest' | 'date-newest' | 'recently-added' | 'name-asc' | 'name-desc') => {
     setSortBy(newSortBy)
     setIsSortOpen(false)
     const newFilters: MarketFilterType = { 
@@ -346,26 +346,30 @@ export const MarketSearchPage: React.FC = () => {
                       >
                         <Layers className="w-4 h-4" />
                         <span className="text-sm font-medium">
-                          {sortBy === 'date-newest' ? 'Soonest' : sortBy === 'date-oldest' ? 'Latest' : sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
+                          {sortBy === 'date-oldest' ? 'Soonest' : sortBy === 'date-newest' ? 'Latest' : sortBy === 'recently-added' ? 'Recent' : sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
                         </span>
                       </button>
                       {isSortOpen && (
                         <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-[100] py-1">
-                          <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</div>
-                          <button
-                            onClick={() => handleSortChange('date-newest')}
-                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-newest' ? 'text-accent font-medium' : 'text-foreground'}`}
-                          >
-                            Soonest First
-                          </button>
                           <button
                             onClick={() => handleSortChange('date-oldest')}
                             className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-oldest' ? 'text-accent font-medium' : 'text-foreground'}`}
                           >
-                            Latest First
+                            Soonest First
+                          </button>
+                          <button
+                            onClick={() => handleSortChange('date-newest')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-newest' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            Furthest First
+                          </button>
+                          <button
+                            onClick={() => handleSortChange('recently-added')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'recently-added' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            Newest First
                           </button>
                           <div className="border-t border-border my-1" />
-                          <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</div>
                           <button
                             onClick={() => handleSortChange('name-asc')}
                             className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'name-asc' ? 'text-accent font-medium' : 'text-foreground'}`}

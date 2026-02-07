@@ -422,16 +422,23 @@ export const marketsApi = {
           if (filters.location.state) locationParts.push(filters.location.state)
           queryParams.append('location', locationParts.join(' '))
         }
-        // Map frontend sortBy to backend field names
-        const sortByMap: Record<string, string> = {
-          'date-newest': 'createdAt',
-          'date-oldest': 'createdAt',
-          'name-asc': 'name',
-          'name-desc': 'name',
-          popularity: 'stats.viewCount'
+        // When sorting is enabled, don't send sort params to API - fetch unsorted data
+        // and let client-side sorting handle it (we fetch 500 records for this purpose)
+        if (filters.sortBy) {
+          // Fetch more results for client-side sorting, but don't send sort params to backend
+          // The client-side sorting in useMarkets.ts handles the actual sorting
+        } else {
+          // Map frontend sortBy to backend field names for server-side sorting (only when not using client-side sorting)
+          const sortByMap: Record<string, string> = {
+            'date-newest': 'createdAt',
+            'date-oldest': 'createdAt',
+            'name-asc': 'name',
+            'name-desc': 'name',
+            popularity: 'stats.viewCount'
+          }
+          if (filters.sortBy) queryParams.append('sortBy', sortByMap[filters.sortBy] || filters.sortBy)
+          if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder)
         }
-        if (filters.sortBy) queryParams.append('sortBy', sortByMap[filters.sortBy] || filters.sortBy)
-        if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder)
       }
       queryParams.append('page', '1')
       queryParams.append('limit', effectiveLimit.toString())
