@@ -336,12 +336,12 @@ export const MarketDetailPage: React.FC = () => {
       )}
 
       {/* TABS */}
-      <div className="mb-2 sm:mb-2">
+      <div className="mb-2 sm:mb-2 overflow-hidden">
         <Tabs
           inactiveTextColor="text-gray-400"
           variant="pills"
           size="md"
-          listClassName="bg-black px-4 py-3"
+          listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2"
           items={[
             {
               key: 'details',

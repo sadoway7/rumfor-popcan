@@ -69,6 +69,9 @@ const ApplicationFormPage = React.lazy(() => import('@/pages/applications').then
 // Dashboard redirect - lazy loaded
 const DashboardRedirectPage = React.lazy(() => import('@/pages/DashboardRedirectPage').then(module => ({ default: module.DashboardRedirectPage })))
 
+// Test pages - lazy loaded
+const UIComponentsTestPage = React.lazy(() => import('@/pages/test/UIComponentsTestPage').then(module => ({ default: module.UIComponentsTestPage })))
+
 // Loading component for Suspense
 const PageLoader: React.FC = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -88,6 +91,9 @@ export function AppRoutes() {
       <Route path="/markets/:id" element={<MainLayout><Suspense fallback={<PageLoader />}><MarketDetailPage /></Suspense></MainLayout>} />
       <Route path="/about" element={<MainLayout><Suspense fallback={<PageLoader />}><AboutPage /></Suspense></MainLayout>} />
       <Route path="/contact" element={<MainLayout><Suspense fallback={<PageLoader />}><ContactPage /></Suspense></MainLayout>} />
+
+      {/* Test Routes */}
+      <Route path="/test/ui" element={<MainLayout><Suspense fallback={<PageLoader />}><UIComponentsTestPage /></Suspense></MainLayout>} />
 
       {/* Auth Routes */}
       <Route path="/auth/login" element={<AuthLayout><Suspense fallback={<PageLoader />}><LoginPage /></Suspense></AuthLayout>} />

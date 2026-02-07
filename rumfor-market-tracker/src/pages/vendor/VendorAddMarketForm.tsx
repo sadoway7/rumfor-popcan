@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -10,6 +11,7 @@ import { Checkbox } from '@/components/ui/Checkbox'
 import { cn } from '@/utils/cn'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '@/features/markets/marketsApi'
+import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { getCategoryImage, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE, ALLOWED_MARKET_TAGS } from '@/assets/images'
 import { formatLocalDate } from '@/utils/formatDate'
 import { formatTime12Hour } from '@/utils/formatTime'
@@ -164,6 +166,8 @@ const attendanceOptions = [
 export function VendorAddMarketForm() {
   const navigate = useNavigate()
   const { user } = useAuthStore()
+  const queryClient = useQueryClient()
+  const { trackMarket } = useTrackedMarkets()
   const [currentStep, setCurrentStep] = useState(1)
   const [tagInputValue, setTagInputValue] = useState('')
   const [marketImage, setMarketImage] = useState<string | undefined>(undefined)
@@ -251,6 +255,11 @@ startDate: formatLocalDate(new Date().toISOString()),
     if (step === 2) {
       if (formData.schedule.length === 0) newErrors.schedule = 'At least one schedule item is required'
     }
+
+    // Step 3 validation - website is optional for now
+    // if (!formData.contact.website?.trim()) {
+    //   newErrors.website = 'Official website/link is required'
+    // }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -354,8 +363,16 @@ startDate: formatLocalDate(new Date().toISOString()),
       const response = await marketsApi.createMarket(marketData)
 
       if (response.success && response.data) {
-        alert('Market added successfully! You can now track this market and plan your participation.')
-        navigate('/vendor/tracked-markets')
+        const data = response.data as any
+        const newMarketId = data.id || data._id || data.market?.id
+        
+        // Auto-track with "interested" status using the same function as the track button
+        await trackMarket(newMarketId, 'interested')
+        
+        // Small delay to ensure market is fully processed
+        setTimeout(() => {
+          navigate(`/vendor/markets/${newMarketId}`)
+        }, 500)
       } else {
         throw new Error(response.error || 'Failed to create market')
       }
@@ -514,51 +531,53 @@ const schedules = formData.schedule.map(s => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
-      {/* Progress Steps - Compact with integrated back button */}
-      <Card className="p-3 sm:p-6">
-        <div className="flex items-center gap-2">
-          {/* Back Button */}
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/vendor')}
-            className="p-2 flex-shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
+    <div className="max-w-4xl mx-auto space-y-3 animate-in slide-in-from-bottom-8 duration-500">
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      {/* Progress Steps */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        {/* Back Button */}
+        <Button 
+          variant="ghost" 
+          onClick={currentStep > 1 ? prevStep : () => navigate('/vendor')}
+          className="p-2"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
 
-          {/* Progress Steps */}
-          <div className="flex items-center flex-1 overflow-hidden">
-            {steps.map((step, index) => (
-              <div key={step.number} className="flex items-center flex-1 min-w-0">
-                <div className={cn(
-                  "flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-medium flex-shrink-0",
-                  currentStep >= step.number 
-                    ? "bg-accent text-accent-foreground" 
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  {currentStep > step.number ? <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" /> : step.number}
-                </div>
-                <div className="ml-1.5 sm:ml-3 min-w-0 flex-1 hidden sm:block">
-                  <div className={cn(
-                    "text-xs sm:text-sm font-medium truncate",
-                    currentStep >= step.number ? "text-foreground" : "text-muted-foreground"
-                  )}>
-                    {step.title}
-                  </div>
-                  <div className="text-xs text-muted-foreground">{step.description}</div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={cn(
-                    "flex-1 h-0.5 mx-1 sm:mx-4",
-                    currentStep > step.number ? "bg-accent" : "bg-muted"
-                  )} />
-                )}
+        {/* Step indicator */}
+        <div className="flex items-center gap-2">
+          {steps.map((step, index) => (
+            <div key={step.number} className="flex items-center">
+              <div className={cn(
+                "flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold transition-colors",
+                currentStep >= step.number 
+                  ? "bg-accent text-accent-foreground" 
+                  : "bg-transparent text-muted-foreground border border-border"
+              )}>
+                {currentStep > step.number ? <CheckCircle className="w-4 h-4" /> : step.number}
               </div>
-            ))}
-          </div>
+              {index < steps.length - 1 && (
+                <div className={cn(
+                  "w-8 h-0.5 mx-2",
+                  currentStep > step.number ? "bg-accent" : "bg-border"
+                )} />
+              )}
+            </div>
+          ))}
         </div>
-      </Card>
+
+        {/* Current step label */}
+        <div className="w-24 text-left">
+          <span className="text-sm font-medium text-muted-foreground">
+            {steps[currentStep - 1]?.title}
+          </span>
+        </div>
+      </div>
 
       {/* API Error Display */}
       {Object.keys(apiErrors).length > 0 && (
@@ -594,124 +613,119 @@ const schedules = formData.schedule.map(s => {
 
       {/* Form Steps */}
       {currentStep === 1 && (
-        <Card className="p-6 space-y-6">
+        <Card className="p-4 sm:p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Basic Information</h2>
-            <p className="text-muted-foreground text-sm">Let's start with the essential details about this market.</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Basic Information · 1 of 3</h2>
           </div>
 
-          {/* Market Name */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Market Name *</label>
-            <Input
-              value={formData.name}
-              onChange={(e) => {
-                setFormData(prev => ({ ...prev, name: e.target.value }))
-                clearFieldError('name')
-              }}
-              placeholder="e.g., Downtown Farmers Market"
-              className={cn((errors.name || apiErrors.name) && "border-red-500")}
-            />
-            {(errors.name || apiErrors.name) && (
-              <p className="text-red-500 text-sm">{errors.name || apiErrors.name}</p>
-            )}
+          {/* Community Info Banner */}
+          <div className="p-3 rounded-lg border border-accent/30 bg-accent/5">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="font-semibold text-foreground">Please read: </span>
+              Markets you add are public and help all vendors. Search first to avoid duplicates. The more info you provide, the more it helps others.
+            </p>
+            <p className="text-xs font-semibold text-foreground mt-1.5">
+              Submissions are admin-managed, edits can only be requested.
+            </p>
           </div>
 
-          {/* Category */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Category *</label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => {
-                setFormData(prev => ({ ...prev, category: value }))
-                clearFieldError('category')
-              }}
-              placeholder="Select market category"
-              options={categories.map(category => ({ value: category.value, label: category.label }))}
-            />
-            {(errors.category || apiErrors.category) && (
-              <p className="text-red-500 text-sm">{errors.category || apiErrors.category}</p>
-            )}
-          </div>
-
-          {/* Market Image Upload - Optional */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Market Image (Optional)</label>
-            <div className="flex items-start gap-3">
-              <input
-                type="file"
-                id="market-image-upload"
-                accept={ALLOWED_IMAGE_TYPES.join(',')}
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <label
-                htmlFor="market-image-upload"
-                className={cn(
-                  "flex-1 cursor-pointer",
-                  !marketImage && "w-full h-28 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50"
-                )}
-              >
-                {marketImage ? (
-                  <img 
-                    src={marketImage} 
-                    alt="Market preview" 
-                    className="w-full h-28 object-cover rounded-lg" 
+            {/* Photo & Category Row */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Market Image Upload */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-foreground">Photo - (replace default)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    id="market-image-upload"
+                    accept={ALLOWED_IMAGE_TYPES.join(',')}
+                    onChange={handleImageUpload}
+                    className="hidden"
                   />
-                ) : (
-                  <div className="w-full h-28 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50">
-                    <Upload className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground ml-2">Click to upload</span>
-                  </div>
+                  {marketImage ? (
+                    <div className="relative group flex-1 h-10">
+                      <img 
+                        src={marketImage} 
+                        alt="Market preview" 
+                        className="w-full h-full object-cover rounded-lg" 
+                      />
+                      <div className="absolute -top-1 -right-1 bg-black/60 rounded-full p-0.5">
+                        <label
+                          htmlFor="market-image-upload"
+                          className="cursor-pointer bg-white rounded-full p-0.5"
+                        >
+                          <Upload className="w-3 h-3" />
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="market-image-upload"
+                      className="flex-1 h-10 px-3 border border-dashed border-input rounded-lg cursor-pointer hover:bg-surface/50 transition-colors flex items-center gap-2 text-muted-foreground"
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm">Add photo</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-bold text-foreground">Category *</label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, category: value }))
+                    clearFieldError('category')
+                  }}
+                  placeholder="Select"
+                  options={categories.map(category => ({ value: category.value, label: category.label }))}
+                />
+                {(errors.category || apiErrors.category) && (
+                  <p className="text-red-500 text-xs">{errors.category || apiErrors.category}</p>
                 )}
-              </label>
-              {marketImage && (
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={removeImage}
-                  className="text-destructive h-8"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
+              </div>
+            </div>
+
+            {/* Market Name */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-foreground">Market Name *</label>
+              <Input
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, name: e.target.value }))
+                  clearFieldError('name')
+                }}
+                placeholder="Market Name *"
+                className={cn((errors.name || apiErrors.name) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+              />
+              {(errors.name || apiErrors.name) && (
+                <p className="text-red-500 text-xs">{errors.name || apiErrors.name}</p>
               )}
             </div>
-          </div>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Description</label>
-            <Textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of the market..."
-              rows={2}
-            />
-          </div>
+            {/* Description */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-foreground">Description</label>
+              <Textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Brief description..."
+                rows={2}
+                  className="text-sm font-semibold placeholder:text-muted-foreground/70"
+              />
+            </div>
 
           {/* Location */}
           <div className="space-y-3">
-            <h3 className="font-medium text-foreground flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4" />
+            <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
               Location *
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="md:col-span-2 space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Address</label>
-                <Input
-                  value={formData.location.address}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    location: { ...prev.location, address: e.target.value }
-                  }))}
-                  placeholder="Street address"
-                />
-              </div>
-              
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">City *</label>
                 <Input
                   value={formData.location.city}
                   onChange={(e) => {
@@ -721,16 +735,15 @@ const schedules = formData.schedule.map(s => {
                     }))
                     clearFieldError('city')
                   }}
-                  placeholder="City"
-                  className={cn((errors.city || apiErrors.city) && "border-red-500")}
+                  placeholder="City *"
+                   className={cn((errors.city || apiErrors.city) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
                 />
                 {(errors.city || apiErrors.city) && (
-                  <p className="text-red-500 text-sm">{errors.city || apiErrors.city}</p>
+                  <p className="text-red-500 text-xs">{errors.city || apiErrors.city}</p>
                 )}
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Province/State *</label>
                 <Select
                   value={formData.location.state}
                   onValueChange={(value) => {
@@ -740,23 +753,35 @@ const schedules = formData.schedule.map(s => {
                     }))
                     clearFieldError('state')
                   }}
-                  placeholder="Select province/state"
+                  placeholder="Province/State *"
                   options={provincesAndStates.map(ps => ({ value: ps.value, label: ps.label }))}
                 />
                 {(errors.state || apiErrors.state) && (
-                  <p className="text-red-500 text-sm">{errors.state || apiErrors.state}</p>
+                  <p className="text-red-500 text-xs">{errors.state || apiErrors.state}</p>
                 )}
               </div>
               
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Postal/Zip Code</label>
+              <div className="sm:col-span-2">
+                <Input
+                  value={formData.location.address}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    location: { ...prev.location, address: e.target.value }
+                  }))}
+                  placeholder="Street address"
+              className="text-sm font-semibold placeholder:text-muted-foreground/70"
+                />
+              </div>
+              
+              <div className="sm:col-span-2">
                 <Input
                   value={formData.location.zipCode}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     location: { ...prev.location, zipCode: e.target.value }
                   }))}
-                  placeholder="A1A 1A1 or 12345"
+                  placeholder="Postal/Zip Code"
+                  className="text-sm font-semibold placeholder:text-muted-foreground/70 sm:max-w-xs"
                 />
               </div>
             </div>
@@ -765,73 +790,74 @@ const schedules = formData.schedule.map(s => {
       )}
 
       {currentStep === 2 && (
-        <Card className="p-6 space-y-6">
+        <Card className="p-4 sm:p-6 space-y-4">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Schedule & Details</h2>
-            <p className="text-muted-foreground text-sm">When does this market operate?</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2">Schedule & Details · 2 of 3</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">When does this market operate?</p>
           </div>
 
           {/* Schedule */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                 Schedule *
               </h3>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {formData.schedule.map((item, index) => (
-                <div key={index} className="p-4 border border-border rounded-lg space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground">Schedule {index + 1}</h4>
+                <div key={index} className="p-3 sm:p-4 rounded-lg space-y-3 bg-muted/20 shadow-md">
+                  <div className="relative">
+                    <h4 className="text-sm font-bold text-foreground text-center">Date {index + 1}</h4>
                     {formData.schedule.length > 1 && (
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={() => removeScheduleItem(index)}
-                        className="p-1"
+                        className="absolute top-0 right-0 p-1 h-7 w-7"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3" />
                       </Button>
                     )}
                   </div>
                   
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        const input = (e.currentTarget.parentElement?.querySelector('input[type="date"]') as HTMLInputElement)
-                        if (input) {
-                          input.focus()
-                          input.showPicker()
-                        }
-                      }}
-                      className="w-full h-10 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-center gap-2 relative z-10"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      <span>
-                        {item.eventDate ? new Date(item.eventDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Select Date'}
-                      </span>
-                    </button>
-                    <Input
-                      type="date"
-                      value={item.eventDate || ''}
-                      onChange={(e) => {
-                        const newSchedule = [...formData.schedule]
-                        newSchedule[index].eventDate = e.target.value
-                        setFormData(prev => ({ ...prev, schedule: newSchedule }))
-                      }}
-                      min={formatLocalDate(new Date().toISOString())}
-                      required
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      style={{ WebkitAppearance: 'none' }}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1 relative">
-                      <label className="text-xs font-medium text-muted-foreground">Start</label>
+                  <div className="flex flex-wrap gap-2 items-end">
+                    <div className="flex-1 min-w-[140px]">
+                      <label className="text-xs font-medium text-muted-foreground text-center block mb-1">Date</label>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          const input = (e.currentTarget.parentElement?.querySelector('input[type="date"]') as HTMLInputElement)
+                          if (input) {
+                            input.focus()
+                            input.showPicker()
+                          }
+                        }}
+                        className="w-full h-10 px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-2 relative z-10"
+                      >
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {item.eventDate ? new Date(item.eventDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Date'}
+                        </span>
+                      </button>
+                      <Input
+                        type="date"
+                        value={item.eventDate || ''}
+                        onChange={(e) => {
+                          const newSchedule = [...formData.schedule]
+                          newSchedule[index].eventDate = e.target.value
+                          setFormData(prev => ({ ...prev, schedule: newSchedule }))
+                        }}
+                        min={formatLocalDate(new Date().toISOString())}
+                        required
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        style={{ WebkitAppearance: 'none' }}
+                      />
+                    </div>
+                    
+                    <div className="w-24">
+                      <label className="text-xs font-medium text-muted-foreground text-center block mb-1">Start</label>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -841,10 +867,9 @@ const schedules = formData.schedule.map(s => {
                             input.showPicker()
                           }
                         }}
-                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2 relative z-10"
+                        className="w-full h-10 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-1 relative z-10"
                       >
-                        <span className="truncate">{item.startTime ? formatTime12Hour(item.startTime) : '--:--'}</span>
-                        <Clock className="w-3 h-3 opacity-50" />
+                        <span>{item.startTime ? formatTime12Hour(item.startTime) : 'Start'}</span>
                       </button>
                       <Input
                         type="time"
@@ -859,8 +884,8 @@ const schedules = formData.schedule.map(s => {
                       />
                     </div>
                     
-                    <div className="space-y-1 relative">
-                      <label className="text-xs font-medium text-muted-foreground">End</label>
+                    <div className="w-24">
+                      <label className="text-xs font-medium text-muted-foreground text-center block mb-1">End</label>
                       <button
                         type="button"
                         onClick={(e) => {
@@ -870,10 +895,9 @@ const schedules = formData.schedule.map(s => {
                             input.showPicker()
                           }
                         }}
-                        className="w-full h-9 px-3 rounded-lg border border-input bg-background hover:bg-accent text-sm flex items-center justify-between gap-2 relative z-10"
+                        className="w-full h-10 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-1 relative z-10"
                       >
-                        <span className="truncate">{item.endTime ? formatTime12Hour(item.endTime) : '--:--'}</span>
-                        <Clock className="w-3 h-3 opacity-50" />
+                        <span>{item.endTime ? formatTime12Hour(item.endTime) : 'End'}</span>
                       </button>
                       <Input
                         type="time"
@@ -896,7 +920,7 @@ const schedules = formData.schedule.map(s => {
                   variant="outline" 
                   size="sm" 
                   onClick={addScheduleItem}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 h-9"
                 >
                   <Plus className="w-4 h-4" />
                   Add Date
@@ -904,48 +928,67 @@ const schedules = formData.schedule.map(s => {
               </div>
             </div>
             
-            {errors.schedule && <p className="text-red-500 text-sm">{errors.schedule}</p>}
+            {errors.schedule && <p className="text-red-500 text-xs">{errors.schedule}</p>}
             
             {/* Schedule Preview */}
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <h4 className="text-sm font-medium text-foreground mb-2">Schedule Preview</h4>
-              <p className="text-sm text-muted-foreground">{formatScheduleDisplay()}</p>
+            <div className="p-4 rounded-lg border border-accent/30 bg-accent/5">
+              <h4 className="text-sm font-semibold text-foreground mb-2">Preview</h4>
+              <p className="text-base text-foreground">{formatScheduleDisplay()}</p>
             </div>
           </div>
         </Card>
       )}
 
       {currentStep === 3 && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Contact & Additional Info */}
-          <Card className="p-6 space-y-6">
+          <Card className="p-4 sm:p-6 space-y-4">
             <div>
-              <h2 className="text-xl font-semibold text-foreground mb-4">Additional Information</h2>
-              <p className="text-muted-foreground text-sm">Help other vendors by providing extra details.</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2">Additional Information · 3 of 3</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Help other vendors with extra details.</p>
             </div>
 
-            {/* Contact Information */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-foreground flex items-center gap-2">
-                <Phone className="w-4 h-4" />
-                Contact Information
+            {/* Promoters Contact Information */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
+                <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+                Promoter's Contact
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Phone</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                   <Input
+                    value={formData.contact.website || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        contact: { ...prev.contact, website: e.target.value }
+                      }))
+                      clearFieldError('website')
+                    }}
+                    placeholder="Official Website/Link *"
+                    className={cn((errors.website || apiErrors.website) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+                  />
+                  {(errors.website || apiErrors.website) && (
+                    <p className="text-red-500 text-xs">{errors.website || apiErrors.website}</p>
+                  )}
+                </div>
+                
+                {/* Phone and Email temporarily hidden */}
+                {/* 
+                <div>
                   <Input
                     value={formData.contact.phone || ''}
                     onChange={(e) => setFormData(prev => ({
                       ...prev,
                       contact: { ...prev.contact, phone: e.target.value }
                     }))}
-                    placeholder="(555) 123-4567"
+                    placeholder="Phone"
+                    className="font-semibold placeholder:text-muted-foreground/70"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Email</label>
+                <div>
                   <Input
                     type="email"
                     value={formData.contact.email || ''}
@@ -953,32 +996,22 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       contact: { ...prev.contact, email: e.target.value }
                     }))}
-                    placeholder="contact@market.com"
+                    placeholder="Email"
+                    className="font-semibold placeholder:text-muted-foreground/70"
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Website</label>
-                  <Input
-                    value={formData.contact.website || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      contact: { ...prev.contact, website: e.target.value }
-                    }))}
-                    placeholder="https://example.com"
-                  />
-                </div>
+                */}
               </div>
             </div>
 
             {/* Accessibility Features */}
-            <div className="space-y-4">
-              <h3 className="font-medium text-foreground flex items-center gap-2">
-                <Accessibility className="w-4 h-4" />
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
+                <Accessibility className="w-3 h-3 sm:w-4 sm:h-4" />
                 Accessibility & Amenities
               </h3>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="wheelchair"
@@ -988,7 +1021,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, wheelchairAccessible: checked }
                     }))}
                   />
-                  <label htmlFor="wheelchair" className="text-sm text-foreground">
+                  <label htmlFor="wheelchair" className="text-xs sm:text-sm text-foreground">
                     Wheelchair Accessible
                   </label>
                 </div>
@@ -1002,7 +1035,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, handicapParking: checked }
                     }))}
                   />
-                  <label htmlFor="handicap-parking" className="text-sm text-foreground">
+                  <label htmlFor="handicap-parking" className="text-xs sm:text-sm text-foreground">
                     Handicap Parking
                   </label>
                 </div>
@@ -1016,7 +1049,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, parkingAvailable: checked }
                     }))}
                   />
-                  <label htmlFor="parking" className="text-sm text-foreground">
+                  <label htmlFor="parking" className="text-xs sm:text-sm text-foreground">
                     Parking Available
                   </label>
                 </div>
@@ -1030,8 +1063,8 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, restroomsAvailable: checked }
                     }))}
                   />
-                  <label htmlFor="restrooms" className="text-sm text-foreground">
-                    Restrooms Available
+                  <label htmlFor="restrooms" className="text-xs sm:text-sm text-foreground">
+                    Restrooms
                   </label>
                 </div>
                 
@@ -1044,7 +1077,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, covered: checked }
                     }))}
                   />
-                  <label htmlFor="covered" className="text-sm text-foreground">
+                  <label htmlFor="covered" className="text-xs sm:text-sm text-foreground">
                     Covered Area
                   </label>
                 </div>
@@ -1058,7 +1091,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, indoor: checked }
                     }))}
                   />
-                  <label htmlFor="indoor" className="text-sm text-foreground">
+                  <label htmlFor="indoor" className="text-xs sm:text-sm text-foreground">
                     Indoor
                   </label>
                 </div>
@@ -1072,7 +1105,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, outdoorSeating: checked }
                     }))}
                   />
-                  <label htmlFor="outdoor-seating" className="text-sm text-foreground">
+                  <label htmlFor="outdoor-seating" className="text-xs sm:text-sm text-foreground">
                     Outdoor Seating
                   </label>
                 </div>
@@ -1086,8 +1119,8 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, wifi: checked }
                     }))}
                   />
-                  <label htmlFor="wifi" className="text-sm text-foreground">
-                    WiFi Available
+                  <label htmlFor="wifi" className="text-xs sm:text-sm text-foreground">
+                    WiFi
                   </label>
                 </div>
                 
@@ -1100,8 +1133,8 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, atm: checked }
                     }))}
                   />
-                  <label htmlFor="atm" className="text-sm text-foreground">
-                    ATM On-Site
+                  <label htmlFor="atm" className="text-xs sm:text-sm text-foreground">
+                    ATM
                   </label>
                 </div>
                 
@@ -1114,7 +1147,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, foodCourt: checked }
                     }))}
                   />
-                  <label htmlFor="food-court" className="text-sm text-foreground">
+                  <label htmlFor="food-court" className="text-xs sm:text-sm text-foreground">
                     Food Court
                   </label>
                 </div>
@@ -1128,7 +1161,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, liveMusic: checked }
                     }))}
                   />
-                  <label htmlFor="live-music" className="text-sm text-foreground">
+                  <label htmlFor="live-music" className="text-xs sm:text-sm text-foreground">
                     Live Music
                   </label>
                 </div>
@@ -1142,8 +1175,8 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, alcoholAvailable: checked }
                     }))}
                   />
-                  <label htmlFor="alcohol" className="text-sm text-foreground">
-                    Alcohol Available
+                  <label htmlFor="alcohol" className="text-xs sm:text-sm text-foreground">
+                    Alcohol
                   </label>
                 </div>
                 
@@ -1156,7 +1189,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, familyFriendly: checked }
                     }))}
                   />
-                  <label htmlFor="family" className="text-sm text-foreground">
+                  <label htmlFor="family" className="text-xs sm:text-sm text-foreground">
                     Family Friendly
                   </label>
                 </div>
@@ -1170,7 +1203,7 @@ const schedules = formData.schedule.map(s => {
                       accessibility: { ...prev.accessibility, petFriendly: checked }
                     }))}
                   />
-                  <label htmlFor="pets" className="text-sm text-foreground">
+                  <label htmlFor="pets" className="text-xs sm:text-sm text-foreground">
                     Pet Friendly
                   </label>
                 </div>
@@ -1178,16 +1211,16 @@ const schedules = formData.schedule.map(s => {
             </div>
 
             {/* Tags */}
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-foreground">Tags (max 3)</h3>
+                <h3 className="font-bold text-foreground text-sm">Tags (max 3)</h3>
                 <span className="text-xs text-muted-foreground">
-                  {formData.additionalInfo.tags.length}/3 selected
+                  {formData.additionalInfo.tags.length}/3
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2 mb-2">
+              <div className="flex flex-wrap gap-1.5">
                 {formData.additionalInfo.tags.map(tag => (
-                  <Badge key={tag} variant="outline" className="flex items-center gap-1">
+                  <Badge key={tag} variant="outline" className="flex items-center gap-1 text-xs font-medium">
                     {tag}
                     <X 
                       className="w-3 h-3 cursor-pointer" 
@@ -1212,17 +1245,17 @@ const schedules = formData.schedule.map(s => {
                         }
                       }
                     }}
-                    placeholder="Type to search tags (comma to add)..."
-                    className="w-full"
+                    placeholder="Type tag..."
+                    className="font-semibold placeholder:text-muted-foreground/70"
                   />
                   {tagInputValue && formData.additionalInfo.tags.length < 3 && (
-                    <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
                       {ALLOWED_MARKET_TAGS
                         .filter(tag => 
                           !formData.additionalInfo.tags.includes(tag) &&
                           tag.toLowerCase().includes(tagInputValue.toLowerCase())
                         )
-                        .slice(0, 10)
+                        .slice(0, 8)
                         .map(tag => (
                           <button
                             key={tag}
@@ -1231,19 +1264,11 @@ const schedules = formData.schedule.map(s => {
                               addTag(tag)
                               setTagInputValue('')
                             }}
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                            className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors"
                           >
                             {tag}
                           </button>
                         ))}
-                      {ALLOWED_MARKET_TAGS.filter(tag => 
-                        !formData.additionalInfo.tags.includes(tag) &&
-                        tag.toLowerCase().includes(tagInputValue.toLowerCase())
-                      ).length === 0 && (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">
-                          No matching tags
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
@@ -1251,47 +1276,47 @@ const schedules = formData.schedule.map(s => {
             </div>
 
             {/* Market Size Estimate */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Estimated Market Size</label>
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-foreground">Estimated Market Size</label>
               <Select
                 value={formData.additionalInfo.attendanceEstimate || ''}
                 onValueChange={(value) => setFormData(prev => ({
                   ...prev,
                   additionalInfo: { ...prev.additionalInfo, attendanceEstimate: value }
                 }))}
-                placeholder="How many vendors typically participate?"
+                placeholder="Vendor count..."
                 options={attendanceOptions.map(option => ({ value: option.value, label: option.label }))}
               />
             </div>
           </Card>
 
           {/* Market Preview */}
-          <Card className="p-6">
-            <h3 className="font-medium text-foreground mb-4 flex items-center gap-2">
-              <Store className="w-4 h-4" />
-              Market Preview
+          <Card className="p-4">
+            <h3 className="font-bold text-foreground mb-3 flex items-center gap-2 text-sm">
+              <Store className="w-3 h-3 sm:w-4 sm:h-4" />
+              Preview
             </h3>
             
-            <div className="bg-surface border border-border rounded-lg p-4 space-y-3">
-              <div className="flex items-start justify-between">
+            <div className="bg-surface border border-border rounded-lg p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h4 className="font-semibold text-foreground">{formData.name || 'Market Name'}</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="font-semibold text-foreground text-sm">{formData.name || 'Market Name'}</h4>
+                  <p className="text-xs text-muted-foreground">
                     {categories.find(c => c.value === formData.category)?.label || 'Category'}
                   </p>
                 </div>
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                   Community Listed
                 </Badge>
               </div>
               
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3" />
                   {formData.location.city}, {formData.location.state}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3 h-3" />
                   {formatScheduleDisplay()}
                 </div>
               </div>
@@ -1305,35 +1330,35 @@ const schedules = formData.schedule.map(s => {
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-2">
           {currentStep > 1 && (
-            <Button variant="outline" onClick={prevStep}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
+            <Button variant="outline" onClick={prevStep} size="sm">
+              <ArrowLeft className="w-3 h-3 mr-1.5" />
+              Back
             </Button>
           )}
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/vendor')}>
+          <Button variant="outline" onClick={() => navigate('/vendor/tracked-markets')} size="sm">
             Cancel
           </Button>
           
           {currentStep < 3 ? (
-            <Button onClick={nextStep}>
+            <Button onClick={nextStep} size="sm">
               Next
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
+            <Button onClick={handleSubmit} disabled={isSubmitting} size="sm">
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Adding Market...
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
+                  Adding...
                 </>
               ) : (
                 <>
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-3 h-3 mr-1.5" />
                   Add Market
                 </>
               )}
