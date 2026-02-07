@@ -16,14 +16,13 @@ interface CommentItemProps {
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
-  comment: initialComment,
+  comment,
   marketId,
   depth = 0,
   maxDepth = 3,
   onReply,
   className
 }) => {
-  const [comment, setComment] = useState(initialComment)
   const [isEditing, setIsEditing] = useState(false)
   const [isReplying, setIsReplying] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
@@ -64,7 +63,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     
     try {
       await editComment(comment.id, editContent.trim())
-      setComment(prev => ({ ...prev, content: editContent.trim() }))
       setIsEditing(false)
     } catch (error) {
       console.error('Failed to edit comment:', error)
@@ -187,7 +185,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-zinc-200 flex items-center justify-center text-zinc-600 font-bold text-xs">
+              <div className="w-full h-full bg-[#E67E22] bg-opacity-20 flex items-center justify-center text-[#E67E22] font-bold text-xs">
                 {comment.user.firstName[0]}{comment.user.lastName[0]}
               </div>
             )}

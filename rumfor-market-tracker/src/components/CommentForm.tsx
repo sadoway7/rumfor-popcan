@@ -89,73 +89,58 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn('w-full', className)}>
+    <form onSubmit={handleSubmit} className={cn('w-full px-2', className)}>
       <div className="relative group w-full">
-        <div className="flex flex-col bg-white rounded-[22px] pl-3 pr-5 py-3 transition-all border border-zinc-400 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:border-zinc-500 focus-within:border-zinc-900 focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-zinc-900/5">
-          <Textarea
-            value={content}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setIsExpanded(true)}
-            placeholder={placeholder}
-            rows={rows}
-            autoFocus={autoFocus}
-            className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[15px] leading-normal resize-none py-1 text-zinc-900 placeholder-zinc-400 font-semibold min-h-0"
-            disabled={isCreating}
-          />
+        <div className="flex flex-row items-center gap-2 bg-white rounded-[22px] pl-3 pr-2 py-1.5 transition-all border border-zinc-400 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:border-zinc-500 focus-within:border-zinc-900 focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-zinc-900/5">
+          <div className="flex-1 min-w-0">
+            <Textarea
+              value={content}
+              onChange={handleTextareaChange}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsExpanded(true)}
+              placeholder={placeholder}
+              rows={Math.max(1, Math.min(rows, 6))}
+              autoFocus={autoFocus}
+              className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[14px] leading-normal resize-none py-0.5 text-zinc-900 placeholder-zinc-400 font-medium min-h-0"
+              disabled={isCreating}
+            />
+          </div>
           
-          {/* Bottom Actions Bar */}
-          <div className="flex items-center justify-between mt-1.5 h-9">
-            {/* Left Actions */}
-            <div className="flex items-center gap-1">
-              {isExpanded && content.length > 800 && (
-                <span className={cn(
-                  "text-[10px] font-bold px-2 py-1 rounded-md",
-                  content.length > 1000 ? "text-red-600 bg-red-50" : "text-zinc-500"
-                )}>
-                  {content.length}/1000
-                </span>
-              )}
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-2">
-              {isExpanded && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsExpanded(false)
-                    setContent('')
-                    setRows(1)
-                  }}
-                  disabled={isCreating}
-                  className="text-zinc-500 hover:text-zinc-900 text-[12px] font-bold rounded-full hover:bg-zinc-50 transition-all active:scale-95 h-6 min-h-0"
-                >
-                  Cancel
-                </Button>
-              )}
-              
+          {/* Right Actions - inline with textarea */}
+          <div className="flex items-end gap-1 pb-0.5 flex-shrink-0">
+            {isExpanded && (
               <Button
-                type="submit"
+                type="button"
+                variant="ghost"
                 size="sm"
-                disabled={!content.trim() || isCreating || content.length > 1000}
-                className={cn(
-                  "bg-zinc-900 text-white rounded-full font-black text-[12px] hover:bg-black disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center gap-1 active:scale-95 h-6 min-h-0",
-                  isCreating && "opacity-50"
-                )}
+                onClick={() => {
+                  setIsExpanded(false)
+                  setContent('')
+                  setRows(1)
+                }}
+                disabled={isCreating}
+                className="text-zinc-500 hover:text-zinc-900 text-[11px] font-bold rounded-full hover:bg-zinc-50 transition-all active:scale-95 h-7 min-h-0 px-2 mb-0.5"
               >
-                {isCreating ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    Posting
-                  </>
-                ) : (
-                  "Post"
-                )}
+                Cancel
               </Button>
-            </div>
+            )}
+            
+            <Button
+              type="submit"
+              disabled={!content.trim() || isCreating || content.length > 1000}
+              className={cn(
+                "bg-[#E67E22] text-white rounded-full font-black text-[11px] hover:bg-[#D35400] disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center justify-center active:scale-95 h-9 w-9 min-h-0 p-0 mb-0.5",
+                isCreating && "opacity-50"
+              )}
+            >
+              {isCreating ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </Button>
           </div>
         </div>
       </div>

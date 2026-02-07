@@ -77,7 +77,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   }
 
   return (
-    <div className={cn('p-0 md:p-3', className)}>
+    <div className={cn('p-0 md:p-3 pt-6 px-3 sm:px-0', className)}>
       {/* Modern Comment Form */}
       <div className="mb-6">
         <CommentForm
@@ -89,7 +89,7 @@ export const CommentList: React.FC<CommentListProps> = ({
 
       {/* Comments List */}
       {comments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 px-4">
+        <div className="flex flex-col items-center justify-center py-8 px-4 sm:px-0">
           <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center mb-3">
             <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -103,7 +103,7 @@ export const CommentList: React.FC<CommentListProps> = ({
           </p>
         </div>
       ) : (
-        <div>
+        <div className="px-4 sm:px-0">
           <ul style={{ '--depth': 0 } as React.CSSProperties} className={cn('space-y-6', styles.commentList)}>
             {visibleTopLevelComments.map((comment) => (
               <CommentItem

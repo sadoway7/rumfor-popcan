@@ -1,5 +1,6 @@
 import { AppRoutes } from './router/routes'
 import { LocationModal } from './components/LocationModal'
+import { CommentsModal } from './components/CommentsModal'
 import { BottomNav } from './components/BottomNav'
 import { useAuthStore } from '@/features/auth/authStore'
 
@@ -12,6 +13,7 @@ function App() {
     <div className="App min-h-screen bg-background">
       <AppRoutes />
       <LocationModal />
+      <CommentsModal />
       {/* Bottom Navigation - Moved to App level to prevent re-rendering */}
       <BottomNav role={userRole} />
     </div>

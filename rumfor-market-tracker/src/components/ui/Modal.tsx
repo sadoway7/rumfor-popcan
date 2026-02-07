@@ -11,6 +11,7 @@ export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   showCloseButton?: boolean
   closeOnOverlayClick?: boolean
   closeOnEscape?: boolean
+  backdropClassName?: string
   children: React.ReactNode
 }
 
@@ -24,6 +25,7 @@ const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
   closeOnOverlayClick = true,
   closeOnEscape = true,
+  backdropClassName,
   children,
   ...props
 }) => {
@@ -120,7 +122,7 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 bg-background/80 backdrop-blur-sm"
+      className={cn("fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 bg-background/80 backdrop-blur-sm", backdropClassName)}
       onClick={handleOverlayClick}
     >
       <div

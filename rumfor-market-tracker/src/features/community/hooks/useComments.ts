@@ -35,7 +35,7 @@ export const useComments = (marketId: string) => {
       const previousComments = queryClient.getQueriesData({ queryKey: ['comments', marketId] })
       
       const optimisticComment: Comment = {
-        id: `optimistic-${Date.now()}`,
+        id: `optimistic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         marketId,
         userId: user?.id || 'temp-user-id',
         user: user || {
@@ -56,40 +56,51 @@ export const useComments = (marketId: string) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
-      
-      previousComments.forEach(([queryKey, data]) => {
-        if (!data || !(data as any).data) return
-        
-        if (newComment.parentId) {
-          const updatedData = (data as any).data.map((comment: Comment) => {
-            if (comment.id === newComment.parentId) {
-              return {
-                ...comment,
-                replies: [optimisticComment, ...comment.replies]
-              }
-            }
-            return comment
-          })
+
+      if (previousComments.length === 0) {
+        queryClient.setQueryData(['comments', marketId, 1], {
+          success: true,
+          data: newComment.parentId ? [] : [optimisticComment],
+          page: 1,
+          totalPages: 1,
+        })
+      } else {
+        previousComments.forEach(([queryKey, data]) => {
+          const queryPage = Array.isArray(queryKey) && queryKey[2] ? queryKey[2] : 1
           
-          queryClient.setQueryData(
-            queryKey,
-            () => ({
-              ...(data as any),
-              data: updatedData
+          if (!data || !(data as any).data) return
+
+          if (newComment.parentId) {
+            const updatedData = (data as any).data.map((comment: Comment) => {
+              if (comment.id === newComment.parentId) {
+                return {
+                  ...comment,
+                  replies: [optimisticComment, ...comment.replies]
+                }
+              }
+              return comment
             })
-          )
-        } else {
-          queryClient.setQueryData(
-            queryKey,
-            () => ({
-              ...(data as any),
-              data: [optimisticComment, ...(data as any).data]
-            })
-          )
-        }
-      })
+            
+            queryClient.setQueryData(
+              queryKey,
+              () => ({
+                ...(data as any),
+                data: updatedData
+              })
+            )
+          } else if (queryPage === 1) {
+            queryClient.setQueryData(
+              queryKey,
+              () => ({
+                ...(data as any),
+                data: [optimisticComment, ...(data as any).data]
+              })
+            )
+          }
+        })
+      }
       
-      return { previousComments }
+      return { previousComments, optimisticComment }
     },
     onError: (error, _variables, context) => {
       if (context?.previousComments) {
@@ -167,7 +178,6 @@ export const useComments = (marketId: string) => {
     mutationFn: ({ commentId, type }: { commentId: string; type: 'like' | 'dislike' | 'love' | 'laugh' }) =>
       communityApi.addReaction(commentId, type),
     onMutate: async ({ commentId, type }) => {
-      void commentId
       await queryClient.cancelQueries({ queryKey: ['comments', marketId] })
 
       const previousComments = queryClient.getQueriesData({ queryKey: ['comments', marketId] })
@@ -180,6 +190,13 @@ export const useComments = (marketId: string) => {
       }
       
       const updateCommentReactions = (comment: Comment): Comment => {
+        if (comment.id !== commentId) {
+          return {
+            ...comment,
+            replies: comment.replies.map(updateCommentReactions),
+          }
+        }
+
         const existingReaction = comment.reactions.find(r => r.userId === optimisticReaction.userId)
         const reactions = existingReaction
           ? comment.reactions.map(r => 

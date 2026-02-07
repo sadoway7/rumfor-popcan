@@ -6,13 +6,11 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { Calendar, MapPin } from 'lucide-react'
-import { Modal } from '@/components/ui/Modal'
-import { CommentList } from './CommentList'
 import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
-// import { FollowCountIcon } from '@/components/ui/FollowCountIcon'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
+import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
 
 interface MarketCardProps {
   market: Market
@@ -65,10 +63,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   detailPath,
   trackingStatus
 }) => {
-  const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false)
   const [dominantColor, setDominantColor] = React.useState<string>('')
   const [, setIsLightBackground] = React.useState(false)
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
+  const { openComments } = useCommentsModalStore()
 
   // Extract dominant color from market image
   React.useEffect(() => {
@@ -437,7 +435,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    setIsCommentsModalOpen(true)
+                    openComments(market.id, market.name)
                   }}
                 >
                   <ChatNotificationIcon count={market.stats?.commentCount || 0} />
@@ -451,7 +449,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                  setIsCommentsModalOpen(true)
+                  openComments(market.id, market.name)
                 }}
               >
                 <ChatNotificationIcon count={market.stats?.commentCount || 0} />
@@ -636,7 +634,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          setIsCommentsModalOpen(true)
+                          openComments(market.id, market.name)
                         }}
                         className="cursor-pointer"
                       >
@@ -655,7 +653,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          setIsCommentsModalOpen(true)
+                          openComments(market.id, market.name)
                         }}
                         className="cursor-pointer mb-2"
                       >
@@ -733,19 +731,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                    </div>
               </div>
             </div>
-          )}
+           )}
         </Link>
-
-        {/* Comments Modal - Fullscreen on mobile, normal modal on desktop */}
-        <Modal
-          isOpen={isCommentsModalOpen}
-          onClose={() => setIsCommentsModalOpen(false)}
-          title={market.name}
-          size="xl"
-          className="sm:!max-w-xl sm:!h-auto sm:!max-h-[90vh] sm:!w-auto sm:!rounded-lg sm:!border sm:!shadow-lg sm:!bg-surface sm:!p-4 !absolute !inset-0 !w-full !h-full !max-w-none !max-h-none !rounded-none !border-none !shadow-none !bg-background !p-0 [&>div>h2]:!text-base [&>div>h2]:!font-semibold [&>div>h2]:!mb-1 [&>div]:!pb-2 [&>div]:!border-b [&>div]:!border-zinc-200 [&>div>button]:!bg-zinc-100 [&>div>button]:!text-zinc-500 [&>div>button]:!hover:bg-zinc-200 [&>div>button]:!hover:text-zinc-900 [&>div>button]:!rounded-full [&>div>button]:!p-2"
-        >
-          <CommentList marketId={market.id} />
-        </Modal>
       </div>
     )
   }
