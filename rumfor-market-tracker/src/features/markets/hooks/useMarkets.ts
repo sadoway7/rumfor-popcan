@@ -80,7 +80,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const SEARCH_QUERY_KEY = (query: string) =>
     ['markets-search', query]
 
-  // Main markets query (used for sorting - fetches more data at once)
+  // Main markets query (used when NOT using infinite scroll or when sorting - fetches more data at once)
   const marketsQuery = useQuery({
     queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit),
     queryFn: async () => {
@@ -91,7 +91,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       }
       return response.data
     },
-    enabled: autoLoad && !searchQuery && (infiniteScroll || Boolean(currentFilters.sortBy)),
+    enabled: autoLoad && !searchQuery && (!infiniteScroll || Boolean(currentFilters.sortBy)),
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
