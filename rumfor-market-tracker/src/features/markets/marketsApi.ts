@@ -111,7 +111,7 @@ const mockMarkets: Market[] = [
         startTime: '08:00',
         endTime: '14:00',
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        endDate: '2026-12-31',
         isRecurring: true
       }
     ],
@@ -193,7 +193,7 @@ const mockMarkets: Market[] = [
         startTime: '10:00',
         endTime: '18:00',
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        endDate: '2026-12-31',
         isRecurring: true
       }
     ],
@@ -273,7 +273,7 @@ const mockMarkets: Market[] = [
         startTime: '06:00',
         endTime: '16:00',
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        endDate: '2026-12-31',
         isRecurring: true
       },
       {
@@ -282,7 +282,7 @@ const mockMarkets: Market[] = [
         startTime: '06:00',
         endTime: '16:00',
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
+        endDate: '2026-12-31',
         isRecurring: true
       }
     ],
@@ -530,6 +530,74 @@ export const marketsApi = {
       const response = await httpClient.get<ApiResponse<Market[]>>(`/markets/search?q=${encodeURIComponent(query)}`)
       if (!response.success) throw new Error(response.error || 'Failed to search markets')
       return response
+    }
+  },
+
+  // Search markets for name suggestions (future markets only)
+  async searchMarketSuggestions(query: string): Promise<ApiResponse<Market[]>> {
+    if (isDevelopment && isMockMode) {
+      await delay(150)
+
+      if (!query.trim()) {
+        return { success: true, data: [] }
+      }
+
+      const searchTerm = query.toLowerCase()
+      const today = new Date()
+      const todayStr = today.toISOString().split('T')[0] // "2026-02-07"
+      
+      const results = mockMarkets.filter(market => {
+        const matchesName = market.name.toLowerCase().includes(searchTerm)
+        
+        // Filter for future markets - show if ANY date is >= today
+        let hasFutureDate = false
+        
+        if (market.schedule) {
+          // Check seasonEnd
+          if (typeof market.schedule === 'object' && 'seasonEnd' in market.schedule) {
+            const seasonEnd = (market.schedule as any).seasonEnd
+            if (seasonEnd && seasonEnd >= todayStr) {
+              hasFutureDate = true
+            }
+          }
+          
+          // Check specialDates array
+          if (typeof market.schedule === 'object' && 'specialDates' in market.schedule) {
+            const specialDates = (market.schedule as any).specialDates
+            if (Array.isArray(specialDates) && specialDates.length > 0) {
+              const hasFutureSpecialDate = specialDates.some((sd: any) => {
+                const date = sd.date || sd.startDate
+                return date >= todayStr
+              })
+              if (hasFutureSpecialDate) {
+                hasFutureDate = true
+              }
+            }
+          }
+          
+          // Legacy array format - check each schedule item
+          if (Array.isArray(market.schedule) && market.schedule.length > 0) {
+            const hasFutureSchedule = market.schedule.some((s: any) => {
+              const date = s.endDate || s.startDate
+              return date >= todayStr
+            })
+            if (hasFutureSchedule) {
+              hasFutureDate = true
+            }
+          }
+        }
+        
+        return matchesName && hasFutureDate
+      }).slice(0, 10)
+
+      return { success: true, data: results }
+    } else {
+      const response = await httpClient.get<any>(
+        `/markets/search?q=${encodeURIComponent(query)}&futureOnly=true&limit=10&sortBy=name&sortOrder=asc`
+      )
+      if (!response.success) throw new Error(response.error || 'Failed to search markets')
+      // Real API returns {markets: [...], pagination: {...}} so extract markets
+      return { success: true, data: response.data?.markets || [] }
     }
   },
 

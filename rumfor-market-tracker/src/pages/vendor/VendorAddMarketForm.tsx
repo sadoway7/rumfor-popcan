@@ -5,6 +5,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { CityAutocomplete } from '@/components/ui/CityAutocomplete'
+import { MarketNameSuggestions } from '@/components/ui/MarketNameSuggestions'
 import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { Checkbox } from '@/components/ui/Checkbox'
@@ -171,6 +173,7 @@ export function VendorAddMarketForm() {
   const [currentStep, setCurrentStep] = useState(1)
   const [tagInputValue, setTagInputValue] = useState('')
   const [marketImage, setMarketImage] = useState<string | undefined>(undefined)
+  const [isMarketNameFocused, setIsMarketNameFocused] = useState(false)
   const tagSuggestionsRef = useRef<HTMLDivElement>(null)
   const tagInputRef = useRef<HTMLInputElement>(null)
 
@@ -256,18 +259,26 @@ startDate: formatLocalDate(new Date().toISOString()),
       if (formData.schedule.length === 0) newErrors.schedule = 'At least one schedule item is required'
     }
 
-    // Step 3 validation - website is optional for now
-    // if (!formData.contact.website?.trim()) {
-    //   newErrors.website = 'Official website/link is required'
-    // }
+    // Step 3 validation
+    if (step === 3) {
+      if (!formData.contact.website?.trim()) {
+        newErrors.website = 'Official website/link is required'
+      }
+    }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const nextStep = () => {
+    console.log('nextStep clicked, currentStep:', currentStep)
+    console.log('formData:', formData)
+    console.log('errors:', errors)
     if (validateStep(currentStep)) {
+      console.log('validation passed, moving to step', currentStep + 1)
       setCurrentStep(currentStep + 1)
+    } else {
+      console.log('validation failed')
     }
   }
 
@@ -613,27 +624,25 @@ const schedules = formData.schedule.map(s => {
 
       {/* Form Steps */}
       {currentStep === 1 && (
-        <Card className="p-4 sm:p-6 space-y-4">
+        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">Basic Information · 1 of 3</h2>
+
           </div>
 
           {/* Community Info Banner */}
-          <div className="p-3 rounded-lg border border-accent/30 bg-accent/5">
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="font-semibold text-foreground">Please read: </span>
-              Markets you add are public and help all vendors. Search first to avoid duplicates. The more info you provide, the more it helps others.
-            </p>
-            <p className="text-xs font-semibold text-foreground mt-1.5">
-              Submissions are admin-managed, edits can only be requested.
-            </p>
+          <div className="p-3 rounded-lg border-2 border-orange-400/50 bg-orange-50/20 backdrop-blur-sm shadow-sm -mx-3 sm:mx-0">
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Markets are public - search first to avoid duplicates</li>
+              <li>More details help other vendors find better markets</li>
+              <li>Admin-Managed - Edits require requests</li>
+            </ul>
           </div>
 
             {/* Photo & Category Row */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 -mx-3 sm:mx-0">
               {/* Market Image Upload */}
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-foreground">Photo - (replace default)</label>
+
                 <div className="flex items-center gap-2">
                   <input
                     type="file"
@@ -649,22 +658,22 @@ const schedules = formData.schedule.map(s => {
                         alt="Market preview" 
                         className="w-full h-full object-cover rounded-lg" 
                       />
-                      <div className="absolute -top-1 -right-1 bg-black/60 rounded-full p-0.5">
-                        <label
-                          htmlFor="market-image-upload"
-                          className="cursor-pointer bg-white rounded-full p-0.5"
-                        >
+                      <label
+                        htmlFor="market-image-upload"
+                        className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg"
+                      >
+                        <div className="bg-white rounded-full p-1">
                           <Upload className="w-3 h-3" />
-                        </label>
-                      </div>
+                        </div>
+                      </label>
                     </div>
                   ) : (
                     <label
                       htmlFor="market-image-upload"
-                      className="flex-1 h-10 px-3 border border-dashed border-input rounded-lg cursor-pointer hover:bg-surface/50 transition-colors flex items-center gap-2 text-muted-foreground"
+                      className="flex-1 h-10 px-3 border border-dashed border-input rounded-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 text-muted-foreground bg-white"
                     >
                       <Upload className="w-4 h-4" />
-                      <span className="text-sm">Add photo</span>
+                      <span className="text-sm">Banner photo</span>
                     </label>
                   )}
                 </div>
@@ -672,14 +681,14 @@ const schedules = formData.schedule.map(s => {
 
               {/* Category */}
               <div className="space-y-1.5">
-                <label className="text-sm font-bold text-foreground">Category *</label>
+
                 <Select
                   value={formData.category}
                   onValueChange={(value) => {
                     setFormData(prev => ({ ...prev, category: value }))
                     clearFieldError('category')
                   }}
-                  placeholder="Select"
+                  placeholder="Category"
                   options={categories.map(category => ({ value: category.value, label: category.label }))}
                 />
                 {(errors.category || apiErrors.category) && (
@@ -688,26 +697,39 @@ const schedules = formData.schedule.map(s => {
               </div>
             </div>
 
-            {/* Market Name */}
-            <div className="space-y-1.5">
+        {/* Market Name */}
+            <div className="space-y-1.5 -mx-3 sm:mx-0">
               <label className="text-sm font-bold text-foreground">Market Name *</label>
-              <Input
-                value={formData.name}
-                onChange={(e) => {
-                  setFormData(prev => ({ ...prev, name: e.target.value }))
-                  clearFieldError('name')
-                }}
-                placeholder="Market Name *"
-                className={cn((errors.name || apiErrors.name) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
-              />
+              <div className="relative">
+                <Input
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, name: e.target.value }))
+                    clearFieldError('name')
+                  }}
+                  onFocus={() => setIsMarketNameFocused(true)}
+                  onBlur={() => setIsMarketNameFocused(false)}
+                  placeholder="Market Name *"
+                  className={cn((errors.name || apiErrors.name) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+                />
+                <MarketNameSuggestions
+                  value={formData.name}
+                  isFocused={isMarketNameFocused}
+                  className="absolute bottom-full mb-2 left-0 right-0 z-50"
+                  onSelect={(market) => {
+                    // Just informational - don't auto-fill
+                    console.log('Selected existing market:', market.name)
+                  }}
+                />
+              </div>
               {(errors.name || apiErrors.name) && (
                 <p className="text-red-500 text-xs">{errors.name || apiErrors.name}</p>
               )}
             </div>
 
-            {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-bold text-foreground">Description</label>
+      {/* Description */}
+      <div className="space-y-1.5 -mx-3 sm:mx-0">
+
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -717,26 +739,43 @@ const schedules = formData.schedule.map(s => {
               />
             </div>
 
-          {/* Location */}
-          <div className="space-y-3">
+    {/* Location */}
+    <div className="space-y-3 -mx-3 sm:mx-0">
             <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
               Location *
             </h3>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 -mx-3 sm:mx-0">
               <div className="space-y-1.5">
-                <Input
+                <CityAutocomplete
                   value={formData.location.city}
-                  onChange={(e) => {
+                  onChange={(value) => {
                     setFormData(prev => ({
                       ...prev,
-                      location: { ...prev.location, city: e.target.value }
+                      location: { ...prev.location, city: value }
                     }))
                     clearFieldError('city')
                   }}
+                  onStateChange={(state) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, state }
+                    }))
+                  }}
+                  onError={(hasError) => {
+                    if (hasError) {
+                      setErrors(prev => ({ ...prev, city: 'Please select a city from the list' }))
+                    } else {
+                      setErrors(prev => {
+                        const newErrors = { ...prev }
+                        delete newErrors.city
+                        return newErrors
+                      })
+                    }
+                  }}
                   placeholder="City *"
-                   className={cn((errors.city || apiErrors.city) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+                  error={!!(errors.city || apiErrors.city)}
                 />
                 {(errors.city || apiErrors.city) && (
                   <p className="text-red-500 text-xs">{errors.city || apiErrors.city}</p>
@@ -790,9 +829,9 @@ const schedules = formData.schedule.map(s => {
       )}
 
       {currentStep === 2 && (
-        <Card className="p-4 sm:p-6 space-y-4">
+        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2">Schedule & Details · 2 of 3</h2>
+
             <p className="text-xs sm:text-sm text-muted-foreground">When does this market operate?</p>
           </div>
 
@@ -805,7 +844,7 @@ const schedules = formData.schedule.map(s => {
               </h3>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 -mx-3 sm:mx-0">
               {formData.schedule.map((item, index) => (
                 <div key={index} className="p-3 sm:p-4 rounded-lg space-y-3 bg-muted/20 shadow-md">
                   <div className="relative">
@@ -823,7 +862,7 @@ const schedules = formData.schedule.map(s => {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 items-end">
-                    <div className="flex-1 min-w-[140px]">
+                    <div className="flex-1 min-w-[100px]">
                       <label className="text-xs font-medium text-muted-foreground text-center block mb-1">Date</label>
                       <button
                         type="button"
@@ -942,9 +981,9 @@ const schedules = formData.schedule.map(s => {
       {currentStep === 3 && (
         <div className="space-y-4">
           {/* Contact & Additional Info */}
-          <Card className="p-4 sm:p-6 space-y-4">
+        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight mb-2">Additional Information · 3 of 3</h2>
+
               <p className="text-xs sm:text-sm text-muted-foreground">Help other vendors with extra details.</p>
             </div>
 
@@ -955,8 +994,8 @@ const schedules = formData.schedule.map(s => {
                 Promoter's Contact
               </h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
+              <div className="grid grid-cols-1 gap-3 -mx-3 sm:mx-0">
+                <div className="space-y-1.5 -mx-3 sm:mx-0">
                    <Input
                     value={formData.contact.website || ''}
                     onChange={(e) => {
@@ -1011,7 +1050,7 @@ const schedules = formData.schedule.map(s => {
                 Accessibility & Amenities
               </h3>
               
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 -mx-3 sm:mx-0">
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="wheelchair"
@@ -1020,6 +1059,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, wheelchairAccessible: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="wheelchair" className="text-xs sm:text-sm text-foreground">
                     Wheelchair Accessible
@@ -1034,6 +1074,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, handicapParking: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="handicap-parking" className="text-xs sm:text-sm text-foreground">
                     Handicap Parking
@@ -1048,6 +1089,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, parkingAvailable: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="parking" className="text-xs sm:text-sm text-foreground">
                     Parking Available
@@ -1062,6 +1104,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, restroomsAvailable: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="restrooms" className="text-xs sm:text-sm text-foreground">
                     Restrooms
@@ -1076,6 +1119,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, covered: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="covered" className="text-xs sm:text-sm text-foreground">
                     Covered Area
@@ -1090,6 +1134,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, indoor: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="indoor" className="text-xs sm:text-sm text-foreground">
                     Indoor
@@ -1104,6 +1149,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, outdoorSeating: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="outdoor-seating" className="text-xs sm:text-sm text-foreground">
                     Outdoor Seating
@@ -1118,6 +1164,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, wifi: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="wifi" className="text-xs sm:text-sm text-foreground">
                     WiFi
@@ -1132,6 +1179,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, atm: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="atm" className="text-xs sm:text-sm text-foreground">
                     ATM
@@ -1146,6 +1194,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, foodCourt: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="food-court" className="text-xs sm:text-sm text-foreground">
                     Food Court
@@ -1160,6 +1209,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, liveMusic: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="live-music" className="text-xs sm:text-sm text-foreground">
                     Live Music
@@ -1174,6 +1224,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, alcoholAvailable: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="alcohol" className="text-xs sm:text-sm text-foreground">
                     Alcohol
@@ -1188,6 +1239,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, familyFriendly: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="family" className="text-xs sm:text-sm text-foreground">
                     Family Friendly
@@ -1202,6 +1254,7 @@ const schedules = formData.schedule.map(s => {
                       ...prev,
                       accessibility: { ...prev.accessibility, petFriendly: checked }
                     }))}
+                    className="h-5 w-5 sm:h-4 sm:w-4"
                   />
                   <label htmlFor="pets" className="text-xs sm:text-sm text-foreground">
                     Pet Friendly
@@ -1211,7 +1264,7 @@ const schedules = formData.schedule.map(s => {
             </div>
 
             {/* Tags */}
-            <div className="space-y-2">
+            <div className="space-y-2 -mx-3 sm:mx-0">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-foreground text-sm">Tags (max 3)</h3>
                 <span className="text-xs text-muted-foreground">
@@ -1297,7 +1350,7 @@ const schedules = formData.schedule.map(s => {
               Preview
             </h3>
             
-            <div className="bg-surface border border-border rounded-lg p-3 space-y-2">
+            <div className="bg-surface border border-border rounded-lg p-3 space-y-2 -mx-3 sm:mx-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-foreground text-sm">{formData.name || 'Market Name'}</h4>

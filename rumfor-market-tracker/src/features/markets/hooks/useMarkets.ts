@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/features/auth/authStore'
 import { marketsApi } from '../marketsApi'
@@ -63,11 +63,13 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   } = options || {}
 
   const queryClient = useQueryClient()
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [currentFilters, setCurrentFilters] = useState<MarketFilters>({})
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
   const [totalPages, setTotalPages] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
 
   // Use mutations for tracking
   const trackMutation = useTrackMarketMutation()
@@ -80,6 +82,8 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const SEARCH_QUERY_KEY = (query: string) =>
     ['markets-search', query]
 
+  const hasSort = Boolean(currentFilters.sortBy)
+
   // Main markets query (used when NOT using infinite scroll or when sorting - fetches more data at once)
   const marketsQuery = useQuery({
     queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit),
@@ -91,7 +95,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       }
       return response.data
     },
-    enabled: autoLoad && !searchQuery && (!infiniteScroll || Boolean(currentFilters.sortBy)),
+    enabled: autoLoad && !searchQuery && (hasSort || initialLoadComplete) && (!infiniteScroll || hasSort),
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -113,7 +117,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       }
     },
     initialPageParam: 1,
-    enabled: autoLoad && !searchQuery && infiniteScroll && !currentFilters.sortBy,
+    enabled: autoLoad && !searchQuery && (initialLoadComplete || !hasSort) && infiniteScroll && !hasSort,
     staleTime: 15 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -122,6 +126,15 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     retry: 1,
     getNextPageParam: (lastPage: any) => (lastPage as any).hasMore ? (lastPage as any).nextPage : undefined
   })
+
+  // Mark initial load complete after first successful fetch
+  useEffect(() => {
+    const marketsData = hasSort ? marketsQuery.data : infiniteMarketsQuery.data?.pages.flatMap((p: any) => p.data)
+    const marketsLength = marketsData?.length ?? 0
+    if (!initialLoadComplete && !marketsQuery.isLoading && !infiniteMarketsQuery.isLoading && marketsLength > 0) {
+      setInitialLoadComplete(true)
+    }
+  }, [initialLoadComplete, marketsQuery.isLoading, infiniteMarketsQuery.isLoading, marketsQuery.data, infiniteMarketsQuery.data, hasSort])
 
   // Search query (shorter cache for dynamic search results)
   const searchQueryResult = useQuery({
@@ -218,10 +231,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     setCurrentFilters(filters)
     setCurrentPage(1)
     setSearchQuery('')
-    // Invalidate markets queries to refetch with new filters
-    queryClient.invalidateQueries({ queryKey: ['markets-infinite'] })
-    queryClient.invalidateQueries({ queryKey: ['markets'] })
-  }, [queryClient])
+  }, [])
 
   // Clear filters function
   const clearFilters = useCallback(() => {
@@ -237,8 +247,8 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   // Get tracked market IDs from tracked markets query
   const { user } = useAuthStore()
-  const trackedMarketsQuery = useTrackedMarketsQuery(user?.id)
-  const trackedMarketIds = Array.isArray(trackedMarketsQuery.data)
+  const trackedMarketsQuery = useTrackedMarketsQuery(initialLoadComplete && user?.id ? user.id : undefined)
+  const trackedMarketIds = trackedMarketsQuery.data && Array.isArray(trackedMarketsQuery.data)
     ? trackedMarketsQuery.data
         .filter((t: any) => t.market) // Only markets that exist
         .map((t: any) => t.market.id)
@@ -257,21 +267,20 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   // Determine current data and loading states
   // Only show loading from the active query
-  const isLoading = (currentFilters.sortBy ? marketsQuery.isLoading : infiniteMarketsQuery.isLoading) || searchQueryResult.isLoading
-  const isSearching = searchQueryResult.isFetching || (currentFilters.sortBy ? marketsQuery.isFetching : infiniteMarketsQuery.isFetching)
+  const isLoading = (hasSort ? marketsQuery.isLoading : infiniteMarketsQuery.isLoading) || searchQueryResult.isLoading
+  const isSearching = searchQueryResult.isFetching || (hasSort ? marketsQuery.isFetching : infiniteMarketsQuery.isFetching)
   const isTracking = trackMutation.isPending || untrackMutation.isPending
   const error = marketsQuery.error?.message || searchQueryResult.error?.message || infiniteMarketsQuery.error?.message || null
 
-  // Get raw markets data from the appropriate query
   const rawMarkets: Market[] = searchQuery
     ? (searchQueryResult.data?.data || [])
-    : currentFilters.sortBy
+    : hasSort
       ? (marketsQuery.data || [])
       : (infiniteMarketsQuery.data?.pages.flatMap((page: any) => page.data) || [])
 
   // Apply client-side sorting when sortBy is present
   const sortedMarkets = useMemo<Market[]>(() => {
-    if (!currentFilters.sortBy || !rawMarkets || !Array.isArray(rawMarkets)) {
+    if (!hasSort || !rawMarkets || !Array.isArray(rawMarkets)) {
       return rawMarkets || []
     }
 
@@ -302,10 +311,10 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
       default:
         return sorted
     }
-  }, [rawMarkets, currentFilters.sortBy])
+  }, [rawMarkets, hasSort])
 
   // Use sorted markets when sorting, otherwise use infinite scroll or regular markets
-  const markets = currentFilters.sortBy ? sortedMarkets : rawMarkets
+  const markets = hasSort ? sortedMarkets : rawMarkets
 
   return {
     // Data
@@ -322,8 +331,8 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     totalPages,
     hasMore,
     // Pagination - disable infinite scroll when sorting (all data loaded at once)
-    hasNextPage: currentFilters.sortBy ? false : (infiniteScroll ? infiniteMarketsQuery.hasNextPage : currentPage < totalPages),
-    fetchNextPage: infiniteScroll && !currentFilters.sortBy ? infiniteMarketsQuery.fetchNextPage : nextPage,
+    hasNextPage: hasSort ? false : (infiniteScroll ? infiniteMarketsQuery.hasNextPage : currentPage < totalPages),
+    fetchNextPage: infiniteScroll && !hasSort ? infiniteMarketsQuery.fetchNextPage : nextPage,
 
   // Error handling
   error,

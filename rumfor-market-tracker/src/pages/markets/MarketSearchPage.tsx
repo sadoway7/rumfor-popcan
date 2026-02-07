@@ -13,11 +13,12 @@ import { Layers, RotateCcw } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [sortBy, setSortBy] = useState<'date-oldest' | 'date-newest' | 'recently-added' | 'name-asc' | 'name-desc'>('date-oldest')
+  const [sortBy, setSortBy] = useState<'date-oldest' | 'date-newest' | 'recently-added' | 'name-asc' | 'name-desc'>('recently-added')
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
   const [isSortOpen, setIsSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<HTMLDivElement>(null)
+  const isInitialLoad = useRef(true)
   const { isSidebarOpen, toggleSidebar } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
@@ -48,8 +49,11 @@ export const MarketSearchPage: React.FC = () => {
     infiniteScroll: true
   })
 
-  // Initialize filters from URL params when component mounts or URL changes
+  // Initialize filters from URL params when component mounts
   useEffect(() => {
+    if (!isInitialLoad.current) return
+    isInitialLoad.current = false
+
     const urlFilters: MarketFilterType = {
       search: searchParams.get('search') || '',
       category: searchParams.get('category')?.split(',') as MarketFilterType['category'],
@@ -62,10 +66,11 @@ export const MarketSearchPage: React.FC = () => {
         wheelchairAccessible: searchParams.get('wheelchair') === 'true',
         parkingAvailable: searchParams.get('parking') === 'true',
         restroomsAvailable: searchParams.get('restrooms') === 'true'
-      }
+      },
+      sortBy: 'recently-added',
+      sortOrder: 'desc'
     }
 
-    // Only set filters if they are not empty to avoid unnecessary updates
     if (Object.keys(urlFilters).some(key => {
       const value = urlFilters[key as keyof MarketFilterType]
       if (typeof value === 'string') return value !== ''
@@ -77,7 +82,7 @@ export const MarketSearchPage: React.FC = () => {
     })) {
       setFilters(urlFilters)
     }
-  }, [searchParams]) // Re-run when URL params change
+  }, [])
 
   // Close sidebar by default
   useEffect(() => {
@@ -424,8 +429,8 @@ export const MarketSearchPage: React.FC = () => {
 
             {/* Loading more indicator */}
             {isSearching && markets.length > 0 && (
-              <div className="flex justify-center mt-8">
-                <Spinner className="h-6 w-6" />
+              <div className="flex justify-center mt-12 mb-8">
+                <Spinner className="h-10 w-10" />
               </div>
             )}
           </main>

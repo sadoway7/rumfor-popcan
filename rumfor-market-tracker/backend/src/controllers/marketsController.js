@@ -524,6 +524,7 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     location,
     dates,
     marketType,
+    futureOnly,
     page = 1,
     limit = 20,
     sortBy = 'score',
@@ -536,8 +537,9 @@ const searchMarkets = catchAsync(async (req, res, next) => {
   const searchConditions = []
 
   if (q) {
+    // Use regex for partial name matching
     searchConditions.push({
-      $text: { $search: q }
+      'name': { $regex: q, $options: 'i' }
     })
   }
 
@@ -567,6 +569,29 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     query.createdByType = createdByTypeMap[marketType];
   }
 
+  // Filter for future markets only (for suggestions dropdown)
+  if (futureOnly === 'true') {
+    // Use today's date at midnight UTC to avoid timezone issues
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    // Show market if seasonEnd >= today OR any specialDate >= today
+    const futureCondition = {
+      $or: [
+        { 'schedule.seasonEnd': { $gte: today } },
+        { 'schedule.specialDates': { 
+          $elemMatch: { 
+            $or: [
+              { date: { $gte: today } },
+              { endDate: { $gte: today } }
+            ]
+          } 
+        } }
+      ]
+    }
+    searchConditions.push(futureCondition)
+  }
+
   if (searchConditions.length > 0) {
     query.$and = searchConditions
   }
@@ -574,7 +599,10 @@ const searchMarkets = catchAsync(async (req, res, next) => {
   // Build sort
   let sort = {}
   if (sortBy === 'score' && q) {
-    sort = { score: { $meta: 'textScore' } }
+    // Use name-based sorting when using regex search instead of text search
+    sort = { name: sortOrder === 'desc' ? -1 : 1 }
+  } else if (sortBy === 'score') {
+    sort = { createdAt: sortOrder === 'desc' ? -1 : 1 }
   } else {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1
   }

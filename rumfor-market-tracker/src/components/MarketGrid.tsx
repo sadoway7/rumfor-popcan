@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Market } from '@/types'
 import { MarketCard } from './MarketCard'
 import { Spinner } from '@/components/ui/Spinner'
@@ -93,10 +93,10 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   // Show loading state
   if (isLoading || isSearching) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16 mt-8">
         <div className="text-center">
-          <Spinner className="h-8 w-8 mx-auto mb-4" />
-          <p className="text-muted-foreground">
+          <Spinner className="h-12 w-12 mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg">
             {isSearching ? 'Searching markets...' : 'Loading markets...'}
           </p>
         </div>
@@ -159,18 +159,54 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   return (
     <div className={cn(getGridClasses(), className)}>
       {markets.map((market) => (
-        <MarketCard
-          key={market.id}
-          market={market}
-          variant={variant === 'list' ? 'featured' : variant === 'grid' ? 'minimal' : variant}
-          onTrack={onTrack}
-          onUntrack={onUntrack}
-          isTracked={trackedMarketIds.includes(market.id)}
-          isLoading={isTracking}
-          showTrackButton={false}
-          className="h-full"
-        />
+        <FadeInWrapper key={market.id}>
+          <MarketCard
+            market={market}
+            variant={variant === 'list' ? 'featured' : variant === 'grid' ? 'minimal' : variant}
+            onTrack={onTrack}
+            onUntrack={onUntrack}
+            isTracked={trackedMarketIds.includes(market.id)}
+            isLoading={isTracking}
+            showTrackButton={false}
+            className="h-full"
+          />
+        </FadeInWrapper>
       ))}
+    </div>
+  )
+}
+
+const FadeInWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isVisible, setIsVisible] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1, rootMargin: '20px' }
+    )
+
+    if (ref.current) {
+      observer.observe(ref.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
+      }`}
+      style={{ transitionDelay: '100ms' }}
+    >
+      {children}
     </div>
   )
 }
