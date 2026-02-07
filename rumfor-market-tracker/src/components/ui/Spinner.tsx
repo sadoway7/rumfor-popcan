@@ -24,11 +24,11 @@ const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
     }
 
     const colorClasses = {
-      accent: 'text-accent',
-      default: 'text-foreground',
-      success: 'text-success',
-      warning: 'text-warning',
-      destructive: 'text-destructive',
+      accent: 'bg-accent',
+      default: 'bg-foreground',
+      success: 'bg-success',
+      warning: 'bg-warning',
+      destructive: 'bg-destructive',
     }
 
     return (
@@ -41,9 +41,8 @@ const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(
         )}
         {...props}
       >
-        <span className={cn("absolute inset-0 rounded-full opacity-20", colorClasses[color])} />
-        <span className={cn("absolute inset-1 rounded-full border-2 border-transparent opacity-60", colorClasses[color], "border-t-current animate-spin")} />
-        <span className={cn("absolute inset-3 rounded-full border border-transparent opacity-40", colorClasses[color], "border-t-current animate-spin")} style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+        <span className={cn("absolute inset-0 rounded-full", colorClasses[color], "animate-ping opacity-75")} style={{ animationDuration: '2s' }} />
+        <span className={cn("absolute inset-0 rounded-full", colorClasses[color], "animate-pulse opacity-50")} style={{ animationDuration: '2s' }} />
       </span>
     )
   }
