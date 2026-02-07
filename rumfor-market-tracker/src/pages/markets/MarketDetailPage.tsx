@@ -348,7 +348,7 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Info',
               icon: <Info className="w-4 h-4" />,
               content: (
-                <div className="space-y-4 pb-4 pt-4 px-4">
+                <div className="space-y-4 pb-4 pt-4 px-4 pb-[100px]">
                   {/* Left: Location + Schedule / Right: Action Links */}
                   <div className="grid grid-cols-2 gap-4">
                     {/* Left Column */}
@@ -539,7 +539,7 @@ variant="outline"
               label: 'Vendors',
               icon: <Users className="w-4 h-4" />,
               content: (
-                <div className="space-y-4 pb-4 pt-4 px-4">
+                <div className="space-y-4 pb-4 pt-4 px-4 pb-[100px]">
                   {/* Vendors Header */}
                   <div className="flex items-center justify-between">
                     <h2 className="font-semibold">
@@ -596,7 +596,7 @@ variant="outline"
               label: 'Comments',
               icon: <MessageSquare className="w-4 h-4" />,
               content: (
-                <div className="pb-4 pt-4 px-4">
+                <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
                   <CommentList marketId={id!} />
                 </div>
               )
@@ -606,7 +606,7 @@ variant="outline"
               label: 'Photos',
               icon: <Image className="w-4 h-4" />,
               content: (
-                <div className="pb-4 pt-4 px-4">
+                <div className="pb-4 pt-4 px-4 pb-[100px]">
                   <PhotoGallery
                     marketId={id!}
                     showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}

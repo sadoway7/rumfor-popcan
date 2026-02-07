@@ -28,6 +28,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const [isExpanded, setIsExpanded] = useState(true)
   const [editContent, setEditContent] = useState(comment.content)
   const [replyContent, setReplyContent] = useState('')
+  const [replyRows, setReplyRows] = useState(1)
   
   const { user } = useAuthStore()
   const {
@@ -82,12 +83,18 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const handleReply = async () => {
     if (!replyContent.trim()) return
 
+    // Close immediately for better UX
+    setIsReplying(false)
+    setReplyContent('')
+    setReplyRows(1)
+
     try {
       await createComment(replyContent.trim(), comment.id)
-      setIsReplying(false)
-      setReplyContent('')
     } catch (error) {
       console.error('Failed to reply to comment:', error)
+      // Optionally reopen on error
+      setIsReplying(true)
+      setReplyContent(replyContent)
     }
   }
 
@@ -277,7 +284,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           ) : (
             <div className={cn(
-              "relative text-[14.5px] leading-relaxed text-zinc-700 px-3 py-2 rounded-[20px] border shadow-sm bg-white border-zinc-300",
+              "relative inline-block text-[14.5px] leading-relaxed text-zinc-700 px-4 py-2.5 rounded-[20px] border shadow-sm bg-white border-zinc-300",
               depth === 0 ? 'ring-[4px] ring-zinc-50/30 font-medium' : 'font-normal'
             )}>
               {/* Floating Reaction Button */}
@@ -301,7 +308,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
           {/* Controls */}
           {!isEditing && !isReplying && (
-            <div className="flex items-center gap-3 mt-2 px-1 flex-wrap">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               {canReply && (
                 <button
                   onClick={() => setIsReplying(true)}
@@ -316,7 +323,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
               {/* Edit/Delete Menu */}
               {(canEdit || canDelete) && (
-                <div className="ml-auto flex items-center gap-1">
+                <div className="flex items-center gap-1">
                   {canEdit && !isEditing && (
                     <button
                       onClick={() => setIsEditing(true)}
@@ -350,35 +357,44 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                       <path d="M1 0V54C1 59.5228 5.47715 64 4 64H8" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <div className="bg-white rounded-[22px] px-4 py-3 border border-zinc-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                    <Textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder={`Reply to ${comment.user.firstName}...`}
-                      rows={2}
-                      className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[14px] leading-normal resize-none py-0 text-zinc-900 placeholder-zinc-400 font-medium min-h-0"
-                      autoFocus
-                    />
-                     <div className="flex items-center justify-end gap-2.5 mt-2 pt-2 border-t border-zinc-100 pr-1">
-                       <button
-                         type="button"
-                         onClick={() => {
-                           setIsReplying(false)
-                           setReplyContent('')
-                         }}
-                         className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-zinc-100 transition-all active:scale-95"
-                       >
-                         Cancel
-                       </button>
-                       <button
-                         type="button"
-                         onClick={handleReply}
-                         disabled={!replyContent.trim()}
-                         className="rounded-full py-1.5 px-3 text-[11px] font-black uppercase tracking-wider bg-zinc-900 text-white hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm shadow-zinc-200 disabled:shadow-none active:scale-95"
-                       >
-                         Reply
-                       </button>
-                     </div>
+                  <div className="flex flex-row items-center gap-2 bg-white rounded-[22px] pl-3 pr-2 py-1.5 border border-zinc-300 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)]">
+                    <div className="flex-1 min-w-0">
+                      <Textarea
+                        value={replyContent}
+                        onChange={(e) => {
+                          setReplyContent(e.target.value)
+                          const lines = e.target.value.split('\n').length
+                          setReplyRows(Math.min(5, Math.max(1, lines)))
+                        }}
+                        placeholder={`Reply to ${comment.user.firstName}...`}
+                        rows={replyRows}
+                        className="w-full bg-transparent !border-none !outline-none !shadow-none focus:!outline-none focus:!ring-0 focus-visible:!ring-0 focus-visible:!ring-offset-0 text-[14px] leading-normal resize-none py-0.5 text-zinc-900 placeholder-zinc-400 font-medium min-h-0"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsReplying(false)
+                          setReplyContent('')
+                          setReplyRows(1)
+                        }}
+                        className="text-zinc-500 hover:text-zinc-900 text-[11px] font-bold rounded-full hover:bg-zinc-50 transition-all active:scale-95 h-7 min-h-0 px-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleReply}
+                        disabled={!replyContent.trim()}
+                        className="bg-[#E67E22] text-white !rounded-full font-black text-[11px] hover:bg-[#D35400] disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center justify-center active:scale-95 h-9 w-9 min-h-0 p-0"
+                      >
+                        <svg className="w-5 h-5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -77,9 +77,9 @@ export const CommentList: React.FC<CommentListProps> = ({
   }
 
   return (
-    <div className={cn('p-0 md:p-3 pt-6 px-3 sm:px-0', className)}>
+    <div className={cn('p-0 md:p-3 pt-6 px-3 sm:px-0 max-w-[900px] mx-auto', className)}>
       {/* Modern Comment Form */}
-      <div className="mb-6">
+      <div className="mb-8 pb-4">
         <CommentForm
           marketId={marketId}
           placeholder="Share your perspective..."

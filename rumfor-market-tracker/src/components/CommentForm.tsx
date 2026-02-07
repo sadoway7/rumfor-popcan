@@ -89,9 +89,9 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   }
 
   return (
-    <form onSubmit={handleSubmit} className={cn('w-full px-2', className)}>
+    <form onSubmit={handleSubmit} className={cn('w-full px-2 max-w-[500px] mx-auto', className)}>
       <div className="relative group w-full">
-        <div className="flex flex-row items-center gap-2 bg-white rounded-[22px] pl-3 pr-2 py-1.5 transition-all border border-zinc-400 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:border-zinc-500 focus-within:border-zinc-900 focus-within:shadow-[0_15px_40px_rgba(0,0,0,0.08)] focus-within:ring-1 focus-within:ring-zinc-900/5">
+        <div className="flex flex-row items-center gap-2 bg-white rounded-[22px] pl-3 pr-2 py-1.5 transition-all border border-zinc-300 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04),0_8px_16px_rgba(0,0,0,0.02)] hover:border-zinc-400 focus-within:border-zinc-500 focus-within:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.06),0_12px_32px_rgba(0,0,0,0.04)] focus-within:ring-1 focus-within:ring-zinc-500/10">
           <div className="flex-1 min-w-0">
             <Textarea
               value={content}
@@ -129,7 +129,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
               type="submit"
               disabled={!content.trim() || isCreating || content.length > 1000}
               className={cn(
-                "bg-[#E67E22] text-white rounded-full font-black text-[11px] hover:bg-[#D35400] disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center justify-center active:scale-95 h-9 w-9 min-h-0 p-0 mb-0.5",
+                "bg-[#E67E22] text-white !rounded-full font-black text-[11px] hover:bg-[#D35400] disabled:opacity-30 transition-all shadow-md shadow-zinc-200 disabled:shadow-none flex items-center justify-center active:scale-95 h-9 w-9 min-h-0 p-0 mb-0.5",
                 isCreating && "opacity-50"
               )}
             >
