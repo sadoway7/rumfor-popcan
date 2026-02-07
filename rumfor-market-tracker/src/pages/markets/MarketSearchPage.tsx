@@ -9,11 +9,11 @@ import { useSidebarStore } from '@/features/theme/themeStore'
 import { useAuthStore } from '@/features/auth/authStore'
 import type { MarketCategory, MarketFilters as MarketFilterType } from '@/types'
 
-import { ArrowUpDown, Layers, RotateCcw } from 'lucide-react'
+import { Layers, RotateCcw } from 'lucide-react'
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [sortBy, setSortBy] = useState<'date' | 'name' | 'distance'>('date')
+  const [sortBy, setSortBy] = useState<'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc'>('date-newest')
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: '', to: '' })
   const [isSortOpen, setIsSortOpen] = useState(false)
   const sortRef = useRef<HTMLDivElement>(null)
@@ -134,6 +134,8 @@ export const MarketSearchPage: React.FC = () => {
     if (newFilters.accessibility?.wheelchairAccessible) params.set('wheelchair', 'true')
     if (newFilters.accessibility?.parkingAvailable) params.set('parking', 'true')
     if (newFilters.accessibility?.restroomsAvailable) params.set('restrooms', 'true')
+    if (newFilters.sortBy) params.set('sortBy', newFilters.sortBy)
+    if (newFilters.sortOrder) params.set('sortOrder', newFilters.sortOrder)
     
     setSearchParams(params)
   }
@@ -185,6 +187,18 @@ export const MarketSearchPage: React.FC = () => {
     return count
   }
 
+  const handleSortChange = (newSortBy: 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc') => {
+    setSortBy(newSortBy)
+    setIsSortOpen(false)
+    const newFilters: MarketFilterType = { 
+      ...filters, 
+      sortBy: newSortBy,
+      sortOrder: (newSortBy.endsWith('-asc') ? 'asc' : 'desc') as 'asc' | 'desc'
+    }
+    setFilters(newFilters)
+    updateUrlParams(newFilters)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Auth Message - Sales Pitch */}
@@ -215,23 +229,6 @@ export const MarketSearchPage: React.FC = () => {
                     {getActiveFilterCount()} active
                   </span>
                 )}
-              </div>
-
-              {/* Sort By Dropdown */}
-              <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">Sort By</div>
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as 'date' | 'name' | 'distance')}
-                    className="w-full px-3 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20"
-                  >
-                    <option value="date">Date</option>
-                    <option value="name">Name</option>
-                    <option value="distance">Distance</option>
-                  </select>
-                  <ArrowUpDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                </div>
               </div>
 
               {/* Date Range */}
@@ -341,45 +338,57 @@ export const MarketSearchPage: React.FC = () => {
                        </>
                      )}
                    </div>
-                   <div className="relative" ref={sortRef}>
-<button
+                    <div className="relative" ref={sortRef}>
+                      <button
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                        className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2"
                         title="Sort"
                       >
                         <Layers className="w-4 h-4" />
-                     </button>
-{isSortOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-50 py-1">
+                        <span className="text-sm font-medium">
+                          {sortBy === 'date-newest' ? 'Soonest' : sortBy === 'date-oldest' ? 'Latest' : sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
+                        </span>
+                      </button>
+                      {isSortOpen && (
+                        <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-[100] py-1">
+                          <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</div>
                           <button
-                            onClick={() => { setSortBy('date'); setIsSortOpen(false); }}
-                            className={`w-full px-4 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'date' ? 'text-accent font-medium' : 'text-foreground'}`}
+                            onClick={() => handleSortChange('date-newest')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-newest' ? 'text-accent font-medium' : 'text-foreground'}`}
                           >
-                            Date (Soonest First)
+                            Soonest First
                           </button>
                           <button
-                            onClick={() => { setSortBy('name'); setIsSortOpen(false); }}
-                            className={`w-full px-4 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'name' ? 'text-accent font-medium' : 'text-foreground'}`}
+                            onClick={() => handleSortChange('date-oldest')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-oldest' ? 'text-accent font-medium' : 'text-foreground'}`}
                           >
-                            Name (A-Z)
+                            Latest First
                           </button>
-<div className="border-t border-border my-1" />
+                          <div className="border-t border-border my-1" />
+                          <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</div>
+                          <button
+                            onClick={() => handleSortChange('name-asc')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'name-asc' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            A - Z
+                          </button>
+                          <button
+                            onClick={() => handleSortChange('name-desc')}
+                            className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'name-desc' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          >
+                            Z - A
+                          </button>
+                          <div className="border-t border-border my-1" />
                           <button
                             disabled
-                            className="w-full px-4 py-2 text-left text-xs text-muted-foreground cursor-not-allowed"
+                            className="w-full px-4 py-2 text-left text-xs text-muted-foreground cursor-not-allowed opacity-60"
                           >
-                            Sorting Is Coming
+                            Distance (Coming Soon)
                           </button>
                         </div>
                       )}
                    </div>
-<button
-                      onClick={() => window.location.reload()}
-                      className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
-                      title="Refresh"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </button>
+
                  </div>
                </div>
 

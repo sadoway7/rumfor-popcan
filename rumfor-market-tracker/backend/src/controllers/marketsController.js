@@ -505,10 +505,10 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   }))
 
   sendSuccess(res, {
-    tracking: serializedTracking,
+    markets: serializedTracking,
     pagination: {
       current: parseInt(page),
-      pages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit),
       total,
       limit: parseInt(limit)
     },
@@ -613,7 +613,7 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
-      pages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit),
       total,
       limit: parseInt(limit)
     },
@@ -732,7 +732,7 @@ const getMarketsByCategory = catchAsync(async (req, res, next) => {
     markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
-      pages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit),
       total,
       limit: parseInt(limit)
     },
@@ -777,7 +777,7 @@ const getMarketsByType = catchAsync(async (req, res, next) => {
     markets: serializedMarkets,
     pagination: {
       current: parseInt(page),
-      pages: Math.ceil(total / limit),
+      totalPages: Math.ceil(total / limit),
       total,
       limit: parseInt(limit)
     },

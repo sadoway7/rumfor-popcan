@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu, SlidersHorizontal, LayoutDashboard, Store, Bookmark } from 'lucide-react'
+import { LogOut, Search, User, MapPin, Plus, Settings, Sun, Moon, Navigation, Menu, SlidersHorizontal, LayoutDashboard, Store } from 'lucide-react'
 
 export function Header() {
   const navigate = useNavigate()
@@ -85,19 +85,23 @@ export function Header() {
   return (
     <header className={`sticky top-0 z-[60] bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? "-translate-y-full" : ""}`}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-[auto,1fr,auto] items-center h-16 gap-4">
-          {/* Logo - Left */}
-          <div className="flex items-center">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo and Sidebar Toggle Group - Left side */}
+          <div className="flex items-center space-x-2">
+
+            {/* Logo */}
             <Link to="/">
-              <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[3px_3px_0px_0px] shadow-black/40">
-                <span className="text-accent-foreground font-bold text-base">R</span>
+              <div className="relative w-10 h-10 bg-amber-500 flex items-center justify-center" style={{
+                clipPath: 'polygon(0 0, 100% 10%, 100% 100%, 10% 100%)'
+              }}>
+                <span className="text-white font-bold text-base">R</span>
               </div>
             </Link>
           </div>
 
-          {/* Search Bar - Center */}
-          <div className="flex justify-center px-4 md:px-8">
-            <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-lg">
+          {/* Search Bar - Centered and wider on desktop */}
+          <div className="flex flex-1 justify-center md:max-w-md md:mx-8">
+            <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
                 type="text"
@@ -107,8 +111,8 @@ export function Header() {
                   setSearchQuery(e.target.value)
                   handleSearch(e.target.value)
                 }}
-                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-[11px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
-                  theme === 'light' ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40' : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
+                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                  theme === 'light' ? 'shadow shadow-black/20' : 'shadow shadow-black/30'
                 }`}
               />
               {isMarketsPage && (
@@ -123,8 +127,8 @@ export function Header() {
             </div>
           </div>
 
-          {/* Right Side Actions - Desktop */}
-          <div className="hidden md:flex items-center justify-end space-x-3 min-w-0">
+          {/* Right Side Actions - Desktop Only */}
+          <div className="hidden md:flex items-center space-x-3">
             {/* Location Button */}
             <Button
               variant="ghost"
@@ -271,8 +275,8 @@ export function Header() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-full transition-colors duration-200" aria-label="Open menu">
-                    <div className="w-10 h-10 bg-amber-500 flex items-center justify-center rounded-full shadow-[1px_1px_0px_0px] shadow-black/20">
+                  <button className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-lg transition-colors duration-200" aria-label="Open menu">
+                    <div className="w-10 h-10 bg-amber-500 flex items-center justify-center">
                       <span className="text-white font-bold text-sm">{user?.firstName?.charAt(0) || user?.lastName?.charAt(0) || 'U'}</span>
                     </div>
                   </button>

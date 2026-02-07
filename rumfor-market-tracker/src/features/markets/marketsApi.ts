@@ -410,20 +410,31 @@ export const marketsApi = {
     } else {
       // Real API with mapping from backend to frontend format
       const queryParams = new URLSearchParams()
+      // When sorting, fetch more results for client-side sorting
+      const effectiveLimit = (filters?.sortBy) ? 500 : limit
       if (filters) {
         if (filters.search) queryParams.append('search', filters.search)
-        if (filters.status?.length) queryParams.append('status', filters.status[0]) // Backend expects single status
-        if (filters.category?.length) queryParams.append('category', filters.category[0]) // Backend expects single category
-        // Combine city and state for location parameter
+        if (filters.status?.length) queryParams.append('status', filters.status[0])
+        if (filters.category?.length) queryParams.append('category', filters.category[0])
         if (filters.location?.city || filters.location?.state) {
           const locationParts = []
           if (filters.location.city) locationParts.push(filters.location.city)
           if (filters.location.state) locationParts.push(filters.location.state)
           queryParams.append('location', locationParts.join(' '))
         }
+        // Map frontend sortBy to backend field names
+        const sortByMap: Record<string, string> = {
+          'date-newest': 'createdAt',
+          'date-oldest': 'createdAt',
+          'name-asc': 'name',
+          'name-desc': 'name',
+          popularity: 'stats.viewCount'
+        }
+        if (filters.sortBy) queryParams.append('sortBy', sortByMap[filters.sortBy] || filters.sortBy)
+        if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder)
       }
-      queryParams.append('page', page.toString())
-      queryParams.append('limit', limit.toString())
+      queryParams.append('page', '1')
+      queryParams.append('limit', effectiveLimit.toString())
 
       const response = await httpClient.get<ApiResponse<any>>(`/markets?${queryParams}`)
       console.log('[getMarkets] Backend response:', response)
@@ -675,9 +686,9 @@ export const marketsApi = {
       // Return the tracking array directly - it contains both tracking and market data
       const backendData = response.data!
       console.log('[TRACKED MARKETS API] Backend data:', backendData)
-      console.log('[TRACKED MARKETS API] Tracking array:', backendData.tracking)
+      console.log('[TRACKED MARKETS API] Tracking array:', backendData.markets)
 
-      return backendData.tracking
+      return backendData.markets
     }
   },
 

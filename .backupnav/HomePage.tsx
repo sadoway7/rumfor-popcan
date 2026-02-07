@@ -67,8 +67,10 @@ export function HomePage() {
               <div className="sticky top-0 z-50 bg-surface-2 border-b border-surface-3">
                 <div className="flex items-center justify-between px-4 py-3">
                   {/* Logo Icon */}
-                  <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
-                    <span className="text-accent-foreground font-bold text-xl">R</span>
+                  <div className="relative w-10 h-10 bg-amber-500 flex items-center justify-center" style={{
+                    clipPath: 'polygon(0 0, 100% 10%, 100% 100%, 10% 100%)'
+                  }}>
+                    <span className="text-white font-bold text-xl">R</span>
                   </div>
                   
                   {/* Sign In Button */}
@@ -86,8 +88,10 @@ export function HomePage() {
               <div className="relative bg-gradient-to-br from-surface-2 to-surface px-5 py-10 border-b border-surface-3">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-3 mb-6">
-                  <div className="w-16 h-16 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
-                    <span className="text-accent-foreground font-bold text-3xl">R</span>
+                  <div className="relative w-16 h-16 bg-amber-500 flex items-center justify-center" style={{
+                    clipPath: 'polygon(0 0, 100% 10%, 100% 100%, 10% 100%)'
+                  }}>
+                    <span className="text-white font-bold text-3xl">R</span>
                   </div>
                   <h1 className="font-bold text-4xl text-foreground uppercase tracking-tighter leading-none">RUMFOR</h1>
                 </div>

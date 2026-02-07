@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
 import {
@@ -16,11 +17,14 @@ import {
   Plus,
   Calendar,
   Search,
+  Bookmark,
 } from 'lucide-react'
 
 interface BottomNavProps {
   role: UserRole
 }
+
+const MOBILE_LABEL_WIDTH = 72;
 
 const navigationConfig = {
   visitor: [
@@ -30,7 +34,7 @@ const navigationConfig = {
   ],
   vendor: [
     { name: 'Search', href: '/markets', icon: Search },
-    { name: 'My Markets', href: '/vendor/tracked-markets', icon: MapPin },
+    { name: 'Tracking', href: '/vendor/tracked-markets', icon: Bookmark },
     { name: 'Add Market', href: '/vendor/add-market', icon: Plus, isPrimary: true },
     { name: 'Calendar', href: '/vendor/calendar', icon: Calendar },
     { name: 'Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
@@ -89,61 +93,139 @@ export function BottomNav({ role }: BottomNavProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [lastScrollY, isMobile])
 
+  // Get active index based on current location
+  const getActiveIndex = () => {
+    for (let i = 0; i < navigation.length; i++) {
+      if (location.pathname === navigation[i].href) {
+        return i
+      }
+    }
+    return -1 // Return -1 if no item is active
+  }
+
+  const activeIndex = getActiveIndex()
+
   return (
     <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-[70] bg-surface border-t border-surface-3 supports-[padding:max(0px)]:pb-safe-area-inset-bottom transition-transform duration-300",
+      "fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[70] transition-all duration-300 supports-[padding:max(0px)]:pb-safe-area-inset-bottom flex items-center gap-4",
       !isMobile && "hidden",
-      isHidden && "translate-y-[200%]"
+      isHidden && "translate-y-[400%]"
     )}>
-      <nav className="flex justify-around items-end py-2 px-4 max-w-md mx-auto shadow-[0_-4px_16px_-3px_rgba(0,0,0,0.15)]">
-        {navigation.map((item: any) => {
-          const isActive = location.pathname === item.href
-          const isPrimary = item.isPrimary
+      <motion.nav 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ 
+          scale: 1, 
+          opacity: 1,
+          width: activeIndex >= 0 ? "auto" : "auto"
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 26 }}
+        role="navigation"
+        aria-label="Bottom Navigation"
+        className={cn(
+          "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full flex items-center h-[60px] transition-all duration-300 ease-out",
+          activeIndex >= 0 ? "px-4 w-auto" : "px-2 min-w-[207px]"
+        )}
+            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.12))' }}
+      >
+        {navigation.filter((item: any) => !item.isPrimary).map((item: any, idx: number) => {
+          const Icon = item.icon
+          const isActive = activeIndex === navigation.indexOf(item)
           
           return (
-            <Link
+            <motion.div
               key={item.name}
-              to={item.href}
-              className={cn(
-                'flex flex-col items-center justify-center px-3 py-2 text-xs font-medium transition-all duration-200 focus-visible:outline-none active:scale-95 relative group',
-                isPrimary
-                  ? 'min-h-[64px] min-w-[64px]'
-                  : 'min-h-[56px] min-w-[56px]',
-                isActive && !isPrimary
-                  ? 'text-amber-500'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
+              whileTap={{ scale: 0.97 }}
+              animate={{
+                width: activeIndex >= 0 ? "fit-content" : "55px",
+                marginRight: activeIndex >= 0 ? "5px" : idx < navigation.filter((i: any) => !i.isPrimary).length - 1 ? "5px" : "auto"
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {isPrimary ? (
-                <div className={cn(
-                  'h-16 w-16 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 -mt-8',
-                  isActive ? 'bg-amber-500' : 'bg-amber-500'
-                )}>
-                  <item.icon className="h-8 w-8 text-white" />
-                </div>
-              ) : (
-                <>
-                  <item.icon
-                    className={cn(
-                      'h-6 w-6 transition-transform duration-150',
-                      isActive ? 'text-amber-500 scale-105' : 'text-muted-foreground group-hover:scale-105'
-                    )}
-                  />
-                  <span className={cn(
-                    'truncate text-[10px] mt-1',
-                    isActive ? 'text-amber-500' : 'text-muted-foreground group-hover:text-foreground'
-                  )}>{item.name}</span>
-                  {/* Animated underline */}
-                  <div className={cn(
-                    'absolute bottom-0 h-1.5 bg-accent rounded-full transition-all duration-300 ease-out',
-                    isActive ? 'w-4 opacity-100' : 'w-0 opacity-0'
-                  )} />
-                </>
-              )}
-            </Link>
+              <Link
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-0 px-4 py-2 rounded-full transition-colors duration-200 relative h-12 min-w-[50px] min-h-[46px] max-h-[50px] group",
+                  isActive && activeIndex >= 0
+                    ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary gap-2"
+                    : "bg-transparent text-gray-400 dark:text-gray-500 hover:bg-amber-500 hover:text-white",
+                  "focus:outline-none focus-visible:ring-0"
+                )}
+                aria-label={item.name}
+              >
+              <Icon
+                size={25}
+                strokeWidth={2.5}
+                aria-hidden
+                className="transition-colors duration-200"
+              />
+
+              {/* Animated label */}
+              <motion.div
+                initial={false}
+                animate={{
+                  width: isActive && activeIndex >= 0 ? "auto" : "0px",
+                  opacity: isActive && activeIndex >= 0 ? 1 : 0,
+                  marginLeft: isActive && activeIndex >= 0 ? "8px" : "0px",
+                }}
+                transition={{
+                  width: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.2 },
+                  marginLeft: { duration: 0.2 },
+                }}
+                className={cn("overflow-hidden flex items-center")}
+              >
+                <span
+                  className={cn(
+                    "font-medium text-sm whitespace-nowrap select-none transition-colors duration-200",
+                    isActive && activeIndex >= 0 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground group-hover:text-white",
+                  )}
+                  title={item.name}
+                >
+                  {item.name}
+                </span>
+              </motion.div>
+              </Link>
+            </motion.div>
           )
         })}
-      </nav>
+      </motion.nav>
+      
+      {/* Primary button (Add Market) - on the right side of navbar */}
+      {navigation.filter((item: any) => item.isPrimary).map((item: any) => {
+        const Icon = item.icon
+        
+        return (
+          <motion.div
+            key={item.name}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+              scale: 1,
+              y: -6
+            }}
+            transition={{ type: "spring", stiffness: 200, damping: 40 }}
+            className="-mb-9 -mt-6"
+        style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.12))' }}
+          >
+            <Link
+              to={item.href}
+              className={cn(
+                "flex items-center justify-center w-16 h-16 rounded-full transition-all duration-200",
+                "bg-amber-500 text-white hover:bg-amber-600",
+                "shadow-2xl hover:shadow-3xl",
+                "focus:outline-none focus-visible:ring-0"
+              )}
+              aria-label={item.name}
+            >
+              <Icon
+                size={36}
+                strokeWidth={2.5}
+                aria-hidden
+                className="text-white"
+              />
+            </Link>
+          </motion.div>
+        )
+      })}
     </div>
   )
 }
