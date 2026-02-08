@@ -43,7 +43,7 @@ export function DashboardLayout({ children, role }: DashboardLayoutProps) {
         {sidebarOpen && (
           <div className="fixed inset-0 z-40 lg:hidden">
             <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setSidebarOpen(false)} />
-            <div className="relative flex-1 flex flex-col max-w-xs w-full bg-surface">
+            <div className="relative flex-1 flex flex-col max-w-xs w-full">
               <div className="absolute top-0 right-0 -mr-12 pt-2">
                 <button
                   className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"

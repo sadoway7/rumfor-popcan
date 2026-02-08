@@ -149,8 +149,12 @@ export function BottomNav({ role }: BottomNavProps) {
                     ? "bg-amber-500 text-white hover:bg-amber-600 shadow-2xl"
                     : "bg-transparent text-gray-400 dark:text-gray-500 hover:bg-amber-500/10 hover:text-amber-500",
                   "focus:outline-none focus-visible:ring-0",
-                  isPrimary ? "w-12" : "px-4"
+                  isPrimary ? "w-12" : "px-4",
+                  "-webkit-tap-highlight-color-transparent",
+                  "active:outline-none",
+                  "border-none outline-none"
                 )}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label={item.name}
               >
               <Icon

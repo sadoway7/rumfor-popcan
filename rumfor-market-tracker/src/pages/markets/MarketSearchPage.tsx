@@ -19,7 +19,7 @@ export const MarketSearchPage: React.FC = () => {
   const sortRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<HTMLDivElement>(null)
   const isInitialLoad = useRef(true)
-  const { isSidebarOpen, toggleSidebar } = useSidebarStore()
+  const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebarStore()
   const { isAuthenticated } = useAuthStore()
   const trendingHashtags = [
     'handmade',
@@ -40,6 +40,7 @@ export const MarketSearchPage: React.FC = () => {
     isTracking,
     searchMarkets,
     setFilters,
+    clearFilters,
     trackMarket,
     untrackMarket,
     hasNextPage,
@@ -83,6 +84,23 @@ export const MarketSearchPage: React.FC = () => {
       setFilters(urlFilters)
     }
   }, [])
+
+  // Handle URL search param changes from header search
+  useEffect(() => {
+    if (isInitialLoad.current) return
+    
+    const urlSearch = searchParams.get('search') || ''
+    if (urlSearch !== filters.search) {
+      if (urlSearch) {
+        searchMarkets(urlSearch)
+      } else {
+        // Clear search and show normal results
+        searchMarkets('')
+        clearFilters()
+      }
+      setFilters({ ...filters, search: urlSearch })
+    }
+  }, [searchParams])
 
   // Close sidebar by default
   useEffect(() => {
@@ -179,6 +197,7 @@ export const MarketSearchPage: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({})
     setSearchParams({})
+    setSidebarOpen(false)
   }
 
   const getActiveFilterCount = () => {
@@ -224,7 +243,14 @@ export const MarketSearchPage: React.FC = () => {
       <>
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar */}
-          <aside className={`${isSidebarOpen ? 'w-full lg:w-80' : 'w-0 lg:w-0'} transition-all duration-300 overflow-hidden bg-background ${!isSidebarOpen ? 'hidden lg:block' : ''}`}>
+          <aside 
+            className={`lg:${isSidebarOpen ? 'w-80' : 'w-0'} overflow-hidden bg-background`}
+            style={{
+              maxHeight: isSidebarOpen ? '2000px' : '0px',
+              opacity: isSidebarOpen ? 1 : 0,
+              transition: 'max-height 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.6, 1)'
+            }}
+          >
             <div className="p-4 sm:p-6 w-full lg:w-80 space-y-5">
 
               {/* Header - Active Count */}
@@ -307,8 +333,7 @@ export const MarketSearchPage: React.FC = () => {
                 <Button
                   onClick={handleClearFilters}
                   variant="outline"
-                  size="sm"
-                  className="w-full"
+                  className="w-full py-3 min-h-[48px]"
                 >
                   Clear All Filters ({getActiveFilterCount()})
                 </Button>
@@ -343,17 +368,17 @@ export const MarketSearchPage: React.FC = () => {
                        </>
                      )}
                    </div>
-                    <div className="relative" ref={sortRef}>
-                      <button
-                        onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2"
-                        title="Sort"
-                      >
-                        <Layers className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          {sortBy === 'date-oldest' ? 'Soonest' : sortBy === 'date-newest' ? 'Latest' : sortBy === 'recently-added' ? 'Recent' : sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
-                        </span>
-                      </button>
+                     <div className="relative" ref={sortRef}>
+                       <button
+                         onClick={() => setIsSortOpen(!isSortOpen)}
+                         className="relative px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2 before:content-[''] before:absolute before:inset-[-12px] before:rounded-full"
+                         title="Sort"
+                       >
+                         <Layers className="w-4 h-4" />
+                         <span className="text-sm font-medium">
+                           {sortBy === 'date-oldest' ? 'Soonest' : sortBy === 'date-newest' ? 'Latest' : sortBy === 'recently-added' ? 'Recent' : sortBy === 'name-asc' ? 'A-Z' : 'Z-A'}
+                         </span>
+                       </button>
                       {isSortOpen && (
                         <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-[100] py-1">
                           <button
@@ -416,7 +441,7 @@ export const MarketSearchPage: React.FC = () => {
                 isTracking={isTracking}
                 variant="grid"
                 emptyStateProps={{
-                  title: "Oops, we didn't find any of those markets.",
+                  title: "We did not find any results",
                   description: "Try adjusting your search criteria or filters to find more markets.",
                   action: (
                     <Button onClick={handleClearFilters} size="lg">

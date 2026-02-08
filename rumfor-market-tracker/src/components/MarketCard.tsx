@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { Calendar, MapPin } from 'lucide-react'
 import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
+import { TrackButton } from '@/components/TrackButton'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
@@ -660,45 +661,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                         <ChatNotificationIcon count={market.stats?.commentCount || 0} />
                       </div>
                       {/* Track Button */}
-                      <button
+                      <TrackButton
+                        isTracked={isTrackedOptimistic}
                         onClick={handleTrackClick}
-                        type="button"
+                        disabled={isLoading}
                         className="mr-1 mt-1"
-                      >
-                        <svg
-                          viewBox="0 0 48 48"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-10 h-10 drop-shadow-md"
-                        >
-                          <rect
-                            x="4"
-                            y="4"
-                            width="40"
-                            height="40"
-                            rx="10"
-                            fill="white"
-                            stroke="white"
-                            strokeWidth="3"
-                          />
-                          {isTrackedOptimistic ? (
-                            <path
-                              d="M15 24L21 30L33 18"
-                              stroke="#22C55E"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          ) : (
-                            <path
-                              d="M24 14V34M12 24H36"
-                              stroke="#E67E22"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                            />
-                          )}
-                        </svg>
-                      </button>
+                        size="sm"
+                      />
                     </div>
                   </div>
                    {/* Bottom row - Title + description with dark gradient and color accent */}

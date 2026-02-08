@@ -149,27 +149,29 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, classNa
       {/* Date Inputs */}
       <div className="flex gap-2">
         {/* From Date Input */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <label className="block text-xs text-muted-foreground mb-1">From</label>
-          <input
-            type="date"
-            value={value.from}
-            onChange={(e) => handleInputChange('from', e.target.value)}
-            onFocus={() => handleInputFocus('from')}
-            className="w-full px-3 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20"
-          />
+          <button
+            type="button"
+            onClick={() => handleInputFocus('from')}
+            className="w-full px-2 sm:px-3 py-2.5 text-xs sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
+            style={{ WebkitAppearance: 'none' }}
+          >
+            {value.from ? formatDate(value.from) : 'Select'}
+          </button>
         </div>
 
         {/* To Date Input */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <label className="block text-xs text-muted-foreground mb-1">To</label>
-          <input
-            type="date"
-            value={value.to}
-            onChange={(e) => handleInputChange('to', e.target.value)}
-            onFocus={() => handleInputFocus('to')}
-            className="w-full px-3 py-2.5 text-sm bg-surface rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20"
-          />
+          <button
+            type="button"
+            onClick={() => handleInputFocus('to')}
+            className="w-full px-2 sm:px-3 py-2.5 text-xs sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
+            style={{ WebkitAppearance: 'none' }}
+          >
+            {value.to ? formatDate(value.to) : 'Select'}
+          </button>
         </div>
       </div>
 

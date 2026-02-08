@@ -20,6 +20,7 @@ export interface TabsProps {
   fullWidth?: boolean
   listClassName?: string
   inactiveTextColor?: string
+  hideIconsOnMobile?: boolean
 }
 
 const Tabs: React.FC<TabsProps> = ({
@@ -32,7 +33,8 @@ const Tabs: React.FC<TabsProps> = ({
   className,
   fullWidth = false,
   listClassName,
-  inactiveTextColor
+  inactiveTextColor,
+  hideIconsOnMobile = false
 }) => {
   const [internalActiveKey, setInternalActiveKey] = useState(defaultActiveKey || items[0]?.key)
   const currentActiveKey = activeKey !== undefined ? activeKey : internalActiveKey
@@ -98,7 +100,7 @@ const Tabs: React.FC<TabsProps> = ({
             disabled={item.disabled}
           >
             {item.icon && (
-              <span className="mr-2">{item.icon}</span>
+              <span className={cn("mr-2", hideIconsOnMobile && "hidden sm:inline-flex")}>{item.icon}</span>
             )}
             {item.label}
           </button>

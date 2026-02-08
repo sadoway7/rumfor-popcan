@@ -50,6 +50,9 @@ export function Header() {
       // Navigate to markets search page
       if (query.trim()) {
         navigate(`/markets?search=${encodeURIComponent(query.trim())}`)
+      } else if (location.pathname === '/markets') {
+        // Already on markets page, remove search param to show all results
+        navigate('/markets', { replace: true })
       }
     }
   }

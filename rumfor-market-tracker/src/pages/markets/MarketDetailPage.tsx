@@ -16,6 +16,7 @@ import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info } from 'lucide-react'
+import { TrackButton } from '@/components/TrackButton'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
@@ -219,68 +220,11 @@ export const MarketDetailPage: React.FC = () => {
 
         {/* Track/Follow - Bottom right of hero */}
         <div className="absolute bottom-4 right-4 z-20">
-          {isMarketTracked(market.id) ? (
-            <button
-              onClick={handleTrackToggle}
-              disabled={isTracking}
-              type="button"
-            >
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-12 h-12 drop-shadow-md"
-              >
-                <rect
-                  x="4"
-                  y="4"
-                  width="40"
-                  height="40"
-                  rx="12"
-                  fill="white"
-                  stroke="white"
-                  strokeWidth="4"
-                />
-                <path
-                  d="M15 24L21 30L33 18"
-                  stroke="#22C55E"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          ) : (
-            <button
-              onClick={handleTrackToggle}
-              disabled={isTracking}
-              type="button"
-            >
-              <svg
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-12 h-12 drop-shadow-md"
-              >
-                <rect
-                  x="4"
-                  y="4"
-                  width="40"
-                  height="40"
-                  rx="12"
-                  fill="white"
-                  stroke="white"
-                  strokeWidth="4"
-                />
-                <path
-                  d="M24 14V34M12 24H36"
-                  stroke="#E67E22"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          )}
+          <TrackButton
+            isTracked={isMarketTracked(market.id)}
+            onClick={handleTrackToggle}
+            disabled={isTracking}
+          />
         </div>
 
         {/* Title + Description - Same as MarketCard */}
@@ -341,6 +285,7 @@ export const MarketDetailPage: React.FC = () => {
           inactiveTextColor="text-gray-400"
           variant="pills"
           size="md"
+          hideIconsOnMobile
           listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2"
           items={[
             {

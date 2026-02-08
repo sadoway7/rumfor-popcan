@@ -230,7 +230,10 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   const setFilters = useCallback((filters: MarketFilters) => {
     setCurrentFilters(filters)
     setCurrentPage(1)
-    setSearchQuery('')
+    // Only clear search if filters doesn't explicitly include a search value
+    if (!filters.search) {
+      setSearchQuery('')
+    }
   }, [])
 
   // Clear filters function
