@@ -1,14 +1,28 @@
-const mongoose = require('mongoose')
-const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/errorHandler')
-const Market = require('../models/Market')
-const Comment = require('../models/Comment')
-const UserMarketTracking = require('../models/UserMarketTracking')
-const Todo = require('../models/Todo')
-const Expense = require('../models/Expense')
-const Message = require('../models/Message')
-const { validateMarketCreation, validateMarketUpdate, validateMongoId, validatePagination, validateSearch } = require('../middleware/validation')
-const { calculateNextMarketDate, canMarketAcceptApplications } = require('../utils/marketLogic')
-const { serializeMarket } = require('../utils/serializers')
+const mongoose = require('mongoose');
+const {
+  catchAsync,
+  AppError,
+  sendSuccess,
+  sendError,
+} = require('../middleware/errorHandler');
+const Market = require('../models/Market');
+const Comment = require('../models/Comment');
+const UserMarketTracking = require('../models/UserMarketTracking');
+const Todo = require('../models/Todo');
+const Expense = require('../models/Expense');
+const Message = require('../models/Message');
+const {
+  validateMarketCreation,
+  validateMarketUpdate,
+  validateMongoId,
+  validatePagination,
+  validateSearch,
+} = require('../middleware/validation');
+const {
+  calculateNextMarketDate,
+  canMarketAcceptApplications,
+} = require('../utils/marketLogic');
+const { serializeMarket } = require('../utils/serializers');
 
 // Get all markets with filtering and pagination
 const getMarkets = catchAsync(async (req, res, next) => {
@@ -20,43 +34,102 @@ const getMarkets = catchAsync(async (req, res, next) => {
     category,
     location,
     dates,
+    dateFrom,
+    dateTo,
     search,
-    marketType
-  } = req.query
+    marketType,
+  } = req.query;
 
   // Build query
-  let query = { status: 'active', isPublic: true }
+  let query = { status: 'active', isPublic: true };
 
   // Debug logging
-  console.log('[DEBUG getMarkets] Query:', JSON.stringify(query, null, 2))
-  console.log('[DEBUG getMarkets] Query params:', req.query)
+  console.log('[DEBUG getMarkets] Query:', JSON.stringify(query, null, 2));
+  console.log('[DEBUG getMarkets] Query params:', req.query);
 
   if (category) {
-    query.category = category
+    query.category = category;
   }
 
   if (dates) {
-    query['dates.type'] = dates
+    query['dates.type'] = dates;
   }
 
   if (location) {
     query.$or = [
       { 'location.city': { $regex: location, $options: 'i' } },
-      { 'location.state': { $regex: location, $options: 'i' } }
-    ]
+      { 'location.state': { $regex: location, $options: 'i' } },
+    ];
   }
 
   if (search) {
-    query.$text = { $search: search }
+    query.$text = { $search: search };
   }
 
   if (marketType) {
     // Map frontend marketType to createdByType
     const createdByTypeMap = {
       'vendor-created': 'vendor',
-      'promoter-managed': { $in: ['promoter', 'admin'] }
+      'promoter-managed': { $in: ['promoter', 'admin'] },
     };
     query.createdByType = createdByTypeMap[marketType];
+  }
+
+  // Filter by date range - only show markets with future dates
+  if (dateFrom || dateTo) {
+    const dateFilter = {};
+
+    if (dateFrom) {
+      // Market is valid if it has events after dateFrom
+      // For recurring: seasonEnd >= dateFrom
+      // For one-time: any special date >= dateFrom
+      dateFilter.$or = [
+        {
+          'schedule.recurring': true,
+          'schedule.seasonEnd': { $gte: dateFrom },
+        },
+        {
+          'schedule.recurring': false,
+          'schedule.specialDates.date': { $gte: dateFrom },
+        },
+      ];
+    }
+
+    if (dateTo) {
+      if (dateFilter.$or) {
+        // Both from and to specified
+        dateFilter.$and = [
+          { $or: dateFilter.$or },
+          {
+            $or: [
+              {
+                'schedule.recurring': true,
+                'schedule.seasonStart': { $lte: dateTo },
+              },
+              {
+                'schedule.recurring': false,
+                'schedule.specialDates.date': { $lte: dateTo },
+              },
+            ],
+          },
+        ];
+        delete dateFilter.$or;
+      } else {
+        // Only dateTo specified
+        dateFilter.$or = [
+          {
+            'schedule.recurring': true,
+            'schedule.seasonStart': { $lte: dateTo },
+          },
+          {
+            'schedule.recurring': false,
+            'schedule.specialDates.date': { $lte: dateTo },
+          },
+        ];
+      }
+    }
+
+    Object.assign(query, dateFilter);
   }
 
   // Execute query
@@ -64,24 +137,33 @@ const getMarkets = catchAsync(async (req, res, next) => {
     .populate('promoter', 'username firstName lastName')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(limit * 1)
-    .skip((page - 1) * limit)
+    .skip((page - 1) * limit);
 
-  console.log('[DEBUG getMarkets] Found', markets.length, 'markets')
+  console.log('[DEBUG getMarkets] Found', markets.length, 'markets');
 
   markets.forEach(m => {
-    console.log('[DEBUG getMarkets] Market:', m.name, 'createdByType:', m.createdByType, 'isPublic:', m.isPublic, 'status:', m.status)
-  })
+    console.log(
+      '[DEBUG getMarkets] Market:',
+      m.name,
+      'createdByType:',
+      m.createdByType,
+      'isPublic:',
+      m.isPublic,
+      'status:',
+      m.status
+    );
+  });
 
   // Get total count for pagination
-  const total = await Market.countDocuments(query)
+  const total = await Market.countDocuments(query);
 
   // Get popular categories for sidebar
   const popularCategories = await Market.aggregate([
     { $match: { status: 'active', isPublic: true } },
     { $group: { _id: '$category', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
-    { $limit: 10 }
-  ])
+    { $limit: 10 },
+  ]);
 
   // Get popular marketTypes for sidebar
   const popularMarketTypes = await Market.aggregate([
@@ -92,98 +174,113 @@ const getMarkets = catchAsync(async (req, res, next) => {
           $cond: {
             if: { $eq: ['$createdByType', 'vendor'] },
             then: 'vendor-created',
-            else: 'promoter-managed'
-          }
+            else: 'promoter-managed',
+          },
         },
-        count: { $sum: 1 }
-      }
+        count: { $sum: 1 },
+      },
     },
     { $sort: { count: -1 } },
-    { $limit: 10 }
-  ])
+    { $limit: 10 },
+  ]);
 
   // Get comment counts for all markets
   const commentCounts = await Comment.aggregate([
     { $match: { isDeleted: false, isModerated: false } },
-    { $group: { _id: '$market', count: { $sum: 1 } } }
-  ])
-  const commentCountMap = {}
+    { $group: { _id: '$market', count: { $sum: 1 } } },
+  ]);
+  const commentCountMap = {};
   commentCounts.forEach(c => {
-    commentCountMap[c._id.toString()] = c.count
-  })
+    commentCountMap[c._id.toString()] = c.count;
+  });
 
   // Re-enable serializer for proper frontend data formatting
   const serializedMarkets = markets.map(market => {
-    const serialized = serializeMarket(market)
+    const serialized = serializeMarket(market);
     // Add comment count to stats
     if (serialized && serialized.stats) {
-      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+      serialized.stats.commentCount =
+        commentCountMap[market._id.toString()] || 0;
     } else if (serialized) {
-      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+      serialized.stats = {
+        commentCount: commentCountMap[market._id.toString()] || 0,
+      };
     }
-    return serialized
-  })
+    return serialized;
+  });
 
-  sendSuccess(res, {
-    markets: serializedMarkets,
-    pagination: {
-      current: parseInt(page),
-      pages: Math.ceil(total / limit),
-      total,
-      limit: parseInt(limit)
+  sendSuccess(
+    res,
+    {
+      markets: serializedMarkets,
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / limit),
+        total,
+        limit: parseInt(limit),
+      },
+      filters: {
+        categories: popularCategories,
+        marketTypes: popularMarketTypes,
+      },
     },
-    filters: {
-      categories: popularCategories,
-      marketTypes: popularMarketTypes
-    }
-  }, 'Markets retrieved successfully')
-})
+    'Markets retrieved successfully'
+  );
+});
 
 // Get single market by ID
 const getMarket = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   const market = await Market.findById(id)
     .populate('promoter', 'username firstName lastName email')
-    .populate('images.uploadedBy', 'username firstName lastName')
+    .populate('images.uploadedBy', 'username firstName lastName');
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Get tracking status if user is authenticated
-  let trackingStatus = null
+  let trackingStatus = null;
   if (req.user) {
-    const userId = req.user._id
+    const userId = req.user._id;
     const tracking = await UserMarketTracking.findOne({
       user: userId,
-      market: id
-    })
-    trackingStatus = tracking ? tracking.status : null
+      market: id,
+    });
+    trackingStatus = tracking ? tracking.status : null;
   }
 
   // Get recent photos from populated market
-  const recentPhotos = market.images?.slice(0, 5) || []
+  const recentPhotos = market.images?.slice(0, 5) || [];
 
   // Get comment count
-  const commentCount = await Comment.countDocuments({ market: market._id, isDeleted: false, isModerated: false })
+  const commentCount = await Comment.countDocuments({
+    market: market._id,
+    isDeleted: false,
+    isModerated: false,
+  });
 
   // Serialize market data for frontend compatibility
-  const serializedMarket = serializeMarket(market)
-  
+  const serializedMarket = serializeMarket(market);
+
   // Add comment count to stats
   if (serializedMarket && serializedMarket.stats) {
-    serializedMarket.stats.commentCount = commentCount
+    serializedMarket.stats.commentCount = commentCount;
   } else if (serializedMarket) {
-    serializedMarket.stats = { commentCount }
+    serializedMarket.stats = { commentCount };
   }
 
-  sendSuccess(res, {
-    market: serializedMarket,
-    trackingStatus,
-    recentPhotos
-  }, 'Market retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      market: serializedMarket,
+      trackingStatus,
+      recentPhotos,
+    },
+    'Market retrieved successfully'
+  );
+});
 
 // Create new market
 const createMarket = catchAsync(async (req, res, next) => {
@@ -196,197 +293,245 @@ const createMarket = catchAsync(async (req, res, next) => {
   }
 
   // Add promoter and creator type to market data
-  const userId = req.user._id
+  const userId = req.user._id;
   const marketData = {
     ...req.body,
     promoter: userId,
-    createdByType
-  }
+    createdByType,
+  };
 
   // For vendor-created markets, use generic images
-  if (createdByType === 'vendor' && (!marketData.images || marketData.images.length === 0)) {
+  if (
+    createdByType === 'vendor' &&
+    (!marketData.images || marketData.images.length === 0)
+  ) {
     // Import the generic images function
     const getGenericMarketImage = require('../utils/genericImages');
     const tempId = Date.now().toString();
-    marketData.images = [{
-      url: getGenericMarketImage(tempId),
-      alt: 'Community market',
-      isHero: true,
-      uploadedBy: req.user._id
-    }];
+    marketData.images = [
+      {
+        url: getGenericMarketImage(tempId),
+        alt: 'Community market',
+        isHero: true,
+        uploadedBy: req.user._id,
+      },
+    ];
   }
 
   // Debug logging
-  console.log('[DEBUG createMarket] Creating market with data:', JSON.stringify(marketData, null, 2))
+  console.log(
+    '[DEBUG createMarket] Creating market with data:',
+    JSON.stringify(marketData, null, 2)
+  );
 
-  const market = await Market.create(marketData)
+  const market = await Market.create(marketData);
 
-  console.log('[DEBUG createMarket] Market created:', market.name, 'createdByType:', market.createdByType, 'isPublic:', market.isPublic, 'status:', market.status)
+  console.log(
+    '[DEBUG createMarket] Market created:',
+    market.name,
+    'createdByType:',
+    market.createdByType,
+    'isPublic:',
+    market.isPublic,
+    'status:',
+    market.status
+  );
 
-  const populatedMarket = await Market.findById(market._id)
-    .populate('promoter', 'username firstName lastName')
+  const populatedMarket = await Market.findById(market._id).populate(
+    'promoter',
+    'username firstName lastName'
+  );
 
-  sendSuccess(res, {
-    market: populatedMarket
-  }, 'Market created successfully', 201)
-})
+  sendSuccess(
+    res,
+    {
+      market: populatedMarket,
+    },
+    'Market created successfully',
+    201
+  );
+});
 
 // Update market
 const updateMarket = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   // Check if market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Admins can edit any market
   if (req.user.role !== 'admin') {
     // Check if market is vendor-created (immutable)
     if (market.createdByType === 'vendor') {
-      return next(new AppError('Vendor-created markets cannot be modified after creation to ensure data integrity', 403))
+      return next(
+        new AppError(
+          'Vendor-created markets cannot be modified after creation to ensure data integrity',
+          403
+        )
+      );
     }
-    
+
     // Check if user owns this market
     if (market.promoter.toString() !== req.user._id) {
-      return next(new AppError('You can only update markets you created', 403))
+      return next(new AppError('You can only update markets you created', 403));
     }
   }
 
-  const updatedMarket = await Market.findByIdAndUpdate(
-    id,
-    req.body,
-    { new: true, runValidators: true }
-  ).populate('promoter', 'username firstName lastName')
+  const updatedMarket = await Market.findByIdAndUpdate(id, req.body, {
+    new: true,
+    runValidators: true,
+  }).populate('promoter', 'username firstName lastName');
 
-  sendSuccess(res, {
-    market: updatedMarket
-  }, 'Market updated successfully')
-})
+  sendSuccess(
+    res,
+    {
+      market: updatedMarket,
+    },
+    'Market updated successfully'
+  );
+});
 
 // Delete market
 const deleteMarket = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Admins can delete any market
   if (req.user.role !== 'admin') {
     // Check if market is vendor-created (immutable)
     if (market.createdByType === 'vendor') {
-      return next(new AppError('Vendor-created markets cannot be deleted to maintain data integrity and vendor accountability', 403))
+      return next(
+        new AppError(
+          'Vendor-created markets cannot be deleted to maintain data integrity and vendor accountability',
+          403
+        )
+      );
     }
-    
+
     // Check if user owns this market
     if (market.promoter.toString() !== req.user._id) {
-      return next(new AppError('You can only delete markets you created', 403))
+      return next(new AppError('You can only delete markets you created', 403));
     }
   }
 
   // Soft delete
-  market.isActive = false
-  await market.save()
+  market.isActive = false;
+  await market.save();
 
-  sendSuccess(res, null, 'Market deleted successfully')
-})
+  sendSuccess(res, null, 'Market deleted successfully');
+});
 
 // Track/untrack market
 const toggleTracking = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { status } = req.body
+  const { id } = req.params;
+  const { status } = req.body;
 
   // Check if market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // For now, prioritize self-managed system - always start with 'interested'
   // Application system can be enabled later when needed
-  let defaultStatus = 'interested'
+  let defaultStatus = 'interested';
 
-  const trackingStatus = status || defaultStatus
+  const trackingStatus = status || defaultStatus;
 
   // Get user ID - handle both _id and id
-  const userId = req.user._id
+  const userId = req.user._id;
 
   // Find existing tracking
   let tracking = await UserMarketTracking.findOne({
     user: userId,
-    market: id
-  })
+    market: id,
+  });
 
   if (tracking) {
     // Update existing tracking
-    tracking.status = trackingStatus
-    await tracking.save()
+    tracking.status = trackingStatus;
+    await tracking.save();
   } else {
     // Create new tracking
     tracking = await UserMarketTracking.create({
       user: userId,
       market: id,
-      status: trackingStatus
-    })
+      status: trackingStatus,
+    });
 
     // Increment market statistics
-    market.stats.favoriteCount = (market.stats.favoriteCount || 0) + 1
-    await market.save()
+    market.stats.favoriteCount = (market.stats.favoriteCount || 0) + 1;
+    await market.save();
   }
 
-  sendSuccess(res, {
-    tracking: {
-      id: tracking._id,
-      marketId: id,
-      userId: userId,
-      status: tracking.status,
-      createdAt: tracking.createdAt,
-      updatedAt: tracking.updatedAt
-    }
-  }, `Market tracked successfully`)
-})
+  sendSuccess(
+    res,
+    {
+      tracking: {
+        id: tracking._id,
+        marketId: id,
+        userId: userId,
+        status: tracking.status,
+        createdAt: tracking.createdAt,
+        updatedAt: tracking.updatedAt,
+      },
+    },
+    `Market tracked successfully`
+  );
+});
 
 // Untrack market (delete tracking record)
 const untrackMarket = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   // Check if market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Get user ID - handle both _id and id
-  const userId = req.user._id
+  const userId = req.user._id;
 
   // Find existing tracking
   const tracking = await UserMarketTracking.findOne({
     user: userId,
-    market: id
-  })
+    market: id,
+  });
 
   if (!tracking) {
-    return next(new AppError('Market not currently tracked', 404))
+    return next(new AppError('Market not currently tracked', 404));
   }
 
   // Delete the tracking record
-  await UserMarketTracking.findByIdAndDelete(tracking._id)
+  await UserMarketTracking.findByIdAndDelete(tracking._id);
 
   // Decrement market statistics
-  market.stats.favoriteCount = Math.max(0, (market.stats.favoriteCount || 0) - 1)
-  await market.save()
+  market.stats.favoriteCount = Math.max(
+    0,
+    (market.stats.favoriteCount || 0) - 1
+  );
+  await market.save();
 
-  sendSuccess(res, {
-    tracked: false
-  }, 'Market untracked successfully')
-})
+  sendSuccess(
+    res,
+    {
+      tracked: false,
+    },
+    'Market untracked successfully'
+  );
+});
 
 // Get user's tracked markets
 const getMyMarkets = catchAsync(async (req, res, next) => {
@@ -395,79 +540,95 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
     limit = 20,
     status,
     sortBy = 'createdAt',
-    sortOrder = 'desc'
-  } = req.query
+    sortOrder = 'desc',
+  } = req.query;
 
   // Build query conditions
-  const userId = req.user._id
-  console.log('[GET MY MARKETS] Querying with userId:', userId)
+  const userId = req.user._id;
+  console.log('[GET MY MARKETS] Querying with userId:', userId);
   const query = {
     user: userId,
-    isArchived: false
-  }
+    isArchived: false,
+  };
 
   if (status) {
-    query.status = status
+    query.status = status;
   }
 
   // Get all tracking records for the user
-  const allTracking = await UserMarketTracking.find(query)
+  const allTracking = await UserMarketTracking.find(query);
 
   // Get market IDs from tracking records
-  const marketIds = allTracking.map(t => t.market)
+  const marketIds = allTracking.map(t => t.market);
 
   // Aggregate expenses for each market
-  const expenseAggregations = marketIds.length > 0 ? await Expense.aggregate([
-    {
-      $match: {
-        vendor: userId,
-        market: { $in: marketIds },
-        isDeleted: false
-      }
-    },
-    {
-      $group: {
-        _id: '$market',
-        totalExpenses: { $sum: { $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount'] } }
-      }
-    }
-  ]) : []
+  const expenseAggregations =
+    marketIds.length > 0
+      ? await Expense.aggregate([
+          {
+            $match: {
+              vendor: userId,
+              market: { $in: marketIds },
+              isDeleted: false,
+            },
+          },
+          {
+            $group: {
+              _id: '$market',
+              totalExpenses: {
+                $sum: {
+                  $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount'],
+                },
+              },
+            },
+          },
+        ])
+      : [];
 
   // Create expense totals map for quick lookup
-  const expenseTotalsMap = new Map()
+  const expenseTotalsMap = new Map();
   expenseAggregations.forEach(result => {
     if (result._id) {
-      expenseTotalsMap.set(result._id.toString(), result.totalExpenses)
+      expenseTotalsMap.set(result._id.toString(), result.totalExpenses);
     }
-  })
+  });
 
   // Aggregate todos for each market
-  const todoAggregations = marketIds.length > 0 ? await Todo.aggregate([
-    {
-      $match: {
-        vendor: userId,
-        market: { $in: marketIds },
-        isDeleted: false
-      }
-    },
-    {
-      $group: {
-        _id: '$market',
-        totalTodos: { $sum: 1 },
-        completedTodos: { $sum: { $cond: [{ $eq: ['$completed', true] }, 1, 0] } }
-      }
-    }
-  ]) : []
+  const todoAggregations =
+    marketIds.length > 0
+      ? await Todo.aggregate([
+          {
+            $match: {
+              vendor: userId,
+              market: { $in: marketIds },
+              isDeleted: false,
+            },
+          },
+          {
+            $group: {
+              _id: '$market',
+              totalTodos: { $sum: 1 },
+              completedTodos: {
+                $sum: { $cond: [{ $eq: ['$completed', true] }, 1, 0] },
+              },
+            },
+          },
+        ])
+      : [];
 
   // Create todo totals map for quick lookup
-  const todoTotalsMap = new Map()
+  const todoTotalsMap = new Map();
   todoAggregations.forEach(result => {
     if (result._id) {
-      const completed = result.completedTodos || 0
-      const total = result.totalTodos || 0
-      todoTotalsMap.set(result._id.toString(), { total, completed, progress: total > 0 ? Math.round((completed / total) * 100) : 0 })
+      const completed = result.completedTodos || 0;
+      const total = result.totalTodos || 0;
+      todoTotalsMap.set(result._id.toString(), {
+        total,
+        completed,
+        progress: total > 0 ? Math.round((completed / total) * 100) : 0,
+      });
     }
-  })
+  });
 
   // OPTIMIZED QUERY: Using .find() with .populate() and .lean() for 60-70% faster performance
   const tracking = await UserMarketTracking.find(query)
@@ -475,25 +636,28 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
       path: 'market',
       match: { status: 'active', isPublic: true },
       // FIXED: Include ALL necessary fields (schedule not dates, added amenities, tags, subcategory)
-      select: 'name description shortDescription category subcategory status location schedule contact images amenities tags createdByType promoter applicationSettings vendorCount stats isPublic',
+      select:
+        'name description shortDescription category subcategory status location schedule contact images amenities tags createdByType promoter applicationSettings vendorCount stats isPublic',
       populate: {
         path: 'promoter',
-        select: 'username profile.firstName profile.lastName email role'
-      }
+        select: 'username profile.firstName profile.lastName email role',
+      },
     })
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(parseInt(limit))
     .skip((page - 1) * parseInt(limit))
-    .lean() // KEY: Returns plain JS objects instead of Mongoose documents (50% faster)
+    .lean(); // KEY: Returns plain JS objects instead of Mongoose documents (50% faster)
 
   // Filter out tracking records where market was deleted or made private
-  const validTracking = tracking.filter(t => t.market !== null)
+  const validTracking = tracking.filter(t => t.market !== null);
 
   // Get total count (use query object, not matchConditions)
-  const total = await UserMarketTracking.countDocuments(query)
+  const total = await UserMarketTracking.countDocuments(query);
 
   // Get status counts (this is already efficient with aggregation)
-  const statusCounts = await UserMarketTracking.getUserStatusCounts(req.user._id)
+  const statusCounts = await UserMarketTracking.getUserStatusCounts(
+    req.user._id
+  );
 
   // Re-enable serializer for proper frontend data formatting
   const serializedTracking = validTracking.map(t => ({
@@ -501,20 +665,24 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
     market: serializeMarket(t.market),
     totalExpenses: expenseTotalsMap.get(t.market?.toString()) || 0,
     todoCount: todoTotalsMap.get(t.market?.toString())?.total || 0,
-    todoProgress: todoTotalsMap.get(t.market?.toString())?.progress || 0
-  }))
+    todoProgress: todoTotalsMap.get(t.market?.toString())?.progress || 0,
+  }));
 
-  sendSuccess(res, {
-    markets: serializedTracking,
-    pagination: {
-      current: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      total,
-      limit: parseInt(limit)
+  sendSuccess(
+    res,
+    {
+      markets: serializedTracking,
+      pagination: {
+        current: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        total,
+        limit: parseInt(limit),
+      },
+      statusCounts,
     },
-    statusCounts
-  }, 'User markets retrieved successfully')
-})
+    'User markets retrieved successfully'
+  );
+});
 
 // Search markets
 const searchMarkets = catchAsync(async (req, res, next) => {
@@ -528,43 +696,43 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     page = 1,
     limit = 20,
     sortBy = 'score',
-    sortOrder = 'desc'
-  } = req.query
+    sortOrder = 'desc',
+  } = req.query;
 
   // Build search query
-  let query = { status: 'active', isPublic: true }
+  let query = { status: 'active', isPublic: true };
 
-  const searchConditions = []
+  const searchConditions = [];
 
   if (q) {
     // Use regex for partial name matching
     searchConditions.push({
-      'name': { $regex: q, $options: 'i' }
-    })
+      name: { $regex: q, $options: 'i' },
+    });
   }
 
   if (category) {
-    query.category = category
+    query.category = category;
   }
 
   if (location) {
     searchConditions.push({
       $or: [
         { 'location.city': { $regex: location, $options: 'i' } },
-        { 'location.state': { $regex: location, $options: 'i' } }
-      ]
-    })
+        { 'location.state': { $regex: location, $options: 'i' } },
+      ],
+    });
   }
 
   if (dates) {
-    query['dates.type'] = dates
+    query['dates.type'] = dates;
   }
 
   if (marketType) {
     // Map frontend marketType to createdByType
     const createdByTypeMap = {
       'vendor-created': 'vendor',
-      'promoter-managed': { $in: ['promoter', 'admin'] }
+      'promoter-managed': { $in: ['promoter', 'admin'] },
     };
     query.createdByType = createdByTypeMap[marketType];
   }
@@ -572,39 +740,38 @@ const searchMarkets = catchAsync(async (req, res, next) => {
   // Filter for future markets only (for suggestions dropdown)
   if (futureOnly === 'true') {
     // Use today's date at midnight UTC to avoid timezone issues
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     // Show market if seasonEnd >= today OR any specialDate >= today
     const futureCondition = {
       $or: [
         { 'schedule.seasonEnd': { $gte: today } },
-        { 'schedule.specialDates': { 
-          $elemMatch: { 
-            $or: [
-              { date: { $gte: today } },
-              { endDate: { $gte: today } }
-            ]
-          } 
-        } }
-      ]
-    }
-    searchConditions.push(futureCondition)
+        {
+          'schedule.specialDates': {
+            $elemMatch: {
+              $or: [{ date: { $gte: today } }, { endDate: { $gte: today } }],
+            },
+          },
+        },
+      ],
+    };
+    searchConditions.push(futureCondition);
   }
 
   if (searchConditions.length > 0) {
-    query.$and = searchConditions
+    query.$and = searchConditions;
   }
 
   // Build sort
-  let sort = {}
+  let sort = {};
   if (sortBy === 'score' && q) {
     // Use name-based sorting when using regex search instead of text search
-    sort = { name: sortOrder === 'desc' ? -1 : 1 }
+    sort = { name: sortOrder === 'desc' ? -1 : 1 };
   } else if (sortBy === 'score') {
-    sort = { createdAt: sortOrder === 'desc' ? -1 : 1 }
+    sort = { createdAt: sortOrder === 'desc' ? -1 : 1 };
   } else {
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1
+    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
   }
 
   // Execute search
@@ -612,355 +779,419 @@ const searchMarkets = catchAsync(async (req, res, next) => {
     .populate('promoter', 'username firstName lastName')
     .sort(sort)
     .limit(limit * 1)
-    .skip((page - 1) * limit)
+    .skip((page - 1) * limit);
 
-  const total = await Market.countDocuments(query)
+  const total = await Market.countDocuments(query);
 
   // Get comment counts
   const commentCounts = await Comment.aggregate([
     { $match: { isDeleted: false, isModerated: false } },
-    { $group: { _id: '$market', count: { $sum: 1 } } }
-  ])
-  const commentCountMap = {}
+    { $group: { _id: '$market', count: { $sum: 1 } } },
+  ]);
+  const commentCountMap = {};
   commentCounts.forEach(c => {
-    commentCountMap[c._id?.toString()] = c.count
-  })
+    commentCountMap[c._id?.toString()] = c.count;
+  });
 
   // Serialize market data for frontend compatibility
   const serializedMarkets = markets.map(market => {
-    const serialized = serializeMarket(market)
+    const serialized = serializeMarket(market);
     if (serialized && serialized.stats) {
-      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+      serialized.stats.commentCount =
+        commentCountMap[market._id.toString()] || 0;
     } else if (serialized) {
-      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+      serialized.stats = {
+        commentCount: commentCountMap[market._id.toString()] || 0,
+      };
     }
-    return serialized
-  })
+    return serialized;
+  });
 
-  sendSuccess(res, {
-    markets: serializedMarkets,
-    pagination: {
-      current: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      total,
-      limit: parseInt(limit)
+  sendSuccess(
+    res,
+    {
+      markets: serializedMarkets,
+      pagination: {
+        current: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        total,
+        limit: parseInt(limit),
+      },
+      searchQuery: q || '',
+      filters: {
+        category,
+        location,
+        dates,
+      },
     },
-    searchQuery: q || '',
-    filters: {
-      category,
-      location,
-      dates
-    }
-  }, 'Search completed successfully')
-})
+    'Search completed successfully'
+  );
+});
 
 // Get popular markets
 const getPopularMarkets = catchAsync(async (req, res, next) => {
-  const { limit = 10, timeframe = '30d' } = req.query
+  const { limit = 10, timeframe = '30d' } = req.query;
 
-  let dateFilter = {}
-  const now = new Date()
+  let dateFilter = {};
+  const now = new Date();
 
   switch (timeframe) {
     case '7d':
-      dateFilter = { createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) } }
-      break
+      dateFilter = {
+        createdAt: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) },
+      };
+      break;
     case '30d':
-      dateFilter = { createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) } }
-      break
+      dateFilter = {
+        createdAt: { $gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) },
+      };
+      break;
     case '90d':
-      dateFilter = { createdAt: { $gte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) } }
-      break
+      dateFilter = {
+        createdAt: { $gte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) },
+      };
+      break;
   }
 
   const popularMarkets = await Market.find({
     status: 'active',
     isPublic: true,
-    ...dateFilter
+    ...dateFilter,
   })
-  .populate('promoter', 'username firstName lastName')
-  .sort({
-    'statistics.totalTrackers': -1,
-    'statistics.totalComments': -1,
-    createdAt: -1
-  })
-  .limit(parseInt(limit))
+    .populate('promoter', 'username firstName lastName')
+    .sort({
+      'statistics.totalTrackers': -1,
+      'statistics.totalComments': -1,
+      createdAt: -1,
+    })
+    .limit(parseInt(limit));
 
   // Get comment counts
   const commentCounts = await Comment.aggregate([
     { $match: { isDeleted: false, isModerated: false } },
-    { $group: { _id: '$market', count: { $sum: 1 } } }
-  ])
-  const commentCountMap = {}
+    { $group: { _id: '$market', count: { $sum: 1 } } },
+  ]);
+  const commentCountMap = {};
   commentCounts.forEach(c => {
-    commentCountMap[c._id?.toString()] = c.count
-  })
+    commentCountMap[c._id?.toString()] = c.count;
+  });
 
   // Serialize market data for frontend compatibility
   const serializedMarkets = popularMarkets.map(market => {
-    const serialized = serializeMarket(market)
+    const serialized = serializeMarket(market);
     if (serialized && serialized.stats) {
-      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+      serialized.stats.commentCount =
+        commentCountMap[market._id.toString()] || 0;
     } else if (serialized) {
-      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+      serialized.stats = {
+        commentCount: commentCountMap[market._id.toString()] || 0,
+      };
     }
-    return serialized
-  })
+    return serialized;
+  });
 
-  sendSuccess(res, {
-    markets: serializedMarkets,
-    timeframe
-  }, 'Popular markets retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      markets: serializedMarkets,
+      timeframe,
+    },
+    'Popular markets retrieved successfully'
+  );
+});
 
 // Get markets by category
 const getMarketsByCategory = catchAsync(async (req, res, next) => {
-  const { category } = req.params
+  const { category } = req.params;
   const {
     page = 1,
     limit = 20,
     sortBy = 'createdAt',
-    sortOrder = 'desc'
-  } = req.query
+    sortOrder = 'desc',
+  } = req.query;
 
   const markets = await Market.find({
     category,
     status: 'active',
-    isPublic: true
+    isPublic: true,
   })
-  .populate('promoter', 'username firstName lastName')
-  .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-  .limit(limit * 1)
-  .skip((page - 1) * limit)
+    .populate('promoter', 'username firstName lastName')
+    .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
 
-  const total = await Market.countDocuments({ category, status: 'active', isPublic: true })
+  const total = await Market.countDocuments({
+    category,
+    status: 'active',
+    isPublic: true,
+  });
 
   // Get comment counts
   const commentCounts = await Comment.aggregate([
     { $match: { isDeleted: false, isModerated: false } },
-    { $group: { _id: '$market', count: { $sum: 1 } } }
-  ])
-  const commentCountMap = {}
+    { $group: { _id: '$market', count: { $sum: 1 } } },
+  ]);
+  const commentCountMap = {};
   commentCounts.forEach(c => {
-    commentCountMap[c._id?.toString()] = c.count
-  })
+    commentCountMap[c._id?.toString()] = c.count;
+  });
 
   // Serialize market data for frontend compatibility
   const serializedMarkets = markets.map(market => {
-    const serialized = serializeMarket(market)
+    const serialized = serializeMarket(market);
     if (serialized && serialized.stats) {
-      serialized.stats.commentCount = commentCountMap[market._id.toString()] || 0
+      serialized.stats.commentCount =
+        commentCountMap[market._id.toString()] || 0;
     } else if (serialized) {
-      serialized.stats = { commentCount: commentCountMap[market._id.toString()] || 0 }
+      serialized.stats = {
+        commentCount: commentCountMap[market._id.toString()] || 0,
+      };
     }
-    return serialized
-  })
+    return serialized;
+  });
 
-  sendSuccess(res, {
-    markets: serializedMarkets,
-    pagination: {
-      current: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      total,
-      limit: parseInt(limit)
+  sendSuccess(
+    res,
+    {
+      markets: serializedMarkets,
+      pagination: {
+        current: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        total,
+        limit: parseInt(limit),
+      },
+      category,
     },
-    category
-  }, 'Markets by category retrieved successfully')
-})
+    'Markets by category retrieved successfully'
+  );
+});
 
 // Get markets by marketType
 const getMarketsByType = catchAsync(async (req, res, next) => {
-  const { marketType } = req.params
+  const { marketType } = req.params;
   const {
     page = 1,
     limit = 20,
     sortBy = 'createdAt',
-    sortOrder = 'desc'
-  } = req.query
+    sortOrder = 'desc',
+  } = req.query;
 
   // Map frontend marketType to createdByType
   const createdByTypeMap = {
     'vendor-created': 'vendor',
-    'promoter-managed': { $in: ['promoter', 'admin'] }
+    'promoter-managed': { $in: ['promoter', 'admin'] },
   };
 
   const query = {
     createdByType: createdByTypeMap[marketType],
     status: 'active',
-    isPublic: true
+    isPublic: true,
   };
 
   const markets = await Market.find(query)
     .populate('promoter', 'username firstName lastName')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
     .limit(limit * 1)
-    .skip((page - 1) * limit)
+    .skip((page - 1) * limit);
 
-  const total = await Market.countDocuments(query)
+  const total = await Market.countDocuments(query);
 
   // Serialize market data for frontend compatibility
-  const serializedMarkets = markets.map(market => serializeMarket(market))
+  const serializedMarkets = markets.map(market => serializeMarket(market));
 
-  sendSuccess(res, {
-    markets: serializedMarkets,
-    pagination: {
-      current: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      total,
-      limit: parseInt(limit)
+  sendSuccess(
+    res,
+    {
+      markets: serializedMarkets,
+      pagination: {
+        current: parseInt(page),
+        totalPages: Math.ceil(total / limit),
+        total,
+        limit: parseInt(limit),
+      },
+      marketType,
     },
-    marketType
-  }, 'Markets by type retrieved successfully')
-})
+    'Markets by type retrieved successfully'
+  );
+});
 
 // Verify market (admin only)
 const verifyMarket = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
-  market.isVerified = true
-  await market.save()
+  market.isVerified = true;
+  await market.save();
 
-  sendSuccess(res, {
-    market
-  }, 'Market verified successfully')
-})
+  sendSuccess(
+    res,
+    {
+      market,
+    },
+    'Market verified successfully'
+  );
+});
 
 // Get market data tailored for vendor perspective
 const getVendorView = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   const market = await Market.findById(id)
-    .populate('promoter', 'username profile.firstName profile.lastName profile.business contact')
-    .populate('images.uploadedBy', 'username profile.firstName profile.lastName')
+    .populate(
+      'promoter',
+      'username profile.firstName profile.lastName profile.business contact'
+    )
+    .populate(
+      'images.uploadedBy',
+      'username profile.firstName profile.lastName'
+    );
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Get vendor-specific tracking info
   const tracking = await UserMarketTracking.findOne({
     user: req.user._id,
-    market: id
-  })
+    market: id,
+  });
 
   // Get recent photos from populated market
-  const recentPhotos = market.images?.slice(0, 5) || []
+  const recentPhotos = market.images?.slice(0, 5) || [];
 
   // Get market statistics for vendors
   const totalApplicants = await UserMarketTracking.countDocuments({
     market: id,
-    status: { $in: ['applied', 'booked', 'completed'] }
-  })
+    status: { $in: ['applied', 'booked', 'completed'] },
+  });
 
   // Get vendor's expense summary for this market
-  const expenseSummary = await Expense.getVendorMarketSummary(req.user._id, id)
+  const expenseSummary = await Expense.getVendorMarketSummary(req.user._id, id);
 
-  sendSuccess(res, {
-    market: {
-      ...market.toObject(),
-      vendorData: {
-        tracking: tracking || null,
-        expenseSummary: expenseSummary.length > 0 ? expenseSummary[0] : null,
-        totalApplicants,
-        nextEventDate: market.nextEventDate,
-        upcomingEvents: market.upcomingEvents
-      }
+  sendSuccess(
+    res,
+    {
+      market: {
+        ...market.toObject(),
+        vendorData: {
+          tracking: tracking || null,
+          expenseSummary: expenseSummary.length > 0 ? expenseSummary[0] : null,
+          totalApplicants,
+          nextEventDate: market.nextEventDate,
+          upcomingEvents: market.upcomingEvents,
+        },
+      },
+      recentPhotos,
     },
-    recentPhotos
-  }, 'Vendor market view retrieved successfully')
-})
+    'Vendor market view retrieved successfully'
+  );
+});
 
 // Track vendor interactions with market
 const trackVendorInteraction = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { action, notes } = req.body
+  const { id } = req.params;
+  const { action, notes } = req.body;
 
   // Check if market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Find or create tracking record
   let tracking = await UserMarketTracking.findOne({
     user: req.user._id,
-    market: id
-  })
+    market: id,
+  });
 
   if (!tracking) {
     tracking = await UserMarketTracking.create({
       user: req.user._id,
       market: id,
-      status: 'interested'
-    })
+      status: 'interested',
+    });
   }
 
   // Update tracking with interaction data
-  tracking.personalNotes = notes || tracking.personalNotes
-  await tracking.save()
+  tracking.personalNotes = notes || tracking.personalNotes;
+  await tracking.save();
 
   // Log the interaction (you might want to create a separate interaction log)
-  sendSuccess(res, {
-    tracking,
-    market: {
-      id: market._id,
-      name: market.name
-    }
-  }, `Market interaction '${action}' recorded successfully`)
-})
+  sendSuccess(
+    res,
+    {
+      tracking,
+      market: {
+        id: market._id,
+        name: market.name,
+      },
+    },
+    `Market interaction '${action}' recorded successfully`
+  );
+});
 
 // Get vendor's past appearances and performance at this market
 const getVendorHistory = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   // Get all tracking records for this vendor and market
   const history = await UserMarketTracking.find({
     user: req.user._id,
-    market: id
+    market: id,
   })
-  .populate('market', 'name category location.city location.state dates')
-  .sort({ createdAt: -1 })
+    .populate('market', 'name category location.city location.state dates')
+    .sort({ createdAt: -1 });
 
   // Get market details
-  const market = await Market.findById(id).select('name category location')
+  const market = await Market.findById(id).select('name category location');
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
-  sendSuccess(res, {
-    market,
-    history,
-    stats: {
-      totalAppearances: history.filter(h => h.status === 'completed').length,
-      totalApplications: history.filter(h => ['applied', 'booked', 'completed'].includes(h.status)).length,
-      lastAppearance: history.find(h => h.status === 'completed')
-    }
-  }, 'Vendor market history retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      market,
+      history,
+      stats: {
+        totalAppearances: history.filter(h => h.status === 'completed').length,
+        totalApplications: history.filter(h =>
+          ['applied', 'booked', 'completed'].includes(h.status)
+        ).length,
+        lastAppearance: history.find(h => h.status === 'completed'),
+      },
+    },
+    'Vendor market history retrieved successfully'
+  );
+});
 
 // Get current application status for the authenticated vendor
 const getApplicationStatus = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
-    .populate('promoter', 'username profile.firstName profile.lastName contact')
+  const market = await Market.findById(id).populate(
+    'promoter',
+    'username profile.firstName profile.lastName contact'
+  );
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Get current application/tracking status
   const tracking = await UserMarketTracking.findOne({
     user: req.user._id,
-    market: id
-  }).populate('applicationData.reviewedBy', 'username profile.firstName profile.lastName')
+    market: id,
+  }).populate(
+    'applicationData.reviewedBy',
+    'username profile.firstName profile.lastName'
+  );
 
   const applicationStatus = {
     market: {
@@ -968,23 +1199,29 @@ const getApplicationStatus = catchAsync(async (req, res, next) => {
       name: market.name,
       promoter: market.promoter,
       applicationDeadline: market.applicationSettings?.applicationDeadline,
-      capacity: market.applicationSettings?.maxVendors
+      capacity: market.applicationSettings?.maxVendors,
     },
     status: tracking || null,
     isOpen: canMarketAcceptApplications(market),
-    canApply: (!tracking || ['cancelled'].includes(tracking.status)) && canMarketAcceptApplications(market),
-    isBooked: tracking && ['booked', 'completed'].includes(tracking.status)
-  }
+    canApply:
+      (!tracking || ['cancelled'].includes(tracking.status)) &&
+      canMarketAcceptApplications(market),
+    isBooked: tracking && ['booked', 'completed'].includes(tracking.status),
+  };
 
-  sendSuccess(res, applicationStatus, 'Application status retrieved successfully')
-})
+  sendSuccess(
+    res,
+    applicationStatus,
+    'Application status retrieved successfully'
+  );
+});
 
 // Get earnings, attendance trends for the vendor at this market
 const getVendorAnalytics = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
   // Add pagination limits to prevent memory issues with large datasets
-  const expenseLimit = 10000 // Maximum 10,000 expense records for performance
+  const expenseLimit = 10000; // Maximum 10,000 expense records for performance
 
   // MongoDB aggregation for efficient analytics calculation
   const analyticsResult = await Expense.aggregate([
@@ -992,57 +1229,57 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
       $match: {
         vendor: req.user._id,
         market: new mongoose.Types.ObjectId(id),
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     },
     {
-      $limit: expenseLimit
+      $limit: expenseLimit,
     },
     {
       $match: {
         vendor: req.user._id,
         market: new mongoose.Types.ObjectId(id),
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     },
     {
       $group: {
         _id: null,
         totalExpenses: {
           $sum: {
-            $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount']
-          }
+            $cond: [{ $eq: ['$category', 'revenue'] }, 0, '$amount'],
+          },
         },
         totalRevenue: {
           $sum: {
-            $cond: [{ $eq: ['$category', 'revenue'] }, '$amount', 0]
-          }
+            $cond: [{ $eq: ['$category', 'revenue'] }, '$amount', 0],
+          },
         },
         expensesByCategory: {
           $push: {
             $cond: [
               { $ne: ['$category', 'revenue'] },
               { category: '$category', amount: '$amount' },
-              null
-            ]
-          }
+              null,
+            ],
+          },
         },
         revenueByCategory: {
           $push: {
             $cond: [
               { $eq: ['$category', 'revenue'] },
               { category: '$category', amount: '$amount' },
-              null
-            ]
-          }
+              null,
+            ],
+          },
         },
         totalCount: { $sum: 1 },
         expenseCount: {
           $sum: {
-            $cond: [{ $eq: ['$category', 'revenue'] }, 0, 1]
-          }
-        }
-      }
+            $cond: [{ $eq: ['$category', 'revenue'] }, 0, 1],
+          },
+        },
+      },
     },
     {
       $project: {
@@ -1054,21 +1291,21 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
           $filter: {
             input: '$expensesByCategory',
             as: 'expense',
-            cond: { $ne: ['$expense', null] }
-          }
+            cond: { $ne: ['$expense', null] },
+          },
         },
         revenueByCategory: {
           $filter: {
             input: '$revenueByCategory',
             as: 'revenue',
-            cond: { $ne: ['$revenue', null] }
-          }
+            cond: { $ne: ['$revenue', null] },
+          },
         },
         totalTransactions: '$totalCount',
-        expenseCount: 1
-      }
-    }
-  ])
+        expenseCount: 1,
+      },
+    },
+  ]);
 
   // Process category aggregations
   const analytics = analyticsResult[0] || {
@@ -1078,55 +1315,62 @@ const getVendorAnalytics = catchAsync(async (req, res, next) => {
     expensesByCategory: [],
     revenueByCategory: [],
     totalTransactions: 0,
-    expenseCount: 0
-  }
+    expenseCount: 0,
+  };
 
   // Convert arrays to objects for easier client consumption
-  const expensesByCategory = analytics.expensesByCategory.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + item.amount
-    return acc
-  }, {})
+  const expensesByCategory = analytics.expensesByCategory.reduce(
+    (acc, item) => {
+      acc[item.category] = (acc[item.category] || 0) + item.amount;
+      return acc;
+    },
+    {}
+  );
 
   const revenueByCategory = analytics.revenueByCategory.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + item.amount
-    return acc
-  }, {})
+    acc[item.category] = (acc[item.category] || 0) + item.amount;
+    return acc;
+  }, {});
 
   const responseAnalytics = {
     expenses: {
       total: analytics.totalExpenses,
-      byCategory: expensesByCategory
+      byCategory: expensesByCategory,
     },
     revenue: {
       total: analytics.totalRevenue,
-      byCategory: revenueByCategory
+      byCategory: revenueByCategory,
     },
     profit: analytics.profit,
     expenseCount: analytics.expenseCount,
-    transactionCount: analytics.totalTransactions
-  }
+    transactionCount: analytics.totalTransactions,
+  };
 
-  sendSuccess(res, responseAnalytics, 'Vendor analytics retrieved successfully')
-})
+  sendSuccess(
+    res,
+    responseAnalytics,
+    'Vendor analytics retrieved successfully'
+  );
+});
 
 // How vendor performs at this vs other markets - comparison data
 const getVendorComparison = catchAsync(async (req, res, next) => {
   // Get all markets where vendor has participated
   const participations = await UserMarketTracking.find({
     user: req.user._id,
-    status: 'completed'
-  }).populate('market', 'name category location.city location.state')
+    status: 'completed',
+  }).populate('market', 'name category location.city location.state');
 
   // Single aggregation query for all expense summaries
-  const marketIds = participations.map(p => p.market._id)
+  const marketIds = participations.map(p => p.market._id);
 
   const expenseSummaries = await Expense.aggregate([
     {
       $match: {
         vendor: req.user._id,
         market: { $in: marketIds },
-        isDeleted: false
-      }
+        isDeleted: false,
+      },
     },
     {
       $group: {
@@ -1134,9 +1378,9 @@ const getVendorComparison = catchAsync(async (req, res, next) => {
         totalAmount: { $sum: '$amount' },
         count: { $sum: 1 },
         taxDeductible: {
-          $sum: { $cond: ['$isTaxDeductible', '$amount', 0] }
-        }
-      }
+          $sum: { $cond: ['$isTaxDeductible', '$amount', 0] },
+        },
+      },
     },
     {
       $group: {
@@ -1146,112 +1390,165 @@ const getVendorComparison = catchAsync(async (req, res, next) => {
             category: '$_id.category',
             totalAmount: '$totalAmount',
             count: '$count',
-            taxDeductible: '$taxDeductible'
-          }
+            taxDeductible: '$taxDeductible',
+          },
         },
-        totalExpenses: { $sum: { $cond: [{ $eq: ['$_id.category', 'revenue'] }, 0, '$totalAmount'] } },
-        totalRevenue: { $sum: { $cond: [{ $eq: ['$_id.category', 'revenue'] }, '$totalAmount', 0] } },
+        totalExpenses: {
+          $sum: {
+            $cond: [{ $eq: ['$_id.category', 'revenue'] }, 0, '$totalAmount'],
+          },
+        },
+        totalRevenue: {
+          $sum: {
+            $cond: [{ $eq: ['$_id.category', 'revenue'] }, '$totalAmount', 0],
+          },
+        },
         totalTaxDeductible: { $sum: '$taxDeductible' },
-        totalCount: { $sum: '$count' }
-      }
-    }
-  ])
+        totalCount: { $sum: '$count' },
+      },
+    },
+  ]);
 
   const comparison = {
     totalMarkets: participations.length,
     markets: participations.map(p => {
-      const summary = expenseSummaries.find(s => s._id.equals(p.market._id))
+      const summary = expenseSummaries.find(s => s._id.equals(p.market._id));
       return {
         market: p.market,
-        summary: summary ? {
-          totalExpenses: summary.totalExpenses,
-          totalRevenue: summary.totalRevenue,
-          netProfit: summary.totalRevenue - summary.totalExpenses,
-          totalTaxDeductible: summary.totalTaxDeductible,
-          totalTransactions: summary.totalCount,
-          categories: summary.categories
-        } : null
-      }
-    })
-  }
+        summary: summary
+          ? {
+              totalExpenses: summary.totalExpenses,
+              totalRevenue: summary.totalRevenue,
+              netProfit: summary.totalRevenue - summary.totalExpenses,
+              totalTaxDeductible: summary.totalTaxDeductible,
+              totalTransactions: summary.totalCount,
+              categories: summary.categories,
+            }
+          : null,
+      };
+    }),
+  };
 
   // Calculate average performance metrics
   if (expenseSummaries.length > 0) {
-    const totalProfit = expenseSummaries.reduce((sum, s) => sum + (s.totalRevenue - s.totalExpenses), 0)
-    comparison.averageProfit = totalProfit / expenseSummaries.length
-    comparison.markets.sort((a, b) => (b.summary?.netProfit || 0) - (a.summary?.netProfit || 0))
+    const totalProfit = expenseSummaries.reduce(
+      (sum, s) => sum + (s.totalRevenue - s.totalExpenses),
+      0
+    );
+    comparison.averageProfit = totalProfit / expenseSummaries.length;
+    comparison.markets.sort(
+      (a, b) => (b.summary?.netProfit || 0) - (a.summary?.netProfit || 0)
+    );
   }
 
-  sendSuccess(res, comparison, 'Vendor market comparison retrieved successfully')
-})
+  sendSuccess(
+    res,
+    comparison,
+    'Vendor market comparison retrieved successfully'
+  );
+});
 
 // Get message history with market promoter
 const getPromoterMessages = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { page = 1, limit = 20 } = req.query
+  const { id } = req.params;
+  const { page = 1, limit = 20 } = req.query;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Only vendors and the market promoter can see messages
-  if (req.user.role !== 'admin' &&
-      !market.promoter.equals(req.user._id) &&
-      req.user.role !== 'vendor') {
-    return next(new AppError('Access denied. You can only see messages for markets you own or applied to.', 403))
+  if (
+    req.user.role !== 'admin' &&
+    !market.promoter.equals(req.user._id) &&
+    req.user.role !== 'vendor'
+  ) {
+    return next(
+      new AppError(
+        'Access denied. You can only see messages for markets you own or applied to.',
+        403
+      )
+    );
   }
 
-  const messages = await Message.getUserMarketMessages(req.user._id, id, { page: parseInt(page), limit: parseInt(limit) })
+  const messages = await Message.getUserMarketMessages(req.user._id, id, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+  });
 
-  sendSuccess(res, {
-    messages,
-    market: {
-      id: market._id,
-      name: market.name,
-      promoter: market.promoter
-    }
-  }, 'Promoter messages retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      messages,
+      market: {
+        id: market._id,
+        name: market.name,
+        promoter: market.promoter,
+      },
+    },
+    'Promoter messages retrieved successfully'
+  );
+});
 
 // Send message to promoter
 const sendPromoterMessage = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { content, recipientId } = req.body
+  const { id } = req.params;
+  const { content, recipientId } = req.body;
 
   if (!content || !content.trim()) {
-    return next(new AppError('Message content cannot be empty or contain only whitespace', 400))
+    return next(
+      new AppError(
+        'Message content cannot be empty or contain only whitespace',
+        400
+      )
+    );
   }
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
-  let recipient
+  let recipient;
   if (req.user.role === 'vendor') {
     // Vendor can only send to market promoter
-    recipient = market.promoter
+    recipient = market.promoter;
   } else if (market.promoter.equals(req.user._id)) {
     // Promoter sending to a specific vendor who has applied to their market
     if (!recipientId) {
-      return next(new AppError('Promoter-to-vendor messaging requires specifying recipient vendor', 400))
+      return next(
+        new AppError(
+          'Promoter-to-vendor messaging requires specifying recipient vendor',
+          400
+        )
+      );
     }
 
     // Check if vendor has applied to this market
     const vendorApplication = await UserMarketTracking.findOne({
       user: recipientId,
       market: id,
-      status: { $in: ['applied', 'booked', 'completed'] }
-    })
+      status: { $in: ['applied', 'booked', 'completed'] },
+    });
 
     if (!vendorApplication) {
-      return next(new AppError('Can only send messages to vendors who have applied to your market', 403))
+      return next(
+        new AppError(
+          'Can only send messages to vendors who have applied to your market',
+          403
+        )
+      );
     }
 
-    recipient = recipientId
+    recipient = recipientId;
   } else {
-    return next(new AppError('Only vendors and promoters for this market can send messages', 403))
+    return next(
+      new AppError(
+        'Only vendors and promoters for this market can send messages',
+        403
+      )
+    );
   }
 
   const message = await Message.create({
@@ -1259,79 +1556,94 @@ const sendPromoterMessage = catchAsync(async (req, res, next) => {
     sender: req.user._id,
     recipient,
     market: id,
-    messageType: req.user.role === 'vendor' ? 'vendor-to-promoter' : 'promoter-to-vendor'
-  })
+    messageType:
+      req.user.role === 'vendor' ? 'vendor-to-promoter' : 'promoter-to-vendor',
+  });
 
   const populatedMessage = await Message.findById(message._id)
     .populate('sender', 'username profile.firstName profile.lastName')
-    .populate('recipient', 'username profile.firstName profile.lastName')
+    .populate('recipient', 'username profile.firstName profile.lastName');
 
-  sendSuccess(res, populatedMessage, 'Message sent successfully', 201)
-})
+  sendSuccess(res, populatedMessage, 'Message sent successfully', 201);
+});
 
 // Get market-specific todo lists
 const getVendorTodos = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { status, category, priority } = req.query
+  const { id } = req.params;
+  const { status, category, priority } = req.query;
 
   // Verify market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
-  const options = {}
-  if (status) options.status = status
-  if (category) options.category = category
-  if (priority) options.priority = priority
+  const options = {};
+  if (status) options.status = status;
+  if (category) options.category = category;
+  if (priority) options.priority = priority;
 
-  const todos = await Todo.getVendorMarketTodos(req.user._id, id, options)
+  const todos = await Todo.getVendorMarketTodos(req.user._id, id, options);
 
-  sendSuccess(res, {
-    todos,
-    market: {
-      id: market._id,
-      name: market.name
-    }
-  }, 'Vendor todos retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      todos,
+      market: {
+        id: market._id,
+        name: market.name,
+      },
+    },
+    'Vendor todos retrieved successfully'
+  );
+});
 
 // Get market-specific expense tracking
 const getVendorExpenses = catchAsync(async (req, res, next) => {
-  const { id } = req.params
-  const { category, dateFrom, dateTo } = req.query
+  const { id } = req.params;
+  const { category, dateFrom, dateTo } = req.query;
 
   // Verify market exists
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
-  const options = {}
-  if (category) options.category = category
-  if (dateFrom) options.dateFrom = dateFrom
-  if (dateTo) options.dateTo = dateTo
+  const options = {};
+  if (category) options.category = category;
+  if (dateFrom) options.dateFrom = dateFrom;
+  if (dateTo) options.dateTo = dateTo;
 
-  const expenses = await Expense.getVendorMarketExpenses(req.user._id, id, options)
+  const expenses = await Expense.getVendorMarketExpenses(
+    req.user._id,
+    id,
+    options
+  );
 
-  sendSuccess(res, {
-    expenses,
-    market: {
-      id: market._id,
-      name: market.name
-    }
-  }, 'Vendor expenses retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      expenses,
+      market: {
+        id: market._id,
+        name: market.name,
+      },
+    },
+    'Vendor expenses retrieved successfully'
+  );
+});
 
 // Get parking, loading, setup information
 const getLogistics = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
-    .populate('promoter', 'username profile.firstName profile.lastName contact')
+  const market = await Market.findById(id).populate(
+    'promoter',
+    'username profile.firstName profile.lastName contact'
+  );
 
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Extract logistics-related information
@@ -1341,27 +1653,27 @@ const getLogistics = catchAsync(async (req, res, next) => {
       name: market.name,
       address: market.location,
       contact: market.contact,
-      promoter: market.promoter
+      promoter: market.promoter,
     },
     setupInfo: {
       boothSizes: market.vendorInfo.boothSizes,
       requirements: market.vendorInfo.requirements,
       amenities: market.vendorInfo.amenities,
-      setupTimes: market.dates
+      setupTimes: market.dates,
     },
-    accessibility: market.accessibility
-  }
+    accessibility: market.accessibility,
+  };
 
-  sendSuccess(res, logistics, 'Logistics information retrieved successfully')
-})
+  sendSuccess(res, logistics, 'Logistics information retrieved successfully');
+});
 
 // Get weather forecast for market dates
 const getWeatherForecast = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // For now, return a mock weather forecast
@@ -1371,33 +1683,33 @@ const getWeatherForecast = catchAsync(async (req, res, next) => {
       id: market._id,
       name: market.name,
       location: market.location,
-      dates: market.dates
+      dates: market.dates,
     },
     forecast: [
       {
         date: new Date().toISOString().split('T')[0],
         condition: 'Sunny',
         temperature: { high: 75, low: 55 },
-        precipitation: 10
-      }
+        precipitation: 10,
+      },
     ],
-    note: 'This is mock data. Integrate with a weather service API for real forecasts.'
-  }
+    note: 'This is mock data. Integrate with a weather service API for real forecasts.',
+  };
 
-  sendSuccess(res, mockForecast, 'Weather forecast retrieved successfully')
-})
+  sendSuccess(res, mockForecast, 'Weather forecast retrieved successfully');
+});
 
 // Get calendar integration data
 const getCalendarEvents = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Convert market dates to calendar events
-  const events = []
+  const events = [];
 
   if (market.dates.type === 'one-time') {
     market.dates.events.forEach(event => {
@@ -1408,9 +1720,9 @@ const getCalendarEvents = catchAsync(async (req, res, next) => {
         end: event.endDate,
         location: `${market.location.address}, ${market.location.city}, ${market.location.state}`,
         description: market.description,
-        marketId: market._id
-      })
-    })
+        marketId: market._id,
+      });
+    });
   } else if (market.dates.type === 'recurring') {
     // For recurring markets, generate next few occurrences
     // This would need more complex logic for real implementation
@@ -1422,35 +1734,39 @@ const getCalendarEvents = catchAsync(async (req, res, next) => {
       location: `${market.location.address}, ${market.location.city}, ${market.location.state}`,
       description: market.description,
       marketId: market._id,
-      recurring: market.dates.recurring
-    })
+      recurring: market.dates.recurring,
+    });
   }
 
-  sendSuccess(res, {
-    events,
-    market: {
-      id: market._id,
-      name: market.name,
-      dates: market.dates
-    }
-  }, 'Calendar events retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      events,
+      market: {
+        id: market._id,
+        name: market.name,
+        dates: market.dates,
+      },
+    },
+    'Calendar events retrieved successfully'
+  );
+});
 
 // Get approved/attending vendors for public display
 const getMarketVendors = catchAsync(async (req, res, next) => {
-  const { id } = req.params
+  const { id } = req.params;
 
-  const market = await Market.findById(id)
+  const market = await Market.findById(id);
   if (!market) {
-    return next(new AppError('Market not found', 404))
+    return next(new AppError('Market not found', 404));
   }
 
   // Get tracking records for approved and attending vendors
   const tracking = await UserMarketTracking.find({
     market: id,
     status: { $in: ['approved', 'attending'] },
-    isArchived: false
-  }).populate('user', 'username profile.firstName profile.lastName role')
+    isArchived: false,
+  }).populate('user', 'username profile.firstName profile.lastName role');
 
   const vendors = tracking.map(t => ({
     user: {
@@ -1458,20 +1774,24 @@ const getMarketVendors = catchAsync(async (req, res, next) => {
       username: t.user.username,
       firstName: t.user.profile?.firstName || t.user.firstName,
       lastName: t.user.profile?.lastName || t.user.lastName,
-      role: t.user.role
+      role: t.user.role,
     },
     status: t.status,
-    joinedAt: t.createdAt
-  }))
+    joinedAt: t.createdAt,
+  }));
 
-  sendSuccess(res, {
-    vendors,
-    market: {
-      id: market._id,
-      name: market.name
-    }
-  }, 'Market vendors retrieved successfully')
-})
+  sendSuccess(
+    res,
+    {
+      vendors,
+      market: {
+        id: market._id,
+        name: market.name,
+      },
+    },
+    'Market vendors retrieved successfully'
+  );
+});
 
 module.exports = {
   getMarkets,
@@ -1500,5 +1820,5 @@ module.exports = {
   getLogistics,
   getWeatherForecast,
   getCalendarEvents,
-  getMarketVendors
-}
+  getMarketVendors,
+};
