@@ -59,12 +59,10 @@ deploy:
   image: node:20-alpine
   before_script:
     - apk add --no-cache openssh-client
-    - echo "UNRAID_IP=$UNRAID_IP"
-    - ping -c 1 $UNRAID_IP || true
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H $UNRAID_IP >> ~/.ssh/known_hosts 2>&1 || true
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY_BASE64" | base64 -d | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
   script:
     - ssh root@$UNRAID_IP "mkdir -p $DEPLOY_PATH/rumfor-market-tracker"
     - scp frontend.tar backend.tar root@$UNRAID_IP:$DEPLOY_PATH/
