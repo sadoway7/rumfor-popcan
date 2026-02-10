@@ -282,20 +282,14 @@ export const MarketSearchPage: React.FC = () => {
 
       <>
         <div className="flex flex-col lg:flex-row">
-          {/* Sidebar - Hidden on desktop when closed */}
+          {/* Sidebar - Slides in from left on desktop */}
           <aside
             className={`
               ${isSidebarOpen ? 'lg:block' : 'lg:hidden'}
-              w-full overflow-hidden bg-background
+              w-full lg:w-80 flex-shrink-0 bg-background transition-all duration-300
             `}
-            style={{
-              maxHeight: isSidebarOpen ? '2000px' : '0px',
-              opacity: isSidebarOpen ? 1 : 0,
-              transition:
-                'max-height 500ms cubic-bezier(0.4, 0, 0.2, 1), opacity 400ms cubic-bezier(0.4, 0, 0.6, 1)',
-            }}
           >
-            <div className="p-4 sm:p-6 w-full lg:w-80 space-y-5">
+            <div className="p-4 sm:p-6 w-full space-y-5 overflow-y-auto h-full">
               {/* Header - Active Count */}
               <div className="flex items-center justify-between">
                 {getActiveFilterCount() > 0 && (
