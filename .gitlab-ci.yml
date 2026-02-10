@@ -59,19 +59,13 @@ deploy:
   image: node:20-alpine
   before_script:
     - apk add --no-cache openssh-client
-    - echo "=== DEBUG: UNRAID_IP ==="
-    - echo "UNRAID_IP='$UNRAID_IP'"
-    - echo "=== DEBUG: Testing connectivity ==="
-    - ping -c 1 $UNRAID_IP || echo "Ping failed with exit code: $?"
-    - echo "=== DEBUG: SSH Key Scan ==="
-    - ssh-keyscan -H $UNRAID_IP >> ~/.ssh/known_hosts 2>&1 || echo "ssh-keyscan failed with exit code: $?"
+    - echo "UNRAID_IP=$UNRAID_IP"
+    - ping -c 1 $UNRAID_IP || true
+    - ssh-keyscan -H $UNRAID_IP >> ~/.ssh/known_hosts 2>&1 || true
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY_BASE64" | base64 -d | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
   script:
-    - echo "=== DEBUG: SSH Connection Test ==="
-    - ssh -v root@$UNRAID_IP "echo 'SSH connection successful'" || echo "SSH connection failed with exit code: $?"
     - ssh root@$UNRAID_IP "mkdir -p $DEPLOY_PATH/rumfor-market-tracker"
     - scp frontend.tar backend.tar root@$UNRAID_IP:$DEPLOY_PATH/
     - scp rumfor-market-tracker/docker-compose.prod.yml rumfor-market-tracker/nginx.conf root@$UNRAID_IP:$DEPLOY_PATH/rumfor-market-tracker/
