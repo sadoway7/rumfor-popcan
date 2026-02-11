@@ -47,6 +47,7 @@ const adminRoutes = require('./routes/admin')
 const notificationRoutes = require('./routes/notifications')
 const ralphCardsRoutes = require('./routes/ralphCards')
 const emailRoutes = require('./routes/email')
+const vendorRoutes = require('./routes/vendors')
 
 const app = express()
 
@@ -281,6 +282,7 @@ app.use('/api/hashtags', hashtagRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/admin/email', emailRoutes)
 app.use('/api/notifications', notificationRoutes)
+app.use('/api/vendors', vendorRoutes)
 app.use('/api/ralph/cards', ralphCardsRoutes)
 
 // Versioned routes (v1)
@@ -303,6 +305,7 @@ app.use('/api/v1/hashtags', hashtagRoutes)
 app.use('/api/v1/admin', adminRoutes)
 app.use('/api/v1/admin/email', emailRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
+app.use('/api/v1/vendors', vendorRoutes)
 app.use('/api/v1/ralph/cards', ralphCardsRoutes)
 
 // CSRF error handler

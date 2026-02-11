@@ -15,6 +15,7 @@ import {
   MapPin,
   Shield,
   Bell,
+  UserCircle,
   LucideIcon,
 } from 'lucide-react'
 
@@ -58,6 +59,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Business',
       items: [
         { name: 'Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
+        { name: 'My Vendor Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'My Applications', href: '/vendor/applications', icon: FileText },
         { name: 'Business Planning', href: '/vendor/planning', icon: CheckSquare },
         { name: 'Todo Lists', href: '/vendor/todos', icon: CheckSquare },
@@ -75,7 +77,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Account',
       items: [
         { name: 'Notifications', href: '/notifications', icon: Bell },
-        { name: 'Profile', href: '/profile', icon: Users },
+        { name: 'Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'Settings', href: '/settings', icon: Settings },
       ]
     },
@@ -96,6 +98,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Vending',
       items: [
         { name: 'Vendor Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
+        { name: 'My Vendor Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'My Applications', href: '/vendor/applications', icon: FileText },
         { name: 'Business Planning', href: '/vendor/planning', icon: CheckSquare },
         { name: 'Todo Lists', href: '/vendor/todos', icon: CheckSquare },
@@ -113,7 +116,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Account',
       items: [
         { name: 'Notifications', href: '/notifications', icon: Bell },
-        { name: 'Profile', href: '/profile', icon: Users },
+        { name: 'Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'Settings', href: '/settings', icon: Settings },
       ]
     },
@@ -147,6 +150,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Vending',
       items: [
         { name: 'Vendor Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
+        { name: 'My Vendor Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'My Applications', href: '/vendor/applications', icon: FileText },
         { name: 'Business Planning', href: '/vendor/planning', icon: CheckSquare },
         { name: 'Todo Lists', href: '/vendor/todos', icon: CheckSquare },
@@ -164,7 +168,7 @@ const navigationConfig: Record<UserRole, NavigationSection[]> = {
       title: 'Account',
       items: [
         { name: 'Notifications', href: '/notifications', icon: Bell },
-        { name: 'Profile', href: '/profile', icon: Users },
+        { name: 'Profile', href: '/vendor/profile', icon: UserCircle },
         { name: 'Settings', href: '/settings', icon: Settings },
       ]
     },

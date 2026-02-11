@@ -1,8 +1,9 @@
 const express = require('express');
 const multer = require('multer');
 const router = express.Router();
-const { protect, requireVendor } = require('../middleware/auth');
+const { verifyToken, requireVendor, optionalAuth } = require('../middleware/auth');
 const {
+  getVendors,
   getVendorProfile,
   updateVendorProfile,
   getVendorMarkets,
@@ -10,7 +11,7 @@ const {
   uploadVendorAvatar,
   uploadVendorCover
 } = require('../controllers/vendorController');
-const { validateMongoId } = require('../middleware/validation');
+const { validateMongoId, validateVendorProfileUpdate, validatePagination, validateSearch } = require('../middleware/validation');
 
 // Configure multer for file uploads
 const upload = multer({
@@ -28,22 +29,30 @@ const upload = multer({
   }
 });
 
-// Get vendor profile
-router.get('/:id/profile', validateMongoId('id'), protect, getVendorProfile);
+// === Public routes ===
 
-// Update vendor profile
-router.patch('/:id/profile', validateMongoId('id'), protect, requireVendor, updateVendorProfile);
+// List/search vendors (public)
+router.get('/', validatePagination, validateSearch, getVendors);
 
-// Get vendor with markets
-router.get('/:id/markets', validateMongoId('id'), protect, getVendorMarkets);
+// Get vendor profile (public)
+router.get('/:id/profile', validateMongoId('id'), getVendorProfile);
 
-// Get vendor's market attendance
-router.get('/:id/attendance', validateMongoId('id'), protect, getVendorAttendance);
+// === Protected routes ===
+router.use(verifyToken);
 
-// Upload vendor avatar
-router.post('/:id/avatar', validateMongoId('id'), protect, requireVendor, upload.single('avatar'), uploadVendorAvatar);
+// Get vendor with markets (authenticated)
+router.get('/:id/markets', validateMongoId('id'), getVendorMarkets);
 
-// Upload vendor cover image
-router.post('/:id/cover', validateMongoId('id'), protect, requireVendor, upload.single('cover'), uploadVendorCover);
+// Get vendor's market attendance (authenticated)
+router.get('/:id/attendance', validateMongoId('id'), getVendorAttendance);
+
+// Update vendor profile (vendor only, ownership checked in controller)
+router.patch('/:id/profile', validateMongoId('id'), requireVendor, validateVendorProfileUpdate, updateVendorProfile);
+
+// Upload vendor avatar (vendor only, ownership checked in controller)
+router.post('/:id/avatar', validateMongoId('id'), requireVendor, upload.single('avatar'), uploadVendorAvatar);
+
+// Upload vendor cover image (vendor only, ownership checked in controller)
+router.post('/:id/cover', validateMongoId('id'), requireVendor, upload.single('cover'), uploadVendorCover);
 
 module.exports = router;

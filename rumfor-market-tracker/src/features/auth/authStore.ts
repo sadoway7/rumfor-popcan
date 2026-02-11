@@ -23,6 +23,9 @@ interface AuthStore extends AuthState {
   // Token management
   refreshTokens: () => Promise<void>
   
+  // Profile management
+  updateProfile: (data: Partial<User>) => Promise<void>
+  
   // Utility methods
   updateUser: (user: Partial<User>) => void
   clearError: () => void
@@ -280,6 +283,27 @@ export const useAuthStore = create<AuthStore>()(
           
           // If token refresh fails, log out the user
           get().logout()
+          throw error
+        }
+      },
+
+      // Profile management
+      updateProfile: async (data: Partial<User>) => {
+        set({ isLoading: true, error: null })
+        try {
+          const updatedUser = await authApi.updateProfile(data)
+          const { user } = get()
+          if (user) {
+            set({
+              user: { ...user, ...updatedUser },
+              isLoading: false,
+            })
+          }
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to update profile',
+          })
           throw error
         }
       },

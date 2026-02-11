@@ -62,6 +62,7 @@ type AuthApi = {
   resendVerification: (email: string) => Promise<{ message: string }>
   logout: () => Promise<void>
   getCurrentUser: () => Promise<User>
+  updateProfile: (data: Partial<User>) => Promise<User>
 }
 
 // Mock API functions for development
@@ -214,6 +215,26 @@ const mockApi: AuthApi = {
 
     return user
   },
+
+  updateProfile: async (data: Partial<User>): Promise<User> => {
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const token = localStorage.getItem('auth-token')
+    if (!token || !token.startsWith('mock-jwt-token-')) {
+      throw new AuthApiError('No valid token', 'NO_TOKEN', 401)
+    }
+
+    const tokenParts = token.split('-')
+    const userId = tokenParts[tokenParts.length - 2]
+
+    const userIndex = mockUsers.findIndex(u => u.id === userId)
+    if (userIndex === -1) {
+      throw new AuthApiError('User not found', 'USER_NOT_FOUND', 404)
+    }
+
+    mockUsers[userIndex] = { ...mockUsers[userIndex], ...data, updatedAt: new Date().toISOString() }
+    return mockUsers[userIndex]
+  },
 }
 
 // Real API functions for production
@@ -346,6 +367,19 @@ const realApi: AuthApi = {
     }
     
     return response.data
+  },
+
+  updateProfile: async (data: Partial<User>): Promise<User> => {
+    const response = await httpClient.patch<ApiResponse<{ user: User }>>('/auth/me', data)
+
+    if (!response.success || !response.data) {
+      throw new AuthApiError(
+        response.error || 'Failed to update profile',
+        'UPDATE_PROFILE_FAILED'
+      )
+    }
+
+    return response.data.user
   },
 }
 

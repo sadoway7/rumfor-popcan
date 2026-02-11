@@ -35,6 +35,7 @@ import {
   LayoutDashboard,
   Store,
   Bookmark,
+  Users,
 } from 'lucide-react';
 
 export function Header() {
@@ -187,6 +188,18 @@ export function Header() {
               )}
             </Button>
 
+            {/* Vendors Link */}
+            <Link to="/vendors">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+                title="Browse Vendors"
+              >
+                <Users className="h-4 w-4" />
+              </Button>
+            </Link>
+
             {isAuthenticated ? (
               <>
                 {/* Dashboard Button - Promoters and Admins Only */}
@@ -257,7 +270,10 @@ export function Header() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center">
+                      <Link
+                        to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
+                        className="flex items-center"
+                      >
                         <User className="h-5 w-5 mr-3 text-muted-foreground" />
                         Profile
                       </Link>
@@ -423,9 +439,21 @@ export function Header() {
                       </Link>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem asChild>
+                    <Link
+                      to="/vendors"
+                      className="flex items-center"
+                    >
+                      <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+                      Browse Vendors
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
+                    <Link
+                      to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
+                      className="flex items-center"
+                    >
                       <User className="h-5 w-5 mr-3 text-muted-foreground" />
                       Profile
                     </Link>

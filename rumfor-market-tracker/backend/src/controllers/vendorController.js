@@ -14,21 +14,95 @@ const saveFileLocally = async (fileBuffer, filename) => {
   return `/uploads/${filename}`;
 };
 
-// Get vendor profile
-exports.getVendorProfile = catchAsync(async (req, res, next) => {
+// Helper: build public vendor card data from a User document
+const buildVendorCardData = (vendor) => ({
+  id: vendor._id || vendor.id,
+  firstName: vendor.firstName,
+  lastName: vendor.lastName,
+  businessName: vendor.businessName || '',
+  tagline: vendor.vendorProfile?.tagline || vendor.businessDescription || '',
+  blurb: vendor.vendorProfile?.blurb || vendor.bio || '',
+  cardColor: vendor.vendorProfile?.cardColor || null,
+  profileImage: vendor.vendorProfile?.profileImage || vendor.profileImage || '',
+  productCategories: vendor.vendorProfile?.productCategories || [],
+  website: vendor.vendorProfile?.website || '',
+});
+
+// List/search vendors (public, paginated)
+const getVendors = catchAsync(async (req, res, _next) => {
+  const {
+    page = 1,
+    limit = 20,
+    search,
+    category,
+    sortBy = 'createdAt',
+    sortOrder = 'desc',
+  } = req.query;
+
+  const pageNum = parseInt(page, 10);
+  const limitNum = Math.min(parseInt(limit, 10), 50);
+
+  // Build query: only active vendors
+  const query = { role: 'vendor', isActive: true };
+
+  // Search by businessName or tagline
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    query.$or = [
+      { businessName: searchRegex },
+      { 'vendorProfile.tagline': searchRegex },
+      { firstName: searchRegex },
+      { lastName: searchRegex },
+    ];
+  }
+
+  // Filter by product category
+  if (category) {
+    query['vendorProfile.productCategories'] = category;
+  }
+
+  // Build sort
+  const allowedSorts = ['createdAt', 'businessName', 'firstName'];
+  const sortField = allowedSorts.includes(sortBy) ? sortBy : 'createdAt';
+  const sort = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
+
+  const [vendors, total] = await Promise.all([
+    User.find(query)
+      .select('firstName lastName businessName businessDescription bio profileImage vendorProfile createdAt')
+      .sort(sort)
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean(),
+    User.countDocuments(query),
+  ]);
+
+  const vendorCards = vendors.map(buildVendorCardData);
+
+  sendSuccess(res, {
+    vendors: vendorCards,
+    pagination: {
+      current: pageNum,
+      pages: Math.ceil(total / limitNum),
+      total,
+      limit: limitNum,
+    },
+  }, 'Vendors retrieved successfully');
+});
+
+// Get vendor profile (public)
+const getVendorProfile = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  
-  // Find vendor user
-  const vendor = await User.findOne({ 
-    _id: id, 
+
+  const vendor = await User.findOne({
+    _id: id,
     role: 'vendor',
-    isActive: true 
-  }).select('-password');
-  
+    isActive: true,
+  }).select('-password -twoFactorSecret -twoFactorBackupCodes -twoFactorTempSecret -loginAttempts -lockUntil -passwordResetToken -passwordResetExpires -emailVerificationToken -emailVerificationExpires');
+
   if (!vendor) {
     return next(new AppError('Vendor not found', 404));
   }
-  
+
   // Get vendor's market statistics
   const stats = await UserMarketTracking.aggregate([
     { $match: { user: vendor._id } },
@@ -37,109 +111,97 @@ exports.getVendorProfile = catchAsync(async (req, res, next) => {
         _id: null,
         totalMarkets: { $sum: 1 },
         approvedApplications: {
-          $sum: {
-            $cond: [{ $eq: ['$status', 'approved'] }, 1, 0]
-          }
+          $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] },
         },
-        yearsActive: {
-          $dateDiff: {
-            startDate: { $min: '$createdAt' },
-            endDate: new Date(),
-            unit: 'year'
-          }
+        attendingMarkets: {
+          $sum: { $cond: [{ $eq: ['$status', 'attending'] }, 1, 0] },
         },
-        averageRating: { $avg: '$rating' }
-      }
-    }
-  ]);
-  
-  // Format vendor profile data
-  const vendorProfile = {
-    id: vendor._id,
-    userId: vendor._id,
-    businessName: vendor.businessName || '',
-    businessDescription: vendor.businessDescription || '',
-    blurb: vendor.bio || '',
-    specialties: [], // TODO: Add specialties field to User model
-    avatar: vendor.profileImage || '',
-    coverImage: '', // TODO: Add coverImage field to User model
-    website: '', // TODO: Add website field to User model
-    socialMedia: {}, // TODO: Add socialMedia field to User model
-    stats: stats[0] || {
-      totalMarkets: 0,
-      approvedApplications: 0,
-      yearsActive: 0,
-      averageRating: 0
+      },
     },
+  ]);
+
+  // Get upcoming markets (approved or attending, with future dates)
+  const upcomingTracking = await UserMarketTracking.find({
+    user: vendor._id,
+    status: { $in: ['approved', 'attending'] },
+    isArchived: false,
+  })
+    .populate({
+      path: 'market',
+      select: 'name category description location schedule status images tags createdByType',
+      match: { isActive: true },
+    })
+    .sort({ createdAt: -1 })
+    .limit(20);
+
+  const upcomingMarkets = upcomingTracking
+    .filter((record) => record.market)
+    .map((record) => ({
+      id: record.market._id,
+      name: record.market.name,
+      category: record.market.category,
+      description: record.market.description,
+      location: record.market.location,
+      schedule: record.market.schedule,
+      status: record.status,
+      images: record.market.images || [],
+      tags: record.market.tags || [],
+      marketType: record.market.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
+      joinedAt: record.createdAt,
+    }));
+
+  const yearsActive = Math.max(0, new Date().getFullYear() - vendor.createdAt.getFullYear());
+
+  const vendorData = {
+    ...buildVendorCardData(vendor),
+    bio: vendor.bio || '',
+    stats: stats[0]
+      ? {
+          totalMarkets: stats[0].totalMarkets,
+          approvedApplications: stats[0].approvedApplications,
+          attendingMarkets: stats[0].attendingMarkets,
+          yearsActive,
+        }
+      : {
+          totalMarkets: 0,
+          approvedApplications: 0,
+          attendingMarkets: 0,
+          yearsActive,
+        },
+    upcomingMarkets,
     createdAt: vendor.createdAt,
-    updatedAt: vendor.updatedAt
   };
-  
-  res.status(200).json({
-    success: true,
-    data: vendorProfile
-  });
+
+  sendSuccess(res, { vendor: vendorData }, 'Vendor profile retrieved successfully');
 });
 
-// Get vendor with markets
-exports.getVendorMarkets = catchAsync(async (req, res, next) => {
+// Get vendor with markets (authenticated)
+const getVendorMarkets = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  
-  // Find vendor user
-  const vendor = await User.findOne({ 
-    _id: id, 
+
+  const vendor = await User.findOne({
+    _id: id,
     role: 'vendor',
-    isActive: true 
-  }).select('-password');
-  
+    isActive: true,
+  }).select('firstName lastName businessName businessDescription bio profileImage vendorProfile createdAt');
+
   if (!vendor) {
     return next(new AppError('Vendor not found', 404));
   }
-  
-  // Get vendor's market tracking records
-  const trackingRecords = await UserMarketTracking.find({ 
-    user: vendor._id 
-  })
-  .populate({
-    path: 'market',
-    select: 'name category description location schedule status tags images',
-    match: { isActive: true }
-  })
-  .sort({ createdAt: -1 });
-  
-  // Format vendor with markets data
+
+  const trackingRecords = await UserMarketTracking.find({ user: vendor._id })
+    .populate({
+      path: 'market',
+      select: 'name category description location schedule status tags images',
+      match: { isActive: true },
+    })
+    .sort({ createdAt: -1 });
+
   const vendorWithMarkets = {
-    id: vendor._id,
-    userId: vendor._id,
-    businessName: vendor.businessName || '',
-    businessDescription: vendor.businessDescription || '',
-    blurb: vendor.bio || '',
-    specialties: [], // TODO: Add specialties field to User model
-    avatar: vendor.profileImage || '',
-    coverImage: '', // TODO: Add coverImage field to User model
-    website: '', // TODO: Add website field to User model
-    socialMedia: {}, // TODO: Add socialMedia field to User model
-    stats: {
-      totalMarkets: trackingRecords.length,
-      approvedApplications: trackingRecords.filter(r => r.status === 'approved').length,
-      yearsActive: new Date().getFullYear() - vendor.createdAt.getFullYear(),
-      averageRating: 0 // TODO: Calculate from ratings
-    },
-    user: {
-      id: vendor._id,
-      email: vendor.email,
-      firstName: vendor.firstName,
-      lastName: vendor.lastName,
-      role: vendor.role,
-      avatar: vendor.profileImage || '',
-      createdAt: vendor.createdAt,
-      updatedAt: vendor.updatedAt,
-      isEmailVerified: vendor.isEmailVerified,
-      isActive: vendor.isActive
-    },
+    ...buildVendorCardData(vendor),
     markets: trackingRecords
-      .filter(record => record.market) // Filter out null markets
-      .map(record => ({
+      .filter((record) => record.market)
+      .map((record) => ({
         id: record.market._id,
         name: record.market.name,
         category: record.market.category,
@@ -151,47 +213,39 @@ exports.getVendorMarkets = catchAsync(async (req, res, next) => {
           notes: record.notes,
           todoCount: record.todoCount || 0,
           todoProgress: record.todoProgress || 0,
-          totalExpenses: record.totalExpenses || 0
-        }
-      }))
+          totalExpenses: record.totalExpenses || 0,
+        },
+      })),
   };
-  
-  res.status(200).json({
-    success: true,
-    data: vendorWithMarkets
-  });
+
+  sendSuccess(res, { vendor: vendorWithMarkets }, 'Vendor markets retrieved successfully');
 });
 
-// Get vendor's market attendance
-exports.getVendorAttendance = catchAsync(async (req, res, next) => {
+// Get vendor's market attendance (authenticated)
+const getVendorAttendance = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  
-  // Find vendor user
-  const vendor = await User.findOne({ 
-    _id: id, 
+
+  const vendor = await User.findOne({
+    _id: id,
     role: 'vendor',
-    isActive: true 
+    isActive: true,
   });
-  
+
   if (!vendor) {
     return next(new AppError('Vendor not found', 404));
   }
-  
-  // Get vendor's market tracking records with full market details
-  const trackingRecords = await UserMarketTracking.find({ 
-    user: vendor._id 
-  })
-  .populate({
-    path: 'market',
-    select: 'name category description location schedule contact status images tags accessibility applicationFields',
-    match: { isActive: true }
-  })
-  .sort({ createdAt: -1 });
-  
-  // Format attendance data
+
+  const trackingRecords = await UserMarketTracking.find({ user: vendor._id })
+    .populate({
+      path: 'market',
+      select: 'name category description location schedule contact status images tags accessibility applicationFields',
+      match: { isActive: true },
+    })
+    .sort({ createdAt: -1 });
+
   const attendance = trackingRecords
-    .filter(record => record.market) // Filter out null markets
-    .map(record => ({
+    .filter((record) => record.market)
+    .map((record) => ({
       market: {
         id: record.market._id,
         name: record.market.name,
@@ -201,161 +255,135 @@ exports.getVendorAttendance = catchAsync(async (req, res, next) => {
         schedule: record.market.schedule,
         status: record.market.status,
         marketType: record.market.createdByType === 'vendor' ? 'vendor-created' : 'promoter-managed',
-        applicationsEnabled: record.market.applicationFields && record.market.applicationFields.length > 0,
-        stats: {
-          viewCount: record.market.viewCount || 0,
-          favoriteCount: record.market.favoriteCount || 0,
-          applicationCount: record.market.applicationCount || 0,
-          commentCount: record.market.commentCount || 0,
-          rating: record.market.rating || 0,
-          reviewCount: record.market.reviewCount || 0
-        },
         images: record.market.images || [],
         tags: record.market.tags || [],
-        accessibility: record.market.accessibility || {},
-        contact: record.market.contact || {},
-        applicationFields: record.market.applicationFields || [],
-        createdAt: record.market.createdAt,
-        updatedAt: record.market.updatedAt
       },
       tracking: {
         id: record._id,
-        userId: record.user,
-        marketId: record.market._id,
         status: record.status,
         notes: record.notes || '',
         todoCount: record.todoCount || 0,
         todoProgress: record.todoProgress || 0,
         totalExpenses: record.totalExpenses || 0,
         createdAt: record.createdAt,
-        updatedAt: record.updatedAt
       },
       status: record.status,
-      joinedAt: record.createdAt
+      joinedAt: record.createdAt,
     }));
-  
-  res.status(200).json({
-    success: true,
-    data: attendance
-  });
+
+  sendSuccess(res, { attendance }, 'Vendor attendance retrieved successfully');
 });
 
-// Update vendor profile
-exports.updateVendorProfile = catchAsync(async (req, res, next) => {
+// Update vendor profile (vendor only, ownership enforced)
+const updateVendorProfile = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+
+  // Ownership check: only the vendor themselves or an admin can update
+  if (req.user._id.toString() !== id && req.user.role !== 'admin') {
+    return next(new AppError('You can only update your own profile', 403));
+  }
+
   const {
     businessName,
     businessDescription,
+    bio,
+    tagline,
     blurb,
-    specialties,
     website,
-    socialMedia
+    productCategories,
+    cardColor,
   } = req.body;
-  
-  // Find and update vendor
+
+  // Build update object — only set fields that were provided
+  const updates = {};
+
+  if (businessName !== undefined) updates.businessName = businessName;
+  if (businessDescription !== undefined) updates.businessDescription = businessDescription;
+  if (bio !== undefined) updates.bio = bio;
+
+  // vendorProfile sub-fields
+  if (tagline !== undefined) updates['vendorProfile.tagline'] = tagline;
+  if (blurb !== undefined) updates['vendorProfile.blurb'] = blurb;
+  if (website !== undefined) updates['vendorProfile.website'] = website;
+  if (productCategories !== undefined) updates['vendorProfile.productCategories'] = productCategories;
+  if (cardColor !== undefined) updates['vendorProfile.cardColor'] = cardColor;
+
   const vendor = await User.findOneAndUpdate(
-    { 
-      _id: id, 
-      role: 'vendor',
-      isActive: true 
-    },
     {
-      businessName,
-      businessDescription,
-      bio: blurb,
-      // TODO: Add specialties, website, socialMedia fields to User model
+      _id: id,
+      role: 'vendor',
+      isActive: true,
     },
+    { $set: updates },
     { new: true, runValidators: true }
-  ).select('-password');
-  
+  ).select('-password -twoFactorSecret -twoFactorBackupCodes -twoFactorTempSecret -loginAttempts -lockUntil');
+
   if (!vendor) {
     return next(new AppError('Vendor not found', 404));
   }
-  
-  // Format updated profile
-  const updatedProfile = {
-    id: vendor._id,
-    userId: vendor._id,
-    businessName: vendor.businessName || '',
-    businessDescription: vendor.businessDescription || '',
-    blurb: vendor.bio || '',
-    specialties: specialties || [],
-    avatar: vendor.profileImage || '',
-    coverImage: '', // TODO: Add coverImage field to User model
-    website: website || '',
-    socialMedia: socialMedia || {},
-    stats: {
-      totalMarkets: 0,
-      approvedApplications: 0,
-      yearsActive: new Date().getFullYear() - vendor.createdAt.getFullYear(),
-      averageRating: 0
-    },
-    createdAt: vendor.createdAt,
-    updatedAt: vendor.updatedAt
-  };
-  
-  res.status(200).json({
-    success: true,
-    data: updatedProfile
-  });
+
+  sendSuccess(res, { vendor: buildVendorCardData(vendor) }, 'Vendor profile updated successfully');
 });
 
 // Upload vendor avatar
-exports.uploadVendorAvatar = catchAsync(async (req, res, next) => {
+const uploadVendorAvatar = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  
+
+  // Ownership check
+  if (req.user._id.toString() !== id && req.user.role !== 'admin') {
+    return next(new AppError('You can only update your own profile', 403));
+  }
+
   if (!req.file) {
     return next(new AppError('Please upload an image file', 400));
   }
-  
-  // Generate unique filename
+
   const fileExt = path.extname(req.file.originalname);
   const fileName = `vendor_avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}${fileExt}`;
-  
-  // Save file locally
+
   const imageUrl = await saveFileLocally(req.file.buffer, fileName);
-  
-  // Update user's profile image
+
+  // Store in vendorProfile.profileImage
   const vendor = await User.findByIdAndUpdate(
     id,
-    { profileImage: imageUrl },
+    { $set: { 'vendorProfile.profileImage': imageUrl } },
     { new: true }
   ).select('-password');
-  
+
   if (!vendor) {
     return next(new AppError('Vendor not found', 404));
   }
-  
-  res.status(200).json({
-    success: true,
-    data: {
-      url: imageUrl
-    }
-  });
+
+  sendSuccess(res, { url: imageUrl }, 'Avatar uploaded successfully');
 });
 
 // Upload vendor cover image
-exports.uploadVendorCover = catchAsync(async (req, res, next) => {
+const uploadVendorCover = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  
+
+  // Ownership check
+  if (req.user._id.toString() !== id && req.user.role !== 'admin') {
+    return next(new AppError('You can only update your own profile', 403));
+  }
+
   if (!req.file) {
     return next(new AppError('Please upload an image file', 400));
   }
-  
-  // Generate unique filename
+
   const fileExt = path.extname(req.file.originalname);
   const fileName = `vendor_cover_${Date.now()}_${Math.random().toString(36).substr(2, 9)}${fileExt}`;
-  
-  // Save file locally
+
   const imageUrl = await saveFileLocally(req.file.buffer, fileName);
-  
-  // TODO: Add coverImage field to User model
-  // For now, we'll store it in a temporary way or return the URL
-  
-  res.status(200).json({
-    success: true,
-    data: {
-      url: imageUrl
-    }
-  });
+
+  sendSuccess(res, { url: imageUrl }, 'Cover image uploaded successfully');
 });
+
+module.exports = {
+  getVendors,
+  getVendorProfile,
+  getVendorMarkets,
+  getVendorAttendance,
+  updateVendorProfile,
+  uploadVendorAvatar,
+  uploadVendorCover,
+};

@@ -62,6 +62,13 @@ const AdminSupportPage = React.lazy(() => import('@/pages/admin/AdminSupportPage
 const MarketSearchPage = React.lazy(() => import('@/pages/markets/MarketSearchPage').then(module => ({ default: module.MarketSearchPage })))
 const MarketDetailPage = React.lazy(() => import('@/pages/markets/MarketDetailPage').then(module => ({ default: module.MarketDetailPage })))
 
+// Vendor public pages - lazy loaded
+const VendorListingPage = React.lazy(() => import('@/pages/vendors/VendorListingPage').then(module => ({ default: module.VendorListingPage })))
+const VendorProfilePage = React.lazy(() => import('@/pages/vendors/VendorProfilePage').then(module => ({ default: module.VendorProfilePage })))
+
+// Vendor profile edit - lazy loaded
+const VendorProfileEditPage = React.lazy(() => import('@/pages/vendor/VendorProfileEditPage').then(module => ({ default: module.VendorProfileEditPage })))
+
 // Application pages - lazy loaded
 const MyApplicationsPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.MyApplicationsPage })))
 const ApplicationDetailPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationDetailPage })))
@@ -90,6 +97,8 @@ export function AppRoutes() {
       <Route path="/" element={<MainLayout><Suspense fallback={<PageLoader />}><HomePage /></Suspense></MainLayout>} />
       <Route path="/markets" element={<MainLayout><Suspense fallback={<PageLoader />}><MarketSearchPage /></Suspense></MainLayout>} />
       <Route path="/markets/:id" element={<MainLayout><Suspense fallback={<PageLoader />}><MarketDetailPage /></Suspense></MainLayout>} />
+      <Route path="/vendors" element={<MainLayout><Suspense fallback={<PageLoader />}><VendorListingPage /></Suspense></MainLayout>} />
+      <Route path="/vendors/:id" element={<MainLayout><Suspense fallback={<PageLoader />}><VendorProfilePage /></Suspense></MainLayout>} />
       <Route path="/about" element={<MainLayout><Suspense fallback={<PageLoader />}><AboutPage /></Suspense></MainLayout>} />
       <Route path="/contact" element={<MainLayout><Suspense fallback={<PageLoader />}><ContactPage /></Suspense></MainLayout>} />
 
@@ -139,6 +148,14 @@ export function AppRoutes() {
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
             <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorDashboardPage /></Suspense></DashboardLayout>
+          </RoleRoute>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/vendor/profile" element={
+        <ProtectedRoute>
+          <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
+            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorProfileEditPage /></Suspense></DashboardLayout>
           </RoleRoute>
         </ProtectedRoute>
       } />

@@ -42,6 +42,9 @@ export * from './Sidebar'
 // Notification Components
 export * from './NotificationBell'
 
+// Vendor Components
+export * from './VendorCard'
+
 // Tracking Components
 export * from './ExpenseChart'
 export * from './ExpenseForm'

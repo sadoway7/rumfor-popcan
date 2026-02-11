@@ -6,7 +6,10 @@ import { useAuthStore } from '@/features/auth/authStore';
 import { useSidebarStore } from '@/features/theme/themeStore';
 import { MarketGrid } from '@/components/MarketGrid';
 import { SubHeader } from '@/components/SubHeader';
+import { VendorCard } from '@/components/VendorCard';
 import { marketsApi } from '@/features/markets/marketsApi';
+import { useVendors } from '@/features/vendor/hooks/useVendors';
+import type { VendorCardData } from '@/types';
 import {
   Users,
   Leaf,
@@ -19,6 +22,76 @@ import {
   MapPin,
   Archive,
 } from 'lucide-react';
+
+// Fallback mock vendors when API returns empty
+const mockVendors: VendorCardData[] = [
+  {
+    id: 'mock-1',
+    firstName: 'Artisan',
+    lastName: 'Crafts',
+    businessName: 'Artisan Crafts Co.',
+    tagline: 'Makes handcrafted silver necklaces, ceramic bowls, and woven baskets',
+    blurb: 'Beautiful, unique pieces made with love',
+    cardColor: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+  {
+    id: 'mock-2',
+    firstName: 'Fresh',
+    lastName: 'Harvest',
+    businessName: 'Fresh Harvest',
+    tagline: 'Grows and sells organic tomatoes, leafy greens, and homemade sourdough',
+    blurb: 'Farm-fresh daily from local growers',
+    cardColor: 'bg-gradient-to-br from-green-500/20 to-emerald-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+  {
+    id: 'mock-3',
+    firstName: 'Bella',
+    lastName: 'Baker',
+    businessName: "Bella's Bakery",
+    tagline: 'Bakes artisan sourdough bread, chocolate croissants, and birthday cakes',
+    blurb: 'Heavenly treats baked fresh each morning',
+    cardColor: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+  {
+    id: 'mock-4',
+    firstName: 'Jade',
+    lastName: 'Jeweler',
+    businessName: 'Jewelry by Jade',
+    tagline: 'Creates custom crystal earrings, amethyst pendants, and beaded bracelets',
+    blurb: 'Stunning pieces that tell your story',
+    cardColor: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+  {
+    id: 'mock-5',
+    firstName: 'Mountain',
+    lastName: 'Brew',
+    businessName: 'Mountain Brew Coffee',
+    tagline: 'Roasts and sells Ethiopian single-origin beans and flavored cold brew',
+    blurb: 'Bold, rich flavors from mountain estates',
+    cardColor: 'bg-gradient-to-br from-red-500/20 to-rose-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+  {
+    id: 'mock-6',
+    firstName: 'Honey',
+    lastName: 'Farmer',
+    businessName: 'Honey Bee Farms',
+    tagline: 'Produces wildflower honey, beeswax candles, and natural lip balm',
+    blurb: 'Pure, natural sweetness from our hives',
+    cardColor: 'bg-gradient-to-br from-yellow-500/20 to-amber-500/20',
+    profileImage: '',
+    productCategories: [],
+  },
+];
 
 // Market categories for browsing
 const marketCategories = [
@@ -48,6 +121,11 @@ export function HomePage() {
   const [password, setPassword] = useState('');
 
   const [showLoginForm, setShowLoginForm] = useState(false);
+
+  // Fetch trending vendors for homepage
+  const { vendors: apiVendors, isLoading: vendorsLoading } = useVendors({}, 1, 6);
+  const displayVendors = apiVendors.length > 0 ? apiVendors : mockVendors;
+  const hasRealVendors = apiVendors.length > 0;
 
   // Fetch recently added markets for homepage
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
@@ -430,95 +508,20 @@ export function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            {[
-              {
-                name: 'Artisan Crafts Co.',
-                initials: 'AC',
-                description:
-                  'Makes handcrafted silver necklaces, ceramic bowls, and woven baskets',
-                blurb: 'Beautiful, unique pieces made with love',
-                color: 'from-purple-500/20 to-pink-500/20',
-              },
-              {
-                name: 'Fresh Harvest',
-                initials: 'FH',
-                description:
-                  'Grows and sells organic tomatoes, leafy greens, and homemade sourdough',
-                blurb: 'Farm-fresh daily from local growers',
-                color: 'from-green-500/20 to-emerald-500/20',
-              },
-              {
-                name: "Bella's Bakery",
-                initials: 'BB',
-                description:
-                  'Bakes artisan sourdough bread, chocolate croissants, and birthday cakes',
-                blurb: 'Heavenly treats baked fresh each morning',
-                color: 'from-amber-500/20 to-orange-500/20',
-              },
-              {
-                name: 'Jewelry by Jade',
-                initials: 'JJ',
-                description:
-                  'Creates custom crystal earrings, amethyst pendants, and beaded bracelets',
-                blurb: 'Stunning pieces that tell your story',
-                color: 'from-blue-500/20 to-cyan-500/20',
-              },
-              {
-                name: 'Mountain Brew Coffee',
-                initials: 'MB',
-                description:
-                  'Roasts and sells Ethiopian single-origin beans and flavored cold brew',
-                blurb: 'Bold, rich flavors from mountain estates',
-                color: 'from-red-500/20 to-rose-500/20',
-              },
-              {
-                name: 'Honey Bee Farms',
-                initials: 'HF',
-                description:
-                  'Produces wildflower honey, beeswax candles, and natural lip balm',
-                blurb: 'Pure, natural sweetness from our hives',
-                color: 'from-yellow-500/20 to-amber-500/20',
-              },
-            ].map((vendor, id) => (
-              <div
-                key={id}
-                className="bg-surface hover:shadow-md transition-all duration-200 border border-surface-3 relative"
-              >
-                <Link
-                  to="#"
-                  className="text-xs text-amber-500 hover:text-amber-600 underline absolute top-2 right-2 z-10"
-                >
-                  vendor profile
-                </Link>
-                <div className="flex items-start">
-                  <div
-                    className={`w-32 h-32 bg-gradient-to-br ${vendor.color} flex items-center justify-center text-4xl font-bold text-foreground border-2 border-surface-3 shadow-sm flex-shrink-0`}
-                  >
-                    {vendor.initials}
-                  </div>
-                  <div className="flex-1 min-w-0 pl-4 py-4 pr-4">
-                    <h3
-                      className="font-bold text-foreground text-lg mb-2 truncate"
-                      title={vendor.name}
-                    >
-                      {vendor.name}
-                    </h3>
-                    <p
-                      className="text-sm text-amber-500 font-medium mb-1 line-clamp-2"
-                      title={vendor.description}
-                    >
-                      {vendor.description}
-                    </p>
-                    <p
-                      className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
-                      title={vendor.blurb}
-                    >
-                      {vendor.blurb}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {vendorsLoading ? (
+              // Skeleton loading state
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-48 rounded-xl bg-surface animate-pulse border border-surface-3" />
+              ))
+            ) : (
+              displayVendors.map((vendor) => (
+                <VendorCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  showLink={hasRealVendors}
+                />
+              ))
+            )}
           </div>
         </section>
       </div>

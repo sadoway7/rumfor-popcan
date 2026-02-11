@@ -47,6 +47,9 @@ const getMarkets = catchAsync(async (req, res, next) => {
   console.log('[DEBUG getMarkets] Query:', JSON.stringify(query, null, 2));
   console.log('[DEBUG getMarkets] Query params:', req.query);
 
+  // Debug logging
+  // Build query
+
   if (category) {
     query.category = category;
   }
@@ -1766,16 +1769,23 @@ const getMarketVendors = catchAsync(async (req, res, next) => {
     market: id,
     status: { $in: ['approved', 'attending'] },
     isArchived: false,
-  }).populate('user', 'username profile.firstName profile.lastName role');
+  }).populate('user', 'username firstName lastName role businessName businessDescription bio profileImage vendorProfile');
 
   const vendors = tracking.map(t => ({
     user: {
       id: t.user._id,
       username: t.user.username,
-      firstName: t.user.profile?.firstName || t.user.firstName,
-      lastName: t.user.profile?.lastName || t.user.lastName,
+      firstName: t.user.firstName,
+      lastName: t.user.lastName,
       role: t.user.role,
     },
+    // Vendor card display fields
+    name: t.user.businessName || `${t.user.firstName} ${t.user.lastName}`,
+    description: t.user.vendorProfile?.tagline || t.user.businessDescription || '',
+    blurb: t.user.vendorProfile?.blurb || t.user.bio || '',
+    color: t.user.vendorProfile?.cardColor || null,
+    profileImage: t.user.vendorProfile?.profileImage || t.user.profileImage || '',
+    productCategories: t.user.vendorProfile?.productCategories || [],
     status: t.status,
     joinedAt: t.createdAt,
   }));

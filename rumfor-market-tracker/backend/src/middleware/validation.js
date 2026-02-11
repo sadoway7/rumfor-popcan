@@ -913,6 +913,66 @@ const validateConversionReview = [
   handleValidationErrors
 ]
 
+// Vendor profile update validation
+const validateVendorProfileUpdate = [
+  body('businessName')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Business name must be less than 100 characters')
+    .trim(),
+
+  body('businessDescription')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Business description must be less than 500 characters')
+    .trim(),
+
+  body('bio')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Bio must be less than 500 characters')
+    .trim(),
+
+  body('tagline')
+    .optional()
+    .isLength({ max: 100 })
+    .withMessage('Tagline must be less than 100 characters')
+    .trim(),
+
+  body('blurb')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Blurb must be less than 500 characters')
+    .trim(),
+
+  body('website')
+    .optional({ values: 'falsy' })
+    .isURL({ protocols: ['http', 'https'], require_protocol: true })
+    .withMessage('Website must be a valid URL (include http:// or https://)')
+    .trim(),
+
+  body('productCategories')
+    .optional()
+    .isArray({ max: 10 })
+    .withMessage('Product categories must be an array with at most 10 items'),
+
+  body('productCategories.*')
+    .optional()
+    .isString()
+    .isLength({ max: 50 })
+    .withMessage('Each product category must be a string under 50 characters')
+    .trim(),
+
+  body('cardColor')
+    .optional({ values: 'falsy' })
+    .isString()
+    .isLength({ max: 100 })
+    .withMessage('Card color must be a string under 100 characters')
+    .trim(),
+
+  handleValidationErrors
+]
+
 module.exports = {
   handleValidationErrors,
   validateUserRegistration,
@@ -931,5 +991,6 @@ module.exports = {
   validateSearch,
   validateMarketTypeParam,
   validateMarketConversionRequest,
-  validateConversionReview
+  validateConversionReview,
+  validateVendorProfileUpdate
 }

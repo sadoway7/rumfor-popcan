@@ -8,6 +8,7 @@ import { useMarket, useMarkets, useMarketVendors } from '@/features/markets/hook
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import TagVoting from '@/components/TagVoting'
+import { VendorCard } from '@/components/VendorCard'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
@@ -504,26 +505,15 @@ variant="outline"
                     />
                   </div>
 
-                  {/* Vendor List - Homepage Mock Style */}
+                  {/* Vendor List */}
                   {filteredVendors.length > 0 ? (
                     <div className="space-y-3">
                       {filteredVendors.map((vendor, index) => (
-                        <div key={index} className="bg-surface border border-surface-3 rounded-lg overflow-hidden">
-                          <div className="flex items-start">
-                            <div className={`w-24 h-24 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-foreground ${vendor.color || 'bg-gradient-to-br from-amber-500/20 to-orange-500/20'}`}>
-                              {vendor.user.firstName?.[0]}{vendor.user.lastName?.[0]}
-                            </div>
-                            <div className="flex-1 min-w-0 p-3">
-                              <h3 className="font-bold text-foreground text-sm truncate">{vendor.name}</h3>
-                              {vendor.description && (
-                                <p className="text-xs text-amber-500 font-medium mb-1 line-clamp-2">{vendor.description}</p>
-                              )}
-                              {vendor.blurb && (
-                                <p className="text-xs text-muted-foreground line-clamp-2">{vendor.blurb}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                        <VendorCard
+                          key={vendor.user?.id || index}
+                          vendor={vendor}
+                          variant="compact"
+                        />
                       ))}
                     </div>
                   ) : (

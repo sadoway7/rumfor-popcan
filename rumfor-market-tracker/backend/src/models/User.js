@@ -69,6 +69,37 @@ const userSchema = new mongoose.Schema({
   insuranceCertificate: String,
   taxId: String,
 
+  // Vendor profile (public-facing card & profile customization)
+  vendorProfile: {
+    tagline: {
+      type: String,
+      maxlength: 100,
+      trim: true
+    },
+    blurb: {
+      type: String,
+      maxlength: 500,
+      trim: true
+    },
+    website: {
+      type: String,
+      trim: true
+    },
+    productCategories: [{
+      type: String,
+      trim: true
+    }],
+    cardColor: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    profileImage: {
+      type: String,
+      trim: true
+    }
+  },
+
   // Promoter-specific fields
   organizationName: String,
   organizationDescription: String,

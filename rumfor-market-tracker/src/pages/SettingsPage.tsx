@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { Button } from '@/components/ui'
@@ -31,7 +32,9 @@ export function SettingsPage() {
             </div>
           </div>
           <div className="pt-4">
-            <Button variant="outline">Edit Profile</Button>
+            <Link to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}>
+              <Button variant="outline">Edit Profile</Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

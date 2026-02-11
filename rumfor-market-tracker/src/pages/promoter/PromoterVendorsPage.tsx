@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { 
   Search, 
   Filter, 
@@ -329,11 +330,19 @@ export function PromoterVendorsPage() {
           />
           <div>
             <div className="font-medium flex items-center gap-2">
-              {record.firstName} {record.lastName}
+              <Link to={`/vendors/${record.id}`} className="hover:text-amber-500 hover:underline transition-colors">
+                {record.firstName} {record.lastName}
+              </Link>
               {record.isEmailVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
             </div>
             <div className="text-sm text-muted-foreground">
-              {record.businessName || 'Independent Vendor'}
+              {record.businessName ? (
+                <Link to={`/vendors/${record.id}`} className="hover:text-amber-500 hover:underline transition-colors">
+                  {record.businessName}
+                </Link>
+              ) : (
+                'Independent Vendor'
+              )}
             </div>
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               <Mail className="w-3 h-3" />

@@ -167,9 +167,13 @@ const updateMe = catchAsync(async (req, res, next) => {
   const allowedUpdates = [
     'firstName',
     'lastName',
+    'displayName',
     'bio',
     'phone',
-    'preferences'
+    'preferences',
+    'businessName',
+    'businessDescription',
+    'vendorProfile'
   ]
 
   const updates = {}

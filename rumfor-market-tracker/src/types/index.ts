@@ -1,4 +1,13 @@
 // User and Authentication Types
+export interface VendorProfileData {
+  tagline?: string;
+  blurb?: string;
+  website?: string;
+  productCategories?: string[];
+  cardColor?: string | null;
+  profileImage?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -6,6 +15,20 @@ export interface User {
   lastName: string;
   role: UserRole;
   avatar?: string;
+  username?: string;
+  displayName?: string;
+  bio?: string;
+  phone?: string;
+  profileImage?: string;
+  businessName?: string;
+  businessDescription?: string;
+  vendorProfile?: VendorProfileData;
+  preferences?: {
+    emailNotifications?: boolean;
+    smsNotifications?: boolean;
+    locationTracking?: boolean;
+    theme?: 'light' | 'dark';
+  };
   createdAt: string;
   updatedAt: string;
   isEmailVerified: boolean;
@@ -75,6 +98,75 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: string;
+}
+
+// Vendor Types
+export interface VendorCardData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  businessName: string;
+  tagline: string;
+  blurb: string;
+  cardColor: string | null;
+  profileImage: string;
+  productCategories: string[];
+  website?: string;
+}
+
+export interface VendorPublicProfile extends VendorCardData {
+  bio: string;
+  stats: {
+    totalMarkets: number;
+    approvedApplications: number;
+    attendingMarkets: number;
+    yearsActive: number;
+  };
+  upcomingMarkets: VendorUpcomingMarket[];
+  createdAt: string;
+}
+
+export interface VendorUpcomingMarket {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  location?: Location;
+  schedule?: MarketScheduleItem[];
+  status: string;
+  images?: Array<{ url?: string; thumbnail?: string; caption?: string }>;
+  tags?: string[];
+  marketType: string;
+  joinedAt: string;
+}
+
+export interface VendorMarketDisplay {
+  user: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
+  name: string;
+  description: string;
+  blurb: string;
+  color: string | null;
+  profileImage: string;
+  productCategories: string[];
+  status: string;
+  joinedAt: string;
+}
+
+export interface VendorProfileUpdateData {
+  businessName?: string;
+  businessDescription?: string;
+  bio?: string;
+  tagline?: string;
+  blurb?: string;
+  website?: string;
+  productCategories?: string[];
+  cardColor?: string | null;
 }
 
 // Market Types
