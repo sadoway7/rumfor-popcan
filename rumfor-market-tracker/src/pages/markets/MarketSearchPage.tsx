@@ -121,9 +121,9 @@ export const MarketSearchPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  // Close sidebar by default
+  // Ensure advanced search sidebar is hidden when entering this page
   useEffect(() => {
-    useSidebarStore.getState().setSidebarOpen(false);
+    setSidebarOpen(false);
   }, []);
 
   // Intersection Observer for infinite scroll
@@ -285,7 +285,7 @@ export const MarketSearchPage: React.FC = () => {
           {/* Sidebar - Slides in from left on desktop */}
           <aside
             className={`
-              ${isSidebarOpen ? 'lg:block' : 'lg:hidden'}
+              ${isSidebarOpen ? 'block' : 'hidden'}
               w-full lg:w-80 flex-shrink-0 bg-background transition-all duration-300
             `}
           >

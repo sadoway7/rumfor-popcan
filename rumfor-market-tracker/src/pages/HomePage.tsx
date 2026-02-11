@@ -66,21 +66,9 @@ export function HomePage() {
     }
   };
 
-  // Open/close sidebar based on screen size
+  // Open sidebar by default on homepage only (mobile landing page)
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        useSidebarStore.getState().setSidebarOpen(false);
-      } else {
-        useSidebarStore.getState().setSidebarOpen(true);
-      }
-    };
-
-    // Set initial state
-    handleResize();
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    useSidebarStore.getState().setSidebarOpen(true);
   }, []);
 
   return (
