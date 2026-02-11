@@ -645,8 +645,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   </div>
                   */}
                   
-                   {/* Top row - Info text (left) + Stacked buttons (right, anchored bottom, grows up) - Mobile only */}
-                  <div className="flex items-center justify-between px-3 py-2 relative md:hidden">
+                   {/* Top row - Info text (left) + Stacked buttons (right, anchored bottom, grows up) */}
+                  <div className="flex items-center justify-between px-3 py-2 relative">
                     <span className="text-xs text-white/80">Tap for details</span>
                     <div className="absolute bottom-4 right-2 z-50 flex flex-col items-end">
                       {/* Comments Button */}

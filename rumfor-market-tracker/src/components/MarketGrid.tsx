@@ -204,7 +204,6 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
             onUntrack={onUntrack}
             isTracked={trackedMarketIds.includes(market.id)}
             isLoading={isTracking}
-            showTrackButton={false}
             className="h-full"
           />
         </FadeInWrapper>

@@ -129,8 +129,20 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Search Bar - Center */}
-          <div className="flex justify-center px-4 md:px-8">
+          {/* Search Bar with Location and Browse Vendors - Center */}
+          <div className="flex justify-center items-center px-4 md:px-8 gap-3">
+            {/* Location Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocationModalOpen(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+              title="Set location"
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+            
+            {/* Search Bar */}
             <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
@@ -159,21 +171,22 @@ export function Header() {
                 </button>
               )}
             </div>
+            
+            {/* Browse Vendors Button */}
+            <Link to="/vendors">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+                title="Browse Vendors"
+              >
+                <Users className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
 
           {/* Right Side Actions - Desktop */}
           <div className="hidden md:flex items-center justify-end space-x-3 min-w-0">
-            {/* Location Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocationModalOpen(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
-              title="Set location"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
-
             {/* Theme Toggle */}
             <Button
               variant="ghost"
@@ -188,17 +201,7 @@ export function Header() {
               )}
             </Button>
 
-            {/* Vendors Link */}
-            <Link to="/vendors">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
-                title="Browse Vendors"
-              >
-                <Users className="h-4 w-4" />
-              </Button>
-            </Link>
+
 
             {isAuthenticated ? (
               <>

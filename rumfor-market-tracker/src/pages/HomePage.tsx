@@ -9,6 +9,7 @@ import { SubHeader } from '@/components/SubHeader';
 import { VendorCard } from '@/components/VendorCard';
 import { marketsApi } from '@/features/markets/marketsApi';
 import { useVendors } from '@/features/vendor/hooks/useVendors';
+import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets';
 import type { VendorCardData } from '@/types';
 import {
   Users,
@@ -126,6 +127,9 @@ export function HomePage() {
   const { vendors: apiVendors, isLoading: vendorsLoading } = useVendors({}, 1, 6);
   const displayVendors = apiVendors.length > 0 ? apiVendors : mockVendors;
   const hasRealVendors = apiVendors.length > 0;
+
+  // Fetch tracked markets for authenticated users
+  const { trackedMarketIds, trackMarket, untrackMarket } = useTrackedMarkets();
 
   // Fetch recently added markets for homepage
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
@@ -490,6 +494,9 @@ export function HomePage() {
             markets={featuredMarkets?.data || []}
             isLoading={marketsLoading}
             variant="grid"
+            trackedMarketIds={trackedMarketIds || []}
+            onTrack={trackMarket}
+            onUntrack={untrackMarket}
             className=""
           />
         </section>
