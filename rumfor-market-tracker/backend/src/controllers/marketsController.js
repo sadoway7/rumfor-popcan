@@ -98,59 +98,46 @@ const getMarkets = catchAsync(async (req, res, next) => {
 
   // Filter by date range - only show markets with future dates
   if (dateFrom || dateTo) {
-    const dateFilter = {};
+    const dateFromObj = dateFrom ? new Date(dateFrom) : null;
+    const dateToObj = dateTo ? new Date(dateTo) : null;
 
-    if (dateFrom) {
-      // Market is valid if it has events after dateFrom
-      // For recurring: seasonEnd >= dateFrom
-      // For one-time: any special date >= dateFrom
-      dateFilter.$or = [
-        {
+    // Simplified date filter - check if market has ANY schedule item within range
+    if (dateFromObj || dateToObj) {
+      const scheduleDateFilters = [];
+
+      // For specialDates (non-recurring markets)
+      if (dateFromObj) {
+        scheduleDateFilters.push({
+          'schedule.specialDates.date': { $gte: dateFromObj }
+        });
+      }
+      if (dateToObj) {
+        scheduleDateFilters.push({
+          'schedule.specialDates.date': { $lte: dateToObj }
+        });
+      }
+
+      // For recurring markets
+      if (dateFromObj) {
+        scheduleDateFilters.push({
           'schedule.recurring': true,
-          'schedule.seasonEnd': { $gte: dateFrom },
-        },
-        {
-          'schedule.recurring': false,
-          'schedule.specialDates.date': { $gte: dateFrom },
-        },
-      ];
-    }
+          'schedule.seasonEnd': { $gte: dateFromObj }
+        });
+      }
+      if (dateToObj) {
+        scheduleDateFilters.push({
+          'schedule.recurring': true,
+          'schedule.seasonStart': { $lte: dateToObj }
+        });
+      }
 
-    if (dateTo) {
-      if (dateFilter.$or) {
-        // Both from and to specified
-        dateFilter.$and = [
-          { $or: dateFilter.$or },
-          {
-            $or: [
-              {
-                'schedule.recurring': true,
-                'schedule.seasonStart': { $lte: dateTo },
-              },
-              {
-                'schedule.recurring': false,
-                'schedule.specialDates.date': { $lte: dateTo },
-              },
-            ],
-          },
-        ];
-        delete dateFilter.$or;
-      } else {
-        // Only dateTo specified
-        dateFilter.$or = [
-          {
-            'schedule.recurring': true,
-            'schedule.seasonStart': { $lte: dateTo },
-          },
-          {
-            'schedule.recurring': false,
-            'schedule.specialDates.date': { $lte: dateTo },
-          },
-        ];
+      // Only add date filter if we have conditions
+      if (scheduleDateFilters.length > 0) {
+        query.$and = (query.$and || []).concat({
+          $or: scheduleDateFilters
+        });
       }
     }
-
-    Object.assign(query, dateFilter);
   }
 
   // Execute query with lean() for 50% faster performance
