@@ -191,6 +191,8 @@ export interface Market {
     maxVendors?: number;
     applicationFee?: number;
     boothFee?: number;
+    applicationLink?: string;
+    applicationDeadline?: string;
     requirements?: {
       businessLicense?: boolean;
       insurance?: boolean;

@@ -117,20 +117,20 @@ export function Header() {
       className={`sticky top-0 z-[60] bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? '-translate-y-full' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-[auto,1fr,auto] items-center h-16 gap-4">
+        <div className="grid grid-cols-[auto,1fr,auto] items-center h-14 md:h-16 gap-2 md:gap-4">
           {/* Logo - Left */}
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <Link to="/">
-              <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[3px_3px_0px_0px] shadow-black/40">
-                <span className="text-accent-foreground font-bold text-base">
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[3px_3px_0px_0px] shadow-black/40">
+                <span className="text-accent-foreground font-bold text-sm">
                   R
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Search Bar with Location and Browse Vendors - Center */}
-          <div className="flex justify-center items-center px-4 md:px-8 gap-3">
+          {/* Search Bar with Location - Center */}
+          <div className="hidden md:flex justify-center items-center px-4 md:px-8 gap-3">
             {/* Location Button */}
             <Button
               variant="ghost"
@@ -172,17 +172,63 @@ export function Header() {
               )}
             </div>
             
-            {/* Browse Vendors Button */}
-            <Link to="/vendors">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
-                title="Browse Vendors"
-              >
-                <Users className="h-4 w-4" />
-              </Button>
-            </Link>
+            {/* Browse Vendors Button - Desktop Only */}
+            <div className="hidden md:flex">
+              <Link to="/vendors">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+                  title="Browse Vendors"
+                >
+                  <Users className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          {/* Mobile Search Bar - Only Location & Search */}
+          <div className="md:hidden flex-1 flex justify-center items-center px-1 gap-1 ml-1">
+            {/* Location Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocationModalOpen(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300 shrink-0"
+              title="Set location"
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+            
+            {/* Search Bar */}
+            <div className="relative w-full max-w-[calc(100%-60px)]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <input
+                type="text"
+                placeholder={getSearchPlaceholder()}
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-[10px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                  theme === 'light'
+                    ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
+                    : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
+                }`}
+              />
+              {isMarketsPage && (
+                <button
+                  onClick={() =>
+                    useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)
+                  }
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Toggle advanced search"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Right Side Actions - Desktop */}

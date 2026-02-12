@@ -121,11 +121,10 @@ export function BottomNav({ role }: BottomNavProps) {
         role="navigation"
         aria-label="Bottom Navigation"
         className={cn(
-          "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full flex items-center h-[60px] px-2",
+          "bg-white/87 dark:bg-black/87 backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2",
           "transition-all duration-300 ease-out",
           "will-change-transform"
         )}
-            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.12))' }}
       >
         {navigation.map((item: any) => {
           const Icon = item.icon
@@ -146,7 +145,7 @@ export function BottomNav({ role }: BottomNavProps) {
                   isActive && activeIndex >= 0
                     ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary"
                     : isPrimary
-                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-2xl"
+                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-[3px_3px_0px_0px] shadow-black/40"
                     : "bg-transparent text-gray-400 dark:text-gray-500 hover:bg-amber-500/10 hover:text-amber-500",
                   "focus:outline-none focus-visible:ring-0",
                   isPrimary ? "w-12" : "px-4",

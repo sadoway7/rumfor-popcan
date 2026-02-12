@@ -847,6 +847,7 @@ interface UseTrackedMarketsReturn {
   untrackMarket: (marketId: string) => void;
   isMarketTracked: (marketId: string) => boolean;
   getTrackingStatus: (marketId: string) => TrackingData | undefined;
+  isTracking: boolean;
   refetch: () => Promise<any>;
 }
 
@@ -935,6 +936,7 @@ export const useTrackedMarkets = (): UseTrackedMarketsReturn => {
     untrackMarket: handleUntrackMarket,
     isMarketTracked,
     getTrackingStatus,
+    isTracking: trackMutation.isPending || untrackMutation.isPending,
     refetch: trackedMarketsQuery.refetch,
   };
 };

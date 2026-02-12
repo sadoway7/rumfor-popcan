@@ -29,6 +29,8 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 import { cn } from '@/utils/cn'
 import { format } from 'date-fns'
+import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
+import { StatusChangeModal } from '@/components/StatusChangeModal'
 
 // Lazy load heavy components for better performance
 const VendorTodoList = React.lazy(() => import('@/components/VendorTodoList').then(module => ({ default: module.VendorTodoList })))
@@ -73,38 +75,6 @@ const statusColors: Record<string, string> = {
   'cancelled': 'bg-destructive/10 text-destructive',
   'completed': 'bg-muted text-muted-foreground'
 }
-
-// Tracking status colors for hero overlay
-const trackingStatusColors: Record<string, string> = {
-  'interested': 'bg-blue-500',
-  'applied': 'bg-yellow-500',
-  'approved': 'bg-green-500',
-  'attending': 'bg-emerald-500',
-  'declined': 'bg-orange-500',
-  'cancelled': 'bg-red-500',
-  'completed': 'bg-gray-500',
-  'archived': 'bg-slate-500'
-}
-
-const trackingStatusLabels: Record<string, string> = {
-  'interested': 'Interested',
-  'applied': 'Applied',
-  'approved': 'Approved',
-  'attending': 'Attending',
-  'declined': 'Declined',
-  'cancelled': 'Cancelled',
-  'completed': 'Completed'
-}
-
-const trackingStatusOptions = [
-  { value: 'interested', label: 'Interested', color: 'bg-blue-500' },
-  { value: 'applied', label: 'Applied', color: 'bg-yellow-500' },
-  { value: 'approved', label: 'Approved', color: 'bg-green-500' },
-  { value: 'attending', label: 'Attending', color: 'bg-emerald-500' },
-  { value: 'declined', label: 'Declined', color: 'bg-orange-500' },
-  { value: 'cancelled', label: 'Cancelled', color: 'bg-red-500' },
-  { value: 'completed', label: 'Completed', color: 'bg-gray-500' }
-]
 
 // Helper functions
 const formatSchedule = (schedule: any[]) => {
@@ -466,10 +436,10 @@ const { id } = useParams<{ id: string }>()
               onClick={() => setShowStatusModal(true)}
               className={cn(
                 'flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity',
-                trackingStatusColors[trackingStatus]
+                TRACKING_STATUS_COLORS[trackingStatus]
               )}
             >
-              <span>{trackingStatusLabels[trackingStatus]}</span>
+              <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
               <ChevronDown className="w-4 h-4" />
             </button>
           </div>
@@ -546,35 +516,13 @@ const { id } = useParams<{ id: string }>()
       </div>
 
       {/* Status Change Modal */}
-      {showStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowStatusModal(false)}>
-          <div className="rounded-xl shadow-2xl max-w-sm w-full border-2 border-border" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="font-semibold text-lg">Change Status</h3>
-              <button onClick={() => setShowStatusModal(false)} className="p-1.5 hover:bg-surface rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 space-y-2">
-              {trackingStatusOptions.map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => handleStatusChange(option.value)}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 font-medium",
-                    trackingStatus === option.value
-                      ? "bg-accent text-accent-foreground shadow-lg"
-                      : "bg-surface hover:bg-surface-2 text-foreground border border-border"
-                  )}
-                >
-                  <div className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
-                  <span>{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusChangeModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={trackingStatus}
+        statusOptions={TRACKING_STATUS_OPTIONS}
+        onStatusChange={handleStatusChange}
+      />
     </div>
   )
 }

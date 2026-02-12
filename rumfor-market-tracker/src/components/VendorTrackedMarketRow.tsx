@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
 import { formatTime12Hour } from '@/utils/formatTime'
@@ -12,14 +12,28 @@ import {
   CheckSquare,
   Check,
   DollarSign,
-  X,
   ChevronDown,
   Trash2,
   Clock,
   TrendingUp,
   MoreVertical,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  Archive
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
+import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
+import { communityApi } from '@/features/community/communityApi'
+import { useQuery } from '@tanstack/react-query'
+import { StatusChangeModal } from '@/components/StatusChangeModal'
+import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
 
 interface VendorMarketTracking {
   id: string
@@ -45,33 +59,6 @@ interface VendorTrackedMarketRowProps {
   className?: string
 }
 
-const statusColors: Record<string, string> = {
-  'interested': 'bg-blue-500',
-  'applied': 'bg-yellow-500',
-  'approved': 'bg-green-500',
-  'attending': 'bg-emerald-500',
-  'declined': 'bg-orange-500',
-  'cancelled': 'bg-red-500',
-  'completed': 'bg-gray-500',
-  'archived': 'bg-slate-500'
-}
-
-const statusLabels: Record<string, string> = {
-  'interested': 'Interested',
-  'applied': 'Applied',
-  'approved': 'Approved',
-  'attending': 'Attending',
-  'completed': 'Completed',
-}
-
-const statusOptions = [
-  { value: 'interested', label: 'Interested', color: 'bg-blue-500' },
-  { value: 'applied', label: 'Applied', color: 'bg-yellow-500' },
-  { value: 'approved', label: 'Approved', color: 'bg-green-500' },
-  { value: 'attending', label: 'Attending', color: 'bg-emerald-500' },
-  { value: 'completed', label: 'Completed', color: 'bg-gray-500' },
-]
-
 export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   market,
   tracking,
@@ -81,10 +68,20 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   onChangeStatus,
   className
 }) => {
+  const navigate = useNavigate()
   const { todos, toggleTodo } = useTodos(market.id)
   const { expenses, updateExpense } = useExpenses(market.id)
+  const { openComments } = useCommentsModalStore()
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+  const { data: commentsData } = useQuery({
+    queryKey: ['comments', market.id, 1],
+    queryFn: () => communityApi.getComments(market.id, 1),
+    staleTime: 60000,
+  })
+
+  const commentCount = market.stats?.commentCount || commentsData?.totalComments || 0
 
   const priorityConfig = {
     urgent: { color: 'bg-red-100 text-red-700', icon: <AlertTriangle className="w-3 h-3" /> },
@@ -192,8 +189,8 @@ const formatSchedule = (schedule: Market['schedule']): string => {
 
   return (
     <>
-      <div 
-        className={cn('rounded-lg bg-card shadow hover:shadow-xl transition-shadow opacity-100', className)}
+    <div 
+        className={cn('rounded-lg bg-card shadow hover:shadow-xl transition-shadow opacity-100 sm:mb-0 mb-4', className)}
         onClick={handleCardClick}
       >
         {/* Mobile */}
@@ -214,31 +211,68 @@ const formatSchedule = (schedule: Market['schedule']): string => {
             )} />
             
             <div className="absolute inset-0 p-3 flex flex-col">
-              {/* Top row: Bigger status badge (left) + Untrack button (right) */}
-              <div className="flex justify-between items-start mb-auto">
-                <button
+                {/* Top row: Options button (left) + Status button (right) */}
+                <div className="flex justify-between items-start mb-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-foreground transition-colors shadow"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => onViewDetails?.(market.id)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/markets/${market.id}`} onClick={(e) => e.stopPropagation()}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Go to Public Page
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => console.log('Archive placeholder')}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive List
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onUntrack?.(market.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Untrack Market
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowStatusModal(true)
+                    }}
+                    className={cn('flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
+                  >
+                    <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Chat button */}
+                <div 
+                  className="absolute bottom-6 right-2 cursor-pointer z-50"
                   onClick={(e) => {
                     e.stopPropagation()
-                    setShowStatusModal(true)
+                    openComments(market.id, market.name)
                   }}
-                  className={cn('flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity', statusColors[currentStatus])}
                 >
-                  <span>{statusLabels[currentStatus]}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUntrack?.(market.id)
-                  }}
-                  className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-red-600 transition-colors shadow"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              
-              {/* Bottom info - clickable to view details */}
+                  <ChatNotificationIcon count={commentCount} />
+                </div>
+
+               {/* Bottom info - clickable to view details */}
               <div className="text-white mt-auto">
                 <h3 className="font-bold text-xl leading-tight mb-1 drop-shadow-lg line-clamp-2">
                   {market.name}
@@ -442,33 +476,109 @@ const formatSchedule = (schedule: Market['schedule']): string => {
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/70" />
             
-            {/* Status badge - clickable with icon */}
+            {/* Options menu */}
             <div className="absolute left-3 top-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-foreground transition-colors shadow"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => onViewDetails?.(market.id)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/markets/${market.id}`} onClick={(e) => e.stopPropagation()}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Go to Public Page
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => console.log('Archive placeholder')}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive List
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onUntrack?.(market.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Untrack Market
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Status badge - clickable with icon */}
+            <div className="absolute right-2 top-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowStatusModal(true)
                 }}
-                className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', statusColors[currentStatus])}
+                className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
               >
-                <span>{statusLabels[currentStatus]}</span>
+                <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
             </div>
 
-            {/* Untrack button */}
+            {/* Options menu */}
             <div className="absolute right-2 top-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onUntrack?.(market.id)
-                }}
-                className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-red-600 transition-colors shadow"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-foreground transition-colors shadow"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => onViewDetails?.(market.id)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to={`/markets/${market.id}`} onClick={(e) => e.stopPropagation()}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Go to Public Page
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => console.log('Archive placeholder')}>
+                        <Archive className="w-4 h-4 mr-2" />
+                        Archive List
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => onUntrack?.(market.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Untrack Market
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            
+
+            {/* Chat button */}
+            <div 
+              className="absolute bottom-6 right-2 cursor-pointer z-50"
+              onClick={(e) => {
+                e.stopPropagation()
+                openComments(market.id, market.name)
+              }}
+            >
+              <ChatNotificationIcon count={commentCount} size="sm" />
+            </div>
+
             {/* Market info - clickable */}
             <div 
               className="absolute bottom-3 left-3 right-3 text-white cursor-pointer"
@@ -660,35 +770,13 @@ const formatSchedule = (schedule: Market['schedule']): string => {
       </div>
 
       {/* Status Change Modal */}
-      {showStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowStatusModal(false)}>
-          <div className="rounded-xl shadow-2xl max-w-sm w-full border-2 border-border" onClick={(e) => e.stopPropagation()} style={{backgroundColor: 'var(--color-card)', opacity: 1}}>
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="font-semibold text-lg text-foreground">Change Status</h3>
-              <button onClick={() => setShowStatusModal(false)} className="p-1.5 hover:bg-surface rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4 space-y-2" style={{backgroundColor: 'var(--color-card)'}}>
-              {statusOptions.map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => handleStatusChange(option.value)}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 font-medium",
-                    currentStatus === option.value
-                      ? "bg-accent text-accent-foreground shadow-lg"
-                      : "bg-surface hover:bg-surface-2 text-foreground border border-border"
-                  )}
-                >
-                  <div className={cn("w-3 h-3 rounded-full flex-shrink-0", option.color)} />
-                  <span>{option.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusChangeModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={currentStatus}
+        statusOptions={TRACKING_STATUS_OPTIONS}
+        onStatusChange={handleStatusChange}
+      />
     </>
   )
 }

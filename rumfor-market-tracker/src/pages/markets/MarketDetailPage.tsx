@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
-import { useMarket, useMarkets, useMarketVendors } from '@/features/markets/hooks/useMarkets'
+import { useMarket, useTrackedMarkets, useMarketVendors } from '@/features/markets/hooks/useMarkets'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import TagVoting from '@/components/TagVoting'
@@ -16,8 +16,10 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info } from 'lucide-react'
+import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
+import { StatusChangeModal } from '@/components/StatusChangeModal'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
@@ -52,8 +54,9 @@ export const MarketDetailPage: React.FC = () => {
     trackMarket,
     untrackMarket,
     isMarketTracked,
-    isTracking
-  } = useMarkets()
+    isTracking,
+    getTrackingStatus
+  } = useTrackedMarkets()
   const { vendors: marketVendors } = useMarketVendors(id!)
   const { user } = useAuthStore()
 
@@ -111,6 +114,17 @@ export const MarketDetailPage: React.FC = () => {
       console.error('Failed to toggle tracking:', error)
     }
   }
+
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      await trackMarket(market.id, newStatus)
+      setShowStatusModal(false)
+    } catch (error) {
+      console.error('Failed to update status:', error)
+    }
+  }
+
+  const trackingStatus = getTrackingStatus(market.id)?.status as keyof typeof TRACKING_STATUS_LABELS || 'interested'
 
   const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
@@ -171,7 +185,12 @@ export const MarketDetailPage: React.FC = () => {
 
   const formatLocation = (location: any) => {
     if (!location) return 'Address not available'
-    return `${location.address || ''}, ${location.city || ''}, ${location.state || ''} ${location.zipCode || ''}`.trim()
+    const address = location.address && location.address !== 'TBD' ? location.address : ''
+    const city = location.city || ''
+    const state = location.state || ''
+    const zipCode = location.zipCode && location.zipCode !== '00000' ? location.zipCode : ''
+    const parts = [address, city, state, zipCode].filter(Boolean)
+    return parts.length > 0 ? parts.join(', ') : 'Address not available'
   }
 
   const filteredVendors = marketVendors.filter(vendor =>
@@ -218,6 +237,20 @@ export const MarketDetailPage: React.FC = () => {
         <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
           {categoryLabels[market.category]}
         </div>
+
+        {/* Status button - under category flag, only show when tracked */}
+        {isMarketTracked(market.id) && (
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className={cn(
+              'absolute top-10 right-0 flex items-center gap-1.5 text-xs font-semibold text-white border-0 shadow-lg px-3 py-1.5 rounded-l-full cursor-pointer hover:opacity-90 transition-opacity z-20',
+              TRACKING_STATUS_COLORS[trackingStatus]
+            )}
+          >
+            <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
+            <ChevronDown className="w-3 h-3" />
+          </button>
+        )}
 
         {/* Track/Follow - Bottom right of hero */}
         <div className="absolute bottom-4 right-4 z-20">
@@ -332,6 +365,28 @@ export const MarketDetailPage: React.FC = () => {
 
                     {/* Right Column: Action Links */}
                     <div className="space-y-4 text-right flex flex-col items-end">
+                      {market.applicationSettings?.applicationLink && (
+                        <a
+                          href={market.applicationSettings.applicationLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2"
+                        >
+                          Apply Here
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      )}
+                      {market.applicationSettings?.applicationDeadline ? (
+                        <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-2">
+                          App Deadline: {new Date(market.applicationSettings.applicationDeadline + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          <Clock className="w-4 h-4" />
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-2">
+                          App Deadline: Unknown
+                          <Clock className="w-4 h-4" />
+                        </span>
+                      )}
                       {market.promoter && (
                         <>
                           <button
@@ -527,16 +582,6 @@ variant="outline"
               )
             },
             {
-              key: 'comments',
-              label: 'Comments',
-              icon: <MessageSquare className="w-4 h-4" />,
-              content: (
-                <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
-                  <CommentList marketId={id!} />
-                </div>
-              )
-            },
-            {
               key: 'photos',
               label: 'Photos',
               icon: <Image className="w-4 h-4" />,
@@ -548,6 +593,16 @@ variant="outline"
                   />
                 </div>
               )
+            },
+            {
+              key: 'comments',
+              label: 'Comments',
+              icon: <MessageSquare className="w-4 h-4" />,
+              content: (
+                <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
+                  <CommentList marketId={id!} />
+                </div>
+              )
             }
           ]}
           defaultActiveKey="details"
@@ -555,23 +610,6 @@ variant="outline"
           fullWidth
           />
         </div>
-
-      {/* Update Status Button (for tracked markets) */}
-      {isMarketTracked(market.id) && (
-        <div className="px-4 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-9"
-            onClick={() => setShowStatusModal(true)}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Update My Status
-          </Button>
-        </div>
-      )}
 
       {/* Report Issue Modal */}
       <ReportIssueModal
@@ -622,51 +660,13 @@ variant="outline"
       )}
 
       {/* Status Update Modal */}
-      {showStatusModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-t-xl sm:rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b sticky top-0 bg-background">
-              <h3 className="font-semibold">Update Your Status</h3>
-            </div>
-            <div className="p-4 space-y-2">
-              {[
-                { value: 'interested', label: 'Interested' },
-                { value: 'applied', label: 'Applied' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'attending', label: 'Attending' },
-                { value: 'declined', label: 'Declined' },
-                { value: 'cancelled', label: 'Cancelled' },
-                { value: 'completed', label: 'Completed' },
-                { value: 'archived', label: 'Archived' }
-              ].map((status) => (
-                <button
-                  key={status.value}
-                  onClick={async () => {
-                    try {
-                      await trackMarket(market.id, status.value)
-                      setShowStatusModal(false)
-                    } catch (error) {
-                      console.error('Failed to update status:', error)
-                    }
-                  }}
-                  className="w-full text-left p-3 rounded-lg border hover:bg-accent/50 transition-colors min-h-[44px]"
-                >
-                  {status.label}
-                </button>
-              ))}
-            </div>
-            <div className="p-4 border-t sticky bottom-0 bg-background">
-              <Button
-                variant="outline"
-                onClick={() => setShowStatusModal(false)}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StatusChangeModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        currentStatus={trackingStatus as string}
+        statusOptions={TRACKING_STATUS_OPTIONS}
+        onStatusChange={handleStatusChange}
+      />
       </div>
     </div>
   )

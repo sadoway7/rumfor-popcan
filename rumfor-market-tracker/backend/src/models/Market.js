@@ -108,16 +108,20 @@ const marketSchema = new mongoose.Schema({
 
   // Application settings
   applicationSettings: {
-    acceptVendors: { type: Boolean, default: true }, // Whether market accepts vendor applications
+    acceptVendors: { type: Boolean, default: true },
     maxVendors: Number,
     applicationFee: { type: Number, default: 0 },
     boothFee: { type: Number, default: 0 },
+    applicationLink: String,
+    applicationDeadline: Date,
     requirements: {
       businessLicense: { type: Boolean, default: false },
       insurance: { type: Boolean, default: false },
       healthPermit: { type: Boolean, default: false },
       liabilityInsurance: { type: Boolean, default: false }
     },
+    customRequirements: [String]
+  },
     customRequirements: [String]
   },
 

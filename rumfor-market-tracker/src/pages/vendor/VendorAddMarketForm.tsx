@@ -56,6 +56,10 @@ interface MarketFormData {
     email?: string
     website?: string
   }
+  applicationSettings: {
+    applicationLink?: string
+    applicationDeadline?: string
+  }
   accessibility: {
     wheelchairAccessible: boolean
     parkingAvailable: boolean
@@ -209,6 +213,7 @@ startDate: formatLocalDate(new Date().toISOString()),
       isRecurring: false
     }],
     contact: {},
+    applicationSettings: {},
     accessibility: {
       wheelchairAccessible: false,
       parkingAvailable: false,
@@ -353,7 +358,9 @@ startDate: formatLocalDate(new Date().toISOString()),
           acceptVendors: true,
           maxVendors: undefined,
           applicationFee: 0,
-          boothFee: 0
+          boothFee: 0,
+          applicationLink: formData.applicationSettings?.applicationLink || undefined,
+          applicationDeadline: formData.applicationSettings?.applicationDeadline || undefined
         },
         images: finalImages.map(url => ({ url, isHero: true })),
         tags: formData.additionalInfo.tags,
@@ -632,8 +639,8 @@ const schedules = formData.schedule.map(s => {
           {/* Community Info Banner */}
           <div className="p-3 rounded-lg border-2 border-orange-400/50 bg-orange-50/20 backdrop-blur-sm shadow-sm -mx-3 sm:mx-0">
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>Markets are public - search first to avoid duplicates</li>
-              <li>More details help other vendors find better markets</li>
+<li>Market listings are public - search first to avoid duplicates</li>
+              <li>More details help other vendors</li>
               <li>Admin-Managed - Edits require requests</li>
             </ul>
           </div>
@@ -1042,6 +1049,57 @@ const schedules = formData.schedule.map(s => {
                 */}
               </div>
             </div>
+
+            {/* Application Information */}
+              <div className="grid grid-cols-1 gap-3 -mx-3 sm:mx-0">
+                <div className="space-y-1.5 -mx-3 sm:mx-0">
+                  <Input
+                    value={formData.applicationSettings?.applicationLink || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        applicationSettings: { ...prev.applicationSettings, applicationLink: e.target.value }
+                      }))
+                    }}
+                    placeholder="Application Link"
+                    className="font-semibold placeholder:text-muted-foreground/70"
+                  />
+                </div>
+                
+                <div className="space-y-1.5 -mx-3 sm:mx-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const input = (e.currentTarget.parentElement?.querySelector('input[type="date"]') as HTMLInputElement)
+                      if (input) {
+                        input.focus()
+                        input.showPicker()
+                      }
+                    }}
+                    className="w-full h-10 px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-2 relative z-10"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>
+                      {formData.applicationSettings?.applicationDeadline 
+                        ? new Date(formData.applicationSettings.applicationDeadline + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                        : 'Select deadline'}
+                    </span>
+                  </button>
+                  <Input
+                    type="date"
+                    value={formData.applicationSettings?.applicationDeadline || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        applicationSettings: { ...prev.applicationSettings, applicationDeadline: e.target.value }
+                      }))
+                    }}
+                    min={formatLocalDate(new Date().toISOString())}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ WebkitAppearance: 'none' }}
+                  />
+                </div>
+              </div>
 
             {/* Accessibility Features */}
             <div className="space-y-3">

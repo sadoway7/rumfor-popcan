@@ -95,114 +95,88 @@ export function VendorTrackedMarketsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Redesigned header matching main site */}
+    <div className="min-h-screen bg-background -mt-6">
+      {/* Header */}
       <div className="sticky top-0 z-20 bg-background shadow-sm py-2.5">
-        {/* Main controls row */}
-        <div className="flex items-center gap-2 px-4 bg-background">
-          {/* View toggle - hidden on mobile, visible on larger screens */}
-          <div className="hidden sm:flex rounded shrink-0 h-10">
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'px-3 py-2 transition-colors',
-                viewMode === 'list' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'px-3 py-2 border-l border-border transition-colors',
-                viewMode === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Action buttons - far right, responsive text */}
-          <Link to="/markets" className="shrink-0 hidden sm:block">
-            <Button size="sm" className="h-10 whitespace-nowrap">
-              <MapPin className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Find Markets</span>
-            </Button>
-          </Link>
-          
-          <Link to="/vendor/add-market" className="shrink-0 hidden sm:block">
-            <Button size="sm" className="h-10 whitespace-nowrap">
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Add New Market</span>
-            </Button>
-          </Link>
-        </div>
-
         {/* Status filters row */}
-        <div className="relative flex flex-nowrap items-center gap-2 px-4 bg-background">
-          <span className="text-xs font-medium text-muted-foreground shrink-0 hidden sm:block">{trackedMarkets.length} Markets:</span>
+        <div className="relative flex flex-nowrap items-center gap-2 px-4 bg-background justify-between">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <span className="text-xs font-medium text-muted-foreground shrink-0 hidden sm:block">{trackedMarkets.length} Markets:</span>
 
-          {/* Left arrow indicator */}
-
-          {/* Scrollable filters */}
-          <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              All ({statusCounts.all})
-            </button>
-            <button
-              onClick={() => setStatusFilter('interested')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              {statusCounts.interested} interested
-            </button>
-            <button
-              onClick={() => setStatusFilter('applied')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              {statusCounts.applied} applied
-            </button>
-            <button
-              onClick={() => setStatusFilter('approved')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              {statusCounts.approved} approved
-            </button>
-            <button
-              onClick={() => setStatusFilter('attending')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              {statusCounts.attending} attending
-            </button>
-            <button
-              onClick={() => setStatusFilter('completed')}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
-                statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
-              )}
-            >
-              {statusCounts.completed} done
-            </button>
+            {/* Scrollable filters */}
+            <div className="flex flex-nowrap gap-2">
+              <button
+                onClick={() => setStatusFilter('all')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'all' ? `${STATUS_COLORS.all} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                All ({statusCounts.all})
+              </button>
+              <button
+                onClick={() => setStatusFilter('interested')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'interested' ? `${STATUS_COLORS.interested} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                {statusCounts.interested} interested
+              </button>
+              <button
+                onClick={() => setStatusFilter('applied')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'applied' ? `${STATUS_COLORS.applied} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                {statusCounts.applied} applied
+              </button>
+              <button
+                onClick={() => setStatusFilter('approved')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'approved' ? `${STATUS_COLORS.approved} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                {statusCounts.approved} approved
+              </button>
+              <button
+                onClick={() => setStatusFilter('attending')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'attending' ? `${STATUS_COLORS.attending} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                {statusCounts.attending} attending
+              </button>
+              <button
+                onClick={() => setStatusFilter('completed')}
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap min-h-[32px]',
+                  statusFilter === 'completed' ? `${STATUS_COLORS.completed} text-white shadow` : 'bg-surface text-foreground hover:bg-surface'
+                )}
+              >
+                {statusCounts.completed} done
+              </button>
+            </div>
           </div>
 
-          {/* Right arrow indicator */}
+          {/* Action buttons - right side */}
+          <div className="hidden sm:flex items-center gap-2 shrink-0 ml-4">
+            <Link to="/markets">
+              <Button size="sm" className="h-10 whitespace-nowrap">
+                <MapPin className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Find Markets</span>
+              </Button>
+            </Link>
+            <Link to="/vendor/add-market">
+              <Button size="sm" className="h-10 whitespace-nowrap">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add New Market</span>
+              </Button>
+            </Link>
+          </div>
         </div>
         
         <style>{`
