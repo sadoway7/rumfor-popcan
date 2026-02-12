@@ -158,7 +158,7 @@ const getMarkets = catchAsync(async (req, res, next) => {
     .lean() // KEY: Returns plain JS objects instead of Mongoose documents
     .populate('promoter', 'username firstName lastName')
     .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-    .limit(limit * 1)
+    .limit(limit)
     .skip((page - 1) * limit);
 
   console.log('[DEBUG getMarkets] Found', markets.length, 'markets');
