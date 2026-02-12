@@ -122,8 +122,6 @@ const marketSchema = new mongoose.Schema({
     },
     customRequirements: [String]
   },
-    customRequirements: [String]
-  },
 
   // Images and media
   images: [{
