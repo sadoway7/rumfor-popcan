@@ -157,7 +157,7 @@ export function HomePage() {
     <div className="min-h-screen bg-background">
       {/* Sidebar - Full height, acts as mobile homepage */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-[60] md:inset-y-0 md:left-0 md:right-auto md:w-80 bg-background overflow-y-auto">
+        <div className="fixed inset-0 z-[60] md:hidden bg-background overflow-y-auto">
           <div className="flex flex-col h-full">
             {/* Mobile Landing Page */}
             <div className="md:hidden relative h-full">
@@ -165,7 +165,7 @@ export function HomePage() {
               <div className="sticky top-0 z-50 bg-surface-2 border-b border-surface-3">
                 <div className="flex items-center justify-between px-4 py-3">
                   {/* Logo Icon */}
-                  <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
+                  <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-gray-500/40">
                     <span className="text-accent-foreground font-bold text-xl">
                       R
                     </span>
@@ -189,8 +189,8 @@ export function HomePage() {
               <div className="relative bg-gradient-to-br from-surface-2 to-surface px-5 py-10 border-b border-surface-3">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-3 mb-6">
-                  <div className="w-16 h-16 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-black/40">
-                    <span className="text-accent-foreground font-bold text-3xl">
+                  <div className="w-20 h-20 bg-accent rounded-xl flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-gray-500/40">
+                    <span className="text-accent-foreground font-bold text-5xl">
                       R
                     </span>
                   </div>
@@ -268,131 +268,100 @@ export function HomePage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Desktop Sidebar Header - Logo + Login */}
-            <div className="hidden md:flex flex-col items-center pt-8 pb-4 px-6 border-b border-surface-3">
-              <Link
-                to="/"
-                className="flex flex-col items-center space-y-2 mb-4"
-              >
-                <div
-                  className="relative w-16 h-16 bg-amber-500 flex items-center justify-center"
-                  style={{
-                    clipPath: 'polygon(0 0, 100% 10%, 100% 100%, 10% 100%)',
-                  }}
-                >
-                  <span className="text-white font-bold text-4xl">R</span>
-                </div>
-                <span className="font-bold text-4xl text-foreground tracking-tighter uppercase">
-                  Rumfor
+      {/* Main Content */}
+      <div
+        className={`flex-1 px-6 py-1 space-y-1 ${isSidebarOpen ? 'hidden md:block' : 'block'}`}
+      >
+        {isAuthenticated && <SubHeader />}
+
+        {/* RUMFOR Branding + Hero Section */}
+        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
+          {/* Branding Column */}
+          <div className="hidden md:flex flex-col items-center pt-8">
+            <Link
+              to="/"
+              className="flex flex-col items-center space-y-2 transform -rotate-3"
+             >
+              <div className="w-20 h-20 bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
+                <span className="text-accent-foreground font-bold text-5xl">
+                  R
                 </span>
-              </Link>
-              {!isAuthenticated && (
-                <div className="w-full">
-                  {!showLoginForm ? (
-                    <button
-                      onClick={() => setShowLoginForm(true)}
-                      className="w-full bg-surface-2 border border-surface-3 hover:bg-surface-3 rounded-lg px-4 py-3 transition-colors"
-                    >
-                      <span className="text-foreground font-semibold text-base uppercase tracking-wide">
-                        Login / Register
-                      </span>
-                    </button>
-                  ) : (
-                    <div className="bg-surface-2 border border-surface-3 rounded-xl p-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-bold uppercase text-foreground">
-                          Sign In
-                        </h3>
-                        <button
-                          onClick={() => setShowLoginForm(false)}
-                          className="text-amber-500 font-semibold hover:underline text-sm"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                      <form onSubmit={handleSignIn} className="space-y-2">
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={email}
-                          onChange={e => setEmail(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-surface-3 text-sm"
-                          required
-                        />
-                        <input
-                          type="password"
-                          placeholder="Password"
-                          value={password}
-                          onChange={e => setPassword(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-lg bg-background text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50 border border-surface-3 text-sm"
-                          required
-                        />
-                        {authError && (
-                          <p className="text-sm font-bold text-red-500 text-center">
-                            {authError}
-                          </p>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={authLoading}
-                          className="w-full bg-surface-3 hover:bg-surface-2 border border-surface-3 rounded-lg py-2.5 transition-colors disabled:opacity-50"
-                        >
-                          <span className="text-foreground font-semibold text-sm uppercase tracking-wide">
-                            {authLoading ? 'Loading...' : 'Sign In'}
-                          </span>
-                        </button>
-                      </form>
-                      <p className="text-center text-sm text-muted-foreground space-x-2">
-                        <Link
-                          to="/auth/register"
-                          className="text-amber-500 font-medium hover:underline"
-                        >
-                          Register
-                        </Link>
-                        <span>|</span>
-                        <Link
-                          to="/auth/forgot-password"
-                          className="text-amber-500 font-medium hover:underline"
-                        >
-                          Forgot password?
-                        </Link>
-                      </p>
-                    </div>
-                  )}
+              </div>
+              <span className="font-bold text-4xl text-foreground tracking-tighter uppercase">
+                Rumfor
+              </span>
+            </Link>
+            <div className="mt-8 space-y-3 w-full px-4">
+              <Link to="/markets" className="block">
+                <div className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 text-center transform hover:-translate-y-0.5">
+                  <span className="text-white font-bold text-sm uppercase tracking-wide">
+                    Browse All Markets →
+                  </span>
                 </div>
-              )}
+              </Link>
+              <Link to="/vendor/add-market/vendor" className="block">
+                <div className="w-full py-3 rounded-xl bg-surface-2 border-2 border-surface-3 hover:border-amber-500 hover:bg-surface-3 transition-all text-center">
+                  <span className="text-foreground font-bold text-sm uppercase tracking-wide">
+                    Add a Market +
+                  </span>
+                </div>
+              </Link>
             </div>
+          </div>
 
-            {/* Main Content Area - Desktop Sidebar */}
-            <div className="hidden md:flex flex-col flex-1 pt-6 pb-6 px-6">
-              {/* Quick Actions */}
-              <div className="mb-8">
-                <div className="space-y-3">
-                  <Link to="/markets" className="block">
-                    <div className="w-full py-3 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-colors text-center">
-                      <span className="text-white font-semibold text-base uppercase tracking-wide">
-                        Browse All Markets →
-                      </span>
-                    </div>
-                  </Link>
-                  <Link to="/vendor/add-market/vendor" className="block">
-                    <div className="w-full py-3 px-5 rounded-xl bg-surface-2 border border-surface-3 hover:bg-surface-3 transition-colors text-center">
-                      <span className="text-foreground font-semibold text-base uppercase tracking-wide">
-                        Add a Market +
-                      </span>
-                    </div>
-                  </Link>
+          {/* Hero Banner - Refined & Subtle */}
+          <div className="w-full h-full">
+            <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3 py-2">
+              {/* Lava Lamp Bubbles */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
+                <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl animate-float-2" />
+                <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-amber-500/15 rounded-full blur-xl animate-float-3" />
+                <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-amber-400/25 rounded-full blur-xl animate-float-4" />
+                <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-orange-400/20 rounded-full blur-xl animate-float-5" />
+                <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
+              </div>
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center pt-2 pb-2 px-4 md:px-6">
+                {/* First Column - Main Message */}
+                <div className="flex flex-col">
+                  <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
+                    Find Markets.
+                    <br />
+                    Sell Stuff.
+                    <br />
+                    <span className="text-amber-600">Build Your Empire.</span>
+                  </h1>
+                </div>
+
+                {/* Second Column - YOUR MARKET ORGANIZER */}
+                <div className="flex flex-col items-center md:items-end">
+                  <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
+                    Your Market
+                    <br />
+                    <span className="text-amber-600">Organizer</span>
+                  </h2>
+
+                  <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-end">
+                    <span className="text-sm text-foreground/70">
+                      Save Markets
+                    </span>
+                    <span className="text-surface-3">•</span>
+                    <span className="text-sm text-foreground/70">Track Apps</span>
+                    <span className="text-surface-3">•</span>
+                    <span className="text-sm text-foreground/70">To-Dos</span>
+                    <span className="text-surface-3">•</span>
+                    <span className="text-sm text-foreground/70">Expenses</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Browse by Category */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center">
-                  <span className="w-2 h-2 bg-amber-500 mr-2 transform rotate-45"></span>
-                  Explore Categories
-                </h3>
-                <div className="grid grid-cols-3 gap-3">
+              {/* Explore Categories */}
+              <div className="relative z-10 mt-6 pt-6 border-t border-surface-3/50 px-4 pb-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
                     const categorySlug = cat.name
@@ -404,12 +373,12 @@ export function HomePage() {
                         key={cat.name}
                         to={`/markets?category=${categorySlug}`}
                       >
-                        <div className="w-full aspect-square flex flex-col items-center justify-center p-3 rounded-xl bg-surface hover:bg-surface-2 transition-colors group border border-surface-3">
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
                           <Icon
-                            className="h-7 w-7 text-amber-500 group-hover:scale-110 transition-transform mb-2"
-                            strokeWidth={2.5}
+                            className="h-4 w-4 text-amber-500 shrink-0"
+                            strokeWidth={2}
                           />
-                          <span className="font-semibold text-foreground text-xs text-center leading-tight uppercase tracking-tight">
+                          <span className="font-medium text-foreground text-xs truncate">
                             {cat.name}
                           </span>
                         </div>
@@ -421,65 +390,10 @@ export function HomePage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Main Content */}
-      <div
-        className={`flex-1 p-6 space-y-6 ${isSidebarOpen ? 'hidden md:block md:ml-80' : 'block'}`}
-      >
-        {isAuthenticated && <SubHeader />}
-
-        {/* Hero Banner - Refined & Subtle */}
-        <div className="w-full">
-          <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3 p-6 md:p-8">
-            {/* Lava Lamp Bubbles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
-              <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl animate-float-2" />
-              <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-amber-500/15 rounded-full blur-xl animate-float-3" />
-              <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-amber-400/25 rounded-full blur-xl animate-float-4" />
-              <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-orange-400/20 rounded-full blur-xl animate-float-5" />
-              <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
-            </div>
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
-              {/* First Column - Main Message */}
-              <div className="flex flex-col">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4 leading-tight">
-                  Find Markets.
-                  <br />
-                  Sell Stuff.
-                  <br />
-                  <span className="text-amber-600">Build Your Empire.</span>
-                </h1>
-              </div>
-
-              {/* Second Column - YOUR MARKET ORGANIZER */}
-              <div className="flex flex-col items-center md:items-end">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-center md:text-right">
-                  Your Market
-                  <br />
-                  <span className="text-amber-600">Organizer</span>
-                </h2>
-
-                <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-end">
-                  <span className="text-sm text-foreground/70">
-                    Save Markets
-                  </span>
-                  <span className="text-surface-3">•</span>
-                  <span className="text-sm text-foreground/70">Track Apps</span>
-                  <span className="text-surface-3">•</span>
-                  <span className="text-sm text-foreground/70">To-Dos</span>
-                  <span className="text-surface-3">•</span>
-                  <span className="text-sm text-foreground/70">Expenses</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Recently Added */}
         <section>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 pt-6 border-t border-surface-3/50">
             <h2 className="text-2xl font-bold text-foreground">
               Recently Added
             </h2>
@@ -502,8 +416,8 @@ export function HomePage() {
         </section>
 
         {/* Trending Vendors */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
+        <section className="mt-10 mb-10">
+          <div className="flex items-center justify-between mb-6 pt-6">
             <h2 className="text-2xl font-bold text-foreground">
               Trending Vendors
             </h2>
@@ -514,7 +428,7 @@ export function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 p-1">
             {vendorsLoading ? (
               // Skeleton loading state
               Array.from({ length: 6 }).map((_, i) => (
@@ -531,6 +445,8 @@ export function HomePage() {
             )}
           </div>
         </section>
+
+        <div className="h-10"></div>
       </div>
     </div>
   );

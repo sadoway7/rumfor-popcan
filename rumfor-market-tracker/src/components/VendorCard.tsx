@@ -73,8 +73,8 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   // Compact variant (MarketDetailPage)
   if (variant === 'compact') {
     const card = (
-      <div className={cn('bg-surface border border-surface-3 rounded-lg overflow-hidden', className)}>
-        <div className="flex items-start">
+      <div className={cn('bg-surface border border-surface-3 rounded-xl overflow-hidden', className)}>
+      <div className="flex items-start overflow-visible">
           {profileImage ? (
             <img
               src={profileImage}
@@ -117,13 +117,13 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   }
 
   // Default variant (Homepage, Vendor Listing)
-  const card = (
-    <div
-      className={cn(
-        'bg-surface hover:shadow-md transition-all duration-200 border border-surface-3 relative',
-        className
-      )}
-    >
+    const card = (
+      <div
+        className={cn(
+          'bg-surface hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-xl overflow-visible',
+          className
+        )}
+      >
       {showLink && (
         <Link
           to={`/vendors/${vendorId}`}
