@@ -12,29 +12,24 @@ import {
   useSidebarStore,
 } from '@/features/theme/themeStore';
 import { Button } from '@/components/ui';
+import { UserDropdown } from '@/components/UserDropdown';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  LogOut,
   Search,
-  User,
   MapPin,
   Plus,
-  Settings,
   Sun,
   Moon,
   Navigation,
   Menu,
-  SlidersHorizontal,
   LayoutDashboard,
   Store,
-  Bookmark,
   Users,
 } from 'lucide-react';
 
@@ -131,17 +126,6 @@ export function Header() {
 
           {/* Search Bar with Location - Center */}
           <div className="hidden md:flex justify-center items-center px-4 md:px-8 gap-3">
-            {/* Location Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocationModalOpen(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
-              title="Set location"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
-            
             {/* Search Bar */}
             <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-lg">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -153,7 +137,7 @@ export function Header() {
                   setSearchQuery(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-[11px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                className={`w-full pl-10 pr-10 py-[11px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                     : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
@@ -161,13 +145,11 @@ export function Header() {
               />
               {isMarketsPage && (
                 <button
-                  onClick={() =>
-                    useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)
-                  }
+                  onClick={() => setLocationModalOpen(true)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                  aria-label="Toggle advanced search"
+                  title="Set location"
                 >
-                  <SlidersHorizontal className="h-4 w-4" />
+                  <MapPin className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -187,21 +169,10 @@ export function Header() {
             </div>
           </div>
           
-          {/* Mobile Search Bar - Only Location & Search */}
+          {/* Mobile Search Bar */}
           <div className="md:hidden flex-1 flex justify-center items-center px-1 gap-1 ml-1">
-            {/* Location Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocationModalOpen(true)}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300 shrink-0"
-              title="Set location"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
-            
             {/* Search Bar */}
-            <div className="relative w-full max-w-[calc(100%-60px)]">
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
                 type="text"
@@ -211,7 +182,7 @@ export function Header() {
                   setSearchQuery(e.target.value);
                   handleSearch(e.target.value);
                 }}
-                className={`w-full pl-10 ${isMarketsPage ? 'pr-10' : 'pr-4'} py-[10px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                className={`w-full pl-10 pr-10 py-[10px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                     : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
@@ -219,13 +190,11 @@ export function Header() {
               />
               {isMarketsPage && (
                 <button
-                  onClick={() =>
-                    useSidebarStore.getState().setSidebarOpen(!isSidebarOpen)
-                  }
+                  onClick={() => setLocationModalOpen(true)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
-                  aria-label="Toggle advanced search"
+                  title="Set location"
                 >
-                  <SlidersHorizontal className="h-4 w-4" />
+                  <MapPin className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -251,13 +220,12 @@ export function Header() {
 
             {isAuthenticated ? (
               <>
-                {/* Dashboard Button - Promoters and Admins Only */}
+{/* Dashboard Button - Promoters and Admins Only */}
                 {user?.role !== 'vendor' && (
                   <Link to={`/${user?.role}/dashboard`}>
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200"
+                      className="bg-white text-black hover:bg-gray-100 transition-colors duration-200 rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40"
                     >
                       <LayoutDashboard className="h-4 w-4 mr-2" />
                       Dashboard
@@ -265,12 +233,12 @@ export function Header() {
                   </Link>
                 )}
 
-                {/* Primary Action Based on Role */}
+{/* Primary Action Based on Role */}
                 {user?.role === 'promoter' && (
                   <Link to="/promoter/markets/create">
                     <Button
                       size="sm"
-                      className="bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200"
+                      className="bg-white text-black hover:bg-gray-100 transition-colors duration-200 rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       List Market
@@ -281,9 +249,8 @@ export function Header() {
                 {user?.role === 'vendor' && (
                   <Link to="/vendor/tracked-markets">
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="bg-surface border-surface-3 hover:bg-surface-2 transition-colors duration-200"
+                      className="bg-white text-black hover:bg-gray-100 transition-colors duration-200 rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40"
                     >
                       <Store className="h-4 w-4 mr-2" />
                       My Markets
@@ -291,93 +258,11 @@ export function Header() {
                   </Link>
                 )}
 
-                {/* User Profile Menu - Radix UI Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-lg transition-colors duration-200">
-                      <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
-                        <User className="h-5 w-5 text-foreground" />
-                      </div>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    className="w-56 bg-surface border border-surface-3 rounded-lg shadow-lg"
-                    align="end"
-                  >
-                    <DropdownMenuLabel className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
-                        <User className="h-5 w-5 text-foreground" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">
-                          {user?.firstName}
-                        </div>
-                        <div className="text-xs text-muted-foreground capitalize">
-                          {user?.role}
-                        </div>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
-                        className="flex items-center"
-                      >
-                        <User className="h-5 w-5 mr-3 text-muted-foreground" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/settings" className="flex items-center">
-                        <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {/* Dashboard link based on role */}
-                    {user?.role === 'vendor' && (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/vendor/dashboard"
-                          className="flex items-center"
-                        >
-                          <MapPin className="h-5 w-5 mr-3 text-muted-foreground" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {user?.role === 'promoter' && (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/promoter/dashboard"
-                          className="flex items-center"
-                        >
-                          <MapPin className="h-5 w-5 mr-3 text-muted-foreground" />
-                          Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {user?.role === 'admin' && (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/admin/dashboard"
-                          className="flex items-center"
-                        >
-                          <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
-                          Admin Panel
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={logout}
-                      className="flex items-center text-foreground focus:text-foreground"
-                    >
-                      <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+{/* User Profile Menu */}
+                <UserDropdown 
+                  avatarSize="md" 
+                  onSetLocation={() => setLocationModalOpen(true)}
+                />
               </>
             ) : (
               <>
@@ -402,127 +287,13 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Header - Logo, Search, User Avatar or Hamburger */}
+{/* Mobile Header - Logo, Search, User Avatar or Hamburger */}
           <div className="md:hidden flex items-center space-x-2">
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="flex items-center justify-center cursor-pointer hover:bg-surface-2 rounded-full transition-colors duration-200"
-                    aria-label="Open menu"
-                  >
-                    <div className="w-10 h-10 bg-amber-500 flex items-center justify-center rounded-full shadow-[1px_1px_0px_0px] shadow-black/20">
-                      <span className="text-white font-bold text-sm">
-                        {user?.firstName?.charAt(0) ||
-                          user?.lastName?.charAt(0) ||
-                          'U'}
-                      </span>
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56 bg-surface border border-surface-3 rounded-lg shadow-lg"
-                  align="end"
-                >
-                  <DropdownMenuLabel className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
-                      <User className="h-5 w-5 text-foreground" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-foreground">
-                        {user?.firstName}
-                      </div>
-                      <div className="text-xs text-muted-foreground capitalize">
-                        {user?.role}
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setLocationModalOpen(true)}
-                    className="flex items-center"
-                  >
-                    <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
-                    Set Location
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={toggleTheme}
-                    className="flex items-center"
-                  >
-                    {theme === 'light' ? (
-                      <Moon className="h-5 w-5 mr-3 text-muted-foreground" />
-                    ) : (
-                      <Sun className="h-5 w-5 mr-3 text-muted-foreground" />
-                    )}
-                    {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to={`/${user?.role}/dashboard`}
-                      className="flex items-center"
-                    >
-                      <MapPin className="h-5 w-5 mr-3 text-amber-500" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  {user?.role === 'promoter' && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/promoter/markets/create"
-                        className="flex items-center"
-                      >
-                        <Plus className="h-5 w-5 mr-3 text-amber-500" />
-                        List Market
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {user?.role === 'vendor' && (
-                    <DropdownMenuItem asChild>
-                      <Link
-                        to="/vendor/tracked-markets"
-                        className="flex items-center"
-                      >
-                        <MapPin className="h-5 w-5 mr-3 text-amber-500" />
-                        My Markets
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/vendors"
-                      className="flex items-center"
-                    >
-                      <Users className="h-5 w-5 mr-3 text-muted-foreground" />
-                      Browse Vendors
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
-                      className="flex items-center"
-                    >
-                      <User className="h-5 w-5 mr-3 text-muted-foreground" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings" className="flex items-center">
-                      <Settings className="h-5 w-5 mr-3 text-muted-foreground" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="flex items-center text-foreground focus:text-foreground"
-                  >
-                    <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <UserDropdown 
+                avatarSize="sm" 
+                onSetLocation={() => setLocationModalOpen(true)} 
+              />
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

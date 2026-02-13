@@ -13,7 +13,7 @@ import type {
   MarketFilters as MarketFilterType,
 } from '@/types';
 
-import { Layers, RotateCcw } from 'lucide-react';
+import { Layers, RotateCcw, Settings, X, SlidersHorizontal } from 'lucide-react';
 
 export const MarketSearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -283,63 +283,37 @@ export const MarketSearchPage: React.FC = () => {
       <>
         <div className="flex flex-col lg:flex-row">
           {/* Sidebar - Slides in from left on desktop */}
-          <aside
+<aside
             className={`
-              ${isSidebarOpen ? 'block' : 'hidden'}
-              w-full lg:w-80 flex-shrink-0 bg-background transition-all duration-300
+              flex-shrink-0 bg-background transition-all duration-300 ease-in-out
+              ${isSidebarOpen ? 'w-full lg:w-80 max-h-[2000px] lg:max-h-full' : 'w-0 max-h-0'}
+              overflow-hidden
             `}
           >
-            <div className="p-4 sm:p-6 w-full space-y-5 overflow-y-auto h-full">
-              {/* Header - Active Count */}
+            <div className="p-4 sm:p-6 w-full min-w-0 lg:min-w-[320px] space-y-5 overflow-y-auto h-full lg:h-auto">
+              {/* Header Row - Title & Close */}
               <div className="flex items-center justify-between">
-                {getActiveFilterCount() > 0 && (
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {getActiveFilterCount()} active
-                  </span>
-                )}
-              </div>
-
-              {/* Date Range */}
-              <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">
-                  Date Range
-                </div>
-                <DatePicker
-                  value={dateRange}
-                  onChange={newValue => {
-                    setDateRange(newValue);
-                    handleFiltersChange({
-                      ...filters,
-                      dateRange: { start: newValue.from, end: newValue.to },
-                    });
-                  }}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Show Past Markets Toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Show past markets</span>
+                <div className="text-lg font-semibold">Filters</div>
                 <button
-                  onClick={() =>
-                    handleFiltersChange({
-                      ...filters,
-                      showPastMarkets: !filters.showPastMarkets,
-                    })
-                  }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    filters.showPastMarkets ? 'bg-amber-500' : 'bg-surface-2'
-                  }`}
+                  onClick={toggleSidebar}
+                  className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2"
                 >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      filters.showPastMarkets
-                        ? 'translate-x-6'
-                        : 'translate-x-1'
-                    }`}
-                  />
+                  Hide
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Clear Filters Button */}
+              {getActiveFilterCount() > 0 && (
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleClearFilters}
+                    className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                  >
+                    Clear filters ({getActiveFilterCount()})
+                  </button>
+                </div>
+              )}
 
               {/* Location Filter */}
               <div>
@@ -386,6 +360,48 @@ export const MarketSearchPage: React.FC = () => {
                   placeholder="City"
                   className="w-full"
                 />
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">
+                  Date Range
+                </div>
+                <DatePicker
+                  value={dateRange}
+                  onChange={newValue => {
+                    setDateRange(newValue);
+                    handleFiltersChange({
+                      ...filters,
+                      dateRange: { start: newValue.from, end: newValue.to },
+                    });
+                  }}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Show Past Markets Toggle */}
+              <div className="flex items-center justify-between px-4 py-2 rounded-full bg-surface shadow shadow-black/20">
+                <span className="text-sm font-medium">Show past markets</span>
+                <button
+                  onClick={() =>
+                    handleFiltersChange({
+                      ...filters,
+                      showPastMarkets: !filters.showPastMarkets,
+                    })
+                  }
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    filters.showPastMarkets ? 'bg-amber-500' : 'bg-surface-2'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      filters.showPastMarkets
+                        ? 'translate-x-6'
+                        : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
 
               {/* Market Categories */}
@@ -471,10 +487,14 @@ export const MarketSearchPage: React.FC = () => {
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex justify-center">
                 <div className="flex items-center gap-2">
-                  <div
+                  <button
                     onClick={toggleSidebar}
-                    className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                    className="w-9 h-9 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center justify-center"
+                    title="Filters"
                   >
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                  <div className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground shadow shadow-black/20">
                     {isSearching
                       ? 'Searching...'
                       : `${total || markets.length} markets found`}
@@ -595,6 +615,9 @@ export const MarketSearchPage: React.FC = () => {
               )}
           </main>
         </div>
+        
+        {/* Footer spacer for bottom nav */}
+        <div className="h-[130px]" />
       </>
     </div>
   );
