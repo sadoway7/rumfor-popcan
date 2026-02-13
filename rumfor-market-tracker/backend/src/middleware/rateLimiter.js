@@ -174,11 +174,11 @@ const authRateLimiter = rateLimit({
 
 // Brute force protection for password reset
 const passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 reset attempts per hour per IP
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 5 : 20, // 5 prod, 20 dev
   message: {
     success: false,
-    message: 'Too many password reset attempts. Please try again later.'
+    message: 'Too many password reset attempts. Please try again in 15 minutes.'
   },
   standardHeaders: true,
   legacyHeaders: false

@@ -2,6 +2,7 @@ const { catchAsync, AppError, sendSuccess, sendError } = require('../middleware/
 const UserMarketTracking = require('../models/UserMarketTracking')
 const Market = require('../models/Market')
 const Notification = require('../models/Notification')
+const User = require('../models/User')
 const { validateApplicationCreation, validateMongoId, validatePagination } = require('../middleware/validation')
 const { canMarketAcceptApplications, canVendorApplyToMarket, shouldAutoApproveApplication } = require('../utils/marketLogic')
 

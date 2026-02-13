@@ -59,12 +59,18 @@ const register = catchAsync(async (req, res, next) => {
     throw error // Re-throw other errors
   }
 
-  // Send email verification
-  try {
-    await sendEmailVerification(user.email, emailVerificationToken)
-  } catch (emailError) {
-    console.error('Failed to send verification email:', emailError)
-  }
+  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${emailVerificationToken}`
+  
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'email-verification',
+    data: {
+      firstName: user.firstName || 'User',
+      verificationUrl,
+      expiresIn: '24 hours'
+    }
+  })
 
   // Generate tokens
   const tokens = generateTokens(user._id, user.tokenVersion)
@@ -343,6 +349,17 @@ const verifyEmail = catchAsync(async (req, res, next) => {
   user.emailVerificationExpires = undefined
   await user.save()
 
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'welcome',
+    data: {
+      firstName: user.firstName || 'User',
+      lastName: user.lastName || '',
+      loginUrl: `${process.env.FRONTEND_URL}/login`
+    }
+  })
+
   sendSuccess(res, null, 'Email verified successfully')
 })
 
@@ -360,13 +377,18 @@ const resendVerification = catchAsync(async (req, res, next) => {
   user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000
   await user.save({ validateBeforeSave: false })
 
-  // Send email verification
-  try {
-    await sendEmailVerification(user.email, verificationToken)
-  } catch (emailError) {
-    console.error('Failed to send email verification:', emailError)
-    // Don't fail the request if email fails, but log it
-  }
+  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`
+  
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'email-verification',
+    data: {
+      firstName: user.firstName || 'User',
+      verificationUrl,
+      expiresIn: '24 hours'
+    }
+  })
 
   sendSuccess(res, null, 'Verification email sent')
 })
