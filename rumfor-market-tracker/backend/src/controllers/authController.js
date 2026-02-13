@@ -4,7 +4,7 @@ const User = require('../models/User')
 const { generateTokens, addAccessTokenToBlacklist, addRefreshTokenToBlacklist, clearUserCache } = require('../middleware/auth')
 const { validateUserRegistration, validateUserLogin, validateUserUpdate } = require('../middleware/validation')
 const twoFactorService = require('../services/twoFactorService')
-const { sendPasswordResetEmail, sendEmailVerification } = require('../services/emailService')
+const emailSender = require('../services/emailSender')
 
 // Register new user
 const register = catchAsync(async (req, res, next) => {
@@ -257,13 +257,18 @@ const forgotPassword = catchAsync(async (req, res, next) => {
   // Log password reset request for security audit
   console.log(`[PASSWORD RESET REQUEST] User ${user.email} requested password reset at ${new Date().toISOString()}`)
 
-  // Send password reset email
-  try {
-    await sendPasswordResetEmail(user.email, resetToken)
-  } catch (emailError) {
-    console.error('Failed to send password reset email:', emailError)
-    // Don't fail the request if email fails, but log it
-  }
+  const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`
+  
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'password-reset',
+    data: {
+      firstName: user.firstName || 'User',
+      resetUrl,
+      expiresIn: '10 minutes'
+    }
+  })
 
   sendSuccess(res, null, 'Password reset link sent to your email')
 })

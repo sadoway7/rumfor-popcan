@@ -596,4 +596,8 @@ const seedEmailTemplates = async () => {
   }
 }
 
-seedEmailTemplates()
+module.exports = { defaultTemplates, seedEmailTemplates }
+
+if (require.main === module) {
+  seedEmailTemplates()
+}

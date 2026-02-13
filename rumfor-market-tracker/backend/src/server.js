@@ -28,6 +28,27 @@ if (missingEnvVars.length > 0) {
 }
 const connectDB = require('../config/database')
 
+const EmailTemplate = require('./models/EmailTemplate')
+const { defaultTemplates } = require('../seed-email-templates')
+
+const seedEmailTemplates = async () => {
+  try {
+    let seeded = 0
+    for (const template of defaultTemplates) {
+      const existing = await EmailTemplate.findOne({ slug: template.slug })
+      if (!existing) {
+        await EmailTemplate.create(template)
+        seeded++
+      }
+    }
+    if (seeded > 0) {
+      console.log(`📧 Seeded ${seeded} email templates`)
+    }
+  } catch (error) {
+    console.error('Failed to seed email templates:', error.message)
+  }
+}
+
 // Import middleware
 const { extractVersionFromPath, addVersionHeaders, handleDeprecation } = require('./middleware/versioning')
 
@@ -336,6 +357,8 @@ const PORT = process.env.PORT || 3001
 const startServer = async () => {
   try {
     await connectDB()
+    
+    await seedEmailTemplates()
     
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`)
