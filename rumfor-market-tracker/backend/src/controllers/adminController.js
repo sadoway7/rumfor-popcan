@@ -279,6 +279,34 @@ const updateUser = catchAsync(async (req, res, next) => {
   } }, 'User updated successfully')
 })
 
+// Delete user (for re-registration scenarios)
+const deleteUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params
+  
+  // Prevent admin from deleting themselves (req.user.userId is the correct property)
+  const currentUserId = req.user?.userId?.toString()
+  if (currentUserId && id === currentUserId) {
+    return sendError(res, 'Cannot delete your own account', 400)
+  }
+  
+  const user = await User.findById(id)
+  if (!user) {
+    return sendError(res, 'User not found', 404)
+  }
+  
+  // Delete user's applications/tracking records
+  await UserMarketTracking.deleteMany({ user: id })
+  
+  // Delete user's notifications
+  const Notification = require('../models/Notification')
+  await Notification.deleteMany({ recipient: id })
+  
+  // Delete the user
+  await User.findByIdAndDelete(id)
+  
+  sendSuccess(res, null, 'User deleted successfully')
+})
+
 // Get single user with full profile
 const getUser = catchAsync(async (req, res, next) => {
   const { id } = req.params
@@ -941,6 +969,7 @@ module.exports = {
   getAdminStats,
   getUsers,
   updateUser,
+  deleteUser,
   getUser,
   getUserActivity,
   getMarkets,

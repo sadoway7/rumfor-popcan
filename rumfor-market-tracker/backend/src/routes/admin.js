@@ -6,6 +6,7 @@ const {
   getAdminStats,
   getUsers,
   updateUser,
+  deleteUser,
   getUser,
   getUserActivity,
   getMarkets,
@@ -32,6 +33,7 @@ router.get('/stats', getAdminStats)
 router.get('/users', validatePagination, getUsers)
 router.get('/users/:id', validateMongoId('id'), getUser)
 router.patch('/users/:id', validateMongoId('id'), updateUser)
+router.delete('/users/:id', validateMongoId('id'), deleteUser)
 router.get('/users/:id/activity', validateMongoId('id'), getUserActivity)
 
 // Market management

@@ -91,6 +91,7 @@ export function useAdminUsers() {
     userFilters,
     fetchUsers,
     updateUserRole,
+    deleteUser,
     suspendUser,
     verifyUser,
     bulkUpdateUsers,
@@ -107,6 +108,13 @@ export function useAdminUsers() {
   const handleRoleChange = useCallback(async (userId: string, role: any) => {
     await updateUserRole(userId, role)
   }, [updateUserRole])
+
+  const handleDeleteUser = useCallback(async (userId: string) => {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return await deleteUser(userId)
+    }
+    return { success: false }
+  }, [deleteUser])
 
   const handleSuspendUser = useCallback(async (userId: string, suspended: boolean) => {
     await suspendUser(userId, suspended)
@@ -137,6 +145,7 @@ export function useAdminUsers() {
     userFilters,
     refreshUsers,
     handleRoleChange,
+    handleDeleteUser,
     handleSuspendUser,
     handleVerifyUser,
     handleBulkUpdate,

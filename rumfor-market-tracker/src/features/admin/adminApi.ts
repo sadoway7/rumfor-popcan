@@ -378,6 +378,23 @@ export const adminApi = {
     }
   },
 
+  async deleteUser(userId: string): Promise<ApiResponse<null>> {
+    if (isMockMode) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const index = mockUsers.findIndex(u => u.id === userId)
+          if (index > -1) {
+            mockUsers.splice(index, 1)
+          }
+          resolve({ success: true, data: null })
+        }, 300)
+      })
+    } else {
+      const response = await httpClient.delete<ApiResponse<null>>(`/admin/users/${userId}`)
+      return response
+    }
+  },
+
   async suspendUser(userId: string, isActive: boolean): Promise<ApiResponse<User>> {
     if (isMockMode) {
       return new Promise((resolve) => {

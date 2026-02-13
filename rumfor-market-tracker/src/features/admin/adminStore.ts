@@ -90,6 +90,7 @@ interface AdminStore extends AdminStoreState {
   // User management methods
   fetchUsers: (filters?: AdminFilters['userFilters']) => Promise<void>
   updateUserRole: (userId: string, role: any) => Promise<void>
+  deleteUser: (userId: string) => Promise<any>
   suspendUser: (userId: string, isActive: boolean) => Promise<void>
   verifyUser: (userId: string, verified: boolean) => Promise<void>
   bulkUpdateUsers: (userIds: string[], operation: 'role' | 'suspend' | 'verify', value: any) => Promise<void>
@@ -247,6 +248,17 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
       )
       set({ users: updatedUsers })
     }
+  },
+
+  deleteUser: async (userId) => {
+    const response = await adminApi.deleteUser(userId)
+    if (response.success) {
+      // Remove the user from the list
+      const { users } = get()
+      const updatedUsers = users.filter(user => user.id !== userId)
+      set({ users: updatedUsers })
+    }
+    return response
   },
 
   suspendUser: async (userId, isActive) => {
