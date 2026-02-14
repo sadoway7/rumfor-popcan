@@ -68,6 +68,8 @@ export const VendorCard: React.FC<VendorCardProps> = ({
     ? (vendor as VendorMarketDisplay).profileImage
     : vendor.profileImage
 
+  console.log('[VendorCard] profileImage:', profileImage, 'vendorId:', vendorId)
+
   const initials = getInitials(firstName, lastName)
   const gradientClass = color || `bg-gradient-to-br ${getGradientForVendor(vendorId)}`
 

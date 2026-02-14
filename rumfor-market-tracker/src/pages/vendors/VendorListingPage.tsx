@@ -19,6 +19,14 @@ const PRODUCT_CATEGORIES = [
   'plants',
   'honey',
   'preserves',
+  'dairy',
+  'meat',
+  'seafood',
+  'soap',
+  'candles',
+  'pottery',
+  'woodwork',
+  'textiles',
 ]
 
 export const VendorListingPage: React.FC = () => {
@@ -61,7 +69,7 @@ export const VendorListingPage: React.FC = () => {
           placeholder="Search vendors by name or specialty..."
           value={searchTerm}
           onChange={handleSearchChange}
-          className="w-full pl-12 pr-4 py-3 text-base bg-surface border border-surface-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          className="w-full pl-12 pr-4 py-3 text-base bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm shadow-black/15"
         />
       </div>
 

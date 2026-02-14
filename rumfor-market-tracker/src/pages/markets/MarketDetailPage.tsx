@@ -193,10 +193,20 @@ export const MarketDetailPage: React.FC = () => {
     return parts.length > 0 ? parts.join(', ') : 'Address not available'
   }
 
-  const filteredVendors = marketVendors.filter(vendor =>
-    `${vendor.user.firstName} ${vendor.user.lastName}`.toLowerCase().includes(vendorSearchTerm.toLowerCase()) ||
-    vendor.user.username.toLowerCase().includes(vendorSearchTerm.toLowerCase())
-  )
+  const filteredVendors = (marketVendors || []).filter((vendor: any) => {
+    const searchTerm = vendorSearchTerm.toLowerCase()
+    const fullName = `${vendor.user?.firstName || ''} ${vendor.user?.lastName || ''}`.toLowerCase()
+    const name = (vendor.name || '').toLowerCase()
+    const description = (vendor.description || '').toLowerCase()
+    const blurb = (vendor.blurb || '').toLowerCase()
+    const username = (vendor.user?.username || '').toLowerCase()
+    
+    return fullName.includes(searchTerm) ||
+      name.includes(searchTerm) ||
+      description.includes(searchTerm) ||
+      blurb.includes(searchTerm) ||
+      username.includes(searchTerm)
+  })
 
   const scheduleDates = Array.isArray(market.schedule) ? market.schedule : []
 
@@ -541,23 +551,21 @@ variant="outline"
               icon: <Users className="w-4 h-4" />,
               content: (
                 <div className="space-y-4 pb-4 pt-4 px-4 pb-[100px]">
-                  {/* Vendors Header */}
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-semibold">
+                  {/* Vendors Header + Search */}
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="font-semibold whitespace-nowrap">
                       {filteredVendors.length} Vendors Attending
                     </h2>
-                  </div>
-
-                  {/* Search Input */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <input
-                      type="text"
-                      placeholder="Search vendors..."
-                      value={vendorSearchTerm}
-                      onChange={(e) => setVendorSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 text-sm bg-muted/50 rounded-lg focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
+                    <div className="relative w-48">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <input
+                        type="text"
+                        placeholder="Filter vendors..."
+                        value={vendorSearchTerm}
+                        onChange={(e) => setVendorSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm shadow-black/15"
+                      />
+                    </div>
                   </div>
 
                   {/* Vendor List */}

@@ -66,11 +66,15 @@ export const useUpdateVendorProfileMutation = () => {
     mutationFn: ({ id, data }: { id: string; data: VendorProfileUpdateData }) =>
       vendorsApi.updateVendorProfile(id, data),
     onSuccess: (_result, variables) => {
-      // Invalidate both the vendor profile and the vendor list
+      // Invalidate and refetch to ensure fresh data
       queryClient.invalidateQueries({ queryKey: VENDORS_KEYS.profile(variables.id) })
       queryClient.invalidateQueries({ queryKey: VENDORS_KEYS.lists() })
       // Also invalidate market vendors since vendor card data may have changed
       queryClient.invalidateQueries({ queryKey: ['market-vendors'] })
+      // Force refetch immediately
+      queryClient.refetchQueries({ queryKey: VENDORS_KEYS.profile(variables.id) })
+      queryClient.refetchQueries({ queryKey: VENDORS_KEYS.lists() })
+      queryClient.refetchQueries({ queryKey: ['market-vendors'] })
     },
   })
 }
