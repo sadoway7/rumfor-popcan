@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   DropdownMenu,
@@ -36,9 +36,10 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
 }) => {
   const { user, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
+  const [open, setOpen] = useState(false)
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity duration-200"
@@ -75,7 +76,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             <Link
               to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? `/vendors/${user?.id}` : '/profile'}
               className="flex items-center flex-1"
-              onClick={(e) => e.stopPropagation()}
+              onClick={() => setOpen(false)}
             >
               <User className="h-5 w-5 md:h-5 md:w-5 mr-3 text-muted-foreground" />
               <span className="text-base md:text-sm">View Profile</span>
@@ -83,7 +84,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             <Link
               to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile/edit'}
               className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-surface-3 transition-colors"
-              onClick={(e) => e.stopPropagation()}
+              onClick={() => setOpen(false)}
             >
               <Pencil className="h-4 w-4 text-muted-foreground" />
             </Link>
@@ -139,14 +140,20 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={onSetLocation}
+          onClick={() => {
+            setOpen(false)
+            onSetLocation()
+          }}
           className="flex items-center py-3 md:py-2"
         >
           <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
           <span className="text-base md:text-sm">Set Location</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={toggleTheme}
+          onClick={() => {
+            setOpen(false)
+            toggleTheme()
+          }}
           className="flex items-center py-3 md:py-2"
         >
           {theme === 'light' ? (
@@ -158,7 +165,10 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={logout}
+          onClick={() => {
+            setOpen(false)
+            logout()
+          }}
           className="flex items-center py-3 md:py-2 text-foreground focus:text-foreground"
         >
           <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />

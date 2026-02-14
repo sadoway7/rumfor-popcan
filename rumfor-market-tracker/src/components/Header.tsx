@@ -31,8 +31,8 @@ import {
   LayoutDashboard,
   Store,
   Users,
-  ShoppingBag,
 } from 'lucide-react';
+import { useDebouncedCallback } from '@/utils/debounce';
 
 export function Header() {
   const navigate = useNavigate();
@@ -58,10 +58,17 @@ export function Header() {
     return 'Search markets...';
   };
 
-  // Contextual search action based on current route
-  const handleSearch = (query: string) => {
+  // Perform the actual search navigation
+  const performSearch = (query: string) => {
     if (location.pathname === '/vendor/tracked-markets') {
-      // Update URL params for vendor markets page
+      const params = new URLSearchParams(searchParams);
+      if (query.trim()) {
+        params.set('search', query.trim());
+      } else {
+        params.delete('search');
+      }
+      navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    } else if (location.pathname === '/markets') {
       const params = new URLSearchParams(searchParams);
       if (query.trim()) {
         params.set('search', query.trim());
@@ -70,21 +77,29 @@ export function Header() {
       }
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
     } else {
-      // Handle markets page search while preserving other filters
-      if (location.pathname === '/markets') {
-        const params = new URLSearchParams(searchParams);
-        if (query.trim()) {
-          params.set('search', query.trim());
-        } else {
-          params.delete('search');
-        }
-        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-      } else {
-        // Navigate to markets search page
-        if (query.trim()) {
-          navigate(`/markets?search=${encodeURIComponent(query.trim())}`);
-        }
+      if (query.trim()) {
+        navigate(`/markets?search=${encodeURIComponent(query.trim())}`);
       }
+    }
+  };
+
+  // Debounced search (300ms delay)
+  const { debouncedCallback: debouncedSearch, flush: flushSearch } = useDebouncedCallback(
+    performSearch,
+    300
+  );
+
+  // Handle input change - update state immediately, debounce the search
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    debouncedSearch(query);
+  };
+
+  // Handle Enter key - flush debounce and search immediately
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      flushSearch();
+      performSearch(searchQuery);
     }
   };
 
@@ -142,10 +157,8 @@ export function Header() {
                 type="text"
                 placeholder={getSearchPlaceholder()}
                 value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
-                  handleSearch(e.target.value);
-                }}
+                onChange={e => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className={`w-full pl-10 pr-10 py-[11px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
@@ -197,10 +210,8 @@ export function Header() {
                 type="text"
                 placeholder={getSearchPlaceholder()}
                 value={searchQuery}
-                onChange={e => {
-                  setSearchQuery(e.target.value);
-                  handleSearch(e.target.value);
-                }}
+                onChange={e => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className={`w-full pl-10 pr-10 py-[10px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'

@@ -37,15 +37,14 @@ export const VendorProfilePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto py-8">
       {/* Profile Header */}
-      <div className={`border-0 sm:border border-surface-3 rounded-none sm:rounded-xl overflow-hidden mb-8 flex flex-col sm:flex-row h-64 sm:max-h-[320px] ${vendor.cardColor || 'bg-surface'}`}>
-        {/* Avatar - 50% width, fills height */}
-        <div className="relative w-full sm:w-1/2 h-full flex-shrink-0">
+      <div className={`border-0 sm:border border-surface-3 rounded-none sm:rounded-xl overflow-hidden mb-8 flex flex-col sm:flex-row sm:h-[320px] ${vendor.cardColor || 'bg-surface'}`}>
+        {/* Avatar - 50% width on desktop, fixed height on mobile */}
+        <div className="relative w-full sm:w-1/2 h-48 sm:h-full flex-shrink-0">
           {vendor.profileImage ? (
             <img
               src={getFullUploadUrl(vendor.profileImage)}
               alt={displayName}
               className="absolute inset-0 w-full h-full object-cover"
-              crossOrigin="anonymous"
             />
           ) : (
             <div
@@ -54,50 +53,84 @@ export const VendorProfilePage: React.FC = () => {
               {initials}
             </div>
           )}
-          {/* Product Categories overlay at bottom of image */}
-          {vendor.productCategories && vendor.productCategories.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
-              <div className="flex flex-wrap gap-1.5">
-                {vendor.productCategories.map((cat) => (
-                  <span
-                    key={cat}
-                    className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 text-gray-800"
-                  >
-                    {cat.replace(/-/g, ' ')}
-                  </span>
-                ))}
-              </div>
+          {/* Name and categories overlay at bottom of image */}
+          <div className="absolute bottom-0 left-0 right-0 z-10">
+            {/* Dark gradient overlay */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.2) 70%, transparent 100%)'
+              }}
+            />
+            <div className="relative p-4 pb-5">
+              <h1 className="text-white font-quicksand font-bold text-2xl sm:text-3xl leading-tight drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                {displayName}
+              </h1>
+              {vendor.productCategories && vendor.productCategories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {vendor.productCategories.map((cat) => (
+                    <span
+                      key={cat}
+                      className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 text-gray-800"
+                    >
+                      {cat.replace(/-/g, ' ')}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0 p-6 flex flex-col">
-          {/* Website */}
+        {/* Info - hidden on mobile since name is in image */}
+        <div className="hidden sm:flex flex-1 min-w-0 p-5 flex-col">
           {vendor.website && (
             <a
               href={vendor.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-amber-500 hover:text-amber-600 mb-3"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-2 text-sm"
             >
               <Globe className="w-4 h-4" />
               {vendor.website.replace(/^https?:\/\//, '')}
             </a>
           )}
-
-          <h1 className="text-3xl font-bold text-foreground mb-2">{displayName}</h1>
           {vendor.tagline && (
-            <p className="text-xl text-amber-500 font-medium mb-4">{vendor.tagline}</p>
+            <p className="text-lg text-muted-foreground font-medium mb-2">{vendor.tagline}</p>
           )}
           {vendor.bio && (
-            <p className="text-muted-foreground leading-relaxed mb-4">{vendor.bio}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{vendor.bio}</p>
           )}
           {vendor.blurb && !vendor.bio && (
-            <p className="text-muted-foreground leading-relaxed mb-4">{vendor.blurb}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{vendor.blurb}</p>
+          )}
+        </div>
+
+        {/* Mobile info - compact inline below image */}
+        <div className="sm:hidden px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+          {vendor.website && (
+            <a
+              href={vendor.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {vendor.website.replace(/^https?:\/\//, '')}
+            </a>
+          )}
+          {vendor.tagline && (
+            <span className="text-muted-foreground">{vendor.tagline}</span>
           )}
         </div>
       </div>
+
+      {/* Mobile bio section */}
+      {(vendor.bio || vendor.blurb) && (
+        <div className="sm:hidden px-4 pb-4 -mt-4">
+          <p className="text-sm text-muted-foreground leading-snug">{vendor.bio || vendor.blurb}</p>
+        </div>
+      )}
 
       {/* Upcoming Markets */}
       <section className="px-4 sm:px-0">

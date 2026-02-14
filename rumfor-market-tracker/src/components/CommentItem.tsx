@@ -191,7 +191,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 src={getFullUploadUrl(comment.user.avatar)}
                 alt={`${comment.user.firstName} ${comment.user.lastName}`}
                 className="w-full h-full object-cover"
-                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-full h-full bg-[#E67E22] bg-opacity-20 flex items-center justify-center text-[#E67E22] font-bold text-xs">

@@ -43,11 +43,11 @@ export const MarketSearchPage: React.FC = () => {
     markets,
     isLoading,
     isSearching,
+    isFetching,
     error,
     filters,
     trackedMarketIds,
     isTracking,
-    searchMarkets,
     setFilters,
     clearFilters,
     trackMarket,
@@ -111,13 +111,6 @@ export const MarketSearchPage: React.FC = () => {
 
     const urlSearch = searchParams.get('search') || '';
     if (urlSearch !== filters.search) {
-      if (urlSearch) {
-        searchMarkets(urlSearch);
-      } else {
-        // Clear search and show normal results
-        searchMarkets('');
-        clearFilters();
-      }
       setFilters({ ...filters, search: urlSearch });
     }
   }, [searchParams]);
@@ -132,7 +125,7 @@ export const MarketSearchPage: React.FC = () => {
     const observer = new IntersectionObserver(
       entries => {
         const target = entries[0];
-        if (target.isIntersecting && hasNextPage && !isSearching) {
+        if (target.isIntersecting && hasNextPage && !isFetching) {
           fetchNextPage();
         }
       },
@@ -152,7 +145,7 @@ export const MarketSearchPage: React.FC = () => {
       }
       observer.disconnect();
     };
-  }, [hasNextPage, isSearching, fetchNextPage]);
+  }, [hasNextPage, isFetching, fetchNextPage]);
 
   // Close sort dropdown when clicking outside
   useEffect(() => {
@@ -195,8 +188,8 @@ export const MarketSearchPage: React.FC = () => {
   };
 
   const handleSearch = (query: string) => {
-    searchMarkets(query);
     const newFilters = { ...filters, search: query };
+    setFilters(newFilters);
     updateUrlParams(newFilters);
   };
 

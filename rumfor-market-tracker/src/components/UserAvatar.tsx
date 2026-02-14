@@ -57,7 +57,6 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
           shapeClasses[shape],
           className
         )}
-        crossOrigin="anonymous"
       />
     )
   }
