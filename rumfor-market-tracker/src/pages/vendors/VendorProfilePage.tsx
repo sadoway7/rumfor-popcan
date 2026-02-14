@@ -1,11 +1,11 @@
 import React from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Globe, Calendar, MapPin } from 'lucide-react'
+import { Globe, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
-import { Badge } from '@/components/ui/Badge'
+import { MarketCard } from '@/components/MarketCard'
 import { useVendorProfile } from '@/features/vendor/hooks/useVendors'
-import { getFullUploadUrl, MARKET_CATEGORY_LABELS } from '@/config/constants'
+import { getFullUploadUrl } from '@/config/constants'
 
 export const VendorProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -37,38 +37,42 @@ export const VendorProfilePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto py-8">
       {/* Profile Header */}
-      <div className={`border-0 sm:border border-surface-3 rounded-none sm:rounded-xl overflow-hidden mb-8 flex flex-col sm:flex-row min-h-[320px] ${vendor.cardColor || 'bg-surface'}`}>
+      <div className={`border-0 sm:border border-surface-3 rounded-none sm:rounded-xl overflow-hidden mb-8 flex flex-col sm:flex-row h-64 sm:max-h-[320px] ${vendor.cardColor || 'bg-surface'}`}>
         {/* Avatar - 50% width, fills height */}
-        {vendor.profileImage ? (
-          <img
-            src={getFullUploadUrl(vendor.profileImage)}
-            alt={displayName}
-            className="w-full sm:w-1/2 h-64 sm:h-full object-cover flex-shrink-0"
-          />
-        ) : (
-          <div
-            className={`w-full sm:w-1/2 h-64 sm:h-full flex items-center justify-center text-6xl font-bold text-foreground flex-shrink-0 bg-white/30`}
-          >
-            {initials}
-          </div>
-        )}
+        <div className="relative w-full sm:w-1/2 h-full flex-shrink-0">
+          {vendor.profileImage ? (
+            <img
+              src={getFullUploadUrl(vendor.profileImage)}
+              alt={displayName}
+              className="absolute inset-0 w-full h-full object-cover"
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <div
+              className={`absolute inset-0 flex items-center justify-center text-6xl font-bold text-foreground bg-white/30`}
+            >
+              {initials}
+            </div>
+          )}
+          {/* Product Categories overlay at bottom of image */}
+          {vendor.productCategories && vendor.productCategories.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent z-10">
+              <div className="flex flex-wrap gap-1.5">
+                {vendor.productCategories.map((cat) => (
+                  <span
+                    key={cat}
+                    className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/90 text-gray-800"
+                  >
+                    {cat.replace(/-/g, ' ')}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0 p-6 flex flex-col">
-          {/* Product Categories */}
-          {vendor.productCategories && vendor.productCategories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {vendor.productCategories.map((cat) => (
-                <span
-                  key={cat}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-white border border-surface-3 text-foreground"
-                >
-                  {cat.replace(/-/g, ' ')}
-                </span>
-              ))}
-            </div>
-          )}
-
           {/* Website */}
           {vendor.website && (
             <a
@@ -103,52 +107,61 @@ export const VendorProfilePage: React.FC = () => {
         </h2>
 
         {vendor.upcomingMarkets && vendor.upcomingMarkets.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {vendor.upcomingMarkets.map((market) => {
-              const imageUrl = market.images && market.images.length > 0 
-                ? (market.images[0] as any).url || (market.images[0] as any).thumbnail || market.images[0]
-                : null
-              
-              return (
-                <Link
-                  key={market.id}
-                  to={`/markets/${market.id}`}
-                  className="bg-surface border border-surface-3 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
-                >
-                  {imageUrl && (
-                    <div className="relative h-40">
-                      <img
-                        src={imageUrl}
-                        alt={market.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 px-4 py-2">
-                        <h3 className="text-white font-bold truncate">{market.name}</h3>
-                      </div>
-                    </div>
-                  )}
-                  <div className="p-4">
-                    {!imageUrl && (
-                      <h3 className="font-bold text-foreground mb-2">{market.name}</h3>
-                    )}
-                    {market.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
-                        <MapPin className="w-4 h-4" />
-                        {market.location.city}{market.location.state ? `, ${market.location.state}` : ''}
-                      </p>
-                    )}
-                    {market.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{market.description}</p>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        {MARKET_CATEGORY_LABELS[market.category as keyof typeof MARKET_CATEGORY_LABELS] || market.category}
-                      </Badge>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {vendor.upcomingMarkets.map((market) => (
+              <MarketCard
+                key={market.id}
+                market={{
+                  id: market.id,
+                  name: market.name,
+                  description: market.description || '',
+                  category: market.category as any,
+                  location: market.location ? {
+                    address: market.location.address || '',
+                    city: market.location.city || '',
+                    state: market.location.state || '',
+                    zipCode: market.location.zipCode || '',
+                    country: market.location.country || '',
+                  } : { address: '', city: '', state: '', zipCode: '', country: '' },
+                  schedule: market.schedule || [],
+                  status: market.status as any,
+                  images: market.images?.map(img => typeof img === 'string' ? img : (img as any).url || (img as any).thumbnail || '') || [],
+                  tags: market.tags || [],
+                  marketType: market.marketType as any,
+                  accessibility: {
+                    wheelchairAccessible: false,
+                    parkingAvailable: false,
+                    restroomsAvailable: false,
+                    familyFriendly: false,
+                    petFriendly: false,
+                    covered: false,
+                    indoor: false,
+                    outdoorSeating: false,
+                    wifi: false,
+                    atm: false,
+                    foodCourt: false,
+                    liveMusic: false,
+                    handicapParking: false,
+                    alcoholAvailable: false,
+                  },
+                  stats: {
+                    viewCount: 0,
+                    favoriteCount: 0,
+                    applicationCount: 0,
+                    commentCount: 0,
+                    rating: 0,
+                    reviewCount: 0,
+                  },
+                  applicationsEnabled: false,
+                  contact: {},
+                  applicationFields: [],
+                  createdAt: market.joinedAt || new Date().toISOString(),
+                  updatedAt: market.joinedAt || new Date().toISOString(),
+                }}
+                variant="profile"
+                showTrackButton={false}
+              />
+            ))}
           </div>
         ) : (
           <div className="text-center py-12 bg-surface border border-surface-3 rounded-xl">

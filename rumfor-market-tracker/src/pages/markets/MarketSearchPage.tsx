@@ -87,6 +87,7 @@ export const MarketSearchPage: React.FC = () => {
         (searchParams.get('sortBy') as MarketFilterType['sortBy']) ||
         'recently-added',
       sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
+      showPastMarkets: searchParams.get('showPastMarkets') === 'false' ? false : true,
     };
 
     if (
@@ -220,7 +221,7 @@ export const MarketSearchPage: React.FC = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({});
+    setFilters({ showPastMarkets: true });
     setSearchParams({});
     setSidebarOpen(false);
   };
@@ -233,6 +234,7 @@ export const MarketSearchPage: React.FC = () => {
     if (filters.accessibility?.wheelchairAccessible) count++;
     if (filters.accessibility?.parkingAvailable) count++;
     if (filters.search) count++;
+    if (filters.showPastMarkets === false) count++;
     return count;
   };
 

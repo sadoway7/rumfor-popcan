@@ -86,7 +86,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   const queryClient = useQueryClient();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState<MarketFilters>({});
+  const [currentFilters, setCurrentFilters] = useState<MarketFilters>({ showPastMarkets: true });
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [totalPages, setTotalPages] = useState(0);
@@ -336,7 +336,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   // Clear filters function
   const clearFilters = useCallback(() => {
-    setCurrentFilters({});
+    setCurrentFilters({ showPastMarkets: true });
     setCurrentPage(1);
     setSearchQuery('');
   }, []);

@@ -120,7 +120,7 @@ const getVendorProfile = catchAsync(async (req, res, next) => {
     },
   ]);
 
-  // Get upcoming markets (approved or attending, with future dates)
+  // Get upcoming markets (approved or attending)
   const upcomingTracking = await UserMarketTracking.find({
     user: vendor._id,
     status: { $in: ['approved', 'attending'] },
@@ -129,7 +129,6 @@ const getVendorProfile = catchAsync(async (req, res, next) => {
     .populate({
       path: 'market',
       select: 'name category description location schedule status images tags createdByType',
-      match: { isActive: true },
     })
     .sort({ createdAt: -1 })
     .limit(20);

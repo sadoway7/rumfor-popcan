@@ -31,6 +31,7 @@ import {
   LayoutDashboard,
   Store,
   Users,
+  ShoppingBag,
 } from 'lucide-react';
 
 export function Header() {
@@ -69,12 +70,20 @@ export function Header() {
       }
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
     } else {
-      // Navigate to markets search page
-      if (query.trim()) {
-        navigate(`/markets?search=${encodeURIComponent(query.trim())}`);
-      } else if (location.pathname === '/markets') {
-        // Already on markets page, remove search param to show all results
-        navigate('/markets', { replace: true });
+      // Handle markets page search while preserving other filters
+      if (location.pathname === '/markets') {
+        const params = new URLSearchParams(searchParams);
+        if (query.trim()) {
+          params.set('search', query.trim());
+        } else {
+          params.delete('search');
+        }
+        navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+      } else {
+        // Navigate to markets search page
+        if (query.trim()) {
+          navigate(`/markets?search=${encodeURIComponent(query.trim())}`);
+        }
       }
     }
   };
@@ -127,7 +136,7 @@ export function Header() {
           {/* Search Bar with Location - Center */}
           <div className="hidden md:flex justify-center items-center px-4 md:px-8 gap-3">
             {/* Search Bar */}
-            <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-lg">
+            <div className="relative w-full max-w-xs sm:max-w-xs md:max-w-sm">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <input
                 type="text"
@@ -154,13 +163,23 @@ export function Header() {
               )}
             </div>
             
-            {/* Browse Vendors Button - Desktop Only */}
-            <div className="hidden md:flex">
+            {/* Browse Markets & Vendors Buttons - Desktop Only */}
+            <div className="hidden md:flex gap-2">
+              <Link to="/markets">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 hover:rounded-full transition-all duration-300"
+                  title="Browse Markets"
+                >
+                  <Store className="h-4 w-4" />
+                </Button>
+              </Link>
               <Link to="/vendors">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
+                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 hover:rounded-full transition-all duration-300"
                   title="Browse Vendors"
                 >
                   <Users className="h-4 w-4" />
@@ -202,19 +221,6 @@ export function Header() {
 
           {/* Right Side Actions - Desktop */}
           <div className="hidden md:flex items-center justify-end space-x-3 min-w-0">
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-muted-foreground hover:text-foreground hover:bg-surface/80 rounded-xl transition-all duration-300"
-            >
-              {theme === 'light' ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Sun className="h-4 w-4" />
-              )}
-            </Button>
 
 
 

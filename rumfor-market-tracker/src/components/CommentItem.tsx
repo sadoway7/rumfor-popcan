@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Textarea } from '@/components/ui/Textarea'
 import { CommentReactions } from './CommentReactions'
-import { UserAvatar } from '@/components/UserAvatar'
 import { useComments } from '@/features/community/hooks/useComments'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Comment } from '@/types'
 import { cn } from '@/utils/cn'
+import { getFullUploadUrl } from '@/config/constants'
 
 interface CommentItemProps {
   comment: Comment
@@ -188,9 +188,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             
             {comment.user.avatar ? (
               <img
-                src={comment.user.avatar}
+                src={getFullUploadUrl(comment.user.avatar)}
                 alt={`${comment.user.firstName} ${comment.user.lastName}`}
                 className="w-full h-full object-cover"
+                crossOrigin="anonymous"
               />
             ) : (
               <div className="w-full h-full bg-[#E67E22] bg-opacity-20 flex items-center justify-center text-[#E67E22] font-bold text-xs">

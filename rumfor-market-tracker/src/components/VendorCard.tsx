@@ -85,6 +85,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
               src={getFullUploadUrl(profileImage)}
               alt={name}
               className="w-24 h-24 flex-shrink-0 object-cover"
+              crossOrigin="anonymous"
             />
           ) : (
             <div
@@ -148,6 +149,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             src={getFullUploadUrl(profileImage)}
             alt={name}
             className="w-32 h-32 flex-shrink-0 object-cover border-2 border-surface-3 shadow-sm"
+            crossOrigin="anonymous"
           />
         ) : (
           <div

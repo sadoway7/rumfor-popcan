@@ -21,7 +21,7 @@ interface MarketCardProps {
   isTracked?: boolean
   isLoading?: boolean
   showTrackButton?: boolean
-  variant?: 'default' | 'compact' | 'featured' | 'minimal'
+  variant?: 'default' | 'compact' | 'featured' | 'minimal' | 'profile'
   detailPath?: string // Custom path for market detail page
   trackingStatus?: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled' // Current tracking status
 }
@@ -701,6 +701,114 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               </div>
             </div>
            )}
+         </Link>
+      </div>
+    )
+  }
+
+  // Profile variant - Similar to minimal but without comments/track buttons
+  if (variant === 'profile') {
+    const getScheduleDates = (schedule: Market['schedule']): string[] => {
+      if (!schedule) return []
+
+      // Handle backend format with specialDates
+      if (typeof schedule === 'object' && !Array.isArray(schedule)) {
+        const schedObj = schedule as any
+        if (schedObj.specialDates && Array.isArray(schedObj.specialDates) && schedObj.specialDates.length > 0) {
+          return schedObj.specialDates.map((s: any) => {
+            const d = new Date(s.date)
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          })
+        }
+      }
+
+      // Handle array format
+      if (!Array.isArray(schedule) || schedule.length === 0) return []
+
+      return schedule
+        .map((s: any) => {
+          if (!s || !s.startDate) return null
+          const dateObj = parseLocalDate(s.startDate)
+          if (isNaN(dateObj.getTime())) return null
+          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        })
+        .filter(Boolean) as string[]
+    }
+
+    const scheduleDates = getScheduleDates(market.schedule)
+
+    return (
+      <div className={cn(
+        'cursor-pointer',
+        'overflow-hidden !rounded-none',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]',
+        className
+      )}>
+        <Link to={detailPath || `/markets/${market.id}`} className="block group">
+          {/* Image with overlaid details */}
+          {market.images && market.images.length > 0 && (
+            <div className="relative h-80">
+              <img
+                src={market.images[0]}
+                alt={market.name}
+                className="w-full h-full object-cover"
+              />
+
+              {/* Top overlays */}
+              <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
+                {/* Left side - Dates stacked */}
+                <div className="flex flex-col gap-1">
+                  {scheduleDates.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      {scheduleDates.map((date, index) => (
+                        <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
+                          <Calendar className="w-4 h-4" />
+                          <span>{date}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Location - Flag style at left edge */}
+              <div className="absolute top-0 -left-2 pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
+                <MapPin className="w-4 h-4 flex-shrink-0" />
+                <span>{formatLocation(market.location)}</span>
+              </div>
+
+              {/* Footer - without comments/track buttons */}
+              <div className="absolute bottom-0 left-0 right-0">
+                <div className="relative">
+                  {/* Color accent layer */}
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: dominantColor 
+                         ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.9)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.15)')} 85%, transparent 100%)`
+                         : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+                    }}
+                  />
+                  {/* Dark overlay for readability */}
+                  <div 
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+                    }}
+                  />
+                  {/* Content */}
+                  <div className="relative px-4 pt-4 pb-6 z-10">
+                    <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                      {market.name}
+                    </h3>
+                    <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+                      {market.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </Link>
       </div>
     )
