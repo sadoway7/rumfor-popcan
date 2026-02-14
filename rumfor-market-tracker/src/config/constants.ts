@@ -18,7 +18,11 @@ export const getBackendBaseUrl = (): string => {
 export const getFullUploadUrl = (path: string | undefined | null): string | undefined => {
   if (!path) return undefined
   if (path.startsWith('http://') || path.startsWith('https://')) return path
-  if (path.startsWith('/uploads/')) return `${getBackendBaseUrl()}${path}`
+  if (path.startsWith('/uploads/')) {
+    const fullUrl = `${getBackendBaseUrl()}${path}`
+    console.log('[Constants] getFullUploadUrl:', { path, backendUrl: getBackendBaseUrl(), fullUrl })
+    return fullUrl
+  }
   return path
 }
 

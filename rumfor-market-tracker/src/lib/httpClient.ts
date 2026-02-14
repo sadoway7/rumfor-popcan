@@ -176,8 +176,11 @@ export const httpClient = {
   /**
    * POST with FormData (for file uploads)
    */
-  async upload<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
+   async upload<T = unknown>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
+    console.log('[HTTP Client] Upload URL:', url)
+    console.log('[HTTP Client] Base URL:', this.baseURL)
+    console.log('[HTTP Client] Endpoint:', endpoint)
     const token = getAuthToken()
 
     const headers: Record<string, string> = {}
