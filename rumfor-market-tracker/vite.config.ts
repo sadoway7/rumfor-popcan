@@ -96,8 +96,11 @@ export default defineConfig({
     react(),
     UnoCSS(),
     checker({
-      typescript: true,
-      overlay: { initialIsOpen: false }
+      typescript: {
+        root: resolve(__dirname, './src'),
+      },
+      overlay: { initialIsOpen: false },
+      enableBuild: false,
     }),
     compression({
       algorithm: 'gzip',

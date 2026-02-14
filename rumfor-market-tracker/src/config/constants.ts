@@ -6,6 +6,19 @@ export const APP_VERSION = '1.0.0'
 export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api/v1'
 export const API_TIMEOUT = 10000
 
+// Backend base URL (for serving static files like uploads)
+export const getBackendBaseUrl = (): string => {
+  return API_BASE_URL.replace(/\/api\/v\d+$/, '')
+}
+
+// Convert relative upload URLs to full URLs
+export const getFullUploadUrl = (path: string | undefined | null): string | undefined => {
+  if (!path) return undefined
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('/uploads/')) return `${getBackendBaseUrl()}${path}`
+  return path
+}
+
 // User roles
 export const USER_ROLES = {
   VISITOR: 'visitor',

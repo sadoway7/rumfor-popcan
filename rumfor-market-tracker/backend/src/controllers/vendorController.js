@@ -338,8 +338,7 @@ const uploadVendorAvatar = catchAsync(async (req, res, next) => {
     return next(new AppError('Please upload an image file', 400));
   }
 
-  const fileExt = path.extname(req.file.originalname);
-  const fileName = `vendor_avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}${fileExt}`;
+  const fileName = `vendor_avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.webp`;
 
   const imageUrl = await saveFileLocally(req.file.buffer, fileName);
 

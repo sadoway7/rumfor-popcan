@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { cn } from '@/utils/cn'
+import { getFullUploadUrl } from '@/config/constants'
 import type { VendorCardData, VendorMarketDisplay } from '@/types'
 
 // Default gradient colors for vendors without a custom color
@@ -75,13 +76,13 @@ export const VendorCard: React.FC<VendorCardProps> = ({
     const card = (
       <div className={cn(
         'border border-surface-3 rounded-xl overflow-hidden',
-        profileImage ? 'bg-surface' : gradientClass,
+        gradientClass,
         className
       )}>
-      <div className="flex items-start overflow-visible">
+      <div className="flex items-stretch">
           {profileImage ? (
             <img
-              src={profileImage}
+              src={getFullUploadUrl(profileImage)}
               alt={name}
               className="w-24 h-24 flex-shrink-0 object-cover"
             />
@@ -95,16 +96,20 @@ export const VendorCard: React.FC<VendorCardProps> = ({
               {initials}
             </div>
           )}
-          <div className="flex-1 min-w-0 p-3">
-            <h3 className="font-bold text-foreground text-sm truncate">{name}</h3>
-            {description && (
-              <p className="text-xs text-amber-500 font-medium mb-1 line-clamp-2">
-                {description}
-              </p>
-            )}
-            {blurb && (
-              <p className="text-xs text-muted-foreground line-clamp-2">{blurb}</p>
-            )}
+          <div className="flex-1 min-w-0 flex flex-col bg-surface/80 rounded-r-xl">
+            <div className="px-3 pt-2 pb-0.5">
+              <h3 className="font-bold text-foreground text-sm truncate">{name}</h3>
+            </div>
+            <div className="px-3 pb-2 pt-0 flex-1">
+              {description && (
+                <p className="text-xs text-amber-500 font-medium mb-0.5 line-clamp-1">
+                  {description}
+                </p>
+              )}
+              {blurb && (
+                <p className="text-xs text-muted-foreground line-clamp-2">{blurb}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -125,7 +130,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
       <div
         className={cn(
           'hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-xl overflow-visible',
-          profileImage ? 'bg-surface' : gradientClass,
+          gradientClass,
           className
         )}
       >
@@ -137,10 +142,10 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           vendor profile
         </Link>
       )}
-      <div className="flex items-start">
+      <div className="flex items-stretch">
         {profileImage ? (
           <img
-            src={profileImage}
+            src={getFullUploadUrl(profileImage)}
             alt={name}
             className="w-32 h-32 flex-shrink-0 object-cover border-2 border-surface-3 shadow-sm"
           />
@@ -154,26 +159,30 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             {initials}
           </div>
         )}
-        <div className="flex-1 min-w-0 pl-4 py-4 pr-4">
-          <h3 className="font-bold text-foreground text-lg mb-2 truncate" title={name}>
-            {name}
-          </h3>
-          {description && (
-            <p
-              className="text-sm text-amber-500 font-medium mb-1 line-clamp-2"
-              title={description}
-            >
-              {description}
-            </p>
-          )}
-          {blurb && (
-            <p
-              className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
-              title={blurb}
-            >
-              {blurb}
-            </p>
-          )}
+        <div className="flex-1 min-w-0 flex flex-col bg-surface/80 rounded-r-xl">
+          <div className="px-4 pt-3 pb-1">
+            <h3 className="font-bold text-foreground text-lg truncate" title={name}>
+              {name}
+            </h3>
+          </div>
+          <div className="px-4 pb-3 pt-0 flex-1">
+            {description && (
+              <p
+                className="text-sm text-amber-500 font-medium mb-1 line-clamp-1"
+                title={description}
+              >
+                {description}
+              </p>
+            )}
+            {blurb && (
+              <p
+                className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
+                title={blurb}
+              >
+                {blurb}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

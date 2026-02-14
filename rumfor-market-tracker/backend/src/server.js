@@ -83,7 +83,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:", "http://localhost:3001"],
       connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
@@ -240,8 +240,17 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('combined'))
 }
 
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
+// Serve static files from uploads directory with CORS headers
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:5173')
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
+  next()
+}, express.static(path.join(__dirname, '../uploads')))
 
 // API version info endpoint
 app.get('/api', (req, res) => {

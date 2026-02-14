@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useThemeStore } from '@/features/theme/themeStore'
+import { UserAvatar } from '@/components/UserAvatar'
 
 interface UserDropdownProps {
   onSetLocation: () => void
@@ -36,10 +37,6 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
   const { user, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
 
-  const sizeClasses = avatarSize === 'sm' 
-    ? 'w-9 h-9 text-xs' 
-    : 'w-[44px] h-[44px] text-sm'
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -47,12 +44,12 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
           className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity duration-200"
           aria-label="Open menu"
         >
-          <div className={`${sizeClasses} bg-white flex items-center justify-center rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40`}>
-            <span className="text-black font-bold">
-              {user?.firstName?.charAt(0) || ''}
-              {user?.lastName?.charAt(0) || 'U'}
-            </span>
-          </div>
+          <UserAvatar 
+            user={user || {}}
+            size={avatarSize === 'sm' ? 'sm' : 'header'}
+            shape="circle"
+            className="bg-white shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40 md:border-2 md:border-surface-3"
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

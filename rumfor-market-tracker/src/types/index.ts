@@ -167,6 +167,7 @@ export interface VendorProfileUpdateData {
   website?: string;
   productCategories?: string[];
   cardColor?: string | null;
+  profileImage?: string;
 }
 
 // Market Types

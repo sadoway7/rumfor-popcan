@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Textarea } from '@/components/ui/Textarea'
 import { CommentReactions } from './CommentReactions'
+import { UserAvatar } from '@/components/UserAvatar'
 import { useComments } from '@/features/community/hooks/useComments'
 import { useAuthStore } from '@/features/auth/authStore'
 import { Comment } from '@/types'

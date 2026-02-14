@@ -2,15 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Save, Eye, Upload, X } from 'lucide-react'
+import { Save, Eye, Upload, X, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { VendorCard } from '@/components/VendorCard'
+import { UserAvatar } from '@/components/UserAvatar'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useUpdateVendorProfileMutation, useUploadVendorAvatarMutation } from '@/features/vendor/hooks/useVendors'
+import { compressAndResizeImage, dataUrlToFile } from '@/utils/imageUtils'
 import type { VendorCardData } from '@/types'
 
 const PRODUCT_CATEGORY_OPTIONS = [
@@ -128,21 +130,53 @@ export const VendorProfileEditPage: React.FC = () => {
       if (!file || !user) return
 
       try {
-        await uploadAvatarMutation.mutateAsync({ id: user.id, file })
-        // Refresh user data
-        const { updateUser: storeUpdate } = useAuthStore.getState()
-        storeUpdate({
-          vendorProfile: {
-            ...user.vendorProfile,
-            profileImage: URL.createObjectURL(file),
-          },
+        const compressedDataUrl = await compressAndResizeImage(file, {
+          maxWidth: 500,
+          maxHeight: 500,
+          quality: 0.8,
         })
-      } catch (_err) {
-        // Error handled by mutation
+        
+        const webpFile = dataUrlToFile(compressedDataUrl, 'avatar.webp')
+        
+        const result = await uploadAvatarMutation.mutateAsync({ id: user.id, file: webpFile })
+        
+        const serverUrl = result?.data?.url
+        if (serverUrl) {
+          updateUser({
+            vendorProfile: {
+              ...user.vendorProfile,
+              profileImage: serverUrl,
+            },
+          })
+        }
+      } catch (err) {
+        console.error('Failed to upload avatar:', err)
       }
     },
-    [user, uploadAvatarMutation]
+    [user, uploadAvatarMutation, updateUser]
   )
+
+  const handleRemoveAvatar = useCallback(async () => {
+    if (!user) return
+
+    try {
+      await updateProfileMutation.mutateAsync({
+        id: user.id,
+        data: {
+          profileImage: '',
+        },
+      })
+
+      updateUser({
+        vendorProfile: {
+          ...user.vendorProfile,
+          profileImage: undefined,
+        },
+      })
+    } catch (err) {
+      console.error('Failed to remove avatar:', err)
+    }
+  }, [user, updateProfileMutation, updateUser])
 
   const onSubmit = async (data: VendorProfileFormData) => {
     if (!user) return
@@ -316,30 +350,40 @@ export const VendorProfileEditPage: React.FC = () => {
                   Profile Image
                 </label>
                 <div className="flex items-center gap-4">
-                  {previewData.profileImage ? (
-                    <img
-                      src={previewData.profileImage}
-                      alt="Profile"
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-lg bg-surface-2 flex items-center justify-center text-muted-foreground text-xl font-bold">
-                      {previewData.firstName[0]}
-                      {previewData.lastName[0]}
-                    </div>
-                  )}
-                  <label className="cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={handleAvatarUpload}
-                    />
-                    <span className="inline-flex items-center gap-1 px-3 py-2 text-sm bg-surface border border-surface-3 rounded-lg hover:bg-surface-2 transition-colors">
-                      <Upload className="w-4 h-4" />
-                      {uploadAvatarMutation.isPending ? 'Uploading...' : 'Upload Image'}
-                    </span>
-                  </label>
+                  <UserAvatar 
+                    user={{
+                      firstName: previewData.firstName,
+                      lastName: previewData.lastName,
+                      profileImage: previewData.profileImage,
+                    }}
+                    size="lg"
+                    shape="square"
+                  />
+                  <div className="flex flex-col gap-2">
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
+                      <span className="inline-flex items-center gap-1 px-3 py-2 text-sm bg-surface border border-surface-3 rounded-lg hover:bg-surface-2 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {uploadAvatarMutation.isPending ? 'Uploading...' : 'Upload Image'}
+                      </span>
+                    </label>
+                    {previewData.profileImage && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        disabled={updateProfileMutation.isPending}
+                        className="inline-flex items-center gap-1 px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

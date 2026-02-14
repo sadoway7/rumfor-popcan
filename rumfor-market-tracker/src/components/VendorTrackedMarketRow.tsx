@@ -529,45 +529,6 @@ const formatSchedule = (schedule: Market['schedule']): string => {
               </button>
             </div>
 
-            {/* Options menu */}
-            <div className="absolute right-2 top-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 rounded-full bg-white text-muted-foreground hover:bg-surface hover:text-foreground transition-colors shadow"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => onViewDetails?.(market.id)}>
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to={`/markets/${market.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Go to Public Page
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => console.log('Archive placeholder')}>
-                        <Archive className="w-4 h-4 mr-2" />
-                        Archive List
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => onUntrack?.(market.id)}
-                        className="text-red-600 focus:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Untrack Market
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
             {/* Chat button */}
             <div 
               className="absolute bottom-6 right-2 cursor-pointer z-50"
@@ -613,9 +574,6 @@ const formatSchedule = (schedule: Market['schedule']): string => {
                 <DollarSign className="w-3.5 h-3.5" />
                 ${tracking?.totalExpenses || 0}
               </span>
-              <Link to={`/vendor/markets/${market.id}`} className="text-xs font-medium text-accent hover:underline">
-                + Add
-              </Link>
             </div>
 
             {overdueTodos.length > 0 && (

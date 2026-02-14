@@ -20,7 +20,7 @@ const getComments = catchAsync(async (req, res, next) => {
     isDeleted: false,
     isModerated: false
   })
-    .populate('author', 'username firstName lastName')
+    .populate('author', 'username firstName lastName role profileImage vendorProfile')
     .sort({ createdAt: -1 })
     .exec()
 
@@ -28,10 +28,15 @@ const getComments = catchAsync(async (req, res, next) => {
   const commentMap = new Map()
   const topLevelComments = []
 
-  // First pass: create map of all comments
+  // First pass: create map of all comments with avatar mapping
   allComments.forEach(comment => {
+    const commentObj = comment.toObject()
+    // Map avatar from profileImage for frontend compatibility
+    if (commentObj.author) {
+      commentObj.author.avatar = comment.author.vendorProfile?.profileImage || comment.author.profileImage || ''
+    }
     commentMap.set(comment._id.toString(), {
-      ...comment.toObject(),
+      ...commentObj,
       replies: []
     })
   })
