@@ -291,6 +291,7 @@ const updateVendorProfile = catchAsync(async (req, res, next) => {
     website,
     productCategories,
     cardColor,
+    profileImage,
   } = req.body;
 
   // Build update object — only set fields that were provided
@@ -306,6 +307,7 @@ const updateVendorProfile = catchAsync(async (req, res, next) => {
   if (website !== undefined) updates['vendorProfile.website'] = website;
   if (productCategories !== undefined) updates['vendorProfile.productCategories'] = productCategories;
   if (cardColor !== undefined) updates['vendorProfile.cardColor'] = cardColor;
+  if (profileImage !== undefined) updates['vendorProfile.profileImage'] = profileImage;
 
   const vendor = await User.findOneAndUpdate(
     {

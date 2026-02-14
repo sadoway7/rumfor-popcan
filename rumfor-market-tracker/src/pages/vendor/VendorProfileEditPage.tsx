@@ -11,8 +11,8 @@ import { Spinner } from '@/components/ui/Spinner'
 import { VendorCard } from '@/components/VendorCard'
 import { UserAvatar } from '@/components/UserAvatar'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useUpdateVendorProfileMutation, useUploadVendorAvatarMutation } from '@/features/vendor/hooks/useVendors'
-import { compressAndResizeImage, dataUrlToFile } from '@/utils/imageUtils'
+import { useUpdateVendorProfileMutation } from '@/features/vendor/hooks/useVendors'
+import { compressAndResizeImage } from '@/utils/imageUtils'
 import type { VendorCardData } from '@/types'
 
 const PRODUCT_CATEGORY_OPTIONS = [
@@ -66,7 +66,6 @@ type VendorProfileFormData = z.infer<typeof vendorProfileSchema>
 export const VendorProfileEditPage: React.FC = () => {
   const { user, updateUser } = useAuthStore()
   const updateProfileMutation = useUpdateVendorProfileMutation()
-  const uploadAvatarMutation = useUploadVendorAvatarMutation()
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
@@ -136,24 +135,25 @@ export const VendorProfileEditPage: React.FC = () => {
           quality: 0.8,
         })
         
-        const webpFile = dataUrlToFile(compressedDataUrl, 'avatar.webp')
+        // Store base64 directly instead of uploading file
+        await updateProfileMutation.mutateAsync({
+          id: user.id,
+          data: {
+            profileImage: compressedDataUrl,
+          },
+        })
         
-        const result = await uploadAvatarMutation.mutateAsync({ id: user.id, file: webpFile })
-        
-        const serverUrl = result?.data?.url
-        if (serverUrl) {
-          updateUser({
-            vendorProfile: {
-              ...user.vendorProfile,
-              profileImage: serverUrl,
-            },
-          })
-        }
+        updateUser({
+          vendorProfile: {
+            ...user.vendorProfile,
+            profileImage: compressedDataUrl,
+          },
+        })
       } catch (err) {
-        console.error('Failed to upload avatar:', err)
+        console.error('Failed to save avatar:', err)
       }
     },
-    [user, uploadAvatarMutation, updateUser]
+    [user, updateProfileMutation, updateUser]
   )
 
   const handleRemoveAvatar = useCallback(async () => {
@@ -369,7 +369,7 @@ export const VendorProfileEditPage: React.FC = () => {
                       />
                       <span className="inline-flex items-center gap-1 px-3 py-2 text-sm bg-surface border border-surface-3 rounded-lg hover:bg-surface-2 transition-colors">
                         <Upload className="w-4 h-4" />
-                        {uploadAvatarMutation.isPending ? 'Uploading...' : 'Upload Image'}
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Upload Image'}
                       </span>
                     </label>
                     {previewData.profileImage && (

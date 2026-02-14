@@ -17,6 +17,8 @@ export const getBackendBaseUrl = (): string => {
 // Convert relative upload URLs to full URLs
 export const getFullUploadUrl = (path: string | undefined | null): string | undefined => {
   if (!path) return undefined
+  // Handle base64 data URLs directly
+  if (path.startsWith('data:')) return path
   if (path.startsWith('http://') || path.startsWith('https://')) return path
   if (path.startsWith('/uploads/')) return `${getBackendBaseUrl()}${path}`
   return path
