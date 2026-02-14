@@ -11,7 +11,7 @@ export const API_TIMEOUT = 10000
 export const getBackendBaseUrl = (): string => {
   const explicitBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL
   if (explicitBackendUrl) return explicitBackendUrl
-  return API_BASE_URL.replace(/\/api\/v\d+$/, '')
+  return API_BASE_URL.replace(/\/api(\/v\d+)?$/, '')
 }
 
 // Convert relative upload URLs to full URLs
