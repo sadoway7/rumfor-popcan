@@ -73,7 +73,11 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   // Compact variant (MarketDetailPage)
   if (variant === 'compact') {
     const card = (
-      <div className={cn('bg-surface border border-surface-3 rounded-xl overflow-hidden', className)}>
+      <div className={cn(
+        'border border-surface-3 rounded-xl overflow-hidden',
+        profileImage ? 'bg-surface' : gradientClass,
+        className
+      )}>
       <div className="flex items-start overflow-visible">
           {profileImage ? (
             <img
@@ -85,7 +89,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             <div
               className={cn(
                 'w-24 h-24 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-foreground',
-                gradientClass
+                'bg-white/30'
               )}
             >
               {initials}
@@ -120,7 +124,8 @@ export const VendorCard: React.FC<VendorCardProps> = ({
     const card = (
       <div
         className={cn(
-          'bg-surface hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-xl overflow-visible',
+          'hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-xl overflow-visible',
+          profileImage ? 'bg-surface' : gradientClass,
           className
         )}
       >
@@ -143,7 +148,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           <div
             className={cn(
               'w-32 h-32 flex items-center justify-center text-4xl font-bold text-foreground border-2 border-surface-3 shadow-sm flex-shrink-0',
-              gradientClass
+              'bg-white/30'
             )}
           >
             {initials}

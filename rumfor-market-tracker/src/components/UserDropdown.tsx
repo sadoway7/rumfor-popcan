@@ -76,7 +76,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         <DropdownMenuItem className="p-0">
           <div className="flex items-center justify-between w-full py-3 md:py-2 px-2">
             <Link
-              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
+              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? `/vendors/${user?.id}` : '/profile'}
               className="flex items-center flex-1"
               onClick={(e) => e.stopPropagation()}
             >
@@ -84,7 +84,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
               <span className="text-base md:text-sm">View Profile</span>
             </Link>
             <Link
-              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile/edit' : '/profile/edit'}
+              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile/edit'}
               className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-surface-3 transition-colors"
               onClick={(e) => e.stopPropagation()}
             >

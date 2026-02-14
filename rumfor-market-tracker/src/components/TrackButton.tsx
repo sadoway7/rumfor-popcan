@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bookmark, Plus } from 'lucide-react'
+import { Bookmark, BookmarkPlus } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 interface TrackButtonProps {
@@ -42,7 +42,7 @@ export const TrackButton: React.FC<TrackButtonProps> = ({
           fill="currentColor"
         />
       ) : (
-        <Plus
+        <BookmarkPlus
           size={iconSize}
           strokeWidth={2.5}
           className="text-gray-400"

@@ -30,7 +30,7 @@ const roleOptions = [
   {
     value: 'vendor',
     label: 'Vendor',
-    description: 'Apply to markets and manage applications',
+    description: 'Create and track markets',
     icon: Store,
     disabled: false
   },
