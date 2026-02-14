@@ -3,11 +3,14 @@ export const APP_NAME = 'Rumfor Market Tracker'
 export const APP_VERSION = '1.0.0'
 
 // API endpoints
-export const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001/api/v1'
+export const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 export const API_TIMEOUT = 10000
 
 // Backend base URL (for serving static files like uploads)
+// VITE_BACKEND_URL can be set explicitly, otherwise derive from API_BASE_URL
 export const getBackendBaseUrl = (): string => {
+  const explicitBackendUrl = (import.meta as any).env?.VITE_BACKEND_URL
+  if (explicitBackendUrl) return explicitBackendUrl
   return API_BASE_URL.replace(/\/api\/v\d+$/, '')
 }
 
