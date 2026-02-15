@@ -206,9 +206,9 @@ export function Header() {
           </div>
           
           {/* Mobile Search Bar */}
-          <div className="md:hidden flex justify-center items-center px-1 gap-1 ml-1">
+          <div className="md:hidden flex justify-center items-center gap-1 flex-1 min-w-0 px-2 mx-1">
             {/* Search Bar */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <input
                 type="text"
@@ -216,7 +216,7 @@ export function Header() {
                 value={searchQuery}
                 onChange={e => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className={`w-[320px] pl-10 pr-10 py-3 md:py-[11px] text-sm bg-surface rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                className={`w-full pl-10 pr-10 py-3 md:py-[11px] text-sm bg-surface rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                     : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'

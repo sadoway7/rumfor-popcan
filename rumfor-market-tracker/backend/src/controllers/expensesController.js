@@ -150,16 +150,13 @@ const getExpenses = catchAsync(async (req, res, next) => {
     updatedAt: expense.updatedAt
   }))
 
-  // Wrap properly - sendSuccess will spread this object, so we need an extra nesting level
   sendSuccess(res, {
-    data: {
-      data: transformedExpenses,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: transformedExpenses.length,
-        totalPages: Math.ceil(transformedExpenses.length / limit)
-      }
+    data: transformedExpenses,
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: transformedExpenses.length,
+      totalPages: Math.ceil(transformedExpenses.length / limit)
     }
   }, 'Expenses retrieved successfully')
 })

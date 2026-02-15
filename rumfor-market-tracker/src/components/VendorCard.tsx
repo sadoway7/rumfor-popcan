@@ -140,6 +140,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
         <Link
           to={`/vendors/${vendorId}`}
           className="text-xs text-amber-500 hover:text-amber-600 underline absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
         >
           vendor profile
         </Link>
@@ -190,13 +191,6 @@ export const VendorCard: React.FC<VendorCardProps> = ({
     </div>
   )
 
-  if (showLink) {
-    return (
-      <Link to={`/vendors/${vendorId}`} className="block">
-        {card}
-      </Link>
-    )
-  }
   return card
 }
 

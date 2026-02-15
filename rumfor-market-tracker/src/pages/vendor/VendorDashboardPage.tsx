@@ -8,13 +8,52 @@ import { Input } from '@/components/ui/Input'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
 import { useAllTodos } from '@/features/tracking/hooks/useAllTodos'
-import { useExpenses } from '@/features/tracking/hooks/useExpenses'
+import { useAllExpenses } from '@/features/tracking/hooks/useAllExpenses'
+import { cn } from '@/utils/cn'
+
+const categoryColors: Record<string, string> = {
+  'booth-fee': 'bg-blue-100 text-blue-700',
+  'transportation': 'bg-purple-100 text-purple-700',
+  'accommodation': 'bg-teal-100 text-teal-700',
+  'supplies': 'bg-amber-100 text-amber-700',
+  'equipment': 'bg-rose-100 text-rose-700',
+  'marketing': 'bg-pink-100 text-pink-700',
+  'food-meals': 'bg-orange-100 text-orange-700',
+  'gasoline': 'bg-red-100 text-red-700',
+  'insurance': 'bg-cyan-100 text-cyan-700',
+  'permits-licenses': 'bg-indigo-100 text-indigo-700',
+  'parking': 'bg-yellow-100 text-yellow-700',
+  'storage': 'bg-violet-100 text-violet-700',
+  'shipping': 'bg-emerald-100 text-emerald-700',
+  'utilities': 'bg-sky-100 text-sky-700',
+  'miscellaneous': 'bg-gray-100 text-gray-700',
+  'revenue': 'bg-green-100 text-green-700'
+}
+
+const categoryLabels: Record<string, string> = {
+  'booth-fee': 'Booth',
+  'transportation': 'Trans',
+  'accommodation': 'Stay',
+  'supplies': 'Supply',
+  'equipment': 'Equip',
+  'marketing': 'Mktg',
+  'food-meals': 'Food',
+  'gasoline': 'Fuel',
+  'insurance': 'Insur',
+  'permits-licenses': 'Permit',
+  'parking': 'Park',
+  'storage': 'Store',
+  'shipping': 'Ship',
+  'utilities': 'Util',
+  'miscellaneous': 'Other',
+  'revenue': 'Rev'
+}
 
 export function VendorDashboardPage() {
   const { todos, isLoading: todosLoading } = useTodos()
   const { trackedMarkets, isLoading: marketsLoading, getTrackingStatus } = useTrackedMarkets()
   const { toggleTodo, deleteTodo, updateTodo } = useAllTodos()
-  const { expenses, isLoading: expensesLoading } = useExpenses()
+  const { expenses, isLoading: expensesLoading, updateExpense } = useAllExpenses()
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingTodo, setEditingTodo] = useState<any>(null)
@@ -23,6 +62,8 @@ export function VendorDashboardPage() {
   const [editPriority, setEditPriority] = useState('medium')
   const [editDueDate, setEditDueDate] = useState('')
   const [editMarketId, setEditMarketId] = useState<string | undefined>(undefined)
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null)
+  const [editActualValue, setEditActualValue] = useState('')
 
   // Calculate task stats
   const pendingTodos = todos.filter(todo => !todo.completed)
@@ -31,12 +72,20 @@ export function VendorDashboardPage() {
     !todo.completed && todo.dueDate && new Date(todo.dueDate) < new Date()
   )
 
-  // Calculate overdue expenses (actual > budgeted)
+  // Calculate overdue expenses (actual not entered yet)
   const overdueExpenses = expenses.filter(expense => {
-    const actual = expense.actualAmount || 0
-    const budget = expense.amount || 0
-    return actual > budget
+    return expense.actualAmount === undefined
   })
+
+  // Only show overdue budgets on dashboard
+  const displayExpenses = overdueExpenses
+    .slice()
+    .sort((a, b) => {
+      const aDate = a.date ? new Date(a.date).getTime() : Infinity
+      const bDate = b.date ? new Date(b.date).getTime() : Infinity
+      return aDate - bDate
+    })
+    .slice(0, 5)
 
   // Calculate market tracking status counts
   const interestedCount = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status === 'interested').length
@@ -53,6 +102,29 @@ export function VendorDashboardPage() {
     }
     const colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899']
     return colors[Math.abs(hash) % colors.length]
+  }
+
+  const startEditingActual = (expenseId: string, currentValue: number | undefined) => {
+    setEditingExpenseId(expenseId)
+    setEditActualValue(currentValue !== undefined ? currentValue.toString() : '')
+  }
+
+  const saveActualAmount = (expenseId: string) => {
+    const newActual = editActualValue === '' ? undefined : parseFloat(editActualValue)
+    if (newActual === undefined || (!isNaN(newActual) && newActual >= 0)) {
+      updateExpense(expenseId, { actualAmount: newActual })
+    }
+    setEditingExpenseId(null)
+    setEditActualValue('')
+  }
+
+  const handleActualKeyPress = (e: React.KeyboardEvent, expenseId: string) => {
+    if (e.key === 'Enter') {
+      saveActualAmount(expenseId)
+    } else if (e.key === 'Escape') {
+      setEditingExpenseId(null)
+      setEditActualValue('')
+    }
   }
 
   const handleEdit = (todo: any) => {
@@ -105,10 +177,8 @@ export function VendorDashboardPage() {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-foreground">Markets</h2>
-          <Link to="/vendor/tracked-markets" className="block">
-            <Button size="sm" className="h-8 text-xs rounded-full">
-              View All
-            </Button>
+          <Link to="/vendor/tracked-markets" className="text-xs px-2 py-1 border border-foreground rounded-full hover:bg-surface">
+            View All
           </Link>
         </div>
         <div className="flex items-center gap-3 text-sm">
@@ -135,10 +205,8 @@ export function VendorDashboardPage() {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-foreground">Tasks</h2>
-          <Link to="/vendor/todos" className="block">
-            <Button size="sm" className="h-8 text-xs rounded-full">
-              View All
-            </Button>
+          <Link to="/vendor/todos" className="text-xs px-2 py-1 border border-foreground rounded-full hover:bg-surface">
+            View All
           </Link>
         </div>
         <div className="flex items-center gap-3 text-sm mb-3">
@@ -165,7 +233,6 @@ export function VendorDashboardPage() {
             <h3 className="text-xs font-medium text-muted-foreground mb-2">Overdue</h3>
             <div className="space-y-1">
               {overdueTodos.slice(0, 5).map((todo) => {
-                const days = todo.dueDate ? Math.ceil((new Date(todo.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null
                 const marketName = todo.marketId ? trackedMarkets.find(m => m.id === todo.marketId)?.name || 'General' : 'General'
 
                 return (
@@ -187,23 +254,15 @@ export function VendorDashboardPage() {
                       )}
                     </div>
 
-                    {/* Title and market name */}
+                    {/* Title and market name + date */}
                     <div className="flex-1 min-w-0">
-                      <p className="block text-sm font-medium truncate text-foreground text-red-600">
+                      <p className="block text-sm font-medium truncate text-red-600">
                         {todo.title}
                       </p>
                       <p className="block text-xs text-muted-foreground truncate">
-                        {marketName}
+                        {marketName !== 'General' ? marketName : ''}{todo.dueDate && marketName !== 'General' ? ' • ' : ''}{todo.dueDate ? new Date(todo.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                       </p>
                     </div>
-
-                    {/* Due date pill */}
-                    {todo.dueDate && (
-                      <span className="text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0 bg-red-100 text-red-700 font-medium">
-                        <Clock className="w-3 h-3" />
-                        {days !== null && days < 0 ? `${Math.abs(days)}d overdue` : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
 
                     {/* Priority pill for urgent tasks */}
                     {todo.priority === 'urgent' && (
@@ -253,10 +312,8 @@ export function VendorDashboardPage() {
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-foreground">Budget</h2>
-          <Link to="/vendor/budgets" className="block">
-            <Button size="sm" className="h-8 text-xs rounded-full">
-              View All
-            </Button>
+          <Link to="/vendor/budgets" className="text-xs px-2 py-1 border border-foreground rounded-full hover:bg-surface">
+            View All
           </Link>
         </div>
 
@@ -266,58 +323,63 @@ export function VendorDashboardPage() {
             <span className="font-semibold">{expenses.length}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">Overdue</span>
-            <span className="font-semibold text-red-600">{overdueExpenses.length}</span>
+            <span className="text-muted-foreground">Pending</span>
+            <span className="font-semibold text-amber-600">{overdueExpenses.length}</span>
           </div>
         </div>
 
-        {overdueExpenses.length > 0 && (
+        {displayExpenses.length > 0 && (
           <>
-            <h3 className="text-xs font-medium text-muted-foreground mb-2">Overdue Budgets</h3>
+            <h3 className="text-xs font-medium text-muted-foreground mb-2">Pending Budget Items</h3>
             <div className="space-y-1">
-              {overdueExpenses.slice(0, 5).map((expense) => {
+              {displayExpenses.map((expense) => {
                 const marketName = expense.marketId ? trackedMarkets.find(m => m.id === expense.marketId)?.name || 'General' : 'General'
-                const variance = expense.actualAmount !== undefined ? expense.actualAmount - expense.amount : 0
+                const isEditing = editingExpenseId === expense.id
 
                 return (
-                  <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px] border-red-200 bg-red-50/50">
-                    {/* Market indicator */}
-                    <div className="flex-shrink-0">
-                      {expense.marketId && (
-                        <div className="w-6 h-6 rounded-md flex items-center justify-center border-2" style={{backgroundColor: getMarketColor(expense.marketId), borderColor: getMarketColor(expense.marketId)}}>
-                          <span className="text-white text-xs font-semibold">{marketName.charAt(0)}</span>
-                        </div>
-                      )}
-                    </div>
+                  <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
+                    <span className={cn(
+                      "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
+                      categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
+                    )}>
+                      {categoryLabels[expense.category] || expense.category?.substring(0, 4) || 'Item'}
+                    </span>
 
-                    {/* Title and market name */}
                     <div className="flex-1 min-w-0">
-                      <p className="block text-sm font-medium truncate text-foreground">
-                        {expense.title || 'Untitled Budget'}
-                      </p>
-                      <p className="block text-xs text-muted-foreground truncate">
-                        {marketName}
-                      </p>
+                      <span className="block text-sm font-medium truncate">{expense.title || 'Untitled Budget'}</span>
+                      <span className="block text-xs text-muted-foreground truncate">
+                        {marketName !== 'General' ? marketName : ''}{expense.date && marketName !== 'General' ? ' • ' : ''}{expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                      </span>
                     </div>
 
-                    {/* Amounts */}
-                    <div className="text-right">
-                      <div className="text-xs font-medium text-muted-foreground">
-                        ${expense.amount.toLocaleString()}
-                      </div>
-                      <div className="text-xs font-semibold text-red-600">
-                        ${expense.actualAmount?.toLocaleString() || '0'}
-                      </div>
+                    <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
+                      ${expense.amount.toLocaleString()}
                     </div>
 
-                    {/* Variance */}
-                    <div className="text-xs font-medium min-w-[50px] text-right whitespace-nowrap">
-                      {variance > 0 ? (
-                        <span className="text-red-600">+${variance.toLocaleString()}</span>
-                      ) : (
-                        <span className="text-muted-foreground">$0</span>
-                      )}
-                    </div>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        value={editActualValue}
+                        onChange={(e) => setEditActualValue(e.target.value)}
+                        onBlur={() => saveActualAmount(expense.id)}
+                        onKeyDown={(e) => handleActualKeyPress(e, expense.id)}
+                        placeholder="0"
+                        className="w-16 text-sm font-semibold text-right px-1 py-0.5 border-2 border-accent rounded bg-background focus:outline-none"
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startEditingActual(expense.id, expense.actualAmount)}
+                        className={cn(
+                          "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right px-2 py-0.5 rounded transition-colors border",
+                          expense.actualAmount === undefined
+                            ? "text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
+                            : "border-border hover:text-accent hover:bg-accent/10"
+                        )}
+                      >
+                        {expense.actualAmount !== undefined ? `$${expense.actualAmount.toLocaleString()}` : '-'}
+                      </button>
+                    )}
                   </div>
                 )
               })}
@@ -325,10 +387,10 @@ export function VendorDashboardPage() {
           </>
         )}
 
-        {overdueExpenses.length === 0 && (
+        {displayExpenses.length === 0 && (
           <div className="text-center py-4">
             <DollarSign className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
-            <p className="text-sm font-medium text-muted-foreground">No overdue budgets</p>
+            <p className="text-sm font-medium text-muted-foreground">No budget items</p>
           </div>
         )}
       </Card>

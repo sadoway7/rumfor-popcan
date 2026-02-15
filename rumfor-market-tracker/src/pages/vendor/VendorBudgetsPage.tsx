@@ -2,21 +2,93 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { Button } from '@/components/ui'
 import { Card } from '@/components/ui/Card'
-import { ArrowLeft, Plus, DollarSign, MoreVertical, Edit2, Trash2, X } from 'lucide-react'
-import { useExpenses } from '@/features/tracking/hooks/useExpenses'
+import { ArrowLeft, Plus, DollarSign, MoreVertical, Edit2, Trash2, X, Calendar } from 'lucide-react'
+import { useAllExpenses } from '@/features/tracking/hooks/useAllExpenses'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
+import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
+import { ExpenseCategory } from '@/types'
 
 export function VendorBudgetsPage() {
-  const { expenses } = useExpenses()
+  const { user } = useAuthStore()
+  const { expenses, createExpense, deleteExpense, isCreating } = useAllExpenses()
   const { trackedMarkets, getTrackingStatus } = useTrackedMarkets()
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<string | null>(null)
+  
+  const [newTitle, setNewTitle] = useState('')
+  const [newMarketId, setNewMarketId] = useState('')
+  const [newExpected, setNewExpected] = useState('')
+  const [newActual, setNewActual] = useState('')
+  const [newDate, setNewDate] = useState('')
+  const [newCategory, setNewCategory] = useState<ExpenseCategory>('miscellaneous')
+
+  // Get all markets the user is following
+  const trackedMarketsList = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status !== 'declined' && getTrackingStatus(market.id)?.status !== 'cancelled')
 
   // Calculate totals client-side
   const totalExpected = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0)
   const totalActual = expenses.reduce((sum, exp) => sum + (exp.actualAmount || 0), 0)
   const overBudget = totalActual > totalExpected
+
+  const handleCreateExpense = () => {
+    if (!newTitle.trim() || !newMarketId || !newExpected || !newDate) return
+    
+    createExpense({
+      title: newTitle,
+      marketId: newMarketId,
+      amount: parseFloat(newExpected),
+      actualAmount: newActual ? parseFloat(newActual) : undefined,
+      date: newDate,
+      category: newCategory,
+      vendorId: user?.id || ''
+    })
+    
+    setNewTitle('')
+    setNewMarketId(trackedMarketsList[0]?.id || '')
+    setNewExpected('')
+    setNewActual('')
+    setNewDate('')
+    setNewCategory('miscellaneous')
+    setShowCreateModal(false)
+    setEditingExpense(null)
+  }
+
+  const handleDeleteExpense = async (id: string) => {
+    if (confirm('Delete this budget item?')) {
+      deleteExpense(id)
+    }
+    setOpenMenuId(null)
+  }
+
+  const openEditModal = (expense: typeof expenses[0]) => {
+    setEditingExpense(expense.id)
+    setNewTitle(expense.title || '')
+    setNewMarketId(expense.marketId)
+    setNewExpected(expense.amount.toString())
+    setNewActual(expense.actualAmount?.toString() || '')
+    setNewDate(expense.date || '')
+    setNewCategory(expense.category || 'miscellaneous')
+    setShowCreateModal(true)
+    setOpenMenuId(null)
+  }
+
+  const resetForm = () => {
+    setNewTitle('')
+    setNewMarketId(trackedMarketsList[0]?.id || '')
+    setNewExpected('')
+    setNewActual('')
+    setNewDate('')
+    setNewCategory('miscellaneous')
+    setEditingExpense(null)
+    setShowCreateModal(false)
+  }
+
+  // Find expenses that don't match any tracked market
+  const unmatchedExpenses = expenses.filter(exp => 
+    !trackedMarketsList.some(market => market.id === exp.marketId)
+  )
 
   const getMarketColor = (marketId: string) => {
     let hash = 0
@@ -27,8 +99,10 @@ export function VendorBudgetsPage() {
     return colors[Math.abs(hash) % colors.length]
   }
 
-  // Get all markets the user is following
-  const trackedMarketsList = trackedMarkets.filter(market => getTrackingStatus(market.id)?.status !== 'declined' && getTrackingStatus(market.id)?.status !== 'cancelled')
+  const openCreateModal = () => {
+    setNewMarketId(trackedMarketsList[0]?.id || '')
+    setShowCreateModal(true)
+  }
 
   return (
     <div className="px-2 py-2">
@@ -56,7 +130,7 @@ export function VendorBudgetsPage() {
 
         <Button
           size="sm"
-          onClick={() => setShowCreateModal(true)}
+          onClick={openCreateModal}
           className="h-8 px-3 flex-shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -70,7 +144,7 @@ export function VendorBudgetsPage() {
             <DollarSign className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
             <h3 className="text-lg font-semibold mb-2">No Budgets Yet</h3>
             <p className="text-sm text-muted-foreground mb-4">Create budgets for your markets to track expenses</p>
-            <Button onClick={() => setShowCreateModal(true)} className="w-full">
+            <Button onClick={openCreateModal} className="w-full">
               <Plus className="w-4 h-4 mr-2" />
               Create Budget
             </Button>
@@ -117,13 +191,13 @@ export function VendorBudgetsPage() {
                           </div>
                         </div>
 
-                        {/* Title and category */}
+                        {/* Title and date */}
                         <div className="flex-1 min-w-0">
                           <span className="block text-sm font-medium truncate text-foreground">
                             {expense.title || 'Untitled Budget'}
                           </span>
                           <span className="block text-xs text-muted-foreground truncate">
-                            {expense.actualAmount !== undefined && expense.actualAmount > expense.amount && variance > 0 ? `Over by $${variance.toFixed(0)}` : ''}
+                            {expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}
                           </span>
                         </div>
 
@@ -162,17 +236,14 @@ export function VendorBudgetsPage() {
                           {openMenuId === expense.id && (
                             <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
                               <button
-                                onClick={() => setShowCreateModal(true)}
+                                onClick={() => openEditModal(expense)}
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
                               >
                                 <Edit2 className="w-4 h-4" />
                                 Edit
                               </button>
                               <button
-                                onClick={() => {
-                                  // TODO: Implement delete expense
-                                  setOpenMenuId(null)
-                                }}
+                                onClick={() => handleDeleteExpense(expense.id)}
                                 className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -191,14 +262,72 @@ export function VendorBudgetsPage() {
         </div>
       )}
 
+      {/* Unmatched expenses (market not tracked) */}
+      {unmatchedExpenses.length > 0 && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold text-foreground">Other Budgets</span>
+              <span className="text-xs text-muted-foreground">({unmatchedExpenses.length})</span>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {unmatchedExpenses.map((expense) => {
+              const variance = expense.actualAmount !== undefined ? expense.actualAmount - expense.amount : 0
+              return (
+                <div key={expense.id} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
+                  <div className="flex-shrink-0">
+                    <div className="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100 border border-gray-200">
+                      <DollarSign className="w-4 h-4 text-gray-500" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium truncate text-foreground">
+                      {expense.title || 'Untitled Budget'}
+                    </span>
+                    <span className="block text-xs text-muted-foreground truncate">
+                      {expense.date ? new Date(expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No date'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      ${expense.amount.toFixed(0)}
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenMenuId(openMenuId === expense.id ? null : expense.id)}
+                      className="p-1.5 rounded hover:bg-surface/50 touch-manipulation"
+                    >
+                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                    {openMenuId === expense.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+                        <button
+                          onClick={() => handleDeleteExpense(expense.id)}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* Create/Edit Expense Modal */}
       {showCreateModal && (
         <Card className="p-6 fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
           <div className="bg-background rounded-lg p-6 max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Create Budget</h3>
+              <h3 className="text-lg font-semibold">{editingExpense ? 'Edit Budget' : 'Create Budget'}</h3>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={resetForm}
                 className="p-1 hover:bg-surface/50 rounded"
               >
                 <X className="w-5 h-5" />
@@ -210,18 +339,35 @@ export function VendorBudgetsPage() {
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
                 <input
                   type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
                   className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
-                  placeholder="Budget title"
+                  placeholder="e.g., Booth fee, Gas, Supplies"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1">Market</label>
-                <select className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none">
+                <select 
+                  value={newMarketId}
+                  onChange={(e) => setNewMarketId(e.target.value)}
+                  className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+                >
+                  <option value="">Select a market</option>
                   {trackedMarketsList.map((market) => (
                     <option key={market.id} value={market.id}>{market.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Date</label>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -229,6 +375,8 @@ export function VendorBudgetsPage() {
                   <label className="block text-xs font-medium text-muted-foreground mb-1">Expected Amount</label>
                   <input
                     type="number"
+                    value={newExpected}
+                    onChange={(e) => setNewExpected(e.target.value)}
                     className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
                     placeholder="0.00"
                     min="0"
@@ -240,6 +388,8 @@ export function VendorBudgetsPage() {
                   <label className="block text-xs font-medium text-muted-foreground mb-1">Actual Amount</label>
                   <input
                     type="number"
+                    value={newActual}
+                    onChange={(e) => setNewActual(e.target.value)}
                     className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none"
                     placeholder="0.00"
                     min="0"
@@ -250,13 +400,17 @@ export function VendorBudgetsPage() {
 
               <div className="flex gap-2 pt-4 border-t">
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={resetForm}
                   className="flex-1 px-4 py-2 text-sm border-2 rounded-lg hover:bg-surface"
                 >
                   Cancel
                 </button>
-                <button className="flex-1 px-4 py-2 text-sm bg-accent text-white rounded-lg hover:bg-accent/90">
-                  Save
+                <button 
+                  onClick={handleCreateExpense}
+                  disabled={!newTitle.trim() || !newMarketId || !newExpected || !newDate || isCreating}
+                  className="flex-1 px-4 py-2 text-sm bg-accent text-white rounded-lg hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </div>

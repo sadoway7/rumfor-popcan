@@ -2,59 +2,63 @@ import * as Sentry from '@sentry/react'
 
 // Initialize Sentry for error monitoring
 export const initSentry = () => {
-  if (import.meta.env.VITE_SENTRY_DSN) {
-    Sentry.init({
-      dsn: import.meta.env.VITE_SENTRY_DSN,
-      environment: import.meta.env.MODE,
-      release: import.meta.env.VITE_APP_VERSION || '1.0.0',
+  const dsn = import.meta.env.VITE_SENTRY_DSN
+  
+  // Skip if DSN is not set or is a placeholder value
+  if (!dsn || dsn === 'your-sentry-dsn' || !dsn.startsWith('https://')) {
+    console.log('⚠️  Sentry DSN not configured, error monitoring disabled')
+    return
+  }
 
-      // Performance monitoring
-      integrations: [
-        Sentry.browserTracingIntegration(),
-        Sentry.replayIntegration({
-          maskAllText: import.meta.env.PROD,
-          blockAllMedia: import.meta.env.PROD,
-        }),
-      ],
+  Sentry.init({
+    dsn,
+    environment: import.meta.env.MODE,
+    release: import.meta.env.VITE_APP_VERSION || '1.0.0',
 
-      // Performance sample rate
-      tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    // Performance monitoring
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
+        maskAllText: import.meta.env.PROD,
+        blockAllMedia: import.meta.env.PROD,
+      }),
+    ],
 
-      // Session replay sample rate
-      replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-      replaysOnErrorSampleRate: 1.0,
+    // Performance sample rate
+    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
 
-      // Error filtering
-      beforeSend(event, hint) {
-        // Filter out common non-actionable errors
-        const error = hint.originalException as Error
-        if (error && error instanceof Error) {
-          const message = error.message || error.toString()
+    // Session replay sample rate
+    replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    replaysOnErrorSampleRate: 1.0,
 
-          // Filter network errors that are expected (like offline)
-          if (message.includes('Failed to fetch') && navigator.onLine === false) {
-            return null
-          }
+    // Error filtering
+    beforeSend(event, hint) {
+      // Filter out common non-actionable errors
+      const error = hint.originalException as Error
+      if (error && error instanceof Error) {
+        const message = error.message || error.toString()
 
-          // Filter CORS errors from external services
-          if (message.includes('CORS') || message.includes('Network Error')) {
-            return null
-          }
-
-          // Filter ResizeObserver loop errors (common browser issue)
-          if (message.includes('ResizeObserver loop limit exceeded')) {
-            return null
-          }
+        // Filter network errors that are expected (like offline)
+        if (message.includes('Failed to fetch') && navigator.onLine === false) {
+          return null
         }
 
-        return event
-      },
-    })
+        // Filter CORS errors from external services
+        if (message.includes('CORS') || message.includes('Network Error')) {
+          return null
+        }
 
-    console.log('✅ Sentry error monitoring initialized')
-  } else {
-    console.log('⚠️  Sentry DSN not configured, error monitoring disabled')
-  }
+        // Filter ResizeObserver loop errors (common browser issue)
+        if (message.includes('ResizeObserver loop limit exceeded')) {
+          return null
+        }
+      }
+
+      return event
+    },
+  })
+
+  console.log('✅ Sentry error monitoring initialized')
 }
 
 // Error boundary component

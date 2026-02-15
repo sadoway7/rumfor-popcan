@@ -299,7 +299,7 @@ export const VendorProfileEditPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
       {/* Card Preview */}
       <section className="mb-6">
         <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Vendor Card Preview</h2>
@@ -464,39 +464,41 @@ export const VendorProfileEditPage: React.FC = () => {
         <section>
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Location</h2>
           <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">City</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
+            <CardContent className="px-4 py-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium text-foreground">City</p>
+                    <span className="text-xs text-muted-foreground">Profile</span>
+                  </div>
+                  <CityAutocomplete
+                    value={watch('city') || ''}
+                    onChange={(value) => {
+                      const event = { target: { name: 'city', value } }
+                      register('city').onChange(event)
+                    }}
+                    onStateChange={(state) => {
+                      const event = { target: { name: 'state', value: state } }
+                      register('state').onChange(event)
+                    }}
+                    placeholder="Enter your city"
+                  />
                 </div>
-                <CityAutocomplete
-                  value={watch('city') || ''}
-                  onChange={(value) => {
-                    const event = { target: { name: 'city', value } }
-                    register('city').onChange(event)
-                  }}
-                  onStateChange={(state) => {
-                    const event = { target: { name: 'state', value: state } }
-                    register('state').onChange(event)
-                  }}
-                  placeholder="Enter your city"
-                />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Province/State</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium text-foreground">Province/State</p>
+                    <span className="text-xs text-muted-foreground">Profile</span>
+                  </div>
+                  <Select
+                    value={watch('state') || ''}
+                    onValueChange={(value) => {
+                      const event = { target: { name: 'state', value } }
+                      register('state').onChange(event)
+                    }}
+                    placeholder="Select province/state"
+                    options={PROVINCES_AND_STATES}
+                  />
                 </div>
-                <Select
-                  value={watch('state') || ''}
-                  onValueChange={(value) => {
-                    const event = { target: { name: 'state', value } }
-                    register('state').onChange(event)
-                  }}
-                  placeholder="Select province/state"
-                  options={PROVINCES_AND_STATES}
-                />
               </div>
             </CardContent>
           </Card>

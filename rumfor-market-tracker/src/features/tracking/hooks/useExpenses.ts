@@ -14,16 +14,19 @@ export const useExpenses = (marketId?: string) => {
       if (!user?.id) throw new Error('User not authenticated')
       try {
         const response = await trackingApi.getExpenses(marketId)
-        return response.data || { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
+        // Handle both old (nested) and new (correct) structure
+        if (Array.isArray(response?.data)) {
+          return { data: response.data, pagination: response.pagination || { page: 1, limit: 20, total: response.data.length, totalPages: 1 } }
+        }
+        return response || { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
       } catch (err) {
         console.error('Failed to fetch expenses:', err)
-        // Return empty paginated response on error (e.g., access denied when not tracking market yet)
         return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
       }
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const paginatedData = queryResult.data as PaginatedResponse<Expense> | undefined
