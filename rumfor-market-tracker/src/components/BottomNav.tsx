@@ -114,14 +114,14 @@ export function BottomNav({ role }: BottomNavProps) {
       <motion.nav 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ 
-          scale: 1, 
+          scale: 1.1, 
           opacity: 1,
         }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         role="navigation"
         aria-label="Bottom Navigation"
         className={cn(
-          "bg-white/87 dark:bg-black/87 backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2",
+          "bg-white/87 dark:bg-black/87 backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2 shadow-lg",
           "transition-all duration-300 ease-out",
           "will-change-transform"
         )}
@@ -146,7 +146,7 @@ export function BottomNav({ role }: BottomNavProps) {
                     ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary"
                     : isPrimary
                     ? "bg-amber-500 text-white hover:bg-amber-600 shadow-[3px_3px_0px_0px] shadow-black/40"
-                    : "bg-transparent text-gray-400 dark:text-gray-500 hover:bg-amber-500/10 hover:text-amber-500",
+                    : "bg-transparent text-gray-400 dark:text-gray-500",
                   "focus:outline-none focus-visible:ring-0",
                   isPrimary ? "w-12" : "px-4",
                   "-webkit-tap-highlight-color-transparent",
@@ -180,7 +180,7 @@ export function BottomNav({ role }: BottomNavProps) {
                   }}
                   className={cn(
                     "overflow-hidden font-medium text-xs whitespace-nowrap select-none",
-                    isActive && activeIndex >= 0 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground group-hover:text-amber-500",
+                    isActive && activeIndex >= 0 ? "text-primary dark:text-primary" : "text-muted-foreground dark:text-muted-foreground",
                   )}
                   title={item.name}
                 >
