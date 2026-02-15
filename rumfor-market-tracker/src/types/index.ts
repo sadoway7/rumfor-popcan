@@ -6,6 +6,15 @@ export interface VendorProfileData {
   productCategories?: string[];
   cardColor?: string | null;
   profileImage?: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  publicPhone?: string;
+  galleryImages?: string[];
+  etsy?: string;
+  shoppingLink?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface User {
@@ -116,6 +125,15 @@ export interface VendorCardData {
 
 export interface VendorPublicProfile extends VendorCardData {
   bio: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  publicPhone?: string;
+  galleryImages?: string[];
+  etsy?: string;
+  shoppingLink?: string;
+  city?: string;
+  state?: string;
   stats: {
     totalMarkets: number;
     approvedApplications: number;
@@ -168,6 +186,15 @@ export interface VendorProfileUpdateData {
   productCategories?: string[];
   cardColor?: string | null;
   profileImage?: string;
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  publicPhone?: string;
+  galleryImages?: string[];
+  etsy?: string;
+  shoppingLink?: string;
+  city?: string;
+  state?: string;
 }
 
 // Market Types

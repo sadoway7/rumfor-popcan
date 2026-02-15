@@ -26,6 +26,11 @@ const buildVendorCardData = (vendor) => ({
   profileImage: vendor.vendorProfile?.profileImage || vendor.profileImage || '',
   productCategories: vendor.vendorProfile?.productCategories || [],
   website: vendor.vendorProfile?.website || '',
+  instagram: vendor.vendorProfile?.instagram || '',
+  facebook: vendor.vendorProfile?.facebook || '',
+  tiktok: vendor.vendorProfile?.tiktok || '',
+  publicPhone: vendor.vendorProfile?.publicPhone || '',
+  galleryImages: vendor.vendorProfile?.galleryImages || [],
 });
 
 // List/search vendors (public, paginated)
@@ -154,6 +159,15 @@ const getVendorProfile = catchAsync(async (req, res, next) => {
   const vendorData = {
     ...buildVendorCardData(vendor),
     bio: vendor.bio || '',
+    instagram: vendor.vendorProfile?.instagram || '',
+    facebook: vendor.vendorProfile?.facebook || '',
+    tiktok: vendor.vendorProfile?.tiktok || '',
+    publicPhone: vendor.vendorProfile?.publicPhone || '',
+    galleryImages: vendor.vendorProfile?.galleryImages || [],
+    etsy: vendor.vendorProfile?.etsy || '',
+    shoppingLink: vendor.vendorProfile?.shoppingLink || '',
+    city: vendor.vendorProfile?.city || '',
+    state: vendor.vendorProfile?.state || '',
     stats: stats[0]
       ? {
           totalMarkets: stats[0].totalMarkets,
@@ -292,6 +306,15 @@ const updateVendorProfile = catchAsync(async (req, res, next) => {
     productCategories,
     cardColor,
     profileImage,
+    instagram,
+    facebook,
+    tiktok,
+    publicPhone,
+    galleryImages,
+    etsy,
+    shoppingLink,
+    city,
+    state,
   } = req.body;
 
   // Build update object — only set fields that were provided
@@ -308,6 +331,15 @@ const updateVendorProfile = catchAsync(async (req, res, next) => {
   if (productCategories !== undefined) updates['vendorProfile.productCategories'] = productCategories;
   if (cardColor !== undefined) updates['vendorProfile.cardColor'] = cardColor;
   if (profileImage !== undefined) updates['vendorProfile.profileImage'] = profileImage;
+  if (instagram !== undefined) updates['vendorProfile.instagram'] = instagram;
+  if (facebook !== undefined) updates['vendorProfile.facebook'] = facebook;
+  if (tiktok !== undefined) updates['vendorProfile.tiktok'] = tiktok;
+  if (publicPhone !== undefined) updates['vendorProfile.publicPhone'] = publicPhone;
+  if (galleryImages !== undefined) updates['vendorProfile.galleryImages'] = galleryImages;
+  if (etsy !== undefined) updates['vendorProfile.etsy'] = etsy;
+  if (shoppingLink !== undefined) updates['vendorProfile.shoppingLink'] = shoppingLink;
+  if (city !== undefined) updates['vendorProfile.city'] = city;
+  if (state !== undefined) updates['vendorProfile.state'] = state;
 
   const vendor = await User.findOneAndUpdate(
     {

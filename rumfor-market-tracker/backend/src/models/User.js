@@ -97,6 +97,42 @@ const userSchema = new mongoose.Schema({
     profileImage: {
       type: String,
       trim: true
+    },
+    instagram: {
+      type: String,
+      trim: true
+    },
+    facebook: {
+      type: String,
+      trim: true
+    },
+    tiktok: {
+      type: String,
+      trim: true
+    },
+    publicPhone: {
+      type: String,
+      trim: true
+    },
+    galleryImages: [{
+      type: String,
+      trim: true
+    }],
+    etsy: {
+      type: String,
+      trim: true
+    },
+    shoppingLink: {
+      type: String,
+      trim: true
+    },
+    city: {
+      type: String,
+      trim: true
+    },
+    state: {
+      type: String,
+      trim: true
     }
   },
 

@@ -25,6 +25,7 @@ interface AuthStore extends AuthState {
   
   // Profile management
   updateProfile: (data: Partial<User>) => Promise<void>
+  deleteProfile: () => Promise<void>
   
   // Utility methods
   updateUser: (user: Partial<User>) => void
@@ -303,6 +304,37 @@ export const useAuthStore = create<AuthStore>()(
           set({
             isLoading: false,
             error: error instanceof Error ? error.message : 'Failed to update profile',
+          })
+          throw error
+        }
+      },
+
+      deleteProfile: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          await authApi.deleteProfile()
+          // Clear auth state after successful deletion
+          set({
+            user: null,
+            token: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isEmailVerified: false,
+            error: null,
+            isLoading: false,
+            isPasswordResetLoading: false,
+            passwordResetSuccess: false,
+            passwordResetError: null,
+            isEmailVerificationLoading: false,
+            emailVerificationSuccess: false,
+            emailVerificationError: null,
+            isTokenRefreshing: false,
+            tokenRefreshError: null,
+          })
+        } catch (error) {
+          set({
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to delete profile',
           })
           throw error
         }

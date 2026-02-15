@@ -1,88 +1,197 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
+import { Card, CardContent } from '@/components/ui'
 import { Button } from '@/components/ui'
+import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
+import { Alert } from '@/components/ui/Alert'
 
 export function SettingsPage() {
-  const { user } = useAuthStore()
+  const { user, deleteProfile, isLoading } = useAuthStore()
+  const navigate = useNavigate()
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [pushNotifications, setPushNotifications] = useState(true)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+    <div className="max-w-2xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Settings</h1>
+        <p className="text-sm text-muted-foreground mt-1">Manage your account</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-          <CardDescription>
-            Update your personal information and account settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Email</label>
-              <p className="text-foreground">{user?.email}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Role</label>
-              <p className="text-foreground capitalize">{user?.role}</p>
-            </div>
-          </div>
-          <div className="pt-4">
-            <Link to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}>
-              <Button variant="outline">Edit Profile</Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Security</CardTitle>
-          <CardDescription>
-            Manage your password and security settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="font-medium">Password</p>
-              <p className="text-sm text-muted-foreground">Last updated 30 days ago</p>
-            </div>
-            <Button variant="outline">Change Password</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Configure how you receive notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">Receive updates via email</p>
+      <div className="space-y-6">
+        <section>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Account</h2>
+          <Card padding="none">
+            <CardContent className="divide-y divide-surface-3 px-4">
+              <div className="flex items-center justify-between py-3 min-w-0">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground">Email address</p>
+                </div>
+                <Link 
+                  to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
+                  className="flex-shrink-0"
+                >
+                  <Button variant="ghost" size="sm" className="text-accent hover:text-accent-light h-9 px-3">
+                    Edit
+                  </Button>
+                </Link>
               </div>
-              <input type="checkbox" className="rounded border-border" defaultChecked />
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">Push Notifications</p>
-                <p className="text-sm text-muted-foreground">Receive browser notifications</p>
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Account type</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                </div>
               </div>
-              <input type="checkbox" className="rounded border-border" defaultChecked />
+            </CardContent>
+          </Card>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Security</h2>
+          <Card padding="none">
+            <CardContent className="divide-y divide-surface-3 px-4">
+              <div className="flex items-center justify-between py-3">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground">Password</p>
+                  <p className="text-xs text-muted-foreground">Last changed 30 days ago</p>
+                </div>
+                <Button variant="ghost" size="sm" className="text-accent hover:text-accent-light h-9 px-3 flex-shrink-0">
+                  Change
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Notifications</h2>
+          <Card padding="none">
+            <CardContent className="divide-y divide-surface-3 px-4">
+              <div className="flex items-center justify-between py-3">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground">Email notifications</p>
+                  <p className="text-xs text-muted-foreground">Receive updates via email</p>
+                </div>
+                <button
+                  onClick={() => setEmailNotifications(!emailNotifications)}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                    emailNotifications ? 'bg-accent' : 'bg-surface-3'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    emailNotifications ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground">Push notifications</p>
+                  <p className="text-xs text-muted-foreground">Receive browser notifications</p>
+                </div>
+                <button
+                  onClick={() => setPushNotifications(!pushNotifications)}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${
+                    pushNotifications ? 'bg-accent' : 'bg-surface-3'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    pushNotifications ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <Card padding="none">
+          <CardContent className="px-4">
+            <div className="flex items-center justify-between py-3">
+              <div className="min-w-0 flex-1 pr-4">
+                <p className="text-sm font-medium text-foreground">Delete profile</p>
+                <p className="text-xs text-muted-foreground">Remove your personal data only</p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-destructive hover:text-destructive/80 hover:bg-destructive/10 h-9 px-3 flex-shrink-0"
+                onClick={() => setShowDeleteModal(true)}
+              >
+                Delete
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Delete Profile Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Profile"
+        description="This action cannot be undone"
+        size="sm"
+      >
+        <ModalContent>
+          <Alert variant="destructive" className="mb-4" title="Warning">
+            Are you sure you want to delete your profile?
+            
+            <div className="mt-3 space-y-2">
+              <div>
+                <p className="font-medium text-sm">Will be deleted:</p>
+                <ul className="list-disc list-inside mt-1 text-sm">
+                  <li>Your account credentials</li>
+                  <li>Personal profile information</li>
+                  <li>Notification preferences</li>
+                  <li>Application history</li>
+                  <li>Comments and reviews</li>
+                </ul>
+              </div>
+              
+              <div>
+                <p className="font-medium text-sm">Will remain:</p>
+                <ul className="list-disc list-inside mt-1 text-sm">
+                  <li>Markets you've created (will become unassociated)</li>
+                  <li>Photos uploaded to markets (will remain)</li>
+                </ul>
+              </div>
+            </div>
+            
+            <p className="mt-3 text-sm font-medium">This action cannot be undone.</p>
+          </Alert>
+        </ModalContent>
+        
+        <ModalFooter>
+          <Button
+            variant="outline"
+            onClick={() => setShowDeleteModal(false)}
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={async () => {
+              setIsDeleting(true)
+              try {
+                await deleteProfile()
+                navigate('/')
+              } catch (error) {
+                console.error('Failed to delete profile:', error)
+              } finally {
+                setIsDeleting(false)
+                setShowDeleteModal(false)
+              }
+            }}
+            disabled={isDeleting || isLoading}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete Profile'}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   )
 }

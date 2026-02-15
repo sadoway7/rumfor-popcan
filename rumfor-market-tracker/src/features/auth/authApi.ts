@@ -63,6 +63,7 @@ type AuthApi = {
   logout: () => Promise<void>
   getCurrentUser: () => Promise<User>
   updateProfile: (data: Partial<User>) => Promise<User>
+  deleteProfile: () => Promise<{ message: string }>
 }
 
 // Mock API functions for development
@@ -235,6 +236,32 @@ const mockApi: AuthApi = {
     mockUsers[userIndex] = { ...mockUsers[userIndex], ...data, updatedAt: new Date().toISOString() }
     return mockUsers[userIndex]
   },
+
+  deleteProfile: async (): Promise<{ message: string }> => {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    const token = localStorage.getItem('auth-token')
+    if (!token || !token.startsWith('mock-jwt-token-')) {
+      throw new AuthApiError('No valid token', 'NO_TOKEN', 401)
+    }
+
+    const tokenParts = token.split('-')
+    const userId = tokenParts[tokenParts.length - 2]
+
+    const userIndex = mockUsers.findIndex(u => u.id === userId)
+    if (userIndex === -1) {
+      throw new AuthApiError('User not found', 'USER_NOT_FOUND', 404)
+    }
+
+    // Remove user from mock data
+    mockUsers.splice(userIndex, 1)
+    delete mockPasswords[userId]
+    
+    // Clear token
+    localStorage.removeItem('auth-token')
+
+    return { message: 'Profile deleted successfully.' }
+  },
 }
 
 // Real API functions for production
@@ -380,6 +407,19 @@ const realApi: AuthApi = {
     }
 
     return response.data.user
+  },
+
+  deleteProfile: async (): Promise<{ message: string }> => {
+    const response = await httpClient.delete<ApiResponse<{ message: string }>>('/auth/me')
+
+    if (!response.success) {
+      throw new AuthApiError(
+        response.error || 'Failed to delete profile',
+        'DELETE_PROFILE_FAILED'
+      )
+    }
+
+    return response.data || { message: response.message || 'Profile deleted successfully.' }
   },
 }
 
