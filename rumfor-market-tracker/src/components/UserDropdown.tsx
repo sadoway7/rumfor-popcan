@@ -49,7 +49,11 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             user={user || {}}
             size={avatarSize === 'sm' ? 'sm' : 'header'}
             shape="circle"
-            className="bg-white shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40 md:border-2 md:border-surface-3"
+            className={`bg-white border-2 border-surface-3 ${
+              theme === 'light'
+                ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
+                : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
+            }`}
           />
         </button>
       </DropdownMenuTrigger>

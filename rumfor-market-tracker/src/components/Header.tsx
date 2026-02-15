@@ -136,12 +136,16 @@ export function Header() {
       className={`sticky top-0 z-[60] bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? '-translate-y-full' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-[auto,1fr,auto] items-center h-14 md:h-16 gap-2 md:gap-4">
+        <div className="grid grid-cols-[auto,1fr,auto] items-center h-18 md:h-16 gap-2 md:gap-4 py-2">
           {/* Logo - Left */}
           <div className="flex items-center flex-shrink-0">
             <Link to="/">
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 shadow-[3px_3px_0px_0px] shadow-black/40">
-                <span className="text-accent-foreground font-bold text-sm">
+              <div className={`w-10 h-10 md:w-8 md:h-8 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 ${
+              theme === 'light'
+                ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
+                : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
+            }`}>
+                <span className="text-accent-foreground font-bold text-base md:text-sm">
                   R
                 </span>
               </div>
@@ -159,7 +163,7 @@ export function Header() {
                 value={searchQuery}
                 onChange={e => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className={`w-full pl-10 pr-10 py-[11px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                className={`w-full pl-10 pr-10 py-[11px] text-sm bg-surface rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                     : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
@@ -202,17 +206,17 @@ export function Header() {
           </div>
           
           {/* Mobile Search Bar */}
-          <div className="md:hidden flex-1 flex justify-center items-center px-1 gap-1 ml-1">
+          <div className="md:hidden flex justify-center items-center px-1 gap-1 ml-1">
             {/* Search Bar */}
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <input
                 type="text"
                 placeholder={getSearchPlaceholder()}
                 value={searchQuery}
                 onChange={e => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className={`w-full pl-10 pr-10 py-[10px] text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
+                className={`w-[320px] pl-10 pr-10 py-3 md:py-[11px] text-sm bg-surface rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-200 ${
                   theme === 'light'
                     ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                     : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
@@ -308,17 +312,17 @@ export function Header() {
           <div className="md:hidden flex items-center space-x-2">
             {isAuthenticated ? (
               <UserDropdown 
-                avatarSize="sm" 
+                avatarSize="md" 
                 onSetLocation={() => setLocationModalOpen(true)} 
               />
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="text-muted-foreground hover:text-foreground p-2 min-h-11 min-w-11"
+                    className="text-muted-foreground hover:text-foreground p-2 min-h-12 min-w-12"
                     aria-label="Open menu"
                   >
-                    <Menu className="h-6 w-6" />
+                    <Menu className="h-7 w-7" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
