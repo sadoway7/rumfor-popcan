@@ -667,6 +667,32 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
     }
   });
 
+  // Aggregate comment counts for each market
+  const commentCounts = marketIds.length > 0
+    ? await Comment.aggregate([
+        {
+          $match: {
+            market: { $in: marketIds },
+            isDeleted: false,
+            isModerated: false,
+          },
+        },
+        {
+          $group: {
+            _id: '$market',
+            count: { $sum: 1 },
+          },
+        },
+      ])
+    : [];
+
+  const commentCountMap = new Map();
+  commentCounts.forEach(c => {
+    if (c._id) {
+      commentCountMap.set(c._id.toString(), c.count);
+    }
+  });
+
   // OPTIMIZED QUERY: Using .find() with .populate() and .lean() for 60-70% faster performance
   const tracking = await UserMarketTracking.find(query)
     .populate({
@@ -697,13 +723,24 @@ const getMyMarkets = catchAsync(async (req, res, next) => {
   );
 
   // Re-enable serializer for proper frontend data formatting
-  const serializedTracking = validTracking.map(t => ({
-    ...t,
-    market: serializeMarket(t.market),
-    totalExpenses: expenseTotalsMap.get(t.market?.toString()) || 0,
-    todoCount: todoTotalsMap.get(t.market?.toString())?.total || 0,
-    todoProgress: todoTotalsMap.get(t.market?.toString())?.progress || 0,
-  }));
+  const serializedTracking = validTracking.map(t => {
+    const serializedMarket = serializeMarket(t.market);
+    // Add comment count to stats
+    if (serializedMarket && serializedMarket.stats) {
+      serializedMarket.stats.commentCount = commentCountMap.get(t.market?._id?.toString()) || 0;
+    } else if (serializedMarket) {
+      serializedMarket.stats = {
+        commentCount: commentCountMap.get(t.market?._id?.toString()) || 0,
+      };
+    }
+    return {
+      ...t,
+      market: serializedMarket,
+      totalExpenses: expenseTotalsMap.get(t.market?._id?.toString()) || 0,
+      todoCount: todoTotalsMap.get(t.market?._id?.toString())?.total || 0,
+      todoProgress: todoTotalsMap.get(t.market?._id?.toString())?.progress || 0,
+    };
+  });
 
   sendSuccess(
     res,
