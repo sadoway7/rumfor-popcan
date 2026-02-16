@@ -96,16 +96,16 @@ const mockVendors: VendorCardData[] = [
 
 // Market categories for browsing
 const marketCategories = [
-  { name: 'Farmers Markets', icon: Leaf },
-  { name: 'Arts & Crafts', icon: Palette },
-  { name: 'Flea Markets', icon: ShoppingBag },
-  { name: 'Food Festivals', icon: UtensilsCrossed },
-  { name: 'Vintage & Antique', icon: Archive },
-  { name: 'Craft Shows', icon: Hammer },
-  { name: 'Night Markets', icon: Moon },
-  { name: 'Street Fairs', icon: MapPin },
-  { name: 'Holiday Markets', icon: Gift },
-  { name: 'Community Events', icon: Users },
+  { name: 'Farmers Markets', icon: Leaf, slug: 'farmers-market' },
+  { name: 'Arts & Crafts', icon: Palette, slug: 'arts-crafts' },
+  { name: 'Flea Markets', icon: ShoppingBag, slug: 'flea-market' },
+  { name: 'Food Festivals', icon: UtensilsCrossed, slug: 'food-festival' },
+  { name: 'Vintage & Antique', icon: Archive, slug: 'vintage-antique' },
+  { name: 'Craft Shows', icon: Hammer, slug: 'craft-show' },
+  { name: 'Night Markets', icon: Moon, slug: 'night-market' },
+  { name: 'Street Fairs', icon: MapPin, slug: 'street-fair' },
+  { name: 'Holiday Markets', icon: Gift, slug: 'holiday-market' },
+  { name: 'Community Events', icon: Users, slug: 'community-event' },
 ];
 
 export function HomePage() {
@@ -123,7 +123,7 @@ export function HomePage() {
 
   const [showLoginForm, setShowLoginForm] = useState(false);
 
-  // Fetch trending vendors for homepage
+  // Fetch new vendors for homepage
   const { vendors: apiVendors, isLoading: vendorsLoading } = useVendors({}, 1, 6);
   const displayVendors = apiVendors.length > 0 ? apiVendors : mockVendors;
   const hasRealVendors = apiVendors.length > 0;
@@ -239,14 +239,10 @@ export function HomePage() {
                 <div className="grid grid-cols-2 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
-                    const categorySlug = cat.name
-                      .toLowerCase()
-                      .replace(' & ', '-')
-                      .replace(' ', '-');
                     return (
                       <Link
                         key={cat.name}
-                        to={`/markets?category=${categorySlug}`}
+                        to={`/markets?category=${cat.slug}`}
                       >
                         <div className="flex items-center gap-2 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
                           <Icon
@@ -364,14 +360,10 @@ export function HomePage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
-                    const categorySlug = cat.name
-                      .toLowerCase()
-                      .replace(' & ', '-')
-                      .replace(' ', '-');
                     return (
                       <Link
                         key={cat.name}
-                        to={`/markets?category=${categorySlug}`}
+                        to={`/markets?category=${cat.slug}`}
                       >
                         <div className="flex items-center gap-2 p-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
                           <Icon
@@ -415,11 +407,11 @@ export function HomePage() {
           />
         </section>
 
-        {/* Trending Vendors */}
+        {/* New Vendors */}
         <section className="mt-10 mb-10">
           <div className="flex items-center justify-between mb-6 pt-6">
             <h2 className="text-2xl font-bold text-foreground">
-              Trending Vendors
+              New Vendors
             </h2>
             <Link to="/vendors">
               <Button variant="ghost" size="sm" className="text-amber-500">

@@ -27,7 +27,6 @@ export const MarketSearchPage: React.FC = () => {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
-  const isInitialLoad = useRef(true);
   const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebarStore();
   const { isAuthenticated } = useAuthStore();
   const trendingHashtags = [
@@ -61,23 +60,26 @@ export const MarketSearchPage: React.FC = () => {
     infiniteScroll: true,
   });
 
-  // Initialize filters from URL params when component mounts
+  // Initialize filters from URL params when component mounts or URL changes
   useEffect(() => {
-    if (!isInitialLoad.current) return;
-    isInitialLoad.current = false;
+    const urlCategory = searchParams.get('category');
+    const urlSearch = searchParams.get('search');
+    const urlCity = searchParams.get('city');
+    const urlState = searchParams.get('state');
+    const urlStatus = searchParams.get('status');
+
+    if (!urlCategory && !urlSearch && !urlCity && !urlState && !urlStatus) {
+      return;
+    }
 
     const urlFilters: MarketFilterType = {
-      search: searchParams.get('search') || '',
-      category: searchParams
-        .get('category')
-        ?.split(',') as MarketFilterType['category'],
+      search: urlSearch || '',
+      category: urlCategory ? urlCategory.split(',') as MarketFilterType['category'] : undefined,
       location: {
-        city: searchParams.get('city') || '',
-        state: searchParams.get('state') || '',
+        city: urlCity || '',
+        state: urlState || '',
       },
-      status: searchParams
-        .get('status')
-        ?.split(',') as MarketFilterType['status'],
+      status: urlStatus ? urlStatus.split(',') as MarketFilterType['status'] : undefined,
       accessibility: {
         wheelchairAccessible: searchParams.get('wheelchair') === 'true',
         parkingAvailable: searchParams.get('parking') === 'true',
@@ -90,25 +92,11 @@ export const MarketSearchPage: React.FC = () => {
       showPastMarkets: searchParams.get('showPastMarkets') === 'false' ? false : true,
     };
 
-    if (
-      Object.keys(urlFilters).some(key => {
-        const value = urlFilters[key as keyof MarketFilterType];
-        if (typeof value === 'string') return value !== '';
-        if (Array.isArray(value)) return value.length > 0;
-        if (typeof value === 'object' && value !== null) {
-          return Object.values(value).some(v => v === true);
-        }
-        return false;
-      })
-    ) {
-      setFilters(urlFilters);
-    }
-  }, []);
+    setFilters(urlFilters);
+  }, [searchParams]);
 
   // Handle URL search param changes from header search
   useEffect(() => {
-    if (isInitialLoad.current) return;
-
     const urlSearch = searchParams.get('search') || '';
     if (urlSearch !== filters.search) {
       setFilters({ ...filters, search: urlSearch });

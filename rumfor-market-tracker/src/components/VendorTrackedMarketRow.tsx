@@ -240,7 +240,10 @@ const formatSchedule = (schedule: Market['schedule']): string => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => onUntrack?.(market.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUntrack?.(market.id)
+                        }}
                         className="text-red-600 focus:text-red-600"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -505,7 +508,10 @@ const formatSchedule = (schedule: Market['schedule']): string => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => onUntrack?.(market.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onUntrack?.(market.id)
+                        }}
                         className="text-red-600 focus:text-red-600"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
