@@ -228,24 +228,26 @@ export const MarketDetailPage: React.FC = () => {
       <div className="w-full max-w-6xl mx-auto sm:px-4">
       {/* HERO SECTION - Matching MarketCard minimal variant */}
       <div className={cn(
-        "relative overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] transition-all duration-300",
-        isDescriptionExpanded ? "min-h-96 md:min-h-[28rem]" : "h-96 md:h-[28rem]"
+        "relative overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]",
+        isDescriptionExpanded ? "min-h-96 md:min-h-[28rem] h-auto" : "h-96 md:h-[28rem]"
       )}>
-        {/* Market Image */}
-        {market.images && market.images.length > 0 ? (
-          <img
-            src={market.images[selectedImageIndex]}
-            alt={market.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground">No image</span>
-          </div>
-        )}
+        {/* Market Image - Fixed height background */}
+        <div className="absolute inset-0 h-96 md:h-[28rem]">
+          {market.images && market.images.length > 0 ? (
+            <img
+              src={market.images[selectedImageIndex]}
+              alt={market.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-muted-foreground">No image</span>
+            </div>
+          )}
+        </div>
 
         {/* Back Button - Top Left */}
-        <div className="absolute top-0 left-0 p-3">
+        <div className="absolute top-0 left-0 p-3 z-10">
           <Button
             variant="outline"
             size="sm"
@@ -257,7 +259,7 @@ export const MarketDetailPage: React.FC = () => {
         </div>
 
         {/* Category - Flag style at right edge */}
-        <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
+        <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 z-10 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
           {categoryLabels[market.category]}
         </div>
 
@@ -304,29 +306,27 @@ export const MarketDetailPage: React.FC = () => {
           </button>
         )}
 
-        {/* Title + Description */}
-        <div className="absolute bottom-0 left-0 right-0">
-          {/* Dark gradient overlay */}
+        {/* Title + Description - in document flow when expanded */}
+        <div className={cn(
+          "transition-[padding] duration-500 ease-out",
+          isDescriptionExpanded ? "relative pt-28 md:pt-36" : "absolute bottom-0 left-0 right-0"
+        )}>
+          {/* Dark gradient background */}
           <div 
-            className="absolute inset-0 transition-all duration-300"
+            className={cn(
+              "absolute left-0 right-0 bottom-0 transition-all duration-500",
+              isDescriptionExpanded ? "top-0" : "inset-0"
+            )}
             style={{
               background: isDescriptionExpanded
-                ? 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.1) 100%)'
+                ? 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.3) 100%)'
                 : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
             }}
           />
-          {/* Dark overlay for readability */}
-          <div 
-            className="absolute inset-0 transition-all duration-300"
-            style={{
-              background: isDescriptionExpanded
-                ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.15) 95%, transparent 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
-            }}
-          />
+          
           {/* Content */}
           <div className={cn(
-            "relative px-4 pt-4 z-10 transition-all duration-300",
+            "relative px-4 pt-4 z-10 transition-[padding] duration-500 ease-out",
             isDescriptionExpanded ? "pb-16 pr-28" : "pb-6 pr-16"
           )}>
             <h1 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
@@ -335,7 +335,7 @@ export const MarketDetailPage: React.FC = () => {
             <p
               ref={descriptionRef}
               className={cn(
-                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md",
+                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md transition-all duration-500 ease-out",
                 !isDescriptionExpanded && "line-clamp-2"
               )}
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
@@ -581,52 +581,47 @@ export const MarketDetailPage: React.FC = () => {
                            <span>ATM</span>
                          </div>
                        )}
+                        </div>
                      </div>
-                   </div>
-                </div>
-              )
-            },
-            {
-              key: 'vendors',
-              label: 'Vendors',
-              icon: <Users className="w-4 h-4" />,
-              content: (
-                <div className="space-y-4 pb-4 pt-4 px-4 pb-[100px]">
-                  {/* Vendors Header + Search */}
-                  <div className="flex items-center justify-between gap-4">
-                    <h2 className="font-semibold whitespace-nowrap">
-                      {filteredVendors.length} Vendors Attending
-                    </h2>
-                    <div className="relative w-48">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <input
-                        type="text"
-                        placeholder="Filter vendors..."
-                        value={vendorSearchTerm}
-                        onChange={(e) => setVendorSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm shadow-black/15"
-                      />
-                    </div>
-                  </div>
 
-                  {/* Vendor List */}
-                  {filteredVendors.length > 0 ? (
-                    <div className="space-y-3">
-                      {filteredVendors.map((vendor, index) => (
-                        <VendorCard
-                          key={vendor.user?.id || index}
-                          vendor={vendor}
-                          variant="compact"
+                  <hr className="border-t border-gray-200 my-8" />
+
+                  {/* Vendors Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <h2 className="text-lg font-medium">
+                        {filteredVendors.length} Vendors Attending
+                      </h2>
+                      <div className="relative w-48">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <input
+                          type="text"
+                          placeholder="Filter vendors..."
+                          value={vendorSearchTerm}
+                          onChange={(e) => setVendorSearchTerm(e.target.value)}
+                          className="w-full pl-10 pr-4 py-2 text-sm bg-surface rounded-full focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm shadow-black/15"
                         />
-                      ))}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-muted-foreground">
-                        {vendorSearchTerm ? 'No vendors match your search' : 'No vendors yet'}
-                      </p>
-                    </div>
-                  )}
+
+                    {filteredVendors.length > 0 ? (
+                      <div className="space-y-3">
+                        {filteredVendors.map((vendor, index) => (
+                          <VendorCard
+                            key={vendor.user?.id || index}
+                            vendor={vendor}
+                            variant="compact"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-sm text-muted-foreground">
+                          {vendorSearchTerm ? 'No vendors match your search' : 'No vendors yet'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             },
