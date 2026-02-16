@@ -1,5 +1,5 @@
 import React from 'react'
-import { X } from 'lucide-react'
+import { X, BookmarkMinus } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 interface StatusOption {
@@ -14,6 +14,7 @@ interface StatusChangeModalProps {
   currentStatus: string
   statusOptions: readonly StatusOption[]
   onStatusChange: (status: string) => void
+  onUntrack?: () => void
 }
 
 export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
@@ -22,6 +23,7 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
   currentStatus,
   statusOptions,
   onStatusChange,
+  onUntrack,
 }) => {
   if (!isOpen) return null
 
@@ -59,6 +61,21 @@ export const StatusChangeModal: React.FC<StatusChangeModalProps> = ({
               <span>{option.label}</span>
             </button>
           ))}
+          {onUntrack && (
+            <>
+              <div className="pt-2 border-t border-border mt-2" />
+              <button
+                onClick={() => {
+                  onUntrack()
+                  onClose()
+                }}
+                className="w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 font-medium bg-surface hover:bg-red-50 text-red-600 border border-border hover:border-red-200"
+              >
+                <BookmarkMinus className="w-4 h-4 flex-shrink-0" />
+                <span>Untrack Market</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

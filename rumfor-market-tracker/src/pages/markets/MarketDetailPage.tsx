@@ -250,8 +250,8 @@ export const MarketDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Back Button + Track Button - Top Left */}
-        <div className="absolute top-0 left-0 p-3 z-10 flex items-center gap-2">
+        {/* Back Button - Top Left */}
+        <div className="absolute top-0 left-0 p-3 z-10">
           <Button
             variant="outline"
             size="sm"
@@ -260,12 +260,6 @@ export const MarketDetailPage: React.FC = () => {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <TrackButton
-            isTracked={isMarketTracked(market.id)}
-            onClick={handleTrackToggle}
-            disabled={isTracking}
-            className="scale-[0.92]"
-          />
         </div>
 
         {/* Category - Flag style at right edge */}
@@ -287,11 +281,22 @@ export const MarketDetailPage: React.FC = () => {
           </button>
         )}
 
+        {/* Track Button - only show when NOT tracked (status dropdown shows when tracked) */}
+        {!isMarketTracked(market.id) && (
+          <div className="absolute top-10 right-2 z-20">
+            <TrackButton
+              isTracked={false}
+              onClick={handleTrackToggle}
+              disabled={isTracking}
+            />
+          </div>
+        )}
+
         {/* Expand/Collapse description - Bottom right of hero */}
         {isTextTruncated && (
           <button
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-            className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-sm font-semibold px-3 py-2 rounded-full hover:bg-white/30 transition-all shadow-lg"
+            className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-l-full hover:opacity-90 transition-opacity shadow-lg"
           >
             {isDescriptionExpanded ? (
               <>
@@ -784,6 +789,7 @@ export const MarketDetailPage: React.FC = () => {
         currentStatus={trackingStatus as string}
         statusOptions={TRACKING_STATUS_OPTIONS}
         onStatusChange={handleStatusChange}
+        onUntrack={handleTrackToggle}
       />
 
       {/* Bottom spacer for floating navbar */}

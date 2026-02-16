@@ -584,7 +584,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         <Link to={detailPath || `/markets/${market.id}`} className="block group">
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-80">
+            <div className="relative h-96">
               <img
                 src={market.images[0]}
                 alt={market.name}
@@ -602,24 +602,28 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
                     )}>
                       {scheduleDates.map((date, index) => (
-                        <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
-                          <Calendar className="w-4 h-4" />
-                          <span>{date}</span>
-                        </div>
-                      ))}
+                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
+                           <Calendar className="w-4 h-4" />
+                           <span>{date}</span>
+                         </div>
+                       ))}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Location - Flag style at left edge */}
-              <div className="absolute top-0 -left-2 pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
-                <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>{formatLocation(market.location)}</span>
+              <div className="absolute top-0 -left-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                <div className="pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span>{formatLocation(market.location)}</span>
+                </div>
               </div>
 
               {/* Category - Flag style at right edge */}
-              <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
+              <div className="absolute top-0 -right-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
+              </div>
 
               {/* Footer - two rows: top row (info text + comments button), bottom row (title + description) */}
               <div className="absolute bottom-0 left-0 right-0">
@@ -652,18 +656,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   </div>
                   */}
                   
-                   {/* Top row - Info text (left) + Stacked buttons (right, anchored bottom, grows up) */}
+                   {/* Top row - Info text (left) + Side by side buttons (right) */}
                    <div className="flex items-center justify-between px-3 py-2 relative">
                      <span className="text-xs text-white/80">Tap for details</span>
-                     <div className="absolute bottom-4 right-2 z-50 flex flex-col items-end">
-                       {/* Track Button */}
-                       <TrackButton
-                         isTracked={isTrackedOptimistic}
-                         onClick={handleTrackClick}
-                         disabled={isLoading}
-                         className="mr-1 mb-2"
-                         size="sm"
-                       />
+                     <div className="absolute bottom-4 right-2 z-50 flex items-center gap-2">
                        {/* Comments Button */}
                        <div
                          onClick={(e) => {
@@ -671,10 +667,18 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                            e.stopPropagation()
                            openComments(market.id, market.name)
                          }}
-                         className="cursor-pointer"
+                         className="cursor-pointer translate-y-1 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
                        >
                          <ChatNotificationIcon count={market.stats?.commentCount || 0} />
                        </div>
+                       {/* Track Button */}
+                       <TrackButton
+                         isTracked={isTrackedOptimistic}
+                         onClick={handleTrackClick}
+                         disabled={isLoading}
+                         size="sm"
+                         className="drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
+                       />
                      </div>
                    </div>
                    {/* Bottom row - Title + description with dark gradient and color accent */}
@@ -760,7 +764,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         <Link to={detailPath || `/markets/${market.id}`} className="block group">
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-80">
+            <div className="relative h-96">
               <img
                 src={market.images[0]}
                 alt={market.name}
@@ -777,20 +781,22 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
                     )}>
                       {scheduleDates.map((date, index) => (
-                        <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
-                          <Calendar className="w-4 h-4" />
-                          <span>{date}</span>
-                        </div>
-                      ))}
+                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
+                           <Calendar className="w-4 h-4" />
+                           <span>{date}</span>
+                         </div>
+                       ))}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Location - Flag style at left edge */}
-              <div className="absolute top-0 -left-2 pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
-                <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>{formatLocation(market.location)}</span>
+              <div className="absolute top-0 -left-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                <div className="pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span>{formatLocation(market.location)}</span>
+                </div>
               </div>
 
               {/* Footer - without comments/track buttons */}
