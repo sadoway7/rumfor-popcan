@@ -1,213 +1,96 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui'
 import { Button } from '@/components/ui'
 import { Link } from 'react-router-dom'
-import {
-  Target,
-  Eye,
-  Heart,
-  Users,
-  CheckCircle,
-  ArrowRight
-} from 'lucide-react'
+import { Users, CheckCircle, Heart, ArrowRight, Store, Calendar, TrendingUp } from 'lucide-react'
 
 export function AboutPage() {
   const values = [
     {
       icon: Users,
       title: 'Community First',
-      description: 'We believe in building stronger communities by connecting local vendors, organizers, and customers through meaningful market experiences.'
+      description: 'Connecting vendors, organizers, and customers through local markets.'
     },
     {
       icon: CheckCircle,
-      title: 'Professional Excellence',
-      description: 'Our platform maintains the highest standards of reliability, security, and user experience to support your business growth.'
+      title: 'Simple & Reliable',
+      description: 'Tools that work when you need them, without the complexity.'
     },
     {
       icon: Heart,
       title: 'Local Focus',
-      description: 'Supporting local economies by making it easier for small businesses and community organizers to thrive and succeed.'
-    },
-    {
-      icon: Target,
-      title: 'Innovation Driven',
-      description: 'Continuously improving our technology to solve real problems and streamline market operations for everyone involved.'
+      description: 'Supporting small businesses and local economies.'
     }
   ]
 
-
-
-
-
-  const benefits = [
+  const features = [
     {
-      title: 'Streamlined Applications',
-      description: 'Digital application process reduces paperwork and processing time by 80%'
+      icon: Store,
+      title: 'Discover Markets',
+      description: 'Find and track markets in your area'
     },
     {
-      title: 'Real-time Communication',
-      description: 'Direct messaging between vendors and organizers improves coordination'
+      icon: Calendar,
+      title: 'Stay Organized',
+      description: 'Keep your schedule and todos in one place'
     },
     {
-      title: 'Financial Tracking',
-      description: 'Built-in expense tracking and profitability analysis for vendors'
-    },
-    {
-      title: 'Community Building',
-      description: 'Features that foster connections between market participants'
-    },
-    {
-      title: 'Data-Driven Insights',
-      description: 'Analytics that help organizers optimize their events and operations'
-    },
-    {
-      title: 'Scalable Platform',
-      description: 'From small community events to large regional markets'
+      icon: TrendingUp,
+      title: 'Track Progress',
+      description: 'Manage budgets and see what works'
     }
   ]
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-16">
-      {/* Hero Section */}
-      <section className="text-center max-w-4xl mx-auto">
-        <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">
-          About Rumfor Market Tracker
-        </h1>
-        <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-          We're on a mission to transform how communities discover, organize, and participate 
-          in local markets. Our platform bridges the gap between vendors, organizers, and customers 
-          to create thriving local economies.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/markets">
-            <Button size="lg" className="text-lg px-8 py-3">
-              Explore Markets
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-          <Link to="/contact">
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-              Get in Touch
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Mission & Vision */}
-      <section>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <Target className="h-5 w-5 text-accent" />
-                </div>
-                <CardTitle className="text-2xl">Our Mission</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                To empower local communities by providing innovative tools that make market 
-                participation accessible, efficient, and profitable for vendors while helping 
-                organizers create successful, sustainable events that strengthen local economies.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <Eye className="h-5 w-5 text-accent" />
-                </div>
-                <CardTitle className="text-2xl">Our Vision</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                To become the leading platform for community markets worldwide, fostering 
-                vibrant local economies where small businesses can thrive, communities can 
-                connect, and sustainable commerce can flourish for generations to come.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Values */}
-      <section>
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Our Core Values</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            These principles guide every decision we make and every feature we build.
+    <div className="min-h-screen">
+      <div className="container mx-auto px-4 py-8 space-y-10">
+        <section className="text-center max-w-xl mx-auto">
+          <h1 className="text-3xl font-bold text-foreground mb-3">About Rumfor</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            Rumfor helps vendors discover markets, track their status, and stay organized. 
+            We're building tools to make market participation easier for everyone.
           </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {values.map((value, index) => (
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="mx-auto w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+        </section>
+        <section>
+          <h2 className="text-xl font-bold text-foreground mb-4 text-center">What you can do</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+            {features.map((feature, index) => (
+              <div key={index} className="bg-surface rounded-lg p-4 text-center">
+                <div className="mx-auto w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mb-3">
+                  <feature.icon className="h-5 w-5 text-accent" />
+                </div>
+                <h3 className="font-medium text-foreground mb-1">{feature.title}</h3>
+                <p className="text-xs text-muted-foreground">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="border-t pt-8">
+          <h2 className="text-xl font-bold text-foreground mb-6 text-center">Our Values</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            {values.map((value, index) => (
+              <div key={index} className="bg-surface rounded-lg p-5 text-center">
+                <div className="mx-auto w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-3">
                   <value.icon className="h-6 w-6 text-accent" />
                 </div>
-                <CardTitle className="text-lg">{value.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-sm">
-                  {value.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+                <h3 className="font-semibold text-foreground mb-2">{value.title}</h3>
+                <p className="text-sm text-muted-foreground">{value.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* Platform Benefits */}
-      <section>
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Platform Benefits</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover how our platform transforms the market experience for everyone involved.
+        <section className="bg-surface rounded-lg p-6 text-center max-w-xl mx-auto">
+          <p className="text-muted-foreground mb-4">
+            Have questions or feedback? We'd love to hear from you.
           </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {benefits.map((benefit, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-lg">{benefit.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{benefit.description}</CardDescription>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-
-
-
-
-      {/* Contact Information */}
-      <section className="bg-accent/5 rounded-lg p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Get In Touch</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Have questions or want to learn more about Rumfor? We'd love to hear from you.
-          </p>
-        </div>
-        
-
-        
-        <div className="text-center mt-8">
           <Link to="/contact">
-            <Button size="lg" className="text-lg px-8 py-3">
-              Contact Us Today
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button>
+              Contact Us
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   )
 }
