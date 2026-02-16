@@ -159,7 +159,7 @@ const ipRateLimiter = rateLimit({
 // Stricter rate limiter for auth endpoints
 const authRateLimiter = rateLimit({
   windowMs: process.env.NODE_ENV === 'production' ? 15 * 60 * 1000 : 60 * 1000, // 15 min prod, 1 min dev
-  max: process.env.NODE_ENV === 'production' ? 5 : 100, // 5 prod, 100 dev
+  max: process.env.NODE_ENV === 'production' ? 15 : 100, // 15 prod, 100 dev
   message: {
     success: false,
     message: process.env.NODE_ENV === 'production'
