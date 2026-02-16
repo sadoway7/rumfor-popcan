@@ -15,6 +15,7 @@ const RegisterPage = React.lazy(() => import('@/pages/auth/RegisterPage').then(m
 const PasswordRecoveryPage = React.lazy(() => import('@/pages/auth/PasswordRecoveryPage').then(module => ({ default: module.PasswordRecoveryPage })))
 const PasswordResetPage = React.lazy(() => import('@/pages/auth/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })))
 const EmailVerificationPage = React.lazy(() => import('@/pages/auth/EmailVerificationPage').then(module => ({ default: module.EmailVerificationPage })))
+const WelcomePage = React.lazy(() => import('@/pages/auth/WelcomePage').then(module => ({ default: module.WelcomePage })))
 const HomePage = React.lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
 const AboutPage = React.lazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
 const ContactPage = React.lazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
@@ -112,6 +113,7 @@ export function AppRoutes() {
       <Route path="/auth/reset-password" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
       <Route path="/auth/reset-password/:token" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
       <Route path="/auth/verify-email" element={<AuthLayout><Suspense fallback={<PageLoader />}><EmailVerificationPage /></Suspense></AuthLayout>} />
+      <Route path="/auth/welcome" element={<AuthLayout><Suspense fallback={<PageLoader />}><WelcomePage /></Suspense></AuthLayout>} />
 
       {/* Protected Routes */}
       <Route path="/profile" element={

@@ -61,7 +61,7 @@ export const MarketDetailPage: React.FC = () => {
     isTracking,
     getTrackingStatus
   } = useTrackedMarkets()
-  const { vendors: marketVendors } = useMarketVendors(id!)
+  const { vendors: marketVendors, refetch: refetchVendors } = useMarketVendors(id!)
   const { user } = useAuthStore()
 
   React.useEffect(() => {
@@ -130,6 +130,9 @@ export const MarketDetailPage: React.FC = () => {
     try {
       await trackMarket(market.id, newStatus)
       setShowStatusModal(false)
+      setTimeout(() => {
+        refetchVendors()
+      }, 1000)
     } catch (error) {
       console.error('Failed to update status:', error)
     }
@@ -390,7 +393,6 @@ export const MarketDetailPage: React.FC = () => {
           inactiveTextColor="text-gray-400"
           variant="pills"
           size="md"
-          hideIconsOnMobile
           listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2"
           items={[
             {
@@ -404,7 +406,7 @@ export const MarketDetailPage: React.FC = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-10"
+                      className="h-10 hover:text-accent hover:border-accent"
                       onClick={() => {
                         if (navigator.share) {
                           navigator.share({ title: market.name, url: window.location.href })
@@ -415,18 +417,18 @@ export const MarketDetailPage: React.FC = () => {
                       Share
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="h-10"
+                      className="h-10 text-muted-foreground/40 hover:text-muted-foreground/40 hover:bg-transparent"
                       onClick={() => setShowReportModal(true)}
                     >
                       <Flag className="w-4 h-4 mr-2" />
                       Report
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="h-10"
+                      className="h-10 text-muted-foreground/40 hover:text-muted-foreground/40 hover:bg-transparent"
                       onClick={() => setShowUpdateModal(true)}
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
@@ -449,14 +451,14 @@ export const MarketDetailPage: React.FC = () => {
                         {scheduleDates.length > 0 ? (
                           scheduleDates.map((scheduleItem: any, index) => {
                             const dateObj = parseLocalDate(scheduleItem.startDate)
-                            const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                            const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
                             
                             return (
-                              <div key={index} className="flex items-start gap-3">
+                              <div key={index} className="flex items-start gap-2">
                                 <Calendar className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                                 <div>
                                   <p className="font-medium text-sm">{displayDate}</p>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground">
                                     {formatTime12Hour(scheduleItem.startTime)} - {formatTime12Hour(scheduleItem.endTime)}
                                   </p>
                                 </div>
@@ -604,7 +606,7 @@ export const MarketDetailPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-4">
                       <h2 className="text-lg font-medium">
-                        {filteredVendors.length} Vendors Attending
+                        {filteredVendors.length > 0 ? `${filteredVendors.length} ` : ''}Vendors Attending
                       </h2>
                       <div className="relative w-48">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -618,6 +620,24 @@ export const MarketDetailPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Official Market Page Notice - only when vendors exist */}
+                    {market.contact?.website && filteredVendors.length > 0 && (
+                      <div className="text-center bg-white px-4 py-3 text-sm -mx-4 sm:mx-0 sm:rounded-lg rounded-none">
+                        <p className="text-muted-foreground">
+                          Visit the{' '}
+                          <a
+                            href={market.contact.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-accent font-medium hover:underline"
+                          >
+                            Official Market Page
+                          </a>
+                          {' '}for their complete vendor list
+                        </p>
+                      </div>
+                    )}
+
                     {filteredVendors.length > 0 ? (
                       <div className="space-y-3">
                         {filteredVendors.map((vendor, index) => (
@@ -630,9 +650,31 @@ export const MarketDetailPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-sm text-muted-foreground">
-                          {vendorSearchTerm ? 'No vendors match your search' : 'No vendors yet'}
+                        <p className="text-base font-medium text-muted-foreground flex items-center justify-center gap-2">
+                          {vendorSearchTerm ? 'No vendors match your search' : (
+                            <>
+                              <Users className="w-5 h-5" />
+                              No Vendors Listed on Rumfor
+                            </>
+                          )}
                         </p>
+                        {!vendorSearchTerm && market.contact?.website && (
+                          <div className="inline-block bg-white border-2 border-black rounded-lg px-6 py-3 mt-4 text-base">
+                            <p className="text-muted-foreground">
+                              Visit the{' '}
+                              <a
+                                href={market.contact.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent font-semibold hover:underline"
+                              >
+                                Official Market Page
+                              </a>
+                              <br />
+                              <span>for their complete vendor list</span>
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -645,10 +687,7 @@ export const MarketDetailPage: React.FC = () => {
               icon: <Image className="w-4 h-4" />,
               content: (
                 <div className="pb-4 pt-4 px-4 pb-[100px]">
-                  <PhotoGallery
-                    marketId={id!}
-                    showUpload={!!user && (user.role === 'vendor' || user.role === 'promoter')}
-                  />
+                  <p className="text-center text-muted-foreground py-8">Disabled at the moment</p>
                 </div>
               )
             },
@@ -746,6 +785,9 @@ export const MarketDetailPage: React.FC = () => {
         statusOptions={TRACKING_STATUS_OPTIONS}
         onStatusChange={handleStatusChange}
       />
+
+      {/* Bottom spacer for floating navbar */}
+      <div className="h-24" />
       </div>
     </div>
   )

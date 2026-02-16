@@ -26,9 +26,9 @@ export const TrackButton: React.FC<TrackButtonProps> = ({
       type="button"
       className={cn(
         "inline-flex items-center justify-center transition-transform shadow-md",
-        size === 'sm' && 'w-10 h-10 rounded-lg',
-        size === 'md' && 'w-12 h-12 rounded-xl',
-        size === 'lg' && 'w-14 h-14 rounded-2xl',
+        size === 'sm' && 'w-10 h-10 rounded-full',
+        size === 'md' && 'w-12 h-12 rounded-full',
+        size === 'lg' && 'w-14 h-14 rounded-full',
         isTracked ? 'bg-green-500' : 'bg-white',
         disabled && 'opacity-50 cursor-not-allowed',
         className

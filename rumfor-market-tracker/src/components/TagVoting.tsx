@@ -34,23 +34,23 @@ export const TagVoting: React.FC<TagVotingProps> = ({
     addTagError
   } = useHashtags(marketId)
 
-  // Sort by votes and show top 5
+  // Sort by votes and show up to 30 tags
   const marketHashtags = useMemo(() => {
     return [...hashtags]
       .sort((a, b) => getVoteCount(b.id) - getVoteCount(a.id))
-      .slice(0, 5)
+      .slice(0, 30)
   }, [hashtags])
 
-  // Generate 4 random suggested tags (excluding already used tags)
+  // Generate 8 random suggested tags (excluding already used tags)
   const suggestedTags = useMemo(() => {
     if (!predefinedHashtags) return []
 
     const usedTags = new Set(hashtags.map(h => h.name))
     const availableTags = predefinedHashtags.filter(tag => !usedTags.has(tag))
 
-    // Shuffle and take 4
+    // Shuffle and take 8
     const shuffled = [...availableTags].sort(() => 0.5 - Math.random())
-    return shuffled.slice(0, 4)
+    return shuffled.slice(0, 8)
   }, [predefinedHashtags, marketTags, hashtags])
 
   // Track user's voting limit (3 votes total)
@@ -108,14 +108,9 @@ export const TagVoting: React.FC<TagVotingProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between pt-4">
           <h3 className="text-lg font-medium">Market Tags</h3>
-          {user && (
-            <span className="text-xs text-muted-foreground">
-              {canVote ? `${3 - userVotes} votes left` : 'Vote limit reached'}
-            </span>
-          )}
         </div>
 <motion.div 
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap gap-3"
           >
             <AnimatePresence mode="popLayout">
               {marketHashtags.map((hashtag) => {
@@ -129,39 +124,10 @@ export const TagVoting: React.FC<TagVotingProps> = ({
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.8, y: 10 }}
                     transition={{ duration: 0.2 }}
-                    className="relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white rounded-full text-sm shadow-[0_1px_2px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)] group whitespace-nowrap"
+                    className="relative inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm shadow-[0_1px_2px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)] group whitespace-nowrap"
                   >
                     <span className="font-medium">{hashtag.name}</span>
-
-                    {user && (
-                    <div className="flex items-center gap-1 ml-1 border-l border-border/50 pl-2">
-                      <button
-                        onClick={() => handleVote(hashtag.name, userVote?.value === 1 ? 0 : 1)}
-                        disabled={isVoting || (!canVote && userVote?.value !== 1)}
-                        title={`Vote: ${hashtag.name}`}
-                        className={cn(
-                          "p-1 rounded hover:bg-muted/50 transition-colors",
-                          userVote?.value === 1 ? "text-primary" : "text-muted-foreground",
-                          (!canVote && userVote?.value !== 1) && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <ThumbsUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleVote(hashtag.name, userVote?.value === -1 ? 0 : -1)}
-                        disabled={isVoting || (!canVote && userVote?.value !== -1)}
-                        title={`Vote: ${hashtag.name}`}
-                        className={cn(
-                          "p-1 rounded hover:bg-muted/50 transition-colors",
-                          userVote?.value === -1 ? "text-destructive" : "text-muted-foreground",
-                          (!canVote && userVote?.value !== -1) && "opacity-50 cursor-not-allowed"
-                        )}
-                      >
-                        <ThumbsDown className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
+                  </motion.div>
               )
             })}
           </AnimatePresence>
@@ -175,14 +141,14 @@ export const TagVoting: React.FC<TagVotingProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.3 }}
-          className="pt-4 space-y-3"
+          className="pt-6 space-y-4"
         >
           <div>
-            <h3 className="text-lg font-medium text-muted-foreground/70 mb-2">Do any of these tags match?</h3>
+            <h3 className="text-base font-medium text-muted-foreground/70 mb-3">Do any of these tags match?</h3>
           </div>
 
 <motion.div 
-            className="flex flex-nowrap gap-2 overflow-hidden max-w-full"
+            className="flex flex-wrap gap-3 overflow-hidden max-w-full"
           >
             <AnimatePresence mode="popLayout">
               {suggestedTags.map((tag) => (
@@ -196,12 +162,12 @@ export const TagVoting: React.FC<TagVotingProps> = ({
                   onClick={() => handleAddSuggestedTag(tag)}
                   disabled={isAddingTag}
                   className={cn(
-                    "relative inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-white/50 rounded-full text-sm shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.06),0_4px_8px_rgba(0,0,0,0.04)] transition-all whitespace-nowrap",
-                    "hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_8px_rgba(0,0,0,0.08),0_8px_16px_rgba(0,0,0,0.04)]",
+                    "relative inline-flex items-center gap-1 px-2 py-0.5 bg-white/50 rounded-full text-xs shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.06)] transition-all whitespace-nowrap",
+                    "hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_8px_rgba(0,0,0,0.08)]",
                     "disabled:opacity-50 disabled:cursor-not-allowed"
                   )}
                 >
-                  <span className="text-primary font-bold text-xs">+</span>
+                  <span className="text-primary font-bold text-[10px]">+</span>
                   <span className="font-medium">{tag}</span>
                 </motion.button>
               ))}

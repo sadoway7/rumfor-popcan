@@ -550,7 +550,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         if (schedObj.specialDates && Array.isArray(schedObj.specialDates) && schedObj.specialDates.length > 0) {
           return schedObj.specialDates.map((s: any) => {
             const d = new Date(s.date)
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            return `${dayName}, ${dateStr}`
           })
         }
       }
@@ -563,7 +565,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           if (!s || !s.startDate) return null
           const dateObj = parseLocalDate(s.startDate)
           if (isNaN(dateObj.getTime())) return null
-          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' })
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          return `${dayName}, ${dateStr}`
         })
         .filter(Boolean) as string[]
     }
@@ -591,9 +595,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
                 {/* Left side - Dates stacked */}
                 <div className="flex flex-col gap-1">
-                  {/* Dates - stacked */}
+                  {/* Dates - 4 down before next column */}
                   {scheduleDates.length > 0 && (
-                    <div className="flex flex-col gap-1">
+                    <div className={cn(
+                      "grid gap-1",
+                      scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
+                    )}>
                       {scheduleDates.map((date, index) => (
                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
                           <Calendar className="w-4 h-4" />
@@ -719,7 +726,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         if (schedObj.specialDates && Array.isArray(schedObj.specialDates) && schedObj.specialDates.length > 0) {
           return schedObj.specialDates.map((s: any) => {
             const d = new Date(s.date)
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            const dayName = d.toLocaleDateString('en-US', { weekday: 'short' })
+            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            return `${dayName}, ${dateStr}`
           })
         }
       }
@@ -732,7 +741,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           if (!s || !s.startDate) return null
           const dateObj = parseLocalDate(s.startDate)
           if (isNaN(dateObj.getTime())) return null
-          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' })
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          return `${dayName}, ${dateStr}`
         })
         .filter(Boolean) as string[]
     }
@@ -761,7 +772,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 {/* Left side - Dates stacked */}
                 <div className="flex flex-col gap-1">
                   {scheduleDates.length > 0 && (
-                    <div className="flex flex-col gap-1">
+                    <div className={cn(
+                      "grid gap-1",
+                      scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
+                    )}>
                       {scheduleDates.map((date, index) => (
                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] shadow text-zinc-900 w-fit">
                           <Calendar className="w-4 h-4" />
