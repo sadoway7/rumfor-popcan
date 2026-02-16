@@ -40,16 +40,16 @@ const marketTypeLabels = {
 
 // Category flag colors tied to category themes
 const categoryFlagColors: Record<string, string> = {
-  'farmers-market': 'bg-white/60 text-green-700',
-  'arts-crafts': 'bg-white/60 text-purple-700',
-  'flea-market': 'bg-white/60 text-amber-700',
-  'food-festival': 'bg-white/60 text-orange-700',
-  'vintage-antique': 'bg-white/60 text-stone-700',
-  'craft-show': 'bg-white/60 text-blue-700',
-  'night-market': 'bg-white/60 text-indigo-700',
-  'street-fair': 'bg-white/60 text-pink-700',
-  'holiday-market': 'bg-white/60 text-red-700',
-  'community-event': 'bg-white/60 text-teal-700'
+  'farmers-market': 'bg-white text-green-700',
+  'arts-crafts': 'bg-white text-purple-700',
+  'flea-market': 'bg-white text-amber-700',
+  'food-festival': 'bg-white text-orange-700',
+  'vintage-antique': 'bg-white text-stone-700',
+  'craft-show': 'bg-white text-blue-700',
+  'night-market': 'bg-white text-indigo-700',
+  'street-fair': 'bg-white text-pink-700',
+  'holiday-market': 'bg-white text-red-700',
+  'community-event': 'bg-white text-teal-700'
 }
 
 export const MarketCard: React.FC<MarketCardProps> = ({
@@ -353,9 +353,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 className="w-full h-full object-cover"
               />
               {/* Overlay with buttons */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-between p-3">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between p-3">
                 <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className={cn('text-xs px-2.5 py-1 bg-white/90', MARKET_CATEGORY_COLORS[market.category])}>
+                  <Badge variant="outline" className={cn('text-xs px-2.5 py-1 bg-white', MARKET_CATEGORY_COLORS[market.category])}>
                     {MARKET_CATEGORY_LABELS[market.category]}
                   </Badge>
                 </div>
@@ -646,51 +646,53 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   */}
                   
                    {/* Top row - Info text (left) + Stacked buttons (right, anchored bottom, grows up) */}
-                  <div className="flex items-center justify-between px-3 py-2 relative">
-                    <span className="text-xs text-white/80">Tap for details</span>
-                    <div className="absolute bottom-4 right-2 z-50 flex flex-col items-end">
-                      {/* Comments Button */}
-                      <div
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          openComments(market.id, market.name)
-                        }}
-                        className="cursor-pointer mb-2"
-                      >
-                        <ChatNotificationIcon count={market.stats?.commentCount || 0} />
-                      </div>
-                      {/* Track Button */}
-                      <TrackButton
-                        isTracked={isTrackedOptimistic}
-                        onClick={handleTrackClick}
-                        disabled={isLoading}
-                        className="mr-1 mt-1"
-                        size="sm"
-                      />
-                    </div>
-                  </div>
+                   <div className="flex items-center justify-between px-3 py-2 relative">
+                     <span className="text-xs text-white/80">Tap for details</span>
+                     <div className="absolute bottom-4 right-2 z-50 flex flex-col items-end">
+                       {/* Track Button */}
+                       <TrackButton
+                         isTracked={isTrackedOptimistic}
+                         onClick={handleTrackClick}
+                         disabled={isLoading}
+                         className="mr-1 mb-2"
+                         size="sm"
+                       />
+                       {/* Comments Button */}
+                       <div
+                         onClick={(e) => {
+                           e.preventDefault()
+                           e.stopPropagation()
+                           openComments(market.id, market.name)
+                         }}
+                         className="cursor-pointer"
+                       >
+                         <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                       </div>
+                     </div>
+                   </div>
                    {/* Bottom row - Title + description with dark gradient and color accent */}
                    <div className="relative">
+                      {/* White line at top */}
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white z-20" />
                       {/* Color accent layer */}
                       <div 
                         className="absolute inset-0"
                         style={{
                           background: dominantColor 
-                             ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.9)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.15)')} 85%, transparent 100%)`
-                             : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+                             ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 1)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.95)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.75)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 85%, transparent 100%)`
+                             : 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.4) 85%, transparent 100%)'
                         }}
                       />
                       {/* Dark overlay for readability */}
                       <div 
                         className="absolute inset-0"
                         style={{
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 35%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.2) 90%, transparent 100%)'
                         }}
                       />
                        {/* Content */}
-                      <div className="relative px-4 pt-4 pb-6 z-10">
-                        <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                       <div className="relative px-4 pt-4 pb-6 z-10">
+                         <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
                           {market.name}
                         </h3>
                         <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
@@ -785,15 +787,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                     className="absolute inset-0"
                     style={{
                       background: dominantColor 
-                         ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.9)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.7)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.15)')} 85%, transparent 100%)`
-                         : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+                         ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 1)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.95)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.75)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 85%, transparent 100%)`
+                         : 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.4) 85%, transparent 100%)'
                     }}
                   />
                   {/* Dark overlay for readability */}
                   <div 
                     className="absolute inset-0"
                     style={{
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 35%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.2) 90%, transparent 100%)'
                     }}
                   />
                   {/* Content */}

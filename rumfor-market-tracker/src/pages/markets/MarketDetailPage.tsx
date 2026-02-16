@@ -17,22 +17,22 @@ import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock } from 'lucide-react'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
 import { StatusChangeModal } from '@/components/StatusChangeModal'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
-  'farmers-market': 'bg-white/60 text-green-700',
-  'arts-crafts': 'bg-white/60 text-purple-700',
-  'flea-market': 'bg-white/60 text-amber-700',
-  'food-festival': 'bg-white/60 text-orange-700',
-  'vintage-antique': 'bg-white/60 text-stone-700',
-  'craft-show': 'bg-white/60 text-blue-700',
-  'night-market': 'bg-white/60 text-indigo-700',
-  'street-fair': 'bg-white/60 text-pink-700',
-  'holiday-market': 'bg-white/60 text-red-700',
-  'community-event': 'bg-white/60 text-teal-700'
+  'farmers-market': 'bg-white text-green-700',
+  'arts-crafts': 'bg-white text-purple-700',
+  'flea-market': 'bg-white text-amber-700',
+  'food-festival': 'bg-white text-orange-700',
+  'vintage-antique': 'bg-white text-stone-700',
+  'craft-show': 'bg-white text-blue-700',
+  'night-market': 'bg-white text-indigo-700',
+  'street-fair': 'bg-white text-pink-700',
+  'holiday-market': 'bg-white text-red-700',
+  'community-event': 'bg-white text-teal-700'
 }
 
 export const MarketDetailPage: React.FC = () => {
@@ -46,6 +46,7 @@ export const MarketDetailPage: React.FC = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [isTextTruncated, setIsTextTruncated] = useState(false)
+  const [showImagePreview, setShowImagePreview] = useState(false)
   const descriptionRef = React.useRef<HTMLParagraphElement>(null)
   
   const { market, isLoading, error, refetch } = useMarket(id!)
@@ -246,16 +247,22 @@ export const MarketDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Back Button - Top Left */}
-        <div className="absolute top-0 left-0 p-3 z-10">
+        {/* Back Button + Track Button - Top Left */}
+        <div className="absolute top-0 left-0 p-3 z-10 flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/markets')}
-            className="bg-black/40 border-white/30 text-white hover:bg-black/60 backdrop-blur-sm h-8 px-3"
+            onClick={() => navigate(-1)}
+            className="bg-white border-white text-black hover:bg-white/90 h-8 px-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)]"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
+          <TrackButton
+            isTracked={isMarketTracked(market.id)}
+            onClick={handleTrackToggle}
+            disabled={isTracking}
+            className="scale-[0.92]"
+          />
         </div>
 
         {/* Category - Flag style at right edge */}
@@ -276,15 +283,6 @@ export const MarketDetailPage: React.FC = () => {
             <ChevronDown className="w-3 h-3" />
           </button>
         )}
-
-        {/* Track/Follow - Top right, under status button */}
-        <div className="absolute top-20 right-3 z-20">
-          <TrackButton
-            isTracked={isMarketTracked(market.id)}
-            onClick={handleTrackToggle}
-            disabled={isTracking}
-          />
-        </div>
 
         {/* Expand/Collapse description - Bottom right of hero */}
         {isTextTruncated && (
@@ -319,8 +317,8 @@ export const MarketDetailPage: React.FC = () => {
             )}
             style={{
               background: isDescriptionExpanded
-                ? 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.6) 80%, rgba(0,0,0,0.3) 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+                ? 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 20%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 100%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.3) 85%, transparent 100%)'
             }}
           />
           
@@ -329,7 +327,23 @@ export const MarketDetailPage: React.FC = () => {
             "relative px-4 pt-4 z-10 transition-[padding] duration-500 ease-out",
             isDescriptionExpanded ? "pb-16 pr-28" : "pb-6 pr-16"
           )}>
-            <h1 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+            {/* Thumbnail preview button */}
+            {market.images && market.images.length > 0 && (
+              <button
+                onClick={() => setShowImagePreview(true)}
+                className="max-w-36 max-h-36 rounded-lg overflow-hidden border-2 border-white hover:border-white transition-all mb-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] inline-block relative"
+              >
+                <img
+                  src={market.images[selectedImageIndex]}
+                  alt={market.name}
+                  className="max-w-full max-h-36 object-contain"
+                />
+                <div className="absolute bottom-1 left-1 bg-white/90 rounded p-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+                  <Eye className="w-4 h-4 text-black" />
+                </div>
+              </button>
+            )}
+            <h1 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
               {market.name}
             </h1>
             <p
@@ -700,6 +714,27 @@ export const MarketDetailPage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {showImagePreview && market.images && market.images.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100]"
+          onClick={() => setShowImagePreview(false)}
+        >
+          <button
+            onClick={() => setShowImagePreview(false)}
+            className="absolute top-4 right-4 bg-white rounded-full p-2 text-black"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={market.images[selectedImageIndex]}
+            alt={market.name}
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
