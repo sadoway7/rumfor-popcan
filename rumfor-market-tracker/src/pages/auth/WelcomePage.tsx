@@ -1,69 +1,124 @@
-import React from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Card, CardContent } from '@/components/ui'
-import { CheckCircle, Mail, ArrowRight, Store } from 'lucide-react'
+import { Button } from '@/components/ui'
+import { Store, Search, PlusCircle, TrendingUp, UserCheck, Megaphone, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react'
 
 export function WelcomePage() {
+  const [showWhatYouCanDo, setShowWhatYouCanDo] = useState(false)
+  const [showComingSoon, setShowComingSoon] = useState(false)
+
   return (
-    <div className="min-h-screen bg-background flex items-start justify-center md:p-4">
-      <div className="w-full md:max-w-md md:rounded-xl md:shadow-lg">
-        <Card className="md:border rounded-none md:rounded-xl">
-          <CardContent className="pt-8 pb-8">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-accent" />
+    <div className="min-h-screen bg-background p-4 space-y-4">
+      <div className="text-center">
+        <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
+          <CheckCircle className="w-6 h-6 text-accent" />
+        </div>
+        <h1 className="text-2xl font-bold text-foreground">Welcome to Rumfor</h1>
+        <p className="text-sm text-muted-foreground">Your account is ready</p>
+      </div>
+
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-center">
+        <h2 className="text-lg font-bold text-amber-600 dark:text-amber-400 mb-2">Limited Beta</h2>
+        <p className="text-sm text-foreground">
+          Email verification may not be working correctly. Your account works fine—we'll ask you to verify later.
+        </p>
+      </div>
+
+      <div className="space-y-0">
+        <button 
+          onClick={() => setShowWhatYouCanDo(!showWhatYouCanDo)}
+          className="w-full bg-surface rounded-t-lg p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-2">
+            {showWhatYouCanDo ? <ChevronDown className="w-4 h-4 text-accent" /> : <ChevronRight className="w-4 h-4 text-accent" />}
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">What you can do</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">Tap to {showWhatYouCanDo ? 'close' : 'expand'}</span>
+        </button>
+        
+        {showWhatYouCanDo && (
+          <div className="bg-surface px-3 pb-3 space-y-3">
+            <div className="grid grid-cols-3 gap-2 pt-2">
+              <div className="bg-background rounded-lg p-3 text-center">
+                <UserCheck className="w-5 h-5 mx-auto text-accent mb-1" />
+                <p className="text-xs font-medium">Track Status</p>
               </div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">
-                Welcome to Rumfor!
-              </h1>
-              <p className="text-muted-foreground">
-                Your account has been created successfully
+              <div className="bg-background rounded-lg p-3 text-center">
+                <Store className="w-5 h-5 mx-auto text-accent mb-1" />
+                <p className="text-xs font-medium">Share Markets</p>
+              </div>
+              <div className="bg-background rounded-lg p-3 text-center">
+                <TrendingUp className="w-5 h-5 mx-auto text-accent mb-1" />
+                <p className="text-xs font-medium">Stay Organized</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Markets you're attending appear on your profile.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Your profile also shows on those market pages.
+            </p>
+          </div>
+        )}
+
+        <button 
+          onClick={() => setShowComingSoon(!showComingSoon)}
+          className="w-full bg-surface rounded-b-lg p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-2">
+            {showComingSoon ? <ChevronDown className="w-4 h-4 text-accent" /> : <ChevronRight className="w-4 h-4 text-accent" />}
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Coming Soon</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">Tap to {showComingSoon ? 'close' : 'expand'}</span>
+        </button>
+        
+        {showComingSoon && (
+          <div className="bg-surface px-3 pb-3 rounded-b-lg space-y-2">
+            <div className="bg-background rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-accent" />
+                <span className="text-sm font-medium">Enhanced Budget Tools</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Easier year-end reporting and market performance insights. Your current data won't be lost—it'll get better.
               </p>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex items-start gap-3 p-4 bg-surface rounded-lg">
-                <Mail className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-foreground">Verify your email</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Check your inbox for a verification link to unlock all features.
-                  </p>
-                </div>
+            <div className="bg-background rounded-lg p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <UserCheck className="w-4 h-4 text-accent" />
+                <span className="text-sm font-medium">Promoter Accounts</span>
               </div>
-
-              <div className="flex items-start gap-3 p-4 bg-surface rounded-lg">
-                <Store className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-foreground">Set up your vendor profile</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Add your business details, profile photo, and product categories.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-accent/5 border border-accent/20 rounded-lg p-4 mb-6">
-              <p className="text-sm text-foreground">
-                <strong>Note:</strong> Add any welcome notes or instructions here for new users.
+              <p className="text-xs text-muted-foreground">
+                Manage market listings—available late summer 2026. We'll help roll over your account if you're a promoter, when it's ready.
               </p>
             </div>
+          </div>
+        )}
+      </div>
 
-            <div className="space-y-3">
-              <Link to="/dashboard" className="block">
-                <Button className="w-full">
-                  Get Started
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-              <Link to="/markets" className="block">
-                <Button variant="outline" className="w-full">
-                  Browse Markets
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="border-t pt-4 grid gap-2">
+        <Link to="/vendor/profile" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+          <Store className="w-4 h-4 mr-3" />
+          Setup your vendor profile
+        </Link>
+        <Link to="/markets" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+          <Search className="w-4 h-4 mr-3" />
+          Browse Markets to track
+        </Link>
+        <Link to="/vendor/add-market" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+          <PlusCircle className="w-4 h-4 mr-3" />
+          Add a market to your list
+        </Link>
+      </div>
+
+      <div className="bg-surface rounded-lg p-3 flex items-start gap-3">
+        <Megaphone className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-muted-foreground">
+          <strong>Find a bug or have a suggestion?</strong> Contact <span className="text-foreground">James / Rupert Rooster</span>.<br />
+          In-app feedback submission form coming to your avatar.
+        </p>
       </div>
     </div>
   )

@@ -113,7 +113,7 @@ export function AppRoutes() {
       <Route path="/auth/reset-password" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
       <Route path="/auth/reset-password/:token" element={<AuthLayout><Suspense fallback={<PageLoader />}><PasswordResetPage /></Suspense></AuthLayout>} />
       <Route path="/auth/verify-email" element={<AuthLayout><Suspense fallback={<PageLoader />}><EmailVerificationPage /></Suspense></AuthLayout>} />
-      <Route path="/auth/welcome" element={<AuthLayout><Suspense fallback={<PageLoader />}><WelcomePage /></Suspense></AuthLayout>} />
+      <Route path="/auth/welcome" element={<AuthLayout hideLogo><Suspense fallback={<PageLoader />}><WelcomePage /></Suspense></AuthLayout>} />
 
       {/* Protected Routes */}
       <Route path="/profile" element={
