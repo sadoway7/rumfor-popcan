@@ -19,6 +19,7 @@ export interface TabsProps {
   className?: string
   fullWidth?: boolean
   listClassName?: string
+  contentClassName?: string
   inactiveTextColor?: string
   hideIconsOnMobile?: boolean
 }

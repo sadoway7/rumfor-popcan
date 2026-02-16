@@ -44,6 +44,9 @@ export const MarketDetailPage: React.FC = () => {
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [vendorSearchTerm, setVendorSearchTerm] = useState('')
   const [isPageLoaded, setIsPageLoaded] = useState(false)
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
+  const [isTextTruncated, setIsTextTruncated] = useState(false)
+  const descriptionRef = React.useRef<HTMLParagraphElement>(null)
   
   const { market, isLoading, error, refetch } = useMarket(id!)
   
@@ -63,6 +66,13 @@ export const MarketDetailPage: React.FC = () => {
   React.useEffect(() => {
     window.scrollTo(0, 0)
   }, [id])
+
+  React.useEffect(() => {
+    if (descriptionRef.current) {
+      const { scrollHeight, clientHeight } = descriptionRef.current
+      setIsTextTruncated(scrollHeight > clientHeight)
+    }
+  }, [market?.description])
 
   if (isLoading) {
     return (
@@ -217,7 +227,10 @@ export const MarketDetailPage: React.FC = () => {
     )}>
       <div className="w-full max-w-6xl mx-auto sm:px-4">
       {/* HERO SECTION - Matching MarketCard minimal variant */}
-      <div className="relative h-96 md:h-[28rem] overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]">
+      <div className={cn(
+        "relative overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] transition-all duration-300",
+        isDescriptionExpanded ? "min-h-96 md:min-h-[28rem]" : "h-96 md:h-[28rem]"
+      )}>
         {/* Market Image */}
         {market.images && market.images.length > 0 ? (
           <img
@@ -262,8 +275,8 @@ export const MarketDetailPage: React.FC = () => {
           </button>
         )}
 
-        {/* Track/Follow - Bottom right of hero */}
-        <div className="absolute bottom-4 right-4 z-20">
+        {/* Track/Follow - Top right, under status button */}
+        <div className="absolute top-20 right-3 z-20">
           <TrackButton
             isTracked={isMarketTracked(market.id)}
             onClick={handleTrackToggle}
@@ -271,28 +284,62 @@ export const MarketDetailPage: React.FC = () => {
           />
         </div>
 
-        {/* Title + Description - Same as MarketCard */}
+        {/* Expand/Collapse description - Bottom right of hero */}
+        {isTextTruncated && (
+          <button
+            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+            className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-sm font-semibold px-3 py-2 rounded-full hover:bg-white/30 transition-all shadow-lg"
+          >
+            {isDescriptionExpanded ? (
+              <>
+                <span>Show less</span>
+                <ChevronDown className="w-4 h-4 rotate-180" />
+              </>
+            ) : (
+              <>
+                <span>Read more</span>
+                <ChevronDown className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Title + Description */}
         <div className="absolute bottom-0 left-0 right-0">
           {/* Dark gradient overlay */}
           <div 
-            className="absolute inset-0"
+            className="absolute inset-0 transition-all duration-300"
             style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
+              background: isDescriptionExpanded
+                ? 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.3) 90%, rgba(0,0,0,0.1) 100%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.15) 85%, transparent 100%)'
             }}
           />
           {/* Dark overlay for readability */}
           <div 
-            className="absolute inset-0"
+            className="absolute inset-0 transition-all duration-300"
             style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
+              background: isDescriptionExpanded
+                ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.15) 95%, transparent 100%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.08) 90%, transparent 100%)'
             }}
           />
           {/* Content */}
-          <div className="relative px-4 pt-4 pb-6 pr-16 z-10">
+          <div className={cn(
+            "relative px-4 pt-4 z-10 transition-all duration-300",
+            isDescriptionExpanded ? "pb-16 pr-28" : "pb-6 pr-16"
+          )}>
             <h1 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
               {market.name}
             </h1>
-            <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+            <p
+              ref={descriptionRef}
+              className={cn(
+                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md",
+                !isDescriptionExpanded && "line-clamp-2"
+              )}
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+            >
               {market.description}
             </p>
           </div>
@@ -337,7 +384,42 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Info',
               icon: <Info className="w-4 h-4" />,
               content: (
-                <div className="space-y-4 pb-4 pt-4 px-4 pb-[100px]">
+                <div className="space-y-4 pb-4 pt-0 px-4 pb-[100px]">
+                  {/* Quick Actions - Share, Report & Update */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({ title: market.name, url: window.location.href })
+                        }
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10"
+                      onClick={() => setShowReportModal(true)}
+                    >
+                      <Flag className="w-4 h-4 mr-2" />
+                      Report
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-10"
+                      onClick={() => setShowUpdateModal(true)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Update
+                    </Button>
+                  </div>
+
                   {/* Left: Location + Schedule / Right: Action Links */}
                   <div className="grid grid-cols-2 gap-4">
                     {/* Left Column */}
@@ -386,34 +468,28 @@ export const MarketDetailPage: React.FC = () => {
                           <Globe className="w-4 h-4" />
                         </a>
                       )}
-                      {market.applicationSettings?.applicationDeadline ? (
+                      {market.applicationSettings?.applicationDeadline && (
                         <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-2">
                           App Deadline: {new Date(market.applicationSettings.applicationDeadline + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           <Clock className="w-4 h-4" />
                         </span>
-                      ) : (
-                        <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-2">
-                          App Deadline: Unknown
-                          <Clock className="w-4 h-4" />
-                        </span>
                       )}
                       {market.promoter && (
-                        <>
-                          <button
-                            className="text-xs font-bold text-accent hover:underline inline-flex items-center gap-2 cursor-pointer"
-                            onClick={() => navigate('/fake-404')}
-                          >
-                            {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Submitted'}
-                            <Users className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
-                            onClick={() => navigate('/fake-404')}
-                          >
-                            Official Link
-                            <Globe className="w-4 h-4" />
-                          </button>
-                        </>
+                        <span className="text-xs font-bold text-accent inline-flex items-center gap-2">
+                          {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Submitted'}
+                          <Users className="w-4 h-4" />
+                        </span>
+                      )}
+                      {market.contact?.website && (
+                        <a
+                          href={market.contact.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2"
+                        >
+                          Official Website
+                          <Globe className="w-4 h-4" />
+                        </a>
                       )}
                       {market.location?.address && (
                         <button
@@ -505,43 +581,8 @@ export const MarketDetailPage: React.FC = () => {
                            <span>ATM</span>
                          </div>
                        )}
-                    </div>
-                  </div>
-
-                  {/* Quick Actions - Share, Report & Update */}
-                  <div className="mt-8 grid grid-cols-3 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10"
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({ title: market.name, url: window.location.href })
-                        }
-                      }}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10"
-                      onClick={() => setShowReportModal(true)}
-                    >
-                      <Flag className="w-4 h-4 mr-2" />
-                      Report
-                    </Button>
-                    <Button
-variant="outline"
-                      size="sm"
-                      className="h-10"
-                      onClick={() => setShowUpdateModal(true)}
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Update
-                    </Button>
-                  </div>
+                     </div>
+                   </div>
                 </div>
               )
             },
