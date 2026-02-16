@@ -121,7 +121,7 @@ export function BottomNav({ role }: BottomNavProps) {
         role="navigation"
         aria-label="Bottom Navigation"
         className={cn(
-          "bg-white/87 dark:bg-black/87 backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2 shadow-lg",
+          "bg-white dark:bg-black backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2 shadow-lg",
           "transition-all duration-300 ease-out",
           "will-change-transform"
         )}

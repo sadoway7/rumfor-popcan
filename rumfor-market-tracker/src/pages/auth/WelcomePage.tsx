@@ -1,14 +1,87 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui'
-import { Store, Search, PlusCircle, TrendingUp, UserCheck, Megaphone, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react'
+import { Store, Search, PlusCircle, TrendingUp, UserCheck, Megaphone, CheckCircle, ChevronDown, ChevronRight, Smartphone, X, Share } from 'lucide-react'
 
 export function WelcomePage() {
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false)
   const [showWhatYouCanDo, setShowWhatYouCanDo] = useState(false)
   const [showComingSoon, setShowComingSoon] = useState(false)
+  const [showAndroidPrompt, setShowAndroidPrompt] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+
+  useEffect(() => {
+    const isAndroid = /android/i.test(navigator.userAgent)
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    const dismissed = localStorage.getItem('pwa-install-dismissed')
+
+    if (isAndroid && !dismissed) {
+      const handler = (e: Event) => {
+        e.preventDefault()
+        setDeferredPrompt(e)
+        setShowAndroidPrompt(true)
+      }
+      window.addEventListener('beforeinstallprompt', handler)
+      
+      return () => window.removeEventListener('beforeinstallprompt', handler)
+    }
+
+    if (isIos && !dismissed) {
+      const standalone = (window.navigator as any).standalone
+      if (!standalone) {
+        setShowInstallInstructions(true)
+      }
+    }
+  }, [])
+
+  const handleAndroidInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowAndroidPrompt(false)
+      }
+      setDeferredPrompt(null)
+    }
+  }
+
+  const dismissAndroidPrompt = () => {
+    setShowAndroidPrompt(false)
+    localStorage.setItem('pwa-install-dismissed', 'true')
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 space-y-4">
+      {showAndroidPrompt && (
+        <div className="fixed inset-x-4 top-4 bg-surface border border-border rounded-lg p-4 shadow-lg z-50">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-accent" />
+              <span className="font-semibold">Install Rumfor</span>
+            </div>
+            <button onClick={dismissAndroidPrompt} className="p-1">
+              <X className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Add Rumfor to your home screen for quick access.
+          </p>
+          <div className="flex gap-2">
+            <button 
+              onClick={handleAndroidInstall}
+              className="flex-1 bg-accent text-accent-foreground rounded-lg py-2 text-sm font-medium"
+            >
+              Install
+            </button>
+            <button 
+              onClick={dismissAndroidPrompt}
+              className="flex-1 bg-surface border border-border rounded-lg py-2 text-sm font-medium"
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="text-center">
         <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
           <CheckCircle className="w-6 h-6 text-accent" />
@@ -24,16 +97,52 @@ export function WelcomePage() {
         </p>
       </div>
 
-      <div className="space-y-0">
+      <div className="rounded-lg overflow-hidden">
+        <button 
+          onClick={() => setShowInstallInstructions(!showInstallInstructions)}
+          className="w-full bg-surface p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-2">
+            {showInstallInstructions ? <ChevronDown className="w-4 h-4 text-accent" /> : <ChevronRight className="w-4 h-4 text-accent" />}
+            <Smartphone className="w-4 h-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Add to iPhone Homescreen</h2>
+          </div>
+          <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{showInstallInstructions ? 'Collapse' : 'Expand'}</span>
+        </button>
+        
+        {showInstallInstructions && (
+          <div className="bg-surface px-3 pb-3 space-y-2">
+            <p className="text-xs text-muted-foreground pt-2">
+              For the best experience, add Rumfor to your home screen:
+            </p>
+            <div className="bg-background rounded-lg p-3 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-xs font-bold text-accent">1</div>
+                <p className="text-xs text-foreground">Tap the <Share className="w-4 h-4 inline mx-1" /> Share button at the bottom of Safari</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-xs font-bold text-accent">2</div>
+                <p className="text-xs text-foreground">Scroll down and tap "Add to Home Screen"</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-xs font-bold text-accent">3</div>
+                <p className="text-xs text-foreground">Tap "Add" in the top right corner</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-lg overflow-hidden">
         <button 
           onClick={() => setShowWhatYouCanDo(!showWhatYouCanDo)}
-          className="w-full bg-surface rounded-t-lg p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+          className="w-full bg-surface p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-2">
             {showWhatYouCanDo ? <ChevronDown className="w-4 h-4 text-accent" /> : <ChevronRight className="w-4 h-4 text-accent" />}
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">What you can do</h2>
           </div>
-          <span className="text-xs text-muted-foreground">Tap to {showWhatYouCanDo ? 'close' : 'expand'}</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{showWhatYouCanDo ? 'Collapse' : 'Expand'}</span>
         </button>
         
         {showWhatYouCanDo && (
@@ -64,17 +173,17 @@ export function WelcomePage() {
 
         <button 
           onClick={() => setShowComingSoon(!showComingSoon)}
-          className="w-full bg-surface rounded-b-lg p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
+          className="w-full bg-surface p-3 flex items-center justify-between text-left active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-2">
             {showComingSoon ? <ChevronDown className="w-4 h-4 text-accent" /> : <ChevronRight className="w-4 h-4 text-accent" />}
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Coming Soon</h2>
           </div>
-          <span className="text-xs text-muted-foreground">Tap to {showComingSoon ? 'close' : 'expand'}</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{showComingSoon ? 'Collapse' : 'Expand'}</span>
         </button>
         
         {showComingSoon && (
-          <div className="bg-surface px-3 pb-3 rounded-b-lg space-y-2">
+          <div className="bg-surface px-3 pb-3 space-y-2">
             <div className="bg-background rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-accent" />
@@ -99,15 +208,15 @@ export function WelcomePage() {
       </div>
 
       <div className="border-t pt-4 grid gap-2">
-        <Link to="/vendor/profile" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+        <Link to="/vendor/profile" className="block p-3 bg-accent/20 rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
           <Store className="w-4 h-4 mr-3" />
           Setup your vendor profile
         </Link>
-        <Link to="/markets" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+        <Link to="/markets" className="block p-3 bg-accent/20 rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
           <Search className="w-4 h-4 mr-3" />
           Browse Markets to track
         </Link>
-        <Link to="/vendor/add-market" className="block p-3 bg-accent text-accent-foreground rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+        <Link to="/vendor/add-market" className="block p-3 bg-accent/20 rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
           <PlusCircle className="w-4 h-4 mr-3" />
           Add a market to your list
         </Link>
