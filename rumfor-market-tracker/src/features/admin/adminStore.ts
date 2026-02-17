@@ -93,6 +93,8 @@ interface AdminStore extends AdminStoreState {
   deleteUser: (userId: string) => Promise<any>
   suspendUser: (userId: string, isActive: boolean) => Promise<void>
   verifyUser: (userId: string, verified: boolean) => Promise<void>
+  resendVerificationEmail: (userId: string) => Promise<ApiResponse<{ message: string }>>
+  setUsersPage: (page: number) => Promise<void>
   bulkUpdateUsers: (userIds: string[], operation: 'role' | 'suspend' | 'verify', value: any) => Promise<void>
   setUserFilters: (filters: AdminFilters['userFilters']) => void
   selectUser: (userId: string) => void
@@ -280,6 +282,27 @@ export const useAdminStore = create<AdminStore>((set, get) => ({
         user.id === userId ? { ...user, isEmailVerified: verified } : user
       )
       set({ users: updatedUsers })
+    }
+  },
+
+  resendVerificationEmail: async (userId) => {
+    return await adminApi.resendVerificationEmail(userId)
+  },
+
+  setUsersPage: async (page) => {
+    const { userFilters } = get()
+    const filtersWithPage = { ...userFilters, page }
+    try {
+      set({ isLoadingUsers: true })
+      const response = await adminApi.getUsers(filtersWithPage)
+      set({
+        users: response.data,
+        usersPagination: response.pagination,
+        isLoadingUsers: false
+      })
+    } catch (error) {
+      set({ isLoadingUsers: false })
+      throw error
     }
   },
 

@@ -12,6 +12,7 @@ const {
   resetPassword,
   verifyEmail,
   resendVerification,
+  sendTestVerificationEmail,
   logout,
   deleteAccount,
   getResetToken,
@@ -39,6 +40,7 @@ router.post('/verify-email', verifyEmail)
 // Development helper - never expose in production!
 if (process.env.NODE_ENV === 'development') {
   router.post('/reset-token', getResetToken)
+  router.post('/test-verification-email', sendTestVerificationEmail)
 }
 
 // Two-factor authentication routes (some public, some protected)

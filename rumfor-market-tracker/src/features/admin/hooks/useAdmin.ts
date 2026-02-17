@@ -94,6 +94,8 @@ export function useAdminUsers() {
     deleteUser,
     suspendUser,
     verifyUser,
+    resendVerificationEmail,
+    setUsersPage,
     bulkUpdateUsers,
     setUserFilters,
     selectUser,
@@ -124,6 +126,14 @@ export function useAdminUsers() {
     await verifyUser(userId, verified)
   }, [verifyUser])
 
+  const handleResendVerification = useCallback(async (userId: string) => {
+    return await resendVerificationEmail(userId)
+  }, [resendVerificationEmail])
+
+  const handlePageChange = useCallback(async (page: number) => {
+    await setUsersPage(page)
+  }, [setUsersPage])
+
   const handleBulkUpdate = useCallback(async (
     userIds: string[], 
     operation: 'role' | 'suspend' | 'verify', 
@@ -148,6 +158,8 @@ export function useAdminUsers() {
     handleDeleteUser,
     handleSuspendUser,
     handleVerifyUser,
+    handleResendVerification,
+    handlePageChange,
     handleBulkUpdate,
     handleFilterChange,
     selectUser,

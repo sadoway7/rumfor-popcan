@@ -396,19 +396,27 @@ const updateMarket = catchAsync(async (req, res, next) => {
 
   // Admins can edit any market
   if (req.user.role !== 'admin') {
-    // Check if market is vendor-created (immutable)
+    // Check if market is vendor-created
     if (market.createdByType === 'vendor') {
-      return next(
-        new AppError(
-          'Vendor-created markets cannot be modified after creation to ensure data integrity',
-          403
-        )
-      );
-    }
-
-    // Check if user owns this market
-    if (market.promoter.toString() !== req.user._id) {
-      return next(new AppError('You can only update markets you created', 403));
+      // Allow the creator to update tags only (for split-market linking)
+      const isCreator = market.createdBy && market.createdBy.toString() === req.user._id;
+      const isOnlyUpdatingTags = Object.keys(req.body).every(key => key === 'tags');
+      
+      if (isCreator && isOnlyUpdatingTags) {
+        // Allow vendors to update tags on their own markets (for split-market linking)
+      } else {
+        return next(
+          new AppError(
+            'Vendor-created markets can only have tags updated by the creator',
+            403
+          )
+        );
+      }
+    } else {
+      // Check if user owns this market
+      if (market.promoter.toString() !== req.user._id) {
+        return next(new AppError('You can only update markets you created', 403));
+      }
     }
   }
 
@@ -1874,6 +1882,25 @@ const getMarketVendors = catchAsync(async (req, res, next) => {
   );
 });
 
+const getCategoryStats = catchAsync(async (req, res, next) => {
+  const categoryCounts = await getCachedAggregation('categories', async () => {
+    return await Market.aggregate([
+      { $match: { status: 'active', isPublic: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+  });
+
+  const stats = categoryCounts.reduce((acc, item) => {
+    if (item._id) {
+      acc[item._id] = item.count;
+    }
+    return acc;
+  }, {});
+
+  sendSuccess(res, { categories: stats }, 'Category stats retrieved successfully');
+});
+
 module.exports = {
   getMarkets,
   getMarket,
@@ -1902,5 +1929,6 @@ module.exports = {
   getWeatherForecast,
   getCalendarEvents,
   getMarketVendors,
+  getCategoryStats,
   clearMarketCache,
 };

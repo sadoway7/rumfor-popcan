@@ -31,6 +31,7 @@ interface CityAutocompleteProps {
   value: string
   onChange: (value: string) => void
   onStateChange?: (state: string) => void
+  onSelect?: (city: string, state: string) => void
   onError?: (hasError: boolean) => void
   placeholder?: string
   className?: string
@@ -41,6 +42,7 @@ export function CityAutocomplete({
   value,
   onChange,
   onStateChange,
+  onSelect,
   onError,
   placeholder = 'City *',
   className,
@@ -123,9 +125,13 @@ export function CityAutocomplete({
     onChange(cityName)
     setHasSelectionError(false)
     onError?.(false)
-    if (state) {
+    
+    if (onSelect) {
+      onSelect(cityName, state)
+    } else if (state) {
       onStateChange?.(state)
     }
+    
     setIsOpen(false)
     
     setTimeout(() => setIsSelecting(false), 200)

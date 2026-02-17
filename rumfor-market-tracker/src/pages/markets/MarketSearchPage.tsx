@@ -38,6 +38,30 @@ export const MarketSearchPage: React.FC = () => {
     'wheelchair-accessible',
   ];
 
+  const urlCategory = searchParams.get('category');
+  const urlSearch = searchParams.get('search');
+  const urlCity = searchParams.get('city');
+  const urlState = searchParams.get('state');
+  const urlStatus = searchParams.get('status');
+
+  const initialFilters: MarketFilterType = {
+    search: urlSearch || '',
+    category: urlCategory ? urlCategory.split(',') as MarketFilterType['category'] : undefined,
+    location: {
+      city: urlCity || '',
+      state: urlState || '',
+    },
+    status: urlStatus ? urlStatus.split(',') as MarketFilterType['status'] : undefined,
+    accessibility: {
+      wheelchairAccessible: searchParams.get('wheelchair') === 'true',
+      parkingAvailable: searchParams.get('parking') === 'true',
+      restroomsAvailable: searchParams.get('restrooms') === 'true',
+    },
+    sortBy: (searchParams.get('sortBy') as MarketFilterType['sortBy']) || 'recently-added',
+    sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
+    showPastMarkets: searchParams.get('showPastMarkets') === 'false' ? false : true,
+  };
+
   const {
     markets,
     isLoading,
@@ -58,48 +82,32 @@ export const MarketSearchPage: React.FC = () => {
   } = useMarkets({
     autoLoad: true,
     infiniteScroll: true,
+    initialFilters,
   });
 
-  // Initialize filters from URL params when component mounts or URL changes
+  // Handle URL param changes after initial mount (e.g., browser back/forward)
   useEffect(() => {
-    const urlCategory = searchParams.get('category');
-    const urlSearch = searchParams.get('search');
-    const urlCity = searchParams.get('city');
-    const urlState = searchParams.get('state');
-    const urlStatus = searchParams.get('status');
+    const newUrlCategory = searchParams.get('category');
+    const newUrlSearch = searchParams.get('search');
+    const newUrlCity = searchParams.get('city');
+    const newUrlState = searchParams.get('state');
+    const newUrlStatus = searchParams.get('status');
 
-    if (!urlCategory && !urlSearch && !urlCity && !urlState && !urlStatus) {
-      return;
-    }
-
-    const urlFilters: MarketFilterType = {
-      search: urlSearch || '',
-      category: urlCategory ? urlCategory.split(',') as MarketFilterType['category'] : undefined,
-      location: {
-        city: urlCity || '',
-        state: urlState || '',
-      },
-      status: urlStatus ? urlStatus.split(',') as MarketFilterType['status'] : undefined,
-      accessibility: {
-        wheelchairAccessible: searchParams.get('wheelchair') === 'true',
-        parkingAvailable: searchParams.get('parking') === 'true',
-        restroomsAvailable: searchParams.get('restrooms') === 'true',
-      },
-      sortBy:
-        (searchParams.get('sortBy') as MarketFilterType['sortBy']) ||
-        'recently-added',
-      sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc',
-      showPastMarkets: searchParams.get('showPastMarkets') === 'false' ? false : true,
-    };
-
-    setFilters(urlFilters);
-  }, [searchParams]);
-
-  // Handle URL search param changes from header search
-  useEffect(() => {
-    const urlSearch = searchParams.get('search') || '';
-    if (urlSearch !== filters.search) {
-      setFilters({ ...filters, search: urlSearch });
+    const newCategory = newUrlCategory ? newUrlCategory.split(',') as MarketFilterType['category'] : undefined;
+    
+    if (
+      newUrlSearch !== filters.search ||
+      JSON.stringify(newCategory) !== JSON.stringify(filters.category) ||
+      newUrlCity !== filters.location?.city ||
+      newUrlState !== filters.location?.state
+    ) {
+      setFilters({
+        ...filters,
+        search: newUrlSearch || '',
+        category: newCategory,
+        location: { city: newUrlCity || '', state: newUrlState || '' },
+        status: newUrlStatus ? newUrlStatus.split(',') as MarketFilterType['status'] : undefined,
+      });
     }
   }, [searchParams]);
 
@@ -326,17 +334,15 @@ export const MarketSearchPage: React.FC = () => {
                       location: {
                         ...filters.location,
                         city: city,
-                        state: filters.location?.state || '',
                       },
                     });
                   }}
-                  onStateChange={state => {
+                  onSelect={(city, state) => {
                     handleFiltersChange({
                       ...filters,
                       location: {
-                        ...filters.location,
-                        state: state,
-                        city: filters.location?.city || '',
+                        city,
+                        state,
                       },
                     });
                   }}

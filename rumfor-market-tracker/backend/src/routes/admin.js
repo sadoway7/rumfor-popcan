@@ -19,6 +19,8 @@ const {
   updateSettings
 } = require('../controllers/adminController')
 
+const { adminResendVerification } = require('../controllers/authController')
+
 const { verifyToken, requireAdmin } = require('../middleware/auth')
 const { validateMongoId, validatePagination } = require('../middleware/validation')
 
@@ -35,6 +37,7 @@ router.get('/users/:id', validateMongoId('id'), getUser)
 router.patch('/users/:id', validateMongoId('id'), updateUser)
 router.delete('/users/:id', validateMongoId('id'), deleteUser)
 router.get('/users/:id/activity', validateMongoId('id'), getUserActivity)
+router.post('/users/:id/resend-verification', validateMongoId('id'), adminResendVerification)
 
 // Market management
 router.get('/markets', validatePagination, getMarkets)

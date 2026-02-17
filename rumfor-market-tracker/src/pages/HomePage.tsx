@@ -138,6 +138,13 @@ export function HomePage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch category stats
+  const { data: categoryStats } = useQuery({
+    queryKey: ['markets', 'categoryStats'],
+    queryFn: () => marketsApi.getCategoryStats(),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -239,19 +246,27 @@ export function HomePage() {
                 <div className="grid grid-cols-2 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
+                    const count = categoryStats?.[cat.slug] || 0;
                     return (
                       <Link
                         key={cat.name}
                         to={`/markets?category=${cat.slug}`}
                       >
-                        <div className="flex items-center gap-2 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
-                          <Icon
-                            className="h-5 w-5 text-amber-500"
-                            strokeWidth={2}
-                          />
-                          <span className="font-medium text-foreground text-sm">
-                            {cat.name}
-                          </span>
+                        <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon
+                              className="h-5 w-5 text-amber-500 flex-shrink-0"
+                              strokeWidth={2}
+                            />
+                            <span className="font-medium text-foreground text-sm truncate">
+                              {cat.name}
+                            </span>
+                          </div>
+                          {count > 0 && (
+                            <span className="text-xs text-muted-foreground font-medium flex-shrink-0">
+                              {count}
+                            </span>
+                          )}
                         </div>
                       </Link>
                     );
@@ -360,19 +375,27 @@ export function HomePage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
+                    const count = categoryStats?.[cat.slug] || 0;
                     return (
                       <Link
                         key={cat.name}
                         to={`/markets?category=${cat.slug}`}
                       >
-                        <div className="flex items-center gap-2 p-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
-                          <Icon
-                            className="h-4 w-4 text-amber-500 shrink-0"
-                            strokeWidth={2}
-                          />
-                          <span className="font-medium text-foreground text-xs truncate">
-                            {cat.name}
-                          </span>
+                        <div className="flex items-center justify-between gap-1 p-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Icon
+                              className="h-4 w-4 text-amber-500 shrink-0"
+                              strokeWidth={2}
+                            />
+                            <span className="font-medium text-foreground text-xs truncate">
+                              {cat.name}
+                            </span>
+                          </div>
+                          {count > 0 && (
+                            <span className="text-xs text-muted-foreground font-medium flex-shrink-0">
+                              {count}
+                            </span>
+                          )}
                         </div>
                       </Link>
                     );

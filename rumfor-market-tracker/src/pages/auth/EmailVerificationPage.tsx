@@ -30,6 +30,7 @@ export function EmailVerificationPage() {
   const [searchParams] = useSearchParams()
   const tokenFromUrl = searchParams.get('token')
   const [email, setEmail] = React.useState('')
+  const hasAttemptedVerification = React.useRef(false)
 
   const {
     register,
@@ -43,11 +44,12 @@ export function EmailVerificationPage() {
   })
 
   React.useEffect(() => {
-    // Auto-verify if token is present in URL
-    if (tokenFromUrl) {
+    // Auto-verify if token is present in URL (only once)
+    if (tokenFromUrl && !hasAttemptedVerification.current) {
+      hasAttemptedVerification.current = true
       handleVerifyToken(tokenFromUrl)
     }
-  }, [tokenFromUrl])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     // Clear state on unmount

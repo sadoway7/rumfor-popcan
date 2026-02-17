@@ -22,6 +22,7 @@ interface UseMarketsOptions {
   autoLoad?: boolean;
   limit?: number;
   infiniteScroll?: boolean;
+  initialFilters?: MarketFilters;
 }
 
 interface UseMarketsReturn {
@@ -81,11 +82,11 @@ interface UseMarketsReturn {
 }
 
 export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
-  const { autoLoad = true, limit = 20, infiniteScroll = false } = options || {};
+  const { autoLoad = true, limit = 20, infiniteScroll = false, initialFilters } = options || {};
 
   const queryClient = useQueryClient();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState<MarketFilters>({ showPastMarkets: true });
+  const [currentFilters, setCurrentFilters] = useState<MarketFilters>(initialFilters || { showPastMarkets: true });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);

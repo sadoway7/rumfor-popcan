@@ -329,25 +329,50 @@ const resetPassword = catchAsync(async (req, res, next) => {
 const verifyEmail = catchAsync(async (req, res, next) => {
   const { token } = req.body
 
+  console.log('[verifyEmail] Received verification request, token length:', token?.length)
+
   if (!token) {
+    console.log('[verifyEmail] No token provided')
     return next(new AppError('Verification token is required', 400))
   }
 
   const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
+  console.log('[verifyEmail] Hashed token:', hashedToken.substring(0, 16) + '...')
+
   const user = await User.findOne({
     emailVerificationToken: hashedToken,
     emailVerificationExpires: { $gt: Date.now() }
   })
 
   if (!user) {
-    return next(new AppError('Invalid verification token', 400))
+    // Check if token exists but is expired
+    const expiredUser = await User.findOne({
+      emailVerificationToken: hashedToken
+    })
+    
+    if (expiredUser) {
+      console.log('[verifyEmail] Token found but expired for user:', expiredUser.email)
+      return next(new AppError('Verification token has expired. Please request a new one.', 400))
+    }
+    
+    // Check if user is already verified (token cleared)
+    const verifiedUser = await User.findOne({ 
+      email: req.body.email 
+    }).select('+emailVerificationToken')
+    
+    console.log('[verifyEmail] Token not found. User may already be verified or token invalid.')
+    return next(new AppError('Invalid or expired verification token. If you already verified your email, please log in.', 400))
   }
+
+  console.log('[verifyEmail] Found user:', user.email, '- verifying...')
 
   // Mark email as verified
   user.isEmailVerified = true
   user.emailVerificationToken = undefined
   user.emailVerificationExpires = undefined
   await user.save()
+
+  console.log('[verifyEmail] Email verified successfully for:', user.email)
 
   await emailSender.sendEmail({
     to: user.email,
@@ -369,6 +394,83 @@ const resendVerification = catchAsync(async (req, res, next) => {
 
   if (user.isEmailVerified) {
     return next(new AppError('Email is already verified', 400))
+  }
+
+  // Generate new verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex')
+  user.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex')
+  user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000
+  await user.save({ validateBeforeSave: false })
+
+  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`
+  
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'email-verification',
+    data: {
+      firstName: user.firstName || 'User',
+      verificationUrl,
+      expiresIn: '24 hours'
+    }
+  })
+
+  sendSuccess(res, null, 'Verification email sent')
+})
+
+// Dev-only: Send test verification email for an existing user
+const sendTestVerificationEmail = catchAsync(async (req, res, next) => {
+  const { email } = req.body
+
+  if (!email) {
+    return next(new AppError('Email is required', 400))
+  }
+
+  const user = await User.findOne({ email: email.toLowerCase().trim() })
+  
+  if (!user) {
+    return next(new AppError('User not found', 404))
+  }
+
+  // Generate new verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex')
+  user.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex')
+  user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000
+  user.isEmailVerified = false // Reset verification status for testing
+  await user.save({ validateBeforeSave: false })
+
+  const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`
+  
+  await emailSender.sendEmail({
+    to: user.email,
+    userId: user._id,
+    type: 'email-verification',
+    data: {
+      firstName: user.firstName || 'User',
+      verificationUrl,
+      expiresIn: '24 hours'
+    }
+  })
+
+  sendSuccess(res, { 
+    verificationUrl,
+    token: verificationToken,
+    message: 'Test verification email sent'
+  }, 'Test verification email sent')
+})
+
+// Admin: Resend verification email to a user
+const adminResendVerification = catchAsync(async (req, res, next) => {
+  const { userId } = req.params
+
+  const user = await User.findById(userId)
+  
+  if (!user) {
+    return next(new AppError('User not found', 404))
+  }
+
+  if (user.isEmailVerified) {
+    return next(new AppError('User is already verified', 400))
   }
 
   // Generate new verification token
@@ -665,6 +767,8 @@ module.exports = {
   resetPassword,
   verifyEmail,
   resendVerification,
+  sendTestVerificationEmail,
+  adminResendVerification,
   logout,
   deleteAccount,
   getResetToken,

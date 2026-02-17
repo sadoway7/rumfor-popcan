@@ -20,6 +20,7 @@ import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS
 import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
 import { StatusChangeModal } from '@/components/StatusChangeModal'
+import { RelatedMarketDates } from '@/components/RelatedMarketDates'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
@@ -139,6 +140,18 @@ export const MarketDetailPage: React.FC = () => {
   }
 
   const trackingStatus = getTrackingStatus(market.id)?.status as keyof typeof TRACKING_STATUS_LABELS || 'interested'
+
+  // Get primary market ID for shared comments (split markets share comments)
+  const getPrimaryMarketId = (): string => {
+    const splitTag = market.tags?.find(tag => tag.startsWith('split-market:'))
+    if (splitTag) {
+      const ids = splitTag.replace('split-market:', '').split(',')
+      return ids[0] // Primary market is first in the list
+    }
+    return market.id // Not a split market, use current ID
+  }
+  
+  const commentsMarketId = getPrimaryMarketId()
 
   const formatSchedule = (schedule: any) => {
     if (!schedule) return 'Schedule TBD'
@@ -474,6 +487,13 @@ export const MarketDetailPage: React.FC = () => {
                           <p className="text-sm text-muted-foreground">Schedule not available</p>
                         )}
                       </div>
+                      
+                      {/* Related Market Dates - for split markets */}
+                      {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                        <div className="mt-3">
+                          <RelatedMarketDates market={market} variant="tabs" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Right Column: Action Links */}
@@ -702,7 +722,7 @@ export const MarketDetailPage: React.FC = () => {
               icon: <MessageSquare className="w-4 h-4" />,
               content: (
                 <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
-                  <CommentList marketId={id!} />
+                  <CommentList marketId={commentsMarketId} />
                 </div>
               )
             }

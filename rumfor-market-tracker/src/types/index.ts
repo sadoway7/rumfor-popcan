@@ -776,6 +776,7 @@ export interface AdminFilters {
     search?: string;
     sortBy?: string;
     sortDirection?: 'asc' | 'desc';
+    page?: number;
   };
   moderationFilters?: {
     type?: string[];

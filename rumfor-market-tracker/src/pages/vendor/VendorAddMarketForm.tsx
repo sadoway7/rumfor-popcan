@@ -81,6 +81,7 @@ interface MarketFormData {
     vendorCount?: number
     attendanceEstimate?: string
     marketImage?: string
+    splitMultipleDates?: boolean
   }
 }
 
@@ -231,7 +232,8 @@ startDate: formatLocalDate(new Date().toISOString()),
       alcoholAvailable: false
     },
     additionalInfo: {
-      tags: []
+      tags: [],
+      splitMultipleDates: false
     }
   })
 
@@ -318,6 +320,116 @@ startDate: formatLocalDate(new Date().toISOString()),
 
       const city = formData.location.city?.trim() || 'Unknown'
       const state = formData.location.state?.trim() || 'NA'
+
+      // If splitMultipleDates is checked, create separate markets for each date
+      if (formData.additionalInfo.splitMultipleDates && formData.schedule.length > 1) {
+        const createdMarketIds: string[] = []
+        
+        // First, create all markets without the relationship tag
+        for (let i = 0; i < formData.schedule.length; i++) {
+          const scheduleItem = formData.schedule[i]
+          const dateObj = new Date(scheduleItem.eventDate || scheduleItem.startDate || new Date())
+          const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          
+          // All markets get date appended
+          const marketName = `${formData.name} - ${dateStr}`
+          
+          const marketData = {
+            name: marketName,
+            description: formData.description || 'A great market for vendors and visitors.',
+            promoter: user?.id || '',
+            createdBy: user?.id || '',
+            createdByType: 'vendor',
+            marketType: 'vendor-created',
+            location: {
+              address: {
+                street: formData.location.address?.trim() || 'TBD',
+                city: city,
+                state: state,
+                zipCode: formData.location.zipCode?.trim() || '00000',
+                country: formData.location.country?.trim() || 'USA'
+              },
+              coordinates: [0, 0]
+            },
+            category: formData.category,
+            schedule: {
+              recurring: false,
+              daysOfWeek: [],
+              startTime: scheduleItem.startTime || '08:00',
+              endTime: scheduleItem.endTime || '14:00',
+              seasonStart: formatLocalDate(scheduleItem.eventDate || new Date().toISOString()),
+              seasonEnd: formatLocalDate(scheduleItem.eventDate || new Date().toISOString()),
+              specialDates: [{
+                date: new Date(scheduleItem.eventDate || scheduleItem.startDate || new Date()).toISOString().split('T')[0],
+                startTime: scheduleItem.startTime || '08:00',
+                endTime: scheduleItem.endTime || '14:00'
+              }]
+            },
+            status: 'active',
+            isPublic: true,
+            applicationsEnabled: false,
+            acceptVendors: true,
+            applicationSettings: {
+              acceptVendors: true,
+              maxVendors: undefined,
+              applicationFee: 0,
+              boothFee: 0,
+              applicationLink: formData.applicationSettings?.applicationLink || undefined,
+              applicationDeadline: formData.applicationSettings?.applicationDeadline || undefined
+            },
+            images: finalImages.map(url => ({ url, isHero: true })),
+            tags: [...formData.additionalInfo.tags], // Will add relationship tag after
+            amenities,
+            contact: formData.contact,
+            accessibility: formData.accessibility,
+            applicationFields: [],
+            stats: {
+              viewCount: 0,
+              favoriteCount: 0,
+              applicationCount: 0,
+              commentCount: 0,
+              rating: 0,
+              reviewCount: 0
+            }
+          }
+          
+          const response = await marketsApi.createMarket(marketData as any)
+          if (response.success && response.data) {
+            const data = response.data as any
+            const newMarketId = data.id || data._id || data.market?.id
+            createdMarketIds.push(newMarketId)
+            await trackMarket(newMarketId, 'interested')
+          }
+        }
+        
+        // Now update all markets with the relationship tag
+        const relationshipTag = `split-market:${createdMarketIds.join(',')}`
+        console.log('Updating markets with relationship tag:', relationshipTag)
+        
+        for (const marketId of createdMarketIds) {
+          try {
+            const updateResponse = await marketsApi.updateMarket(marketId, {
+              tags: [...formData.additionalInfo.tags, relationshipTag]
+            } as any)
+            console.log('Update response for market', marketId, ':', updateResponse)
+          } catch (e) {
+            console.error('Failed to update market with relationship tag:', e)
+          }
+        }
+        
+        // Invalidate markets queries to force refetch with updated tags
+        queryClient.invalidateQueries({ queryKey: ['markets'] })
+        
+        // Navigate to the first (primary) market
+        setTimeout(() => {
+          navigate(`/vendor/markets/${createdMarketIds[0]}`)
+        }, 500)
+        
+        setIsSubmitting(false)
+        return
+      }
+
+      // Single market creation (original code path)
 
       const marketData: any = {
         name: formData.name,
@@ -422,13 +534,21 @@ startDate: formatLocalDate(new Date().toISOString()),
   }
 
   const addScheduleItem = () => {
+    const firstItem = formData.schedule[0]
+    const newDate = new Date()
+    
+    let dayOfWeek = 6
+    if (formData.schedule.length > 0) {
+      dayOfWeek = new Date(formData.schedule[formData.schedule.length - 1].eventDate || new Date()).getDay()
+    }
+    
     setFormData(prev => ({
       ...prev,
       schedule: [...prev.schedule, {
-        dayOfWeek: 6,
-        startTime: '08:00',
-        endTime: '14:00',
-startDate: formatLocalDate(new Date().toISOString()),
+        dayOfWeek: dayOfWeek,
+        startTime: firstItem?.startTime || '08:00',
+        endTime: firstItem?.endTime || '14:00',
+startDate: formatLocalDate(newDate.toISOString()),
         endDate: formatLocalDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()),
         eventDate: formatLocalDate(new Date().toISOString()),
         isRecurring: false
@@ -548,6 +668,15 @@ const schedules = formData.schedule.map(s => {
     return schedules.join(', ')
   }
 
+  const handleBack = () => {
+    if (currentStep > 1) {
+      prevStep();
+    } else {
+      // On first section, behave like browser back button
+      window.history.back();
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-3 animate-in slide-in-from-bottom-8 duration-500">
       <style>{`
@@ -561,8 +690,9 @@ const schedules = formData.schedule.map(s => {
         {/* Back Button */}
         <Button 
           variant="ghost" 
-          onClick={currentStep > 1 ? prevStep : () => navigate('/vendor')}
+          onClick={handleBack}
           className="p-2"
+          title={currentStep > 1 ? "Go to previous step" : "Go back to previous page"}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -589,13 +719,13 @@ const schedules = formData.schedule.map(s => {
           ))}
         </div>
 
-        {/* Current step label */}
-        <div className="w-24 text-left">
-          <span className="text-sm font-medium text-muted-foreground">
-            {steps[currentStep - 1]?.title}
-          </span>
+          {/* Current step label */}
+          <div className="w-24 text-left">
+            <span className="text-sm font-medium text-muted-foreground">
+              {steps[currentStep - 1]?.title}
+            </span>
+          </div>
         </div>
-      </div>
 
       {/* API Error Display */}
       {Object.keys(apiErrors).length > 0 && (
@@ -961,17 +1091,44 @@ const schedules = formData.schedule.map(s => {
                 </div>
               ))}
               
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                {/* Split Multiple Dates Option - only show if there are multiple dates */}
+                {formData.schedule.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="split-dates"
+                      checked={formData.additionalInfo.splitMultipleDates || false}
+                      onValueChange={(checked) => setFormData(prev => ({
+                        ...prev,
+                        additionalInfo: { ...prev.additionalInfo, splitMultipleDates: checked }
+                      }))}
+                      className="h-5 w-5 sm:h-4 sm:w-4"
+                    />
+                    <label htmlFor="split-dates" className="font-bold text-sm text-foreground">
+                      Different Vendors Each Day
+                    </label>
+                  </div>
+                )}
+                
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={addScheduleItem}
-                  className="flex items-center gap-1 h-9"
+                  className="flex items-center gap-1 h-9 ml-auto"
                 >
                   <Plus className="w-4 h-4" />
                   Add Date
                 </Button>
               </div>
+              
+              {/* Explanation note - only show when checkbox is checked */}
+              {formData.additionalInfo.splitMultipleDates && formData.schedule.length > 1 && (
+                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    <span className="font-semibold">Note:</span> We'll create separate market listings for each date. Each date will be shown on its own market card.
+                  </p>
+                </div>
+              )}
             </div>
             
             {errors.schedule && <p className="text-red-500 text-xs">{errors.schedule}</p>}

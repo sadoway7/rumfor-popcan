@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Users, 
@@ -13,7 +13,9 @@ import {
   Download,
   RefreshCw,
   Edit,
-  Trash2
+  Trash2,
+  MoreVertical,
+  Mail
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +32,127 @@ interface AdminUserTableProps {
   className?: string
 }
 
+function UserActionsDropdown({ 
+  record, 
+  onEdit, 
+  onVerify, 
+  onResendVerification,
+  onSuspend, 
+  onDelete 
+}: { 
+  record: UserWithStats
+  onEdit: () => void
+  onVerify: () => void
+  onResendVerification: () => Promise<void>
+  onSuspend: () => void
+  onDelete: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  const handleResend = async () => {
+    await onResendVerification()
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-8 w-8 p-0"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </Button>
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-border rounded-md shadow-lg z-50 py-1">
+          <button
+            onClick={() => {
+              onEdit()
+              setIsOpen(false)
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
+          >
+            <Edit className="h-4 w-4" />
+            Edit User
+          </button>
+          <button
+            onClick={() => {
+              onVerify()
+              setIsOpen(false)
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
+          >
+            {record.isEmailVerified ? (
+              <>
+                <ShieldX className="h-4 w-4" />
+                Unverify Email
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="h-4 w-4" />
+                Verify Email
+              </>
+            )}
+          </button>
+          {!record.isEmailVerified && (
+            <button
+              onClick={handleResend}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Resend Verification
+            </button>
+          )}
+          <button
+            onClick={() => {
+              onSuspend()
+              setIsOpen(false)
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
+          >
+            {record.isActive ? (
+              <>
+                <UserX className="h-4 w-4" />
+                Suspend User
+              </>
+            ) : (
+              <>
+                <UserCheck className="h-4 w-4" />
+                Activate User
+              </>
+            )}
+          </button>
+          <div className="h-px bg-border my-1" />
+          <button
+            onClick={() => {
+              onDelete()
+              setIsOpen(false)
+            }}
+            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2 text-red-500"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete User
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function AdminUserTable({ className }: AdminUserTableProps) {
   const navigate = useNavigate()
   const {
@@ -43,6 +166,8 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
     handleDeleteUser,
     handleSuspendUser,
     handleVerifyUser,
+    handleResendVerification,
+    handlePageChange,
     handleBulkUpdate,
     handleFilterChange,
     selectUser,
@@ -206,9 +331,12 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
       key: 'role',
       title: 'Role',
       render: (_: any, record: UserWithStats) => (
-        <Badge variant={getRoleBadgeVariant(record.role)}>
-          {record.role}
-        </Badge>
+        <Select
+          value={record.role}
+          onValueChange={(value) => handleRoleChange(record.id, value as UserRole)}
+          options={roleChangeOptions}
+          className="w-28"
+        />
       )
     },
     {
@@ -232,57 +360,24 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
     },
     {
       key: 'actions',
-      title: 'Actions',
+      title: '',
+      width: '48px',
       render: (_: any, record: UserWithStats) => (
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(`/admin/users/${record.id}`)}
-            title="Edit user"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleVerifyUser(record.id, !record.isEmailVerified)}
-            title={record.isEmailVerified ? 'Unverify user' : 'Verify user'}
-          >
-            {record.isEmailVerified ? (
-              <ShieldCheck className="h-4 w-4" />
-            ) : (
-              <ShieldX className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleSuspendUser(record.id, !record.isActive)}
-            title={record.isActive ? 'Suspend user' : 'Activate user'}
-          >
-            {record.isActive ? (
-              <UserX className="h-4 w-4" />
-            ) : (
-              <UserCheck className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteUser(record.id)}
-            title="Delete user"
-            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-          <Select
-            value={record.role}
-            onValueChange={(value) => handleRoleChange(record.id, value as UserRole)}
-            options={roleChangeOptions}
-            className="w-24"
-          />
-        </div>
+        <UserActionsDropdown
+          record={record}
+          onEdit={() => navigate(`/admin/users/${record.id}`)}
+          onVerify={() => handleVerifyUser(record.id, !record.isEmailVerified)}
+          onResendVerification={async () => {
+            const result = await handleResendVerification(record.id)
+            if (result.success) {
+              alert('Verification email sent to ' + record.email)
+            } else {
+              alert('Failed to send verification email: ' + (result.error || 'Unknown error'))
+            }
+          }}
+          onSuspend={() => handleSuspendUser(record.id, !record.isActive)}
+          onDelete={() => handleDeleteUser(record.id)}
+        />
       )
     }
   ]
@@ -457,6 +552,7 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
               variant="outline"
               size="sm"
               disabled={usersPagination.page <= 1}
+              onClick={() => handlePageChange(usersPagination.page - 1)}
             >
               Previous
             </Button>
@@ -467,6 +563,7 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
               variant="outline"
               size="sm"
               disabled={usersPagination.page >= usersPagination.totalPages}
+              onClick={() => handlePageChange(usersPagination.page + 1)}
             >
               Next
             </Button>

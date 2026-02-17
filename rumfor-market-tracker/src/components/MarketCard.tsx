@@ -12,6 +12,7 @@ import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } 
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
+import { RelatedMarketDates } from './RelatedMarketDates'
 
 interface MarketCardProps {
   market: Market
@@ -24,6 +25,7 @@ interface MarketCardProps {
   variant?: 'default' | 'compact' | 'featured' | 'minimal' | 'profile'
   detailPath?: string // Custom path for market detail page
   trackingStatus?: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled' // Current tracking status
+  relatedMarketIds?: string[] // IDs of related markets (for split markets)
 }
 
 
@@ -62,12 +64,22 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   showTrackButton = true,
   variant = 'default',
   detailPath,
-  trackingStatus
+  trackingStatus,
+  relatedMarketIds
 }) => {
   const [dominantColor, setDominantColor] = React.useState<string>('')
   const [, setIsLightBackground] = React.useState(false)
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
   const { openComments } = useCommentsModalStore()
+
+  // Check if this is a split market (has relatedMarketIds or split-market tag)
+  const isSplitMarket = relatedMarketIds && relatedMarketIds.length > 1
+  
+  // Strip date suffix from market name for split markets
+  // Format: "Market Name - Jan 15" -> "Market Name"
+  const displayName = isSplitMarket && market.name.includes(' - ')
+    ? market.name.split(' - ')[0]
+    : market.name
 
   // Extract dominant color from market image
   React.useEffect(() => {
@@ -458,8 +470,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               {/* Solid dark bar at bottom for title */}
               <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
+                {/* Split market banner */}
+                {isSplitMarket && (
+                  <div className="mb-1 px-2 py-0.5 bg-blue-500/90 text-white text-[10px] font-bold rounded inline-block">
+                    Different Vendors Each Day
+                  </div>
+                )}
                 <h3 className="text-white font-quicksand font-bold text-lg leading-tight line-clamp-2">
-                  {market.name}
+                  {displayName}
                 </h3>
               </div>
             </div>
@@ -467,7 +485,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           
           <div className="p-6">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="text-xl font-quicksand font-bold line-clamp-2">{market.name}</h3>
+              <h3 className="text-xl font-quicksand font-bold line-clamp-2">{displayName}</h3>
               <Badge variant="outline" className={cn('ml-2 flex-shrink-0 text-base font-medium px-4 py-1.5 min-w-[80px] text-center', MARKET_STATUS_COLORS[market.status])}>
                 {market.status}
               </Badge>
@@ -595,19 +613,24 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
                 {/* Left side - Dates stacked */}
                 <div className="flex flex-col gap-1">
-                  {/* Dates - 4 down before next column */}
-                  {scheduleDates.length > 0 && (
-                    <div className={cn(
-                      "grid gap-1",
-                      scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
-                    )}>
-                      {scheduleDates.map((date, index) => (
-                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
-                           <Calendar className="w-4 h-4" />
-                           <span>{date}</span>
-                         </div>
-                       ))}
-                    </div>
+                  {/* Check if this is a split market with related dates */}
+                  {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
+                    <RelatedMarketDates market={market} />
+                  ) : (
+                    /* Regular dates display for non-split markets */
+                    scheduleDates.length > 0 && (
+                      <div className={cn(
+                        "grid gap-1",
+                        scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
+                      )}>
+                        {scheduleDates.map((date, index) => (
+                           <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
+                             <Calendar className="w-4 h-4" />
+                             <span>{date}</span>
+                           </div>
+                         ))}
+                      </div>
+                    )
                   )}
                 </div>
               </div>
@@ -703,9 +726,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       />
                        {/* Content */}
                        <div className="relative px-4 pt-4 pb-6 z-10">
-                         <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
-                          {market.name}
-                        </h3>
+                          {/* Split market banner */}
+                          {isSplitMarket && (
+                            <div className="mb-2 px-2 py-1 bg-blue-500/90 text-white text-xs font-bold rounded inline-block">
+                              Different Vendors Each Day
+                            </div>
+                          )}
+                          <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                           {displayName}
+                         </h3>
                         <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                           {market.description}
                         </p>
@@ -773,22 +802,28 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               {/* Top overlays */}
               <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
-                {/* Left side - Dates stacked */}
-                <div className="flex flex-col gap-1">
-                  {scheduleDates.length > 0 && (
-                    <div className={cn(
-                      "grid gap-1",
-                      scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
-                    )}>
-                      {scheduleDates.map((date, index) => (
-                         <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
-                           <Calendar className="w-4 h-4" />
-                           <span>{date}</span>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-                </div>
+                  {/* Left side - Dates stacked or RelatedMarketDates */}
+                  <div className="flex flex-col gap-1">
+                    {/* Check if this is a split market with related dates */}
+                    {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
+                      <RelatedMarketDates market={market} />
+                    ) : (
+                      /* Regular dates display for non-split markets */
+                      scheduleDates.length > 0 && (
+                        <div className={cn(
+                          "grid gap-1",
+                          scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
+                        )}>
+                          {scheduleDates.map((date, index) => (
+                             <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
+                                 <Calendar className="w-4 h-4" />
+                                 <span>{date}</span>
+                               </div>
+                           ))}
+                        </div>
+                      )
+                    )}
+                  </div>
               </div>
 
               {/* Location - Flag style at left edge */}
@@ -820,8 +855,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   />
                   {/* Content */}
                   <div className="relative px-4 pt-4 pb-6 z-10">
+                    {/* Split market banner */}
+                    {isSplitMarket && (
+                      <div className="mb-2 px-2 py-1 bg-blue-500/90 text-white text-xs font-bold rounded inline-block">
+                        Different Vendors Each Day
+                      </div>
+                    )}
                     <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
-                      {market.name}
+                      {displayName}
                     </h3>
                     <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                       {market.description}
@@ -863,8 +904,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         )}
 
         <div className="p-6">
+          {/* Split market banner */}
+          {isSplitMarket && (
+            <div className="mb-2 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded inline-block">
+              Different Vendors Each Day
+            </div>
+          )}
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-bold text-2xl line-clamp-2 flex-1">{market.name}</h3>
+            <h3 className="font-bold text-2xl line-clamp-2 flex-1">{displayName}</h3>
             <div className="flex flex-col sm:flex-row gap-1 ml-2 flex-shrink-0">
               <Badge variant="outline" className={cn('text-xs', marketTypeColors[market.marketType])}>
                 {marketTypeLabels[market.marketType]}

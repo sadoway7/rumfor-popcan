@@ -511,6 +511,16 @@ export const marketsApi = {
     }
   },
 
+  async getCategoryStats(): Promise<Record<string, number>> {
+    const response = await httpClient.get<ApiResponse<{ categories: Record<string, number> }>>(
+      '/markets/stats/categories'
+    );
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch category stats');
+    }
+    return response.data?.categories || {};
+  },
+
   // Get market by ID
   async getMarketById(id: string): Promise<ApiResponse<Market>> {
     if (isDevelopment && isMockMode) {

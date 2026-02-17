@@ -1,9 +1,58 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Market } from '@/types';
 import { MarketCard } from './MarketCard';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { cn } from '@/utils/cn';
+
+/**
+ * Helper function to group split markets
+ * Returns only the primary market from each group, with relatedMarketIds attached
+ */
+function groupSplitMarkets(markets: Market[]): { market: Market; relatedMarketIds?: string[] }[] {
+  const splitTagMap = new Map<string, string[]>() // tag -> array of market IDs
+  const marketIdToTag = new Map<string, string>() // market ID -> its split tag
+  
+  // First pass: identify all split markets and group them
+  markets.forEach(market => {
+    const splitTag = market.tags?.find(tag => tag.startsWith('split-market:'))
+    if (splitTag) {
+      const ids = splitTag.replace('split-market:', '').split(',')
+      splitTagMap.set(splitTag, ids)
+      marketIdToTag.set(market.id, splitTag)
+    }
+  })
+  
+  // Track which markets we've already included (as part of a group)
+  const includedIds = new Set<string>()
+  const result: { market: Market; relatedMarketIds?: string[] }[] = []
+  
+  // Second pass: build result list
+  markets.forEach(market => {
+    const splitTag = marketIdToTag.get(market.id)
+    
+    if (!splitTag) {
+      // Not a split market - include as-is
+      result.push({ market })
+    } else if (!includedIds.has(market.id)) {
+      // This is a split market we haven't included yet
+      const allIds = splitTagMap.get(splitTag) || []
+      
+      // Only include if this is the primary (first) market in the group
+      if (allIds[0] === market.id) {
+        result.push({ 
+          market, 
+          relatedMarketIds: allIds 
+        })
+        // Mark all markets in this group as included
+        allIds.forEach(id => includedIds.add(id))
+      }
+      // If not primary, skip it (will be shown via tabs on primary card)
+    }
+  })
+  
+  return result
+}
 
 /**
  * Props for the MarketGrid component
@@ -187,9 +236,12 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     );
   }
 
+  // Group split markets - only show primary market from each group
+  const groupedMarkets = useMemo(() => groupSplitMarkets(markets), [markets])
+
   return (
     <div className={cn(getGridClasses(), className)}>
-      {markets.map(market => (
+      {groupedMarkets.map(({ market, relatedMarketIds }) => (
         <FadeInWrapper key={market.id}>
           <MarketCard
             market={market}
@@ -205,6 +257,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
             isTracked={trackedMarketIds.includes(market.id)}
             isLoading={isTracking}
             className="h-full"
+            relatedMarketIds={relatedMarketIds}
           />
         </FadeInWrapper>
       ))}

@@ -320,13 +320,18 @@ export const adminApi = {
             )
           }
 
+          const page = filters?.page || 1
+          const limit = 20
+          const startIndex = (page - 1) * limit
+          const paginatedUsers = filteredUsers.slice(startIndex, startIndex + limit)
+
           resolve({
-            data: filteredUsers,
+            data: paginatedUsers,
             pagination: {
-              page: 1,
-              limit: 20,
+              page,
+              limit,
               total: filteredUsers.length,
-              totalPages: Math.ceil(filteredUsers.length / 20)
+              totalPages: Math.ceil(filteredUsers.length / limit)
             }
           })
         }, 400)
@@ -338,6 +343,7 @@ export const adminApi = {
       if (filters?.search) queryParams.append('search', filters.search)
       if (filters?.sortBy) queryParams.append('sortBy', filters.sortBy)
       if (filters?.sortDirection) queryParams.append('sortOrder', filters.sortDirection)
+      if (filters?.page) queryParams.append('page', String(filters.page))
 
       const response = await httpClient.get<ApiResponse<{ users: UserWithStats[], pagination: any }>>(`/admin/users?${queryParams}`)
       
@@ -519,6 +525,11 @@ export const adminApi = {
       }
       return { success: false, data: response.data } as any
     }
+  },
+
+  async resendVerificationEmail(userId: string): Promise<ApiResponse<{ message: string }>> {
+    const response = await httpClient.post<ApiResponse<{ message: string }>>(`/admin/users/${userId}/resend-verification`, {})
+    return response
   },
 
   async bulkUpdateUsers(
