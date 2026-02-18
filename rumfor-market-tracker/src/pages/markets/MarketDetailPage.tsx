@@ -145,8 +145,13 @@ export const MarketDetailPage: React.FC = () => {
   const getPrimaryMarketId = (): string => {
     const splitTag = market.tags?.find(tag => tag.startsWith('split-market:'))
     if (splitTag) {
-      const ids = splitTag.replace('split-market:', '').split(',')
-      return ids[0] // Primary market is first in the list
+      const tagContent = splitTag.replace('split-market:', '')
+      // Handle both old format (id1,id2) and new format (id1:date1,id2:date2)
+      const parts = tagContent.split(',')
+      const firstPart = parts[0]
+      // Extract just the ID (before the colon if present)
+      const primaryId = firstPart.includes(':') ? firstPart.split(':')[0] : firstPart
+      return primaryId
     }
     return market.id // Not a split market, use current ID
   }
@@ -275,9 +280,18 @@ export const MarketDetailPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Category - Flag style at right edge */}
-        <div className={`absolute top-0 -right-2 pl-5 pr-4 py-1.5 z-10 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
-          {categoryLabels[market.category]}
+        {/* Category + Split Market Flag - Flag style at right edge */}
+        <div className="absolute top-0 -right-2 z-10 flex">
+          {/* Different Vendors Each Day - only for split markets */}
+          {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+            <div className="pl-5 pr-5 py-1.5 bg-slate-600 text-white font-medium text-sm -mr-1" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%)' }}>
+              Different Vendors Each Day
+            </div>
+          )}
+          {/* Category flag */}
+          <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
+            {categoryLabels[market.category]}
+          </div>
         </div>
 
         {/* Status button - under category flag, only show when tracked */}
@@ -549,7 +563,7 @@ export const MarketDetailPage: React.FC = () => {
 
                   {/* Tags */}
                   <TagVoting
-                    marketTags={market.tags || []}
+                    marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
                     marketId={id!}
                     className="mt-8 mb-6"
                   />

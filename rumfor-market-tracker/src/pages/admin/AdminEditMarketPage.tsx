@@ -789,9 +789,9 @@ export function AdminEditMarketPage() {
                 </p>
               </div>
               
-              {formData.tags.length > 0 && (
+              {formData.tags.filter(tag => !tag.startsWith('split-market:')).length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
+                  {formData.tags.filter(tag => !tag.startsWith('split-market:')).map((tag) => (
                     <Badge key={tag} variant="outline" className="flex items-center gap-1">
                       {tag}
                       <button

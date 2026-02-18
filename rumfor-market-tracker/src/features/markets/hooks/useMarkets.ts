@@ -270,20 +270,15 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
   // Refresh function
   const refresh = useCallback(async () => {
     if (infiniteScroll) {
-      await queryClient.refetchQueries({
-        queryKey: ['markets-infinite', currentFilters, limit],
-        type: 'active',
+      await queryClient.invalidateQueries({
+        queryKey: ['markets-infinite'],
       });
     } else {
-      await queryClient.refetchQueries({
-        queryKey: MARKETS_QUERY_KEY(currentFilters, currentPage, limit),
-        type: 'active',
+      await queryClient.invalidateQueries({
+        queryKey: ['markets'],
       });
     }
   }, [
-    currentFilters,
-    currentPage,
-    limit,
     queryClient,
     infiniteScroll,
   ]);

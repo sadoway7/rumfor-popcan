@@ -131,10 +131,10 @@ export function HomePage() {
   // Fetch tracked markets for authenticated users
   const { trackedMarketIds, trackMarket, untrackMarket } = useTrackedMarkets();
 
-  // Fetch recently added markets for homepage
+  // Fetch recently added markets for homepage (fetch more to account for grouping)
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
     queryKey: ['markets', 'featured'],
-    queryFn: () => marketsApi.getMarkets({}, 1, 3),
+    queryFn: () => marketsApi.getMarkets({}, 1, 10),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -426,6 +426,7 @@ export function HomePage() {
             trackedMarketIds={trackedMarketIds || []}
             onTrack={trackMarket}
             onUntrack={untrackMarket}
+            maxItems={6}
             className=""
           />
         </section>

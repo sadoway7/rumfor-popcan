@@ -470,12 +470,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               {/* Solid dark bar at bottom for title */}
               <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-4">
-                {/* Split market banner */}
-                {isSplitMarket && (
-                  <div className="mb-1 px-2 py-0.5 bg-blue-500/90 text-white text-[10px] font-bold rounded inline-block">
-                    Different Vendors Each Day
-                  </div>
-                )}
                 <h3 className="text-white font-quicksand font-bold text-lg leading-tight line-clamp-2">
                   {displayName}
                 </h3>
@@ -610,7 +604,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               />
 
               {/* Top overlays */}
-              <div className="absolute top-10 left-4 right-4 flex items-start justify-between">
+              <div className="absolute top-16 left-4 right-4 flex items-start justify-between">
                 {/* Left side - Dates stacked */}
                 <div className="flex flex-col gap-1">
                   {/* Check if this is a split market with related dates */}
@@ -632,7 +626,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       </div>
                     )
                   )}
-                </div>
+                 </div>
               </div>
 
               {/* Location - Flag style at left edge */}
@@ -646,6 +640,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               {/* Category - Flag style at right edge */}
               <div className="absolute top-0 -right-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
                 <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
+                {/* Different Vendors Each Day banner - pill shaped, under category */}
+                {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                  <div className="mt-1 px-4 py-1 bg-slate-600 text-white text-sm font-bold rounded-full shadow-md text-center">
+                    Different Vendors Each Day
+                  </div>
+                )}
               </div>
 
               {/* Footer - two rows: top row (info text + comments button), bottom row (title + description) */}
@@ -726,12 +726,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                       />
                        {/* Content */}
                        <div className="relative px-4 pt-4 pb-6 z-10">
-                          {/* Split market banner */}
-                          {isSplitMarket && (
-                            <div className="mb-2 px-2 py-1 bg-blue-500/90 text-white text-xs font-bold rounded inline-block">
-                              Different Vendors Each Day
-                            </div>
-                          )}
                           <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
                            {displayName}
                          </h3>
@@ -834,6 +828,17 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 </div>
               </div>
 
+              {/* Category - Flag style at right edge */}
+              <div className="absolute top-0 -right-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
+                {/* Different Vendors Each Day banner - pill shaped, under category */}
+                {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                  <div className="mt-1 px-4 py-1 bg-slate-600 text-white text-sm font-bold rounded-full shadow-md text-center">
+                    Different Vendors Each Day
+                  </div>
+                )}
+              </div>
+
               {/* Footer - without comments/track buttons */}
               <div className="absolute bottom-0 left-0 right-0">
                 <div className="relative">
@@ -855,12 +860,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                   />
                   {/* Content */}
                   <div className="relative px-4 pt-4 pb-6 z-10">
-                    {/* Split market banner */}
-                    {isSplitMarket && (
-                      <div className="mb-2 px-2 py-1 bg-blue-500/90 text-white text-xs font-bold rounded inline-block">
-                        Different Vendors Each Day
-                      </div>
-                    )}
                     <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
                       {displayName}
                     </h3>
@@ -904,12 +903,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         )}
 
         <div className="p-6">
-          {/* Split market banner */}
-          {isSplitMarket && (
-            <div className="mb-2 px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded inline-block">
-              Different Vendors Each Day
-            </div>
-          )}
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-bold text-2xl line-clamp-2 flex-1">{displayName}</h3>
             <div className="flex flex-col sm:flex-row gap-1 ml-2 flex-shrink-0">

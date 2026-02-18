@@ -219,8 +219,8 @@ export function CityAutocomplete({
           placeholder={placeholder}
           autoComplete="new-password"
           className={cn(
-            'w-full h-10 px-3 rounded-lg border bg-white shadow-sm',
-            'text-sm font-semibold placeholder:text-muted-foreground/70 pr-10',
+            'w-full h-12 sm:h-10 px-4 sm:px-3 rounded-lg border bg-white shadow-sm',
+            'text-base sm:text-sm font-semibold placeholder:text-muted-foreground/70 pr-10',
             (error || hasSelectionError) && 'border-red-500',
             className
           )}
@@ -243,7 +243,7 @@ export function CityAutocomplete({
               <button
                 type="button"
                 onMouseDown={() => handleSelect(suggestion)}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-muted/50 transition-colors"
+                className="w-full px-4 py-3 sm:px-3 sm:py-2 text-left text-base sm:text-sm hover:bg-muted/50 transition-colors"
               >
                 {getDisplayName(suggestion)}
               </button>
@@ -253,7 +253,7 @@ export function CityAutocomplete({
       )}
 
       {isOpen && query.length >= 2 && !isLoading && suggestions.length === 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg border shadow-lg p-3 text-sm text-muted-foreground text-center">
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg border shadow-lg p-4 sm:p-3 text-base sm:text-sm text-muted-foreground text-center">
           No cities found
         </div>
       )}

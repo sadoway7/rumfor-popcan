@@ -150,11 +150,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, classNa
       <div className="flex gap-2">
         {/* From Date Input */}
         <div className="flex-1 min-w-0">
-          <label className="block text-xs text-muted-foreground mb-1">From</label>
+          <label className="block text-sm sm:text-xs text-muted-foreground mb-1">From</label>
           <button
             type="button"
             onClick={() => handleInputFocus('from')}
-            className="w-full px-2 sm:px-3 py-2.5 text-xs sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
+            className="w-full px-4 sm:px-3 py-4 sm:py-2.5 text-base sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
             style={{ WebkitAppearance: 'none' }}
           >
             {value.from ? formatDate(value.from) : 'Select'}
@@ -163,11 +163,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({ value, onChange, classNa
 
         {/* To Date Input */}
         <div className="flex-1 min-w-0">
-          <label className="block text-xs text-muted-foreground mb-1">To</label>
+          <label className="block text-sm sm:text-xs text-muted-foreground mb-1">To</label>
           <button
             type="button"
             onClick={() => handleInputFocus('to')}
-            className="w-full px-2 sm:px-3 py-2.5 text-xs sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
+            className="w-full px-4 sm:px-3 py-4 sm:py-2.5 text-base sm:text-sm bg-surface text-foreground rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer shadow shadow-black/20 text-left truncate appearance-none"
             style={{ WebkitAppearance: 'none' }}
           >
             {value.to ? formatDate(value.to) : 'Select'}

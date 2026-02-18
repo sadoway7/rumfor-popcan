@@ -775,7 +775,7 @@ export const marketsApi = {
         } as Market,
       };
     } else {
-      const response = await httpClient.put<ApiResponse<Market>>(
+      const response = await httpClient.patch<ApiResponse<Market>>(
         `/markets/${marketId}`,
         marketData
       );

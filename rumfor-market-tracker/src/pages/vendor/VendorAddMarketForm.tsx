@@ -324,11 +324,17 @@ startDate: formatLocalDate(new Date().toISOString()),
       // If splitMultipleDates is checked, create separate markets for each date
       if (formData.additionalInfo.splitMultipleDates && formData.schedule.length > 1) {
         const createdMarketIds: string[] = []
+        const createdMarketDates: string[] = []
         
         // First, create all markets without the relationship tag
         for (let i = 0; i < formData.schedule.length; i++) {
           const scheduleItem = formData.schedule[i]
-          const dateObj = new Date(scheduleItem.eventDate || scheduleItem.startDate || new Date())
+          const dateStr_raw = scheduleItem.eventDate || scheduleItem.startDate || new Date().toISOString().split('T')[0]
+          const eventDate = dateStr_raw
+          
+          // Parse date string as local date (not UTC) to avoid timezone shift
+          const [year, month, day] = dateStr_raw.split('-').map(Number)
+          const dateObj = new Date(year, month - 1, day)
           const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
           
           // All markets get date appended
@@ -398,20 +404,21 @@ startDate: formatLocalDate(new Date().toISOString()),
             const data = response.data as any
             const newMarketId = data.id || data._id || data.market?.id
             createdMarketIds.push(newMarketId)
+            createdMarketDates.push(eventDate)
             await trackMarket(newMarketId, 'interested')
           }
         }
         
         // Now update all markets with the relationship tag
-        const relationshipTag = `split-market:${createdMarketIds.join(',')}`
-        console.log('Updating markets with relationship tag:', relationshipTag)
+        // Format: split-market:id1:2024-02-19,id2:2024-02-20,id3:2024-02-21
+        const relationshipParts = createdMarketIds.map((id, i) => `${id}:${createdMarketDates[i]}`)
+        const relationshipTag = `split-market:${relationshipParts.join(',')}`
         
         for (const marketId of createdMarketIds) {
           try {
-            const updateResponse = await marketsApi.updateMarket(marketId, {
+            await marketsApi.updateMarket(marketId, {
               tags: [...formData.additionalInfo.tags, relationshipTag]
             } as any)
-            console.log('Update response for market', marketId, ':', updateResponse)
           } catch (e) {
             console.error('Failed to update market with relationship tag:', e)
           }

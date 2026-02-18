@@ -325,6 +325,7 @@ const createMarket = catchAsync(async (req, res, next) => {
   const marketData = {
     ...req.body,
     promoter: userId,
+    createdBy: userId, // Use ObjectId from authenticated user, not string from body
     createdByType,
   };
 
@@ -346,24 +347,7 @@ const createMarket = catchAsync(async (req, res, next) => {
     ];
   }
 
-  // Debug logging
-  console.log(
-    '[DEBUG createMarket] Creating market with data:',
-    JSON.stringify(marketData, null, 2)
-  );
-
   const market = await Market.create(marketData);
-
-  console.log(
-    '[DEBUG createMarket] Market created:',
-    market.name,
-    'createdByType:',
-    market.createdByType,
-    'isPublic:',
-    market.isPublic,
-    'status:',
-    market.status
-  );
 
   // Clear market cache when new market is created
   clearMarketCache();
@@ -399,7 +383,7 @@ const updateMarket = catchAsync(async (req, res, next) => {
     // Check if market is vendor-created
     if (market.createdByType === 'vendor') {
       // Allow the creator to update tags only (for split-market linking)
-      const isCreator = market.createdBy && market.createdBy.toString() === req.user._id;
+      const isCreator = market.createdBy && market.createdBy.equals(req.user._id);
       const isOnlyUpdatingTags = Object.keys(req.body).every(key => key === 'tags');
       
       if (isCreator && isOnlyUpdatingTags) {

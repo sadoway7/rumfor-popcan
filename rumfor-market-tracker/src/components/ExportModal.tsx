@@ -119,7 +119,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         if (market.contact.website) data['Website'] = market.contact.website
       }
 
-      data['Tags'] = market.tags.join(', ')
+      data['Tags'] = market.tags.filter((t: string) => !t.startsWith('split-market:')).join(', ')
       data['Created Date'] = format(parseISO(market.createdAt), 'yyyy-MM-dd')
       data['Updated Date'] = format(parseISO(market.updatedAt), 'yyyy-MM-dd')
 

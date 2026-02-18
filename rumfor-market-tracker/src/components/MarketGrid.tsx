@@ -17,7 +17,12 @@ function groupSplitMarkets(markets: Market[]): { market: Market; relatedMarketId
   markets.forEach(market => {
     const splitTag = market.tags?.find(tag => tag.startsWith('split-market:'))
     if (splitTag) {
-      const ids = splitTag.replace('split-market:', '').split(',')
+      // Parse tag - handle both old format (id1,id2) and new format (id1:date1,id2:date2)
+      const tagContent = splitTag.replace('split-market:', '')
+      const ids = tagContent.split(',').map(part => {
+        // If part contains ':', extract just the ID
+        return part.includes(':') ? part.split(':')[0] : part
+      })
       splitTagMap.set(splitTag, ids)
       marketIdToTag.set(market.id, splitTag)
     }
@@ -73,6 +78,8 @@ interface MarketGridProps {
     description?: string;
     action?: React.ReactNode;
   };
+  groupSplitMarkets?: boolean;
+  maxItems?: number;
 }
 
 /**
@@ -122,6 +129,8 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   variant = 'grid',
   className,
   emptyStateProps,
+  groupSplitMarkets: shouldGroupSplitMarkets = true,
+  maxItems,
 }) => {
   // Calculate grid columns based on variant and screen size
   const getGridClasses = () => {
@@ -236,8 +245,20 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     );
   }
 
-  // Group split markets - only show primary market from each group
-  const groupedMarkets = useMemo(() => groupSplitMarkets(markets), [markets])
+  // Group split markets - only show primary market from each group (when enabled)
+  const groupedMarkets = useMemo(() => {
+    let result
+    if (!shouldGroupSplitMarkets) {
+      result = markets.map(market => ({ market, relatedMarketIds: undefined }))
+    } else {
+      result = groupSplitMarkets(markets)
+    }
+    // Limit to maxItems if specified
+    if (maxItems && result.length > maxItems) {
+      result = result.slice(0, maxItems)
+    }
+    return result
+  }, [markets, shouldGroupSplitMarkets, maxItems])
 
   return (
     <div className={cn(getGridClasses(), className)}>

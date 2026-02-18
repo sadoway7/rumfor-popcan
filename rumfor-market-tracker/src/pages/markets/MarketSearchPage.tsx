@@ -79,6 +79,7 @@ export const MarketSearchPage: React.FC = () => {
     fetchNextPage,
     infiniteScroll,
     total,
+    refresh,
   } = useMarkets({
     autoLoad: true,
     infiniteScroll: true,
@@ -284,13 +285,13 @@ export const MarketSearchPage: React.FC = () => {
             <div className="p-4 sm:p-6 w-full min-w-0 lg:min-w-[320px] space-y-5 overflow-y-auto h-full lg:h-auto">
               {/* Header Row - Title & Close */}
               <div className="flex items-center justify-between">
-                <div className="text-lg font-semibold">Filters</div>
+                <div className="text-xl sm:text-lg font-semibold">Filters</div>
                 <button
                   onClick={toggleSidebar}
-                  className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2"
+                  className="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-base sm:text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2"
                 >
                   Hide
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
               </div>
 
@@ -299,7 +300,7 @@ export const MarketSearchPage: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleClearFilters}
-                    className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
+                    className="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-base sm:text-sm font-medium bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20"
                   >
                     Clear filters ({getActiveFilterCount()})
                   </button>
@@ -309,7 +310,7 @@ export const MarketSearchPage: React.FC = () => {
               {/* Location Filter */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs font-medium text-muted-foreground">
+                  <div className="text-sm sm:text-xs font-medium text-muted-foreground">
                     Location
                   </div>
                   {(filters.location?.city || filters.location?.state) && (
@@ -320,7 +321,7 @@ export const MarketSearchPage: React.FC = () => {
                           location: { city: '', state: '' },
                         })
                       }
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="text-sm sm:text-xs text-muted-foreground hover:text-foreground"
                     >
                       Clear
                     </button>
@@ -353,7 +354,7 @@ export const MarketSearchPage: React.FC = () => {
 
               {/* Date Range */}
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">
+                <div className="text-sm sm:text-xs font-medium text-muted-foreground mb-2">
                   Date Range
                 </div>
                 <DatePicker
@@ -370,8 +371,8 @@ export const MarketSearchPage: React.FC = () => {
               </div>
 
               {/* Show Past Markets Toggle */}
-              <div className="flex items-center justify-between px-4 py-2 rounded-full bg-surface shadow shadow-black/20">
-                <span className="text-sm font-medium">Show past markets</span>
+              <div className="flex items-center justify-between px-5 py-3 sm:px-4 sm:py-2 rounded-full bg-surface shadow shadow-black/20">
+                <span className="text-base sm:text-sm font-medium">Show past markets</span>
                 <button
                   onClick={() =>
                     handleFiltersChange({
@@ -379,14 +380,14 @@ export const MarketSearchPage: React.FC = () => {
                       showPastMarkets: !filters.showPastMarkets,
                     })
                   }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-7 w-12 sm:h-6 sm:w-11 items-center rounded-full transition-colors ${
                     filters.showPastMarkets ? 'bg-amber-500' : 'bg-surface-2'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-5 w-5 sm:h-4 sm:w-4 transform rounded-full bg-white transition-transform ${
                       filters.showPastMarkets
-                        ? 'translate-x-6'
+                        ? 'translate-x-6 sm:translate-x-6'
                         : 'translate-x-1'
                     }`}
                   />
@@ -395,7 +396,7 @@ export const MarketSearchPage: React.FC = () => {
 
               {/* Market Categories */}
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">
+                <div className="text-sm sm:text-xs font-medium text-muted-foreground mb-2">
                   Market Categories
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -441,7 +442,7 @@ export const MarketSearchPage: React.FC = () => {
 
               {/* Trending hashtags */}
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-2">
+                <div className="text-sm sm:text-xs font-medium text-muted-foreground mb-2">
                   Trending hashtags
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -462,7 +463,7 @@ export const MarketSearchPage: React.FC = () => {
                 <Button
                   onClick={handleClearFilters}
                   variant="outline"
-                  className="w-full py-3 min-h-[48px]"
+                  className="w-full py-4 sm:py-3 min-h-[56px] sm:min-h-[48px] text-base sm:text-sm"
                 >
                   Clear All Filters ({getActiveFilterCount()})
                 </Button>
@@ -475,15 +476,15 @@ export const MarketSearchPage: React.FC = () => {
             {/* Header */}
             <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex justify-center">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 sm:gap-2">
                   <button
                     onClick={toggleSidebar}
-                    className="w-9 h-9 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center justify-center"
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center justify-center"
                     title="Filters"
                   >
-                    <SlidersHorizontal className="w-4 h-4" />
+                    <SlidersHorizontal className="w-5 h-5 sm:w-4 sm:h-4" />
                   </button>
-                  <div className="px-4 py-2 rounded-full text-sm font-medium bg-surface text-foreground shadow shadow-black/20">
+                  <div className="px-5 py-3 sm:px-4 sm:py-2 rounded-full text-base sm:text-sm font-medium bg-surface text-foreground shadow shadow-black/20">
                     {isSearching
                       ? 'Searching...'
                       : `${total || markets.length} markets found`}
@@ -505,11 +506,11 @@ export const MarketSearchPage: React.FC = () => {
                   <div className="relative" ref={sortRef}>
                     <button
                       onClick={() => setIsSortOpen(!isSortOpen)}
-                      className="relative px-3 py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2 before:content-[''] before:absolute before:inset-[-12px] before:rounded-full"
+                      className="relative px-5 py-3 sm:px-3 sm:py-2 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center gap-2 before:content-[''] before:absolute before:inset-[-12px] before:rounded-full"
                       title="Sort"
                     >
-                      <Layers className="w-4 h-4" />
-                      <span className="text-sm font-medium">
+                      <Layers className="w-5 h-5 sm:w-4 sm:h-4" />
+                      <span className="text-base sm:text-sm font-medium">
                         {sortBy === 'date-oldest'
                           ? 'Soonest'
                           : sortBy === 'date-newest'
@@ -525,45 +526,52 @@ export const MarketSearchPage: React.FC = () => {
                       <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-[0_-4px_16px_rgba(0,0,0,0.3),0_4px_12px_rgba(0,0,0,0.15)] z-[100] py-1">
                         <button
                           onClick={() => handleSortChange('date-oldest')}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-oldest' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          className={`w-full px-5 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'date-oldest' ? 'text-accent font-medium' : 'text-foreground'}`}
                         >
                           Soonest First
                         </button>
                         <button
                           onClick={() => handleSortChange('date-newest')}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'date-newest' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          className={`w-full px-5 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'date-newest' ? 'text-accent font-medium' : 'text-foreground'}`}
                         >
                           Furthest First
                         </button>
                         <button
                           onClick={() => handleSortChange('recently-added')}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'recently-added' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          className={`w-full px-5 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'recently-added' ? 'text-accent font-medium' : 'text-foreground'}`}
                         >
                           Newest First
                         </button>
                         <div className="border-t border-border my-1" />
                         <button
                           onClick={() => handleSortChange('name-asc')}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'name-asc' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          className={`w-full px-5 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'name-asc' ? 'text-accent font-medium' : 'text-foreground'}`}
                         >
                           A - Z
                         </button>
                         <button
                           onClick={() => handleSortChange('name-desc')}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-surface-2 ${sortBy === 'name-desc' ? 'text-accent font-medium' : 'text-foreground'}`}
+                          className={`w-full px-5 py-3 text-left text-base hover:bg-surface-2 ${sortBy === 'name-desc' ? 'text-accent font-medium' : 'text-foreground'}`}
                         >
                           Z - A
                         </button>
                         <div className="border-t border-border my-1" />
                         <button
                           disabled
-                          className="w-full px-4 py-2 text-left text-xs text-muted-foreground cursor-not-allowed opacity-60"
+                          className="w-full px-5 py-3 text-left text-sm text-muted-foreground cursor-not-allowed opacity-60"
                         >
                           Distance (Coming Soon)
                         </button>
                       </div>
                     )}
                   </div>
+                  <button
+                    onClick={async () => { handleClearFilters(); await refresh(); }}
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-surface text-foreground cursor-pointer hover:bg-surface-2 shadow shadow-black/20 flex items-center justify-center"
+                    title="Refresh"
+                  >
+                    <RotateCcw className={`w-5 h-5 sm:w-4 sm:h-4 ${isFetching ? 'animate-spin' : ''}`} />
+                  </button>
                 </div>
               </div>
             </div>
