@@ -280,50 +280,49 @@ export const MarketDetailPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Category + Split Market Flag - Flag style at right edge */}
-        <div className="absolute top-0 -right-2 z-10 flex">
-          {/* Different Vendors Each Day - only for split markets */}
-          {market.tags?.some(tag => tag.startsWith('split-market:')) && (
-            <div className="pl-5 pr-5 py-1.5 bg-slate-600 text-white font-medium text-sm -mr-1" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%)' }}>
-              Different Vendors Each Day
-            </div>
-          )}
-          {/* Category flag */}
-          <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>
-            {categoryLabels[market.category]}
-          </div>
-        </div>
-
-        {/* Status button - under category flag, only show when tracked */}
-        {isMarketTracked(market.id) && (
-          <button
-            onClick={() => setShowStatusModal(true)}
-            className={cn(
-              'absolute top-10 right-0 flex items-center gap-1.5 text-xs font-semibold text-white border-0 shadow-lg px-3 py-1.5 rounded-l-full cursor-pointer hover:opacity-90 transition-opacity z-20',
-              TRACKING_STATUS_COLORS[trackingStatus]
-            )}
-          >
-            <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
-            <ChevronDown className="w-3 h-3" />
-          </button>
-        )}
-
-        {/* Track Button - only show when NOT tracked (status dropdown shows when tracked) */}
-        {!isMarketTracked(market.id) && (
-          <div className="absolute top-10 right-2 z-20">
+        {/* Track/Status Button - Top Right */}
+        <div className="absolute top-0 right-0 p-3 z-10">
+          {isMarketTracked(market.id) ? (
+            <button
+              onClick={() => setShowStatusModal(true)}
+              className={cn(
+                'flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity',
+                TRACKING_STATUS_COLORS[trackingStatus]
+              )}
+            >
+              <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          ) : (
             <TrackButton
               isTracked={false}
               onClick={handleTrackToggle}
               disabled={isTracking}
             />
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* Rotating Vendors - Center Top */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10 flex pt-3">
+          {/* Rotating Vendors - only for split markets */}
+          {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+            <div className="px-4 py-2 bg-amber-500 text-white font-semibold text-sm rounded-full shadow-lg flex items-center gap-2">
+              <span>Rotating Vendors</span>
+              {scheduleDates.length > 0 && (
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {new Date(scheduleDates[0].startDate).getDate()}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Expand/Collapse description - Bottom right of hero */}
         {isTextTruncated && (
           <button
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-            className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white/20 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-l-full hover:opacity-90 transition-opacity shadow-lg"
+            className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-l-full hover:bg-white/90 transition-opacity shadow-lg"
           >
             {isDescriptionExpanded ? (
               <>
@@ -339,10 +338,10 @@ export const MarketDetailPage: React.FC = () => {
           </button>
         )}
 
-        {/* Title + Description - in document flow when expanded */}
+        {/* Title + Description - always absolute, animate with transforms */}
         <div className={cn(
-          "transition-[padding] duration-500 ease-out",
-          isDescriptionExpanded ? "relative pt-28 md:pt-36" : "absolute bottom-0 left-0 right-0"
+          "absolute left-0 right-0 bottom-0 transition-all duration-500 ease-in-out",
+          isDescriptionExpanded && "top-0"
         )}>
           {/* Dark gradient background */}
           <div 
@@ -384,8 +383,8 @@ export const MarketDetailPage: React.FC = () => {
             <p
               ref={descriptionRef}
               className={cn(
-                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md transition-all duration-500 ease-out",
-                !isDescriptionExpanded && "line-clamp-2"
+                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md overflow-hidden transition-[max-height] duration-500 ease-in-out",
+                isDescriptionExpanded ? "max-h-96" : "max-h-12"
               )}
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
             >
@@ -478,33 +477,42 @@ export const MarketDetailPage: React.FC = () => {
                         <p className="text-sm">{formatLocation(market.location)}</p>
                       </div>
 
-                      {/* Schedule */}
-                      <div className="space-y-2">
-                        {scheduleDates.length > 0 ? (
-                          scheduleDates.map((scheduleItem: any, index) => {
-                            const dateObj = parseLocalDate(scheduleItem.startDate)
-                            const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-                            
-                            return (
-                              <div key={index} className="flex items-start gap-2">
-                                <Calendar className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <p className="font-medium text-sm">{displayDate}</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatTime12Hour(scheduleItem.startTime)} - {formatTime12Hour(scheduleItem.endTime)}
-                                  </p>
+                      {/* Schedule - only show if NOT a split market */}
+                      {!market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                        <div className="space-y-2">
+                          {scheduleDates.length > 0 ? (
+                            scheduleDates.map((scheduleItem: any, index) => {
+                              const dateObj = parseLocalDate(scheduleItem.startDate)
+                              const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                              
+                              return (
+                                <div key={index} className="flex items-start gap-2">
+                                  <Calendar className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <p className="font-medium text-sm">{displayDate}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatTime12Hour(scheduleItem.startTime)} - {formatTime12Hour(scheduleItem.endTime)}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            )
-                          })
-                        ) : (
-                          <p className="text-sm text-muted-foreground">Schedule not available</p>
-                        )}
-                      </div>
+                              )
+                            })
+                          ) : (
+                            <p className="text-sm text-muted-foreground">Schedule not available</p>
+                          )}
+                        </div>
+                      )}
                       
                       {/* Related Market Dates - for split markets */}
                       {market.tags?.some(tag => tag.startsWith('split-market:')) && (
                         <div className="mt-3">
+                          <div className="mb-3">
+                            <h3 className="text-base font-bold flex items-center gap-2">
+                              <Calendar className="w-5 h-5 text-accent" />
+                              Rotating Vendors
+                            </h3>
+                            <span className="text-xs text-muted-foreground ml-7">(select date to view)</span>
+                          </div>
                           <RelatedMarketDates market={market} variant="tabs" />
                         </div>
                       )}

@@ -603,111 +603,73 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 className="w-full h-full object-cover"
               />
 
-              {/* Top overlays */}
-              <div className="absolute top-16 left-4 right-4 flex items-start justify-between">
-                {/* Left side - Dates stacked */}
-                <div className="flex flex-col gap-1">
-                  {/* Check if this is a split market with related dates */}
-                  {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
-                    <RelatedMarketDates market={market} />
-                  ) : (
-                    /* Regular dates display for non-split markets */
-                    scheduleDates.length > 0 && (
-                      <div className={cn(
-                        "grid gap-1",
-                        scheduleDates.length > 4 ? "grid-cols-2 grid-rows-4" : ""
-                      )}>
-                        {scheduleDates.map((date, index) => (
-                           <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#ffffff] drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] text-zinc-900 w-fit">
-                             <Calendar className="w-4 h-4" />
-                             <span>{date}</span>
-                           </div>
-                         ))}
-                      </div>
-                    )
-                  )}
-                 </div>
-              </div>
-
-              {/* Location - Flag style at left edge */}
-              <div className="absolute top-0 -left-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                <div className="pl-5 pr-5 py-1.5 bg-white text-zinc-900 font-medium text-sm flex items-center gap-1.5" style={{ clipPath: 'polygon(0% 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)' }}>
-                  <MapPin className="w-4 h-4 flex-shrink-0" />
-                  <span>{formatLocation(market.location)}</span>
+              {/* Track Button + Comments - Top Right */}
+              <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
+                <TrackButton
+                  isTracked={isTrackedOptimistic}
+                  onClick={handleTrackClick}
+                  disabled={isLoading}
+                  size="sm"
+                  className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+                />
+                {/* Comments Button */}
+                <div
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    openComments(market.id, market.name)
+                  }}
+                  className="cursor-pointer drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] scale-95 -mr-1 mt-1"
+                >
+                  <ChatNotificationIcon count={market.stats?.commentCount || 0} />
                 </div>
               </div>
 
-              {/* Category - Flag style at right edge */}
-              <div className="absolute top-0 -right-2 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
-                <div className={`pl-5 pr-4 py-1.5 ${categoryFlagColors[market.category] || 'bg-white'} text-zinc-900 font-medium text-sm`} style={{ clipPath: 'polygon(15px 0%, 100% 0%, 100% 100%, 0% 100%)' }}>{MARKET_CATEGORY_LABELS[market.category]}</div>
-                {/* Different Vendors Each Day banner - pill shaped, under category */}
-                {market.tags?.some(tag => tag.startsWith('split-market:')) && (
-                  <div className="mt-1 px-4 py-1 bg-slate-600 text-white text-sm font-bold rounded-full shadow-md text-center">
-                    Different Vendors Each Day
-                  </div>
-                )}
-              </div>
-
-              {/* Footer - two rows: top row (info text + comments button), bottom row (title + description) */}
+              {/* Footer - dates + badges + title/description */}
               <div className="absolute bottom-0 left-0 right-0">
-                  {/* Top row - Info text (left) + Icons (right) */}
-                  {/*
-                  <div className="flex items-center justify-between px-3 py-2 relative">
-                    <span className="text-xs text-white/80">Tap for details</span>
-                    <div className="flex flex-col items-end gap-1 z-50">
-                      <div
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          // Handle follow click
-                        }}
-                      >
-                        <FollowCountIcon count={market.stats?.vendorFollowCount || 0} />
-                      </div>
-                      <div
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          openComments(market.id, market.name)
-                        }}
-                        className="cursor-pointer"
-                      >
-                        <ChatNotificationIcon count={market.stats?.commentCount || 0} />
-                      </div>
-                    </div>
-                  </div>
-                  */}
-                  
-                   {/* Top row - Info text (left) + Side by side buttons (right) */}
-                   <div className="flex items-center justify-between px-3 py-2 relative">
-                     <span className="text-xs text-white/80">Tap for details</span>
-                     <div className="absolute bottom-4 right-2 z-50 flex items-center gap-2">
-                       {/* Comments Button */}
-                       <div
-                         onClick={(e) => {
-                           e.preventDefault()
-                           e.stopPropagation()
-                           openComments(market.id, market.name)
-                         }}
-                         className="cursor-pointer translate-y-1 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
-                       >
-                         <ChatNotificationIcon count={market.stats?.commentCount || 0} />
+                    {/* Bottom row - Title + description with dark gradient and color accent */}
+                    <div className="relative">
+                       {/* White line at top */}
+                       <div className="absolute top-0 left-0 right-0 h-0.5 bg-white z-20" />
+                       
+                       {/* Location - left side, on white line */}
+                       <div className="absolute -top-3 left-3 z-30 flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-xs font-medium text-zinc-900 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+                         <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                         <span>{formatLocation(market.location)}</span>
                        </div>
-                       {/* Track Button */}
-                       <TrackButton
-                         isTracked={isTrackedOptimistic}
-                         onClick={handleTrackClick}
-                         disabled={isLoading}
-                         size="sm"
-                         className="drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]"
-                       />
-                     </div>
-                   </div>
-                   {/* Bottom row - Title + description with dark gradient and color accent */}
-                   <div className="relative">
-                      {/* White line at top */}
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-white z-20" />
+                       
+                       {/* Dates + Rotating Vendors - stacked above location */}
+                       <div className="absolute bottom-full left-3 mb-5 z-30 flex flex-col gap-2">
+                         {/* Rotating Vendors - top */}
+                         {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-white w-fit">
+                             <Calendar className="w-4 h-4" />
+                             <span>Rotating Vendors</span>
+                           </div>
+                         )}
+                         {/* Dates */}
+                         {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
+                           <RelatedMarketDates market={market} />
+                         ) : (
+                           scheduleDates.length > 0 && (
+                             <div className={cn(
+                               "flex flex-col gap-1",
+                             )}>
+                               {scheduleDates.map((date, index) => (
+                                 <div key={index} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-zinc-900 w-fit">
+                                   <Calendar className="w-3.5 h-3.5" />
+                                   <span>{date}</span>
+                                 </div>
+                               ))}
+                             </div>
+                           )
+                         )}
+                       </div>
+                       
+                       {/* Category - right side, on white line */}
+                       <div className={`absolute -top-3 right-3 z-30 px-3 py-1 rounded-full text-xs font-medium ${categoryFlagColors[market.category] || 'bg-white'} drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]`}>
+                         {MARKET_CATEGORY_LABELS[market.category]}
+                       </div>
                       {/* Color accent layer */}
                       <div 
                         className="absolute inset-0"
@@ -724,11 +686,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                           background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 35%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.2) 90%, transparent 100%)'
                         }}
                       />
-                       {/* Content */}
-                       <div className="relative px-4 pt-4 pb-6 z-10">
-                          <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
-                           {displayName}
-                         </h3>
+                        {/* Content */}
+                        <div className="relative px-4 pt-6 pb-6 z-10">
+                           <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                            {displayName}
+                          </h3>
                         <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                           {market.description}
                         </p>

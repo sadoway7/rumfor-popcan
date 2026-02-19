@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Market } from '@/types'
 import { cn } from '@/utils/cn'
-import { Calendar } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
+import { marketsApi } from '@/features/markets/marketsApi'
+import { formatTime12Hour } from '@/utils/formatTime'
 
 interface RelatedMarketDatesProps {
   market: Market
@@ -13,6 +15,14 @@ interface RelatedMarketDatesProps {
 interface SplitMarketInfo {
   id: string
   date: string
+  startTime?: string
+  endTime?: string
+}
+
+interface RelatedMarketData {
+  id: string
+  startTime?: string
+  endTime?: string
 }
 
 /**
@@ -27,6 +37,8 @@ export const RelatedMarketDates: React.FC<RelatedMarketDatesProps> = ({
   className,
   variant = 'compact'
 }) => {
+  const [relatedMarketData, setRelatedMarketData] = useState<Record<string, RelatedMarketData>>({})
+  
   const splitTag = market.tags?.find(tag => tag.startsWith('split-market:'))
   
   if (!splitTag) {
@@ -52,6 +64,58 @@ export const RelatedMarketDates: React.FC<RelatedMarketDatesProps> = ({
   } else {
     // Legacy format without dates - just IDs
     marketInfos = tagContent.split(',').map(id => ({ id, date: '' }))
+  }
+  
+  // Fetch related market times
+  useEffect(() => {
+    const fetchRelatedMarkets = async () => {
+      const idsToFetch = marketInfos
+        .map(info => info.id)
+        .filter(id => id !== currentMarketId && !relatedMarketData[id])
+      
+      if (idsToFetch.length === 0) return
+      
+      const newData: Record<string, RelatedMarketData> = { ...relatedMarketData }
+      
+      for (const id of idsToFetch) {
+        try {
+          const response = await marketsApi.getMarketById(id)
+          if (response.success && response.data) {
+            const m = response.data
+            // Extract time from schedule
+            let startTime: string | undefined
+            let endTime: string | undefined
+            
+            if (Array.isArray(m.schedule) && m.schedule.length > 0) {
+              startTime = m.schedule[0].startTime
+              endTime = m.schedule[0].endTime
+            } else if (m.schedule && typeof m.schedule === 'object') {
+              const sched = m.schedule as any
+              startTime = sched.startTime
+              endTime = sched.endTime
+            }
+            
+            newData[id] = { id, startTime, endTime }
+          }
+        } catch (e) {
+          console.error('Failed to fetch market', id, e)
+        }
+      }
+      
+      setRelatedMarketData(newData)
+    }
+    
+    fetchRelatedMarkets()
+  }, [splitTag])
+  
+  // Add current market's time to the data
+  const currentMarketTime = {
+    startTime: Array.isArray(market.schedule) && market.schedule.length > 0 
+      ? market.schedule[0].startTime 
+      : (market.schedule && typeof market.schedule === 'object' ? (market.schedule as any).startTime : undefined),
+    endTime: Array.isArray(market.schedule) && market.schedule.length > 0 
+      ? market.schedule[0].endTime 
+      : (market.schedule && typeof market.schedule === 'object' ? (market.schedule as any).endTime : undefined)
   }
   
   // Format date for display (includes day of week)
@@ -106,50 +170,64 @@ export const RelatedMarketDates: React.FC<RelatedMarketDatesProps> = ({
     )
   }
   
-  // Tab variant - for detail pages (legacy style)
+  // Tab variant - for detail pages
   if (variant === 'tabs') {
     return (
-      <div className={cn("", className)}>
-        {/* Banner */}
-        <div className="px-3 py-2 bg-slate-600 text-white text-sm font-bold rounded-lg mb-3 flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Different Vendors Each Day
-        </div>
-        
-        {/* Date tabs */}
-        <div className="flex flex-wrap gap-2">
-          {marketInfos.map((info, index) => {
-            const isCurrentMarket = info.id === currentMarketId
-            const dateDisplay = formatDate(info.date) || `Date ${index + 1}`
-            
-            return (
-              <Link
-                key={info.id}
-                to={isCurrentMarket ? '#' : `/markets/${info.id}`}
-                onClick={(e) => {
-                  if (isCurrentMarket) e.preventDefault()
-                }}
-                className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
-                  isCurrentMarket 
-                    ? "bg-slate-600 text-white cursor-default shadow-md" 
-                    : "bg-gray-100 text-gray-700 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+      <div className={cn("space-y-2", className)}>
+        {marketInfos.map((info, index) => {
+          const isCurrentMarket = info.id === currentMarketId
+          const dateDisplay = formatDate(info.date) || `Date ${index + 1}`
+          
+          // Get time for this market
+          const marketTime = isCurrentMarket 
+            ? currentMarketTime 
+            : relatedMarketData[info.id]
+          const timeDisplay = marketTime?.startTime && marketTime?.endTime
+            ? `${formatTime12Hour(marketTime.startTime)} - ${formatTime12Hour(marketTime.endTime)}`
+            : null
+          
+          const content = (
+            <>
+              <Calendar className={cn("w-4 h-4 flex-shrink-0 mt-0.5 transition-colors", isCurrentMarket ? "text-amber-500" : "text-accent group-hover:text-amber-500")} />
+              <div>
+                <p className={cn("text-sm transition-colors", isCurrentMarket ? "font-bold text-amber-600" : "font-medium group-hover:text-amber-600")}>{dateDisplay}</p>
+                {timeDisplay && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {timeDisplay}
+                  </p>
                 )}
-              >
-                <Calendar className="w-4 h-4" />
-                <span>{dateDisplay}</span>
                 {isCurrentMarket && (
-                  <span className="ml-1 w-2 h-2 bg-white rounded-full"></span>
+                  <p className="text-xs text-amber-500">Current view</p>
                 )}
-              </Link>
+              </div>
+            </>
+          )
+          
+          if (isCurrentMarket) {
+            return (
+              <div key={info.id} className="flex items-start gap-2 cursor-default bg-amber-50 px-3 py-2 rounded-lg -ml-3">
+                {content}
+              </div>
             )
-          })}
-        </div>
+          }
+          
+          return (
+            <Link
+              key={info.id}
+              to={`/markets/${info.id}`}
+              className="flex items-start gap-2 hover:bg-gray-50 px-3 py-2 rounded-lg -mx-3 transition-colors cursor-pointer group"
+            >
+              {content}
+            </Link>
+          )
+        })}
       </div>
     )
   }
   
   // Compact variant - for cards (stacked dates like normal markets)
+  // Note: Uses div instead of Link to avoid nested <a> tags since MarketCard is wrapped in Link
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       {marketInfos.map((info, index) => {
@@ -159,22 +237,24 @@ export const RelatedMarketDates: React.FC<RelatedMarketDatesProps> = ({
         if (!dateDisplay) return null
         
         return (
-          <Link
+          <div
             key={info.id}
-            to={isCurrentMarket ? '#' : `/markets/${info.id}`}
             onClick={(e) => {
-              if (isCurrentMarket) e.preventDefault()
+              if (!isCurrentMarket) {
+                e.stopPropagation()
+                window.location.href = `/markets/${info.id}`
+              }
             }}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] w-fit",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] w-fit",
               isCurrentMarket 
-                ? "bg-[#ffffff] text-zinc-900" 
-                : "bg-white/70 text-zinc-700 hover:bg-white"
+                ? "bg-white text-zinc-900" 
+                : "bg-white/70 text-zinc-900 hover:bg-white cursor-pointer"
             )}
           >
             <Calendar className="w-4 h-4" />
             <span>{dateDisplay}</span>
-          </Link>
+          </div>
         )
       })}
     </div>
