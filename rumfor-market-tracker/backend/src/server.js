@@ -84,7 +84,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:", "http://localhost:3001"],
-      connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca"],
+      connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca", process.env.FRONTEND_URL].filter(Boolean),
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -206,18 +206,18 @@ const corsOptions = {
 // Apply CORS before other middleware
 app.use(cors(corsOptions))
 
-// HTTPS enforcement middleware (skip for API routes)
+// HTTPS enforcement middleware (skip for API routes and localhost)
 if (process.env.NODE_ENV === 'production') {
   app.use((req, res, next) => {
-    // Skip HTTPS enforcement for API routes (handled by nginx)
+    // Skip for API routes, localhost, or health checks
     if (req.path.startsWith('/api/')) {
       return next()
     }
-    if (req.header('x-forwarded-proto') !== 'https') {
-      res.redirect(`https://${req.header('host')}${req.url}`)
-    } else {
-      next()
+    const isLocalhost = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip.startsWith('::ffff:127.')
+    if (isLocalhost || req.header('x-forwarded-proto') === 'https') {
+      return next()
     }
+    res.redirect(`https://${req.header('host')}${req.url}`)
   })
 }
 
