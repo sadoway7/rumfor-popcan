@@ -8,9 +8,10 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/vite.svg",
-      "sizes": "any",
-      "type": "image/svg+xml"
+      "src": "/assets/images/maskable-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
