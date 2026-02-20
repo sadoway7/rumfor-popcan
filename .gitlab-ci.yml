@@ -106,7 +106,7 @@ deploy:namecheap:
       ProxyPreserveHost On
       ProxyPassReverse / http://127.0.0.1:3000/
       HTACCESS"
-    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "cd $NAMECHEAP_DEPLOY_PATH && npm install --production && mkdir -p tmp && touch tmp/restart.txt"
+    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "cd $NAMECHEAP_DEPLOY_PATH && /opt/alt/alt-nodejs24/root/usr/bin/npm install --production && mkdir -p tmp && touch tmp/restart.txt"
   environment:
     name: namecheap-production
     url: $NAMECHEAP_FRONTEND_URL
