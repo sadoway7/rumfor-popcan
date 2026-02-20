@@ -71,3 +71,44 @@ deploy:
     - ssh root@$UNRAID_IP "cd $DEPLOY_PATH && MONGODB_URI='$MONGODB_URI' JWT_SECRET='$JWT_SECRET' JWT_REFRESH_SECRET='$JWT_REFRESH_SECRET' SESSION_SECRET='$SESSION_SECRET' FRONTEND_URL='$FRONTEND_URL' docker compose -f rumfor-market-tracker/docker-compose.prod.yml up -d"
   only:
     - master
+
+deploy:namecheap:
+  stage: deploy
+  image: node:20-alpine
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -p $NAMECHEAP_PORT $NAMECHEAP_HOST >> ~/.ssh/known_hosts 2>&1 || true
+    - eval $(ssh-agent -s)
+    - echo "$NAMECHEAP_SSH_KEY" | base64 -d | ssh-add -
+  script:
+    - cd rumfor-market-tracker
+    - npm ci
+    - npm run build
+    - rm -rf backend/public && cp -r dist backend/public
+    - |
+      cat > backend/.env << EOF
+      NODE_ENV=production
+      PORT=3000
+      MONGODB_URI=$MONGODB_URI
+      JWT_SECRET=$JWT_SECRET
+      JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET
+      SESSION_SECRET=$SESSION_SECRET
+      FRONTEND_URL=$NAMECHEAP_FRONTEND_URL
+      EOF
+    - rsync -avz -e "ssh -p $NAMECHEAP_PORT -o StrictHostKeyChecking=accept-new" --delete --exclude 'node_modules' --exclude '.git' backend/ $NAMECHEAP_USER@$NAMECHEAP_HOST:$NAMECHEAP_DEPLOY_PATH/
+    - |
+      ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "mkdir -p /home/xsoucsnq/public_html && cat > /home/xsoucsnq/public_html/.htaccess << 'HTACCESS'
+      RewriteEngine On
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteCond %{REQUEST_FILENAME} !-d
+      RewriteRule ^(.*)$ http://127.0.0.1:3000/\$1 [P,L]
+      ProxyPreserveHost On
+      ProxyPassReverse / http://127.0.0.1:3000/
+      HTACCESS"
+    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "cd $NAMECHEAP_DEPLOY_PATH && npm install --production && mkdir -p tmp && touch tmp/restart.txt"
+  environment:
+    name: namecheap-production
+    url: $NAMECHEAP_FRONTEND_URL
+  only:
+    - master

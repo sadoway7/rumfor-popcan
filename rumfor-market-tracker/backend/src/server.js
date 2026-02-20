@@ -341,6 +341,27 @@ app.use('/api/v1/ralph/cards', ralphCardsRoutes)
 // CSRF error handler
 app.use(csrfErrorHandler)
 
+// Serve frontend static files in production (Namecheap deployment)
+if (process.env.NODE_ENV === 'production') {
+  const publicPath = path.join(__dirname, '../public')
+  app.use(express.static(publicPath))
+  
+  // SPA fallback - serve index.html for non-API routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next()
+    }
+    res.sendFile(path.join(publicPath, 'index.html'), (err) => {
+      if (err) {
+        res.status(404).json({
+          success: false,
+          message: 'Frontend not found. Ensure public/ directory exists.'
+        })
+      }
+    })
+  })
+}
+
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({
