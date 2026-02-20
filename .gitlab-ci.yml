@@ -97,16 +97,7 @@ deploy:namecheap:
       FRONTEND_URL=$NAMECHEAP_FRONTEND_URL
       EOF
     - rsync -avz -e "ssh -p $NAMECHEAP_PORT -o StrictHostKeyChecking=accept-new" --delete --exclude 'node_modules' --exclude '.git' backend/ $NAMECHEAP_USER@$NAMECHEAP_HOST:$NAMECHEAP_DEPLOY_PATH/
-    - |
-      ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "mkdir -p /home/xsoucsnq/public_html && cat > /home/xsoucsnq/public_html/.htaccess << 'HTACCESS'
-      RewriteEngine On
-      RewriteCond %{REQUEST_FILENAME} !-f
-      RewriteCond %{REQUEST_FILENAME} !-d
-      RewriteRule ^(.*)$ http://127.0.0.1:3000/\$1 [P,L]
-      ProxyPreserveHost On
-      ProxyPassReverse / http://127.0.0.1:3000/
-      HTACCESS"
-    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "cd $NAMECHEAP_DEPLOY_PATH && /opt/alt/alt-nodejs24/root/usr/bin/npm install --production && mkdir -p tmp && touch tmp/restart.txt"
+    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "cd $NAMECHEAP_DEPLOY_PATH && mkdir -p tmp && touch tmp/restart.txt"
   environment:
     name: namecheap-production
     url: $NAMECHEAP_FRONTEND_URL
