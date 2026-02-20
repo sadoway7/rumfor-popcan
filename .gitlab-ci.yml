@@ -97,9 +97,9 @@ deploy:namecheap:
       FRONTEND_URL=$NAMECHEAP_FRONTEND_URL
       EOF
     - rsync -avz -e "ssh -p $NAMECHEAP_PORT -o StrictHostKeyChecking=accept-new" --delete --exclude 'node_modules' --exclude '.git' backend/ $NAMECHEAP_USER@$NAMECHEAP_HOST:$NAMECHEAP_DEPLOY_PATH/
-    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "screen -S rumfor-app -X quit 2>/dev/null || true; cd $NAMECHEAP_DEPLOY_PATH && screen -dmS rumfor-app bash -c '/opt/alt/alt-nodejs20/root/usr/bin/node app.js > app.log 2>&1'"
+    - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "chmod +x $NAMECHEAP_DEPLOY_PATH/start.sh && $NAMECHEAP_DEPLOY_PATH/start.sh"
     - echo "Waiting for app to start..."
-    - sleep 10
+    - sleep 8
     - ssh -p $NAMECHEAP_PORT $NAMECHEAP_USER@$NAMECHEAP_HOST "curl -s http://127.0.0.1:3000/api/health"
   environment:
     name: namecheap-production
