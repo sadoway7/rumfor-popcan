@@ -114,6 +114,11 @@ export const MarketDetailPage: React.FC = () => {
   }
 
   const handleTrackToggle = async () => {
+    if (!user) {
+      navigate('/auth/login')
+      return
+    }
+
     const currentlyTracked = isMarketTracked(market.id)
     
     try {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Market } from '@/types'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -12,6 +12,7 @@ import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } 
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
+import { useAuthStore } from '@/features/auth/authStore'
 import { RelatedMarketDates } from './RelatedMarketDates'
 
 interface MarketCardProps {
@@ -71,6 +72,8 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [, setIsLightBackground] = React.useState(false)
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
   const { openComments } = useCommentsModalStore()
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const navigate = useNavigate()
 
   // Check if this is a split market (has relatedMarketIds or split-market tag)
   const isSplitMarket = relatedMarketIds && relatedMarketIds.length > 1
@@ -163,6 +166,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const handleTrackClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
+    if (!isAuthenticated) {
+      navigate('/auth/login')
+      return
+    }
+
     setIsTrackedOptimistic(!isTrackedOptimistic)
     
     if (isTrackedOptimistic && onUntrack) {
