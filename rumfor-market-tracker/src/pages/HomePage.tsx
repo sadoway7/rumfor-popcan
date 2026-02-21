@@ -290,53 +290,8 @@ export function HomePage() {
       >
         {isAuthenticated && <SubHeader />}
 
-        {/* Market Categories - Full Width Above Everything */}
-        <div className="hidden md:flex gap-2 mt-2 animate-[fadeIn_0.3s_ease-out_both]">
-          {/* Browse All Markets Button - Left Side */}
-          <Link to="/markets" className="flex-shrink-0">
-            <div className="h-full min-w-[80px] px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 flex items-center justify-center text-center active:translate-y-0.5 active:shadow-inner">
-              <span className="text-amber-500 font-bold text-sm uppercase tracking-wide">
-                All
-              </span>
-            </div>
-          </Link>
-
-          {/* Categories Grid - 2 rows of 5 */}
-          <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
-            {marketCategories.map((cat, index) => {
-              const Icon = cat.icon;
-              const count = categoryStats?.[cat.slug] || 0;
-              return (
-                <Link
-                  key={cat.name}
-                  to={`/markets?category=${cat.slug}`}
-                  className="animate-[fadeIn_0.3s_ease-out_both]"
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  <div className="flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 h-full">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon
-                        className="h-5 w-5 text-amber-500 shrink-0"
-                        strokeWidth={2}
-                      />
-                      <span className="font-medium text-foreground text-sm truncate">
-                        {cat.name}
-                      </span>
-                    </div>
-                    {count > 0 && (
-                      <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
-                        {count}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Hero Banner - Full Width */}
-        <div className="w-full">
+        <div className="w-full max-w-[1440px] mx-auto">
 
           {/* Hero Content */}
           <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3">
@@ -383,6 +338,51 @@ export function HomePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Market Categories */}
+        <div className="hidden md:flex max-w-[1440px] mx-auto gap-2 mt-2 animate-[fadeIn_0.3s_ease-out_both]">
+          {/* Browse All Markets Button - Left Side */}
+          <Link to="/markets" className="flex-shrink-0">
+            <div className="h-full min-w-[80px] px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 flex items-center justify-center text-center active:translate-y-0.5 active:shadow-inner">
+              <span className="text-amber-500 font-bold text-sm uppercase tracking-wide">
+                All
+              </span>
+            </div>
+          </Link>
+
+          {/* Categories Grid - 2 rows of 5 */}
+          <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
+            {marketCategories.map((cat, index) => {
+              const Icon = cat.icon;
+              const count = categoryStats?.[cat.slug] || 0;
+              return (
+                <Link
+                  key={cat.name}
+                  to={`/markets?category=${cat.slug}`}
+                  className="animate-[fadeIn_0.3s_ease-out_both]"
+                  style={{ animationDelay: `${index * 0.03}s` }}
+                >
+                  <div className="flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 h-full">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon
+                        className="h-5 w-5 text-amber-500 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="font-medium text-foreground text-sm truncate">
+                        {cat.name}
+                      </span>
+                    </div>
+                    {count > 0 && (
+                      <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
+                        {count}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 

@@ -277,7 +277,7 @@ export const MarketDetailPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate(-1)}
-            className="bg-white border-white text-black hover:bg-white/90 h-8 px-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)]"
+            className="bg-white !border !border-[#9CA3AF] text-black hover:bg-white/90 h-8 px-3 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -301,6 +301,7 @@ export const MarketDetailPage: React.FC = () => {
               isTracked={false}
               onClick={handleTrackToggle}
               disabled={isTracking}
+              size="sm"
             />
           )}
         </div>

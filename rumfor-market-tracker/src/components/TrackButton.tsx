@@ -69,8 +69,8 @@ export const TrackButton = React.forwardRef<HTMLButtonElement, TrackButtonProps>
         <path
           d="M2 4C2 2.89543 2.89543 2 4 2H20C21.1046 2 22 2.89543 22 4V30L12 22L2 30V4Z"
           fill={fillColor}
-          stroke="white"
-          strokeWidth="1.5"
+          stroke="#9CA3AF"
+          strokeWidth="1"
         />
         {isTracked && (
           <g clipPath="url(#bookmarkClip)">

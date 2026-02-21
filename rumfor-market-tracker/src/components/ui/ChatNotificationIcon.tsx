@@ -24,8 +24,8 @@ export const ChatNotificationIcon: React.FC<{ count: number; size?: 'sm' | 'md' 
         <path
           d="M8 11 C8 7.5 10.5 5 14 5 L34 5 C37.5 5 40 7.5 40 11 L40 27 C40 30.5 37.5 33 34 33 L16 33 L8 41 L8 11 Z"
           fill="white"
-          stroke="white"
-          strokeWidth="2.2"
+          stroke="#9CA3AF"
+          strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
