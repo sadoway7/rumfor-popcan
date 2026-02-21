@@ -69,6 +69,7 @@ interface MarketGridProps {
   error?: string | null;
   onTrack?: (marketId: string) => void;
   onUntrack?: (marketId: string) => void;
+  onStatusChange?: (marketId: string, status: string) => void;
   trackedMarketIds?: string[];
   isTracking?: boolean;
   variant?: 'grid' | 'list' | 'compact' | 'minimal';
@@ -80,6 +81,7 @@ interface MarketGridProps {
   };
   groupSplitMarkets?: boolean;
   maxItems?: number;
+  trackingData?: { marketId: string; status: string }[];
 }
 
 /**
@@ -124,6 +126,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   error = null,
   onTrack,
   onUntrack,
+  onStatusChange,
   trackedMarketIds = [],
   isTracking = false,
   variant = 'grid',
@@ -131,8 +134,11 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
   emptyStateProps,
   groupSplitMarkets: shouldGroupSplitMarkets = true,
   maxItems,
+  trackingData,
 }) => {
-  // Calculate grid columns based on variant and screen size
+  const getTrackingStatus = (marketId: string) => {
+    return trackingData?.find(t => t.marketId === marketId)?.status
+  }
   const getGridClasses = () => {
     if (variant === 'list') {
       return 'grid grid-cols-1 gap-4';
@@ -275,8 +281,10 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
             }
             onTrack={onTrack}
             onUntrack={onUntrack}
+            onStatusChange={onStatusChange}
             isTracked={trackedMarketIds.includes(market.id)}
             isLoading={isTracking}
+            trackingStatus={getTrackingStatus(market.id)}
             className="h-full"
             relatedMarketIds={relatedMarketIds}
           />

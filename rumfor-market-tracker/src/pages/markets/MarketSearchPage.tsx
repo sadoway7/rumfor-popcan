@@ -70,6 +70,7 @@ export const MarketSearchPage: React.FC = () => {
     error,
     filters,
     trackedMarketIds,
+    trackingData,
     isTracking,
     setFilters,
     clearFilters,
@@ -194,9 +195,9 @@ export const MarketSearchPage: React.FC = () => {
     handleSearch(tag);
   };
 
-  const handleTrackMarket = async (marketId: string) => {
+  const handleTrackMarket = async (marketId: string, status?: string) => {
     try {
-      await trackMarket(marketId);
+      await trackMarket(marketId, status);
     } catch (error) {
       console.error('Failed to track market:', error);
     }
@@ -585,7 +586,9 @@ export const MarketSearchPage: React.FC = () => {
                 error={error}
                 onTrack={handleTrackMarket}
                 onUntrack={handleUntrackMarket}
+                onStatusChange={handleTrackMarket}
                 trackedMarketIds={trackedMarketIds}
+                trackingData={trackingData}
                 isTracking={isTracking}
                 variant="grid"
                 emptyStateProps={{

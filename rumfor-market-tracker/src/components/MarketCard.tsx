@@ -1,14 +1,16 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { Market } from '@/types'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar, MapPin, BookmarkMinus } from 'lucide-react'
 import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
 import { TrackButton } from '@/components/TrackButton'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
+import { TRACKING_STATUS_OPTIONS } from '@/config/trackingStatus'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
@@ -20,6 +22,7 @@ interface MarketCardProps {
   className?: string
   onTrack?: (marketId: string) => void
   onUntrack?: (marketId: string) => void
+  onStatusChange?: (marketId: string, status: string) => void
   isTracked?: boolean
   isLoading?: boolean
   showTrackButton?: boolean
@@ -60,6 +63,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   className,
   onTrack,
   onUntrack,
+  onStatusChange,
   isTracked = false,
   isLoading = false,
   showTrackButton = true,
@@ -71,8 +75,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [dominantColor, setDominantColor] = React.useState<string>('')
   const [, setIsLightBackground] = React.useState(false)
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
+  const [isPendingOptimistic, setIsPendingOptimistic] = React.useState(false)
+  const [optimisticStatus, setOptimisticStatus] = React.useState<string | undefined>(trackingStatus)
+  const lastTrackingStatusRef = React.useRef(trackingStatus)
+  const [showStatusDropdown, setShowStatusDropdown] = React.useState(false)
+  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, right: 0 })
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const buttonRef = React.useRef<HTMLButtonElement>(null)
   const { openComments } = useCommentsModalStore()
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
   const navigate = useNavigate()
 
   // Check if this is a split market (has relatedMarketIds or split-market tag)
@@ -167,23 +178,77 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     e.preventDefault()
     e.stopPropagation()
 
-    if (!isAuthenticated) {
+    if (!user) {
       navigate('/auth/login')
       return
     }
 
-    setIsTrackedOptimistic(!isTrackedOptimistic)
-    
-    if (isTrackedOptimistic && onUntrack) {
+    if (isTrackedOptimistic) {
+      const buttonElement = buttonRef.current || (e.currentTarget as HTMLElement)
+      if (buttonElement) {
+        const rect = buttonElement.getBoundingClientRect()
+        setDropdownPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right
+        })
+      }
+      setShowStatusDropdown(!showStatusDropdown)
+    } else {
+      setIsTrackedOptimistic(true)
+      setIsPendingOptimistic(true)
+      setOptimisticStatus('interested')
+      if (onTrack) {
+        onTrack(market.id)
+      }
+    }
+  }
+
+  const handleStatusChange = (status: string) => {
+    setOptimisticStatus(status)
+    lastTrackingStatusRef.current = status
+    setShowStatusDropdown(false)
+    if (onStatusChange) {
+      onStatusChange(market.id, status)
+    }
+  }
+
+  const handleUntrack = () => {
+    setShowStatusDropdown(false)
+    setIsTrackedOptimistic(false)
+    setOptimisticStatus(undefined)
+    setIsPendingOptimistic(true)
+    if (onUntrack) {
       onUntrack(market.id)
-    } else if (!isTrackedOptimistic && onTrack) {
-      onTrack(market.id)
     }
   }
 
   React.useEffect(() => {
-    setIsTrackedOptimistic(isTracked)
-  }, [isTracked])
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowStatusDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  React.useEffect(() => {
+    if (!isPendingOptimistic) {
+      setIsTrackedOptimistic(isTracked)
+      if (trackingStatus && trackingStatus !== lastTrackingStatusRef.current) {
+        setOptimisticStatus(trackingStatus)
+        lastTrackingStatusRef.current = trackingStatus
+      }
+    }
+  }, [isTracked, isPendingOptimistic, trackingStatus])
+
+  React.useEffect(() => {
+    if (isLoading) {
+      setIsPendingOptimistic(true)
+    } else {
+      setIsPendingOptimistic(false)
+    }
+  }, [isLoading])
 
   const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
     // Handle new backend format: object with specialDates
@@ -614,13 +679,17 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
               {/* Track Button + Comments - Top Right */}
               <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
-                <TrackButton
-                  isTracked={isTrackedOptimistic}
-                  onClick={handleTrackClick}
-                  disabled={isLoading}
-                  size="sm"
-                  className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
-                />
+                <div ref={dropdownRef} className="relative">
+                  <TrackButton
+                    ref={buttonRef}
+                    isTracked={isTrackedOptimistic}
+                    onClick={handleTrackClick}
+                    disabled={isLoading}
+                    size="sm"
+                    status={isTrackedOptimistic ? (optimisticStatus || 'interested') : undefined}
+                    className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
+                  />
+                </div>
                 {/* Comments Button */}
                 <div
                   onClick={(e) => {
@@ -707,11 +776,49 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                    </div>
               </div>
             </div>
-           )}
-         </Link>
-      </div>
-    )
-  }
+            )}
+          </Link>
+        {showStatusDropdown && createPortal(
+          <div 
+            className="fixed bg-white shadow-xl border border-gray-200 overflow-hidden z-[9999] w-44 rounded-bl-lg rounded-br-lg rounded-tl-lg"
+            style={{
+              top: dropdownPosition.top,
+              right: dropdownPosition.right
+            }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
+            {TRACKING_STATUS_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleStatusChange(option.value)}
+                className={cn(
+                  "w-full text-left px-3 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors",
+                  optimisticStatus === option.value
+                    ? "bg-amber-50 text-amber-700"
+                    : "hover:bg-gray-50"
+                )}
+              >
+                <div className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", option.color)} />
+                {option.label}
+              </button>
+            ))}
+            <div className="border-t border-gray-200" />
+            <button
+              onClick={handleUntrack}
+              className="w-full text-left px-3 py-2.5 text-sm font-medium flex items-center gap-2 text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <BookmarkMinus className="w-4 h-4 flex-shrink-0" />
+              Untrack Market
+            </button>
+          </div>,
+          document.body
+        )}
+       </div>
+     )
+   }
 
   // Profile variant - Similar to minimal but without comments/track buttons
   if (variant === 'profile') {

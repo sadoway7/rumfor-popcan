@@ -129,7 +129,7 @@ export function HomePage() {
   const hasRealVendors = apiVendors.length > 0;
 
   // Fetch tracked markets for authenticated users
-  const { trackedMarketIds, trackMarket, untrackMarket } = useTrackedMarkets();
+  const { trackedMarketIds, trackMarket, untrackMarket, trackingData } = useTrackedMarkets();
 
   // Fetch recently added markets for homepage (fetch more to account for grouping)
   const { data: featuredMarkets, isLoading: marketsLoading } = useQuery({
@@ -424,8 +424,10 @@ export function HomePage() {
             isLoading={marketsLoading}
             variant="grid"
             trackedMarketIds={trackedMarketIds || []}
+            trackingData={trackingData}
             onTrack={trackMarket}
             onUntrack={untrackMarket}
+            onStatusChange={trackMarket}
             maxItems={6}
             className=""
           />

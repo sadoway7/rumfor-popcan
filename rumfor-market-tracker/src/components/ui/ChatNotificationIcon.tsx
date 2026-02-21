@@ -8,9 +8,9 @@ export const ChatNotificationIcon: React.FC<{ count: number; size?: 'sm' | 'md' 
   };
 
   const badgeClasses = {
-    sm: 'min-w-5 h-5 px-1.5 text-xs',
-    md: 'min-w-6 h-6 px-1.5 text-xs',
-    lg: 'min-w-7 h-7 px-2 text-sm',
+    sm: 'min-w-5 h-5 px-1 text-xs',
+    md: 'min-w-5 h-5 px-1.5 text-xs',
+    lg: 'min-w-6 h-6 px-1.5 text-sm',
   };
 
   return (
@@ -29,12 +29,15 @@ export const ChatNotificationIcon: React.FC<{ count: number; size?: 'sm' | 'md' 
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+        <circle cx="16" cy="18" r="2.5" fill="#9CA3AF" />
+        <circle cx="24" cy="18" r="2.5" fill="#9CA3AF" />
+        <circle cx="32" cy="18" r="2.5" fill="#9CA3AF" />
       </svg>
       
       {count > 0 && (
         <div
           className={`absolute -top-1 -left-1 ${badgeClasses[size]} text-white rounded-full flex items-center justify-center font-semibold shadow-md z-[60]`}
-          style={{ backgroundColor: '#E67E22' }}
+          style={{ backgroundColor: '#22C55E' }}
         >
           {count}
         </div>

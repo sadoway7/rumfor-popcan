@@ -29,6 +29,7 @@ interface UseMarketsReturn {
   // Data
   markets: Market[];
   trackedMarketIds: string[];
+  trackingData: { marketId: string; status: string }[];
 
   // Loading states
   isLoading: boolean;
@@ -312,6 +313,16 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
           .map((t: any) => t.market.id)
       : [];
 
+  const trackingData =
+    trackedMarketsQuery.data && Array.isArray(trackedMarketsQuery.data)
+      ? trackedMarketsQuery.data
+          .filter((t: any) => t.market)
+          .map((t: any) => ({
+            marketId: t.market?.id || t.marketId,
+            status: t.status,
+          }))
+      : [];
+
   // Get market by ID helper
   const getMarketById = useCallback(
     (id: string) => {
@@ -417,6 +428,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
     // Data
     markets,
     trackedMarketIds,
+    trackingData,
 
     // Loading states
     isLoading,
