@@ -71,8 +71,9 @@ export const MarketDetailPage: React.FC = () => {
 
   React.useEffect(() => {
     if (descriptionRef.current) {
-      const { scrollHeight, clientHeight } = descriptionRef.current
-      setIsTextTruncated(scrollHeight > clientHeight)
+      const lineHeight = parseInt(getComputedStyle(descriptionRef.current).lineHeight) || 24
+      const maxHeight = lineHeight * 2
+      setIsTextTruncated(descriptionRef.current.scrollHeight > maxHeight)
     }
   }, [market?.description])
 
@@ -331,7 +332,7 @@ export const MarketDetailPage: React.FC = () => {
           />
           
           {/* Content */}
-          <div className="relative px-4 pt-4 pb-6 pr-28 z-10">
+          <div className="relative px-4 pt-4 pb-6 z-10">
             {/* Thumbnail preview button */}
             {market.images && market.images.length > 0 && (
               <button
@@ -351,16 +352,21 @@ export const MarketDetailPage: React.FC = () => {
             <h1 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
               {market.name}
             </h1>
-            <p
-              ref={descriptionRef}
-              className={cn(
-                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md",
-                !isDescriptionExpanded && "line-clamp-2"
-              )}
-              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+            <div
+              className="overflow-hidden"
+              style={{
+                maxHeight: isDescriptionExpanded ? '2000px' : '3rem',
+                transition: 'max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
             >
-              {market.description}
-            </p>
+              <p
+                ref={descriptionRef}
+                className="text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+              >
+                {market.description}
+              </p>
+            </div>
           </div>
           {/* Expand/Collapse button - right side */}
           {isTextTruncated && (
@@ -371,12 +377,12 @@ export const MarketDetailPage: React.FC = () => {
               {isDescriptionExpanded ? (
                 <>
                   <span>Show less</span>
-                  <ChevronDown className="w-4 h-4 rotate-180" />
+                  <ChevronDown className="w-4 h-4" />
                 </>
               ) : (
                 <>
                   <span>Read more</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4 rotate-180" />
                 </>
               )}
             </button>
@@ -413,13 +419,13 @@ export const MarketDetailPage: React.FC = () => {
         <Tabs
           inactiveTextColor="text-gray-400"
           variant="pills"
-          size="md"
+          size="lg"
           listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-none sm:rounded-b-3xl"
           items={[
             {
               key: 'details',
               label: 'Info',
-              icon: <Info className="w-4 h-4" />,
+              icon: <Info className="w-5 h-5" />,
               content: (
                 <div className="space-y-4 pb-4 pt-0 px-4 pb-[100px]">
                   {/* Quick Actions - Share, Report & Update */}
@@ -721,7 +727,7 @@ export const MarketDetailPage: React.FC = () => {
             {
               key: 'photos',
               label: 'Photos',
-              icon: <Image className="w-4 h-4" />,
+              icon: <Image className="w-5 h-5" />,
               content: (
                 <div className="pb-4 pt-4 px-4 pb-[100px]">
                   <p className="text-center text-muted-foreground py-8">Disabled at the moment</p>
@@ -731,7 +737,7 @@ export const MarketDetailPage: React.FC = () => {
             {
               key: 'comments',
               label: 'Comments',
-              icon: <MessageSquare className="w-4 h-4" />,
+              icon: <MessageSquare className="w-5 h-5" />,
               content: (
                 <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
                   <CommentList marketId={commentsMarketId} />
