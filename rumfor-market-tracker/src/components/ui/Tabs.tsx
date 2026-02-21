@@ -34,6 +34,7 @@ const Tabs: React.FC<TabsProps> = ({
   className,
   fullWidth = false,
   listClassName,
+  contentClassName,
   inactiveTextColor,
   hideIconsOnMobile = false
 }) => {
@@ -108,7 +109,7 @@ const Tabs: React.FC<TabsProps> = ({
         ))}
       </div>
       
-      <div className="py-4">
+      <div className={cn("py-4", contentClassName)}>
         {items.map((item) => (
           <div
             key={item.key}

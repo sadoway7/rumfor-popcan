@@ -539,6 +539,7 @@ const useTrackMarketMutation = () => {
       status?: string;
       attendingDates?: string[];
     }) => {
+      console.log('[useTrackMarketMutation] Calling API with marketId:', marketId, 'status:', status);
       const response = await marketsApi.trackMarket(
         marketId,
         status,
@@ -547,6 +548,7 @@ const useTrackMarketMutation = () => {
       if (!response.success) {
         throw new Error(response.error || 'Failed to track market');
       }
+      console.log('[useTrackMarketMutation] API response:', response);
       return { marketId, response };
     },
     onMutate: async ({ marketId, status }) => {
@@ -610,6 +612,7 @@ const useTrackMarketMutation = () => {
       return { previousData };
     },
     onSuccess: () => {
+      console.log('[useTrackMarketMutation] onSuccess - invalidating queries');
       // Refetch to get complete data from server
       if (userId) {
         queryClient.invalidateQueries({

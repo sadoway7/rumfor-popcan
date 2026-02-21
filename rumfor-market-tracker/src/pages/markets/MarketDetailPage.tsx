@@ -255,7 +255,7 @@ export const MarketDetailPage: React.FC = () => {
       <div className="w-full max-w-6xl mx-auto sm:px-4">
       {/* HERO SECTION - Matching MarketCard minimal variant */}
       <div className={cn(
-        "relative overflow-hidden !rounded-none shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]",
+        "relative overflow-hidden rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3",
         isDescriptionExpanded ? "min-h-96 md:min-h-[28rem] h-auto" : "h-96 md:h-[28rem]"
       )}>
         {/* Market Image - Fixed height background */}
@@ -429,7 +429,7 @@ export const MarketDetailPage: React.FC = () => {
           inactiveTextColor="text-gray-400"
           variant="pills"
           size="md"
-          listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2"
+          listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-b-3xl"
           items={[
             {
               key: 'details',

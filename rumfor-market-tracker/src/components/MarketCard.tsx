@@ -77,7 +77,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
   const [isPendingOptimistic, setIsPendingOptimistic] = React.useState(false)
   const [optimisticStatus, setOptimisticStatus] = React.useState<string | undefined>(trackingStatus)
-  const lastTrackingStatusRef = React.useRef(trackingStatus)
+  const lastTrackingStatusRef = React.useRef<string | undefined>(trackingStatus)
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false)
   const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, right: 0 })
   const [overlayOpacity, setOverlayOpacity] = React.useState<number | undefined>(undefined)
@@ -207,10 +207,12 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   }
 
   const handleStatusChange = (status: string) => {
+    console.log('[MarketCard] handleStatusChange called with status:', status, 'for market:', market.id)
     setOptimisticStatus(status)
     lastTrackingStatusRef.current = status
     setShowStatusDropdown(false)
     if (onStatusChange) {
+      console.log('[MarketCard] Calling onStatusChange')
       onStatusChange(market.id, status)
     }
   }
@@ -741,7 +743,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         className={cn(
         'cursor-pointer',
         'overflow-hidden rounded-none md:rounded-lg',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]',
+        'shadow-none',
         'hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:md:-translate-y-1',
         'transition-all duration-300',
         'relative',
@@ -846,7 +848,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                         <div 
                           className="absolute inset-0"
                           style={{
-                            background: 'linear-gradient(to top, white 55%, rgba(255,255,255,0.95) 70%, rgba(255,255,255,0.6) 85%, transparent 100%)'
+                            background: 'linear-gradient(to top, white 60%, rgba(255,255,255,0.98) 75%, rgba(255,255,255,0.85) 90%, transparent 100%)'
                           }}
                         />
                           {/* Content */}
@@ -871,6 +873,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               right: dropdownPosition.right
             }}
             onClick={(e) => {
+              console.log('[MarketCard] Dropdown container clicked')
               e.preventDefault()
               e.stopPropagation()
             }}
@@ -878,7 +881,17 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             {TRACKING_STATUS_OPTIONS.map((option) => (
               <button
                 key={option.value}
-                onClick={() => handleStatusChange(option.value)}
+                type="button"
+                onMouseDown={(e) => {
+                  console.log('[MarketCard] Button mousedown for:', option.value)
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  console.log('[MarketCard] Button clicked for:', option.value)
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleStatusChange(option.value)
+                }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 text-sm font-medium flex items-center gap-2 transition-colors",
                   optimisticStatus === option.value
@@ -892,7 +905,13 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             ))}
             <div className="border-t border-gray-200" />
             <button
-              onClick={handleUntrack}
+              type="button"
+              onClick={(e) => {
+                console.log('[MarketCard] Untrack button clicked')
+                e.preventDefault()
+                e.stopPropagation()
+                handleUntrack()
+              }}
               className="w-full text-left px-3 py-2.5 text-sm font-medium flex items-center gap-2 text-red-600 hover:bg-red-50 transition-colors"
             >
               <BookmarkMinus className="w-4 h-4 flex-shrink-0" />

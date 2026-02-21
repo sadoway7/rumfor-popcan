@@ -149,7 +149,7 @@ export const MarketGrid: React.FC<MarketGridProps> = ({
     }
 
     // Use fixed classes instead of dynamic ones for Tailwind purging - 4 wide on large screens
-    return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4';
+    return 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-5';
   };
 
   // Show loading state only on initial load

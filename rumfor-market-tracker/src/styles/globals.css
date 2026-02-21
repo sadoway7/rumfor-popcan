@@ -540,6 +540,15 @@
     }
   }
 
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   @keyframes glow {
     from {
       box-shadow: 0 0 10px hsl(var(--shadow-glow));

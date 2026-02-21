@@ -291,7 +291,7 @@ export function HomePage() {
         {isAuthenticated && <SubHeader />}
 
         {/* Market Categories - Full Width Above Everything */}
-        <div className="hidden md:flex gap-2 mt-2">
+        <div className="hidden md:flex gap-2 mt-2 animate-[fadeIn_0.3s_ease-out_both]">
           {/* Browse All Markets Button - Left Side */}
           <Link to="/markets" className="flex-shrink-0">
             <div className="h-full min-w-[80px] px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 flex items-center justify-center text-center active:translate-y-0.5 active:shadow-inner">
@@ -303,13 +303,15 @@ export function HomePage() {
 
           {/* Categories Grid - 2 rows of 5 */}
           <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
-            {marketCategories.map(cat => {
+            {marketCategories.map((cat, index) => {
               const Icon = cat.icon;
               const count = categoryStats?.[cat.slug] || 0;
               return (
                 <Link
                   key={cat.name}
                   to={`/markets?category=${cat.slug}`}
+                  className="animate-[fadeIn_0.3s_ease-out_both]"
+                  style={{ animationDelay: `${index * 0.03}s` }}
                 >
                   <div className="flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 h-full">
                     <div className="flex items-center gap-2 min-w-0">
@@ -351,24 +353,24 @@ export function HomePage() {
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-6 px-6 md:px-12">
               {/* First Column - Main Message */}
               <div className="flex flex-col">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-                  Find Markets.
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.1s' }}>
+                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.15s' }}>Find Markets.</span>
                   <br />
-                  Sell Stuff.
+                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.25s' }}>Sell Stuff.</span>
                   <br />
-                  <span className="text-amber-600">Build Your Empire.</span>
+                  <span className="inline-block text-amber-600 animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.35s' }}>Build Your Empire.</span>
                 </h1>
               </div>
 
               {/* Second Column - YOUR MARKET ORGANIZER */}
-              <div className="flex flex-col items-center md:items-end">
+              <div className="flex flex-col items-center md:items-end animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
                   Your Market
                   <br />
                   <span className="text-amber-600">Organizer</span>
                 </h2>
 
-                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-end text-sm">
+                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-end text-sm animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.4s' }}>
                   <span className="text-foreground/70">
                     Save Markets
                   </span>
@@ -386,7 +388,7 @@ export function HomePage() {
 
         {/* Recently Added */}
         <section>
-          <div className="flex items-center justify-between pt-6 mb-4">
+          <div className="flex items-center justify-between pt-6 mb-4 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
             <h2 className="text-2xl font-bold text-foreground">
               Recently Added
             </h2>
@@ -398,45 +400,45 @@ export function HomePage() {
           </div>
 
           {/* Market Grid with Logo as 1st card */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
             {/* RUMFOR Logo Card - 1st Position */}
-            <Link
-              to="/"
-              className="hidden md:flex flex-col items-center justify-center bg-surface border border-surface-3 rounded-none md:rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300"
+            <div
+              className="hidden md:flex flex-col items-center justify-center h-[384px] animate-[fadeIn_1.5s_ease-out_0.75s_both]"
             >
-              <div className="flex flex-col items-center space-y-3 transform -rotate-3">
-                <div className="w-[106px] h-[106px] bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
-                  <span className="text-accent-foreground font-bold text-[66px]">
+              <div className="flex flex-col items-center space-y-4 transform -rotate-3">
+                <div className="w-[130px] h-[130px] bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
+                  <span className="text-accent-foreground font-bold text-[80px]">
                     R
                   </span>
                 </div>
-                <span className="font-bold text-[44px] text-foreground tracking-tighter uppercase">
+                <span className="font-bold text-[54px] text-foreground tracking-tighter uppercase">
                   Rumfor
                 </span>
               </div>
-            </Link>
+            </div>
 
             {/* Market cards (show first 5) */}
-            {featuredMarkets?.data?.slice(0, 5).map((market: any) => (
-              <MarketCard
-                key={market.id}
-                market={market}
-                variant="minimal"
-                onTrack={trackMarket}
-                onUntrack={untrackMarket}
-                onStatusChange={trackMarket}
-                isTracked={trackedMarketIds?.includes(market.id)}
-                trackingStatus={trackingData?.find(t => t.marketId === market.id)?.status}
-                isLoading={marketsLoading}
-                className="h-full"
-              />
+            {featuredMarkets?.data?.slice(0, 5).map((market: any, index: number) => (
+              <div key={market.id} className="animate-[fadeIn_0.5s_ease-out_both]" style={{ animationDelay: `${index * 0.1}s` }}>
+                <MarketCard
+                  market={market}
+                  variant="minimal"
+                  onTrack={trackMarket}
+                  onUntrack={untrackMarket}
+                  onStatusChange={trackMarket}
+                  isTracked={trackedMarketIds?.includes(market.id)}
+                  trackingStatus={trackingData?.find(t => t.marketId === market.id)?.status}
+                  isLoading={marketsLoading}
+                  className="h-full"
+                />
+              </div>
             ))}
           </div>
         </section>
 
         {/* New Vendors */}
         <section className="mt-10 mb-10">
-          <div className="flex items-center justify-between mb-6 pt-6">
+          <div className="flex items-center justify-between mb-6 pt-6 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.3s' }}>
             <h2 className="text-2xl font-bold text-foreground">
               New Vendors
             </h2>
@@ -454,12 +456,13 @@ export function HomePage() {
                 <div key={i} className="h-48 rounded-xl bg-surface animate-pulse border border-surface-3" />
               ))
             ) : (
-              displayVendors.map((vendor) => (
-                <VendorCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  showLink={hasRealVendors}
-                />
+              displayVendors.map((vendor, index) => (
+                <div key={vendor.id} className="animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: `${index * 0.08}s` }}>
+                  <VendorCard
+                    vendor={vendor}
+                    showLink={hasRealVendors}
+                  />
+                </div>
               ))
             )}
           </div>
