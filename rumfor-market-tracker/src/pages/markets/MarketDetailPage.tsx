@@ -256,10 +256,10 @@ export const MarketDetailPage: React.FC = () => {
       {/* HERO SECTION - Matching MarketCard minimal variant */}
       <div className={cn(
         "relative overflow-hidden rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3",
-        isDescriptionExpanded ? "min-h-96 md:min-h-[28rem] h-auto" : "h-96 md:h-[28rem]"
+        isDescriptionExpanded ? "min-h-96 md:min-h-[28rem] h-auto" : "h-96 md:h-[28rem] min-h-96 md:min-h-[28rem]"
       )}>
         {/* Market Image - Fixed height background */}
-        <div className="absolute inset-0 h-96 md:h-[28rem]">
+        <div className="absolute inset-0">
           {market.images && market.images.length > 0 ? (
             <img
               src={market.images[selectedImageIndex]}
