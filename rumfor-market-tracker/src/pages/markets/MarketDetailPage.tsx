@@ -254,10 +254,7 @@ export const MarketDetailPage: React.FC = () => {
     )}>
       <div className="w-full max-w-6xl mx-auto sm:px-4">
       {/* HERO SECTION - Matching MarketCard minimal variant */}
-      <div className={cn(
-        "relative overflow-hidden rounded-none sm:rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3",
-        isDescriptionExpanded ? "min-h-[28rem] md:min-h-[36rem] h-auto" : "min-h-[28rem] md:min-h-[36rem] h-auto"
-      )}>
+      <div className="relative flex flex-col justify-end overflow-hidden rounded-none sm:rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3 min-h-[28rem] md:min-h-[36rem]">
         {/* Market Image - Fixed height background */}
         <div className="absolute inset-0">
           {market.images && market.images.length > 0 ? (
@@ -323,49 +320,18 @@ export const MarketDetailPage: React.FC = () => {
           )}
         </div>
 
-        {/* Expand/Collapse description - Bottom right of hero */}
-        {isTextTruncated && (
-          <button
-            onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-            className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-l-full hover:bg-white/90 transition-opacity shadow-lg"
-          >
-            {isDescriptionExpanded ? (
-              <>
-                <span>Show less</span>
-                <ChevronDown className="w-4 h-4 rotate-180" />
-              </>
-            ) : (
-              <>
-                <span>Read more</span>
-                <ChevronDown className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Title + Description - always absolute, animate with transforms */}
-        <div className={cn(
-          "absolute left-0 right-0 bottom-0 transition-all duration-500 ease-in-out",
-          isDescriptionExpanded && "top-0"
-        )}>
+                {/* Title + Description */}
+        <div className="relative">
           {/* Dark gradient background */}
           <div 
-            className={cn(
-              "absolute left-0 right-0 bottom-0 transition-all duration-500",
-              isDescriptionExpanded ? "top-0" : "inset-0"
-            )}
+            className="absolute left-0 right-0 bottom-0 top-0"
             style={{
-              background: isDescriptionExpanded
-                ? 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 20%, rgba(0,0,0,0.9) 50%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.4) 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.3) 85%, transparent 100%)'
+              background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.3) 85%, transparent 100%)'
             }}
           />
           
           {/* Content */}
-          <div className={cn(
-            "relative px-4 pt-4 z-10 transition-[padding] duration-500 ease-out",
-            isDescriptionExpanded ? "pb-16 h-full overflow-y-auto" : "pb-6 pr-16"
-          )}>
+          <div className="relative px-4 pt-4 pb-6 pr-28 z-10">
             {/* Thumbnail preview button */}
             {market.images && market.images.length > 0 && (
               <button
@@ -388,14 +354,33 @@ export const MarketDetailPage: React.FC = () => {
             <p
               ref={descriptionRef}
               className={cn(
-                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md overflow-hidden transition-[max-height] duration-500 ease-in-out",
-                isDescriptionExpanded ? "max-h-none" : "max-h-12"
+                "text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md",
+                !isDescriptionExpanded && "line-clamp-2"
               )}
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
             >
               {market.description}
             </p>
           </div>
+          {/* Expand/Collapse button - right side */}
+          {isTextTruncated && (
+            <button
+              onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+              className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-l-full hover:bg-white/90 transition-opacity shadow-lg"
+            >
+              {isDescriptionExpanded ? (
+                <>
+                  <span>Show less</span>
+                  <ChevronDown className="w-4 h-4 rotate-180" />
+                </>
+              ) : (
+                <>
+                  <span>Read more</span>
+                  <ChevronDown className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
