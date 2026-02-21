@@ -5,6 +5,7 @@ import { Button } from '@/components/ui';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useSidebarStore } from '@/features/theme/themeStore';
 import { MarketGrid } from '@/components/MarketGrid';
+import { MarketCard } from '@/components/MarketCard';
 import { SubHeader } from '@/components/SubHeader';
 import { VendorCard } from '@/components/VendorCard';
 import { marketsApi } from '@/features/markets/marketsApi';
@@ -289,117 +290,94 @@ export function HomePage() {
       >
         {isAuthenticated && <SubHeader />}
 
-        {/* RUMFOR Branding + Hero Section */}
-        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
-          {/* Branding Column */}
-          <div className="hidden md:flex flex-col items-center pt-8">
-            <Link
-              to="/"
-              className="flex flex-col items-center space-y-2 transform -rotate-3"
-             >
-              <div className="w-20 h-20 bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
-                <span className="text-accent-foreground font-bold text-5xl">
-                  R
-                </span>
-              </div>
-              <span className="font-bold text-4xl text-foreground tracking-tighter uppercase">
-                Rumfor
+        {/* Market Categories - Full Width Above Everything */}
+        <div className="hidden md:flex gap-2 mt-2">
+          {/* Browse All Markets Button - Left Side */}
+          <Link to="/markets" className="flex-shrink-0">
+            <div className="h-full min-w-[80px] px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 flex items-center justify-center text-center active:translate-y-0.5 active:shadow-inner">
+              <span className="text-amber-500 font-bold text-sm uppercase tracking-wide">
+                All
               </span>
-            </Link>
-            <div className="mt-8 space-y-3 w-full px-4">
-              <Link to="/markets" className="block">
-                <div className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 text-center transform hover:-translate-y-0.5">
-                  <span className="text-white font-bold text-sm uppercase tracking-wide">
-                    Browse All Markets →
-                  </span>
-                </div>
-              </Link>
-              <Link to="/vendor/add-market/vendor" className="block">
-                <div className="w-full py-3 rounded-xl bg-surface-2 border-2 border-surface-3 hover:border-amber-500 hover:bg-surface-3 transition-all text-center">
-                  <span className="text-foreground font-bold text-sm uppercase tracking-wide">
-                    Add a Market +
-                  </span>
-                </div>
-              </Link>
             </div>
-          </div>
+          </Link>
 
-          {/* Hero Banner - Refined & Subtle */}
-          <div className="w-full h-full">
-            <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3 py-2">
-              {/* Lava Lamp Bubbles */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
-                <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl animate-float-2" />
-                <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-amber-500/15 rounded-full blur-xl animate-float-3" />
-                <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-amber-400/25 rounded-full blur-xl animate-float-4" />
-                <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-orange-400/20 rounded-full blur-xl animate-float-5" />
-                <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
-              </div>
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center pt-2 pb-2 px-4 md:px-6">
-                {/* First Column - Main Message */}
-                <div className="flex flex-col">
-                  <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-                    Find Markets.
-                    <br />
-                    Sell Stuff.
-                    <br />
-                    <span className="text-amber-600">Build Your Empire.</span>
-                  </h1>
-                </div>
-
-                {/* Second Column - YOUR MARKET ORGANIZER */}
-                <div className="flex flex-col items-center md:items-end">
-                  <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
-                    Your Market
-                    <br />
-                    <span className="text-amber-600">Organizer</span>
-                  </h2>
-
-                  <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-end">
-                    <span className="text-sm text-foreground/70">
-                      Save Markets
-                    </span>
-                    <span className="text-surface-3">•</span>
-                    <span className="text-sm text-foreground/70">Track Apps</span>
-                    <span className="text-surface-3">•</span>
-                    <span className="text-sm text-foreground/70">To-Dos</span>
-                    <span className="text-surface-3">•</span>
-                    <span className="text-sm text-foreground/70">Expenses</span>
+          {/* Categories Grid - 2 rows of 5 */}
+          <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
+            {marketCategories.map(cat => {
+              const Icon = cat.icon;
+              const count = categoryStats?.[cat.slug] || 0;
+              return (
+                <Link
+                  key={cat.name}
+                  to={`/markets?category=${cat.slug}`}
+                >
+                  <div className="flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 h-full">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon
+                        className="h-5 w-5 text-amber-500 shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="font-medium text-foreground text-sm truncate">
+                        {cat.name}
+                      </span>
+                    </div>
+                    {count > 0 && (
+                      <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
+                        {count}
+                      </span>
+                    )}
                   </div>
-                </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Hero Banner - Full Width */}
+        <div className="w-full">
+
+          {/* Hero Content */}
+          <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3">
+            {/* Lava Lamp Bubbles */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
+              <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl animate-float-2" />
+              <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-amber-500/15 rounded-full blur-xl animate-float-3" />
+              <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-amber-400/25 rounded-full blur-xl animate-float-4" />
+              <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-orange-400/20 rounded-full blur-xl animate-float-5" />
+              <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-6 px-6 md:px-12">
+              {/* First Column - Main Message */}
+              <div className="flex flex-col">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
+                  Find Markets.
+                  <br />
+                  Sell Stuff.
+                  <br />
+                  <span className="text-amber-600">Build Your Empire.</span>
+                </h1>
               </div>
 
-              {/* Explore Categories */}
-              <div className="relative z-10 mt-6 pt-6 border-t border-surface-3/50 px-4 pb-2">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                  {marketCategories.map(cat => {
-                    const Icon = cat.icon;
-                    const count = categoryStats?.[cat.slug] || 0;
-                    return (
-                      <Link
-                        key={cat.name}
-                        to={`/markets?category=${cat.slug}`}
-                      >
-                        <div className="flex items-center justify-between gap-1 p-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Icon
-                              className="h-4 w-4 text-amber-500 shrink-0"
-                              strokeWidth={2}
-                            />
-                            <span className="font-medium text-foreground text-xs truncate">
-                              {cat.name}
-                            </span>
-                          </div>
-                          {count > 0 && (
-                            <span className="text-xs text-muted-foreground font-medium flex-shrink-0">
-                              {count}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-                    );
-                  })}
+              {/* Second Column - YOUR MARKET ORGANIZER */}
+              <div className="flex flex-col items-center md:items-end">
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
+                  Your Market
+                  <br />
+                  <span className="text-amber-600">Organizer</span>
+                </h2>
+
+                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-end text-sm">
+                  <span className="text-foreground/70">
+                    Save Markets
+                  </span>
+                  <span className="text-surface-3">•</span>
+                  <span className="text-foreground/70">Track Apps</span>
+                  <span className="text-surface-3">•</span>
+                  <span className="text-foreground/70">To-Dos</span>
+                  <span className="text-surface-3">•</span>
+                  <span className="text-foreground/70">Expenses</span>
                 </div>
               </div>
             </div>
@@ -408,7 +386,7 @@ export function HomePage() {
 
         {/* Recently Added */}
         <section>
-          <div className="flex items-center justify-between mb-6 pt-6 border-t border-surface-3/50">
+          <div className="flex items-center justify-between pt-6 mb-4">
             <h2 className="text-2xl font-bold text-foreground">
               Recently Added
             </h2>
@@ -419,18 +397,41 @@ export function HomePage() {
             </Link>
           </div>
 
-          <MarketGrid
-            markets={featuredMarkets?.data || []}
-            isLoading={marketsLoading}
-            variant="grid"
-            trackedMarketIds={trackedMarketIds || []}
-            trackingData={trackingData}
-            onTrack={trackMarket}
-            onUntrack={untrackMarket}
-            onStatusChange={trackMarket}
-            maxItems={6}
-            className=""
-          />
+          {/* Market Grid with Logo as 1st card */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {/* RUMFOR Logo Card - 1st Position */}
+            <Link
+              to="/"
+              className="hidden md:flex flex-col items-center justify-center bg-surface border border-surface-3 rounded-none md:rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)] hover:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="flex flex-col items-center space-y-3 transform -rotate-3">
+                <div className="w-[106px] h-[106px] bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
+                  <span className="text-accent-foreground font-bold text-[66px]">
+                    R
+                  </span>
+                </div>
+                <span className="font-bold text-[44px] text-foreground tracking-tighter uppercase">
+                  Rumfor
+                </span>
+              </div>
+            </Link>
+
+            {/* Market cards (show first 5) */}
+            {featuredMarkets?.data?.slice(0, 5).map((market: any) => (
+              <MarketCard
+                key={market.id}
+                market={market}
+                variant="minimal"
+                onTrack={trackMarket}
+                onUntrack={untrackMarket}
+                onStatusChange={trackMarket}
+                isTracked={trackedMarketIds?.includes(market.id)}
+                trackingStatus={trackingData?.find(t => t.marketId === market.id)?.status}
+                isLoading={marketsLoading}
+                className="h-full"
+              />
+            ))}
+          </div>
         </section>
 
         {/* New Vendors */}

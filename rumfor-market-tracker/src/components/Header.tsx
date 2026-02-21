@@ -186,20 +186,30 @@ export function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 hover:rounded-full transition-all duration-300"
+                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
                   title="Browse Markets"
                 >
-                  <Store className="h-4 w-4" />
+                  <Store className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
                 </Button>
               </Link>
               <Link to="/vendors">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-muted-foreground hover:text-foreground hover:bg-surface/80 hover:rounded-full transition-all duration-300"
+                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
                   title="Browse Vendors"
                 >
-                  <Users className="h-4 w-4" />
+                  <Users className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                </Button>
+              </Link>
+              <Link to="/vendor/add-market/vendor">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
+                  title="Add Market"
+                >
+                  <Plus className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
                 </Button>
               </Link>
             </div>

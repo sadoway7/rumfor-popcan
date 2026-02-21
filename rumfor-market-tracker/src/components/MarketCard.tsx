@@ -80,8 +80,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   const lastTrackingStatusRef = React.useRef(trackingStatus)
   const [showStatusDropdown, setShowStatusDropdown] = React.useState(false)
   const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, right: 0 })
+  const [overlayOpacity, setOverlayOpacity] = React.useState<number | undefined>(undefined)
+  const [isMobile, setIsMobile] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const cardRef = React.useRef<HTMLDivElement>(null)
   const { openComments } = useCommentsModalStore()
   const user = useAuthStore(state => state.user)
   const navigate = useNavigate()
@@ -249,6 +252,71 @@ export const MarketCard: React.FC<MarketCardProps> = ({
       setIsPendingOptimistic(false)
     }
   }, [isLoading])
+
+  // Scroll-based overlay opacity effect for mobile
+  React.useEffect(() => {
+    const checkMobile = () => window.innerWidth < 768
+    setIsMobile(checkMobile())
+
+    const card = cardRef.current
+    if (!card) return
+
+    let rafId: number | null = null
+
+    const updateOverlayOpacity = () => {
+      if (!checkMobile()) {
+        setOverlayOpacity(undefined)
+        return
+      }
+
+      const rect = card.getBoundingClientRect()
+      const viewportHeight = window.innerHeight
+      const cardCenter = rect.top + rect.height / 2
+      const viewportCenter = viewportHeight / 2
+      
+      // Create a larger "clear zone" in the center (50% of viewport height)
+      // Only start applying overlay when card is in top/bottom 25% of viewport
+      const clearZoneRadius = viewportHeight * 0.25
+      const distanceFromCenter = Math.abs(cardCenter - viewportCenter)
+      
+      // Only start applying opacity after the card leaves the clear zone
+      if (distanceFromCenter < clearZoneRadius) {
+        setOverlayOpacity(0)
+        return
+      }
+      
+      // Calculate opacity for cards outside the clear zone
+      const maxOpacityDistance = viewportCenter - clearZoneRadius
+      const normalizedDistance = Math.min((distanceFromCenter - clearZoneRadius) / maxOpacityDistance, 1)
+      
+      // Opacity: 0 in center zone, up to 0.35 at edges
+      const opacity = normalizedDistance * 0.35
+      setOverlayOpacity(opacity)
+    }
+
+    const onScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(updateOverlayOpacity)
+    }
+
+    const onResize = () => {
+      setIsMobile(checkMobile())
+      updateOverlayOpacity()
+    }
+
+    // Initial calculation
+    updateOverlayOpacity()
+
+    // Listen to scroll and resize events
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize, { passive: true })
+    
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   const formatSchedule = (schedule: Market['schedule'], dates?: any) => {
     // Handle new backend format: object with specialDates
@@ -428,17 +496,23 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   if (variant === 'compact') {
     return (
-      <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] transition-all duration-300 cursor-pointer !rounded-none', className)}>
-          {/* Image with overlaid details */}
-          {market.images && market.images.length > 0 ? (
-            <div className="relative h-48">
-              <img
-                src={market.images[0]}
-                alt={market.name}
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay with buttons */}
+      <div ref={cardRef} className="relative">
+        {/* Scroll-based overlay on mobile, hover-based on desktop - covers entire card */}
+        <div 
+          className="absolute inset-0 bg-white pointer-events-none z-10 rounded-none md:rounded-lg md:bg-white/10 md:group-hover:bg-transparent md:transition-all md:duration-300"
+          style={{ opacity: isMobile ? overlayOpacity : undefined }}
+        />
+        <Link to={detailPath || `/markets/${market.id}`} className="block group relative z-20">
+          <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] hover:md:-translate-y-1 transition-all duration-300 cursor-pointer rounded-none md:rounded-lg', className)}>
+            {/* Image with overlaid details */}
+            {market.images && market.images.length > 0 ? (
+              <div className="relative h-48">
+                <img
+                  src={market.images[0]}
+                  alt={market.name}
+                  className="w-full h-full object-cover"
+                />
+                {/* Overlay with buttons */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-between p-3">
                 <div className="flex flex-wrap gap-1">
                   <Badge variant="outline" className={cn('text-xs px-2.5 py-1 bg-white', MARKET_CATEGORY_COLORS[market.category])}>
@@ -477,8 +551,9 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           </div>
         </Card>
       </Link>
-    )
-  }
+    </div>
+  )
+}
 
   if (variant === 'featured') {
     return (
@@ -661,13 +736,23 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     const scheduleDates = getScheduleDates(market.schedule)
 
     return (
-      <div className={cn(
+      <div
+        ref={cardRef}
+        className={cn(
         'cursor-pointer',
-        'overflow-hidden !rounded-none',
+        'overflow-hidden rounded-none md:rounded-lg',
         'shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]',
+        'hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:md:-translate-y-1',
+        'transition-all duration-300',
+        'relative',
         className
       )}>
-        <Link to={detailPath || `/markets/${market.id}`} className="block group">
+        {/* Scroll-based overlay on mobile, hover-based on desktop - covers entire card */}
+        <div 
+          className="absolute inset-0 bg-white pointer-events-none z-10 md:bg-white/10 md:group-hover:bg-transparent md:transition-all md:duration-300"
+          style={{ opacity: isMobile ? overlayOpacity : undefined }}
+        />
+        <Link to={detailPath || `/markets/${market.id}`} className="block group relative z-20">
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
             <div className="relative h-96">
@@ -748,31 +833,31 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                        <div className={`absolute -top-3 right-3 z-30 px-3 py-1 rounded-full text-xs font-medium ${categoryFlagColors[market.category] || 'bg-white'} drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]`}>
                          {MARKET_CATEGORY_LABELS[market.category]}
                        </div>
-                      {/* Color accent layer */}
-                      <div 
-                        className="absolute inset-0"
-                        style={{
-                          background: dominantColor 
-                             ? `linear-gradient(to top, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 1)')} 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.95)')} 30%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.75)')} 60%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.4)')} 85%, transparent 100%)`
-                             : 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.4) 85%, transparent 100%)'
-                        }}
-                      />
-                      {/* Dark overlay for readability */}
-                      <div 
-                        className="absolute inset-0"
-                        style={{
-                          background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 35%, rgba(0,0,0,0.5) 65%, rgba(0,0,0,0.2) 90%, transparent 100%)'
-                        }}
-                      />
-                        {/* Content */}
-                        <div className="relative px-4 pt-6 pb-6 z-10">
-                           <h3 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
-                            {displayName}
-                          </h3>
-                        <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                          {market.description}
-                        </p>
-                      </div>
+                       {/* Color accent layer */}
+                       <div 
+                         className="absolute inset-0"
+                         style={{
+                           background: dominantColor 
+                              ? `linear-gradient(to bottom, transparent 0%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.3)')} 40%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.6)')} 70%, ${dominantColor.replace('rgb', 'rgba').replace(')', ', 0.9)')} 100%)`
+                              : 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 40%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.9) 100%)'
+                         }}
+                       />
+                        {/* White overlay that fades up */}
+                        <div 
+                          className="absolute inset-0"
+                          style={{
+                            background: 'linear-gradient(to top, white 55%, rgba(255,255,255,0.95) 70%, rgba(255,255,255,0.6) 85%, transparent 100%)'
+                          }}
+                        />
+                          {/* Content */}
+                          <div className="relative px-5 pt-5 pb-5 z-10">
+                             <h3 className="text-zinc-900 font-quicksand font-bold text-lg leading-snug line-clamp-2 mb-2">
+                             {displayName}
+                            </h3>
+                          <p className="text-zinc-500 text-sm font-normal leading-relaxed line-clamp-2">
+                            {market.description}
+                          </p>
+                        </div>
                    </div>
               </div>
             </div>
@@ -856,10 +941,14 @@ export const MarketCard: React.FC<MarketCardProps> = ({
     const scheduleDates = getScheduleDates(market.schedule)
 
     return (
-      <div className={cn(
+      <div
+        ref={cardRef}
+        className={cn(
         'cursor-pointer',
-        'overflow-hidden !rounded-none',
+        'overflow-hidden rounded-none md:rounded-lg',
         'shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)]',
+        'hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:md:-translate-y-1',
+        'transition-all duration-300',
         className
       )}>
         <Link to={detailPath || `/markets/${market.id}`} className="block group">
@@ -870,6 +959,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                 src={market.images[0]}
                 alt={market.name}
                 className="w-full h-full object-cover"
+              />
+              {/* Scroll-based overlay on mobile, hover-based on desktop */}
+              <div 
+                className="absolute inset-0 bg-white pointer-events-none md:bg-white/10 md:group-hover:bg-transparent md:transition-all md:duration-300"
+                style={{ opacity: overlayOpacity }}
               />
 
               {/* Top overlays */}
@@ -937,11 +1031,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                     }}
                   />
                   {/* Content */}
-                  <div className="relative px-4 pt-4 pb-6 z-10">
-                    <h3 className="text-white font-quicksand font-bold text-2xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
+                  <div className="relative px-5 pt-4 pb-5 z-10">
+                    <h3 className="text-white font-quicksand font-bold text-xl leading-snug line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
                       {displayName}
                     </h3>
-                    <p className="text-white/90 text-base font-medium leading-relaxed line-clamp-2 mt-2 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
+                    <p className="text-white/80 text-sm font-normal leading-relaxed line-clamp-2 mt-1.5 drop-shadow-md" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                       {market.description}
                     </p>
                   </div>
@@ -956,14 +1050,20 @@ export const MarketCard: React.FC<MarketCardProps> = ({
 
   // Default variant
   return (
-    <Link to={detailPath || `/markets/${market.id}`} className="block">
-      <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer !rounded-none shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_4px_20px_rgba(0,0,0,0.2)]', className)}>
+    <div ref={cardRef}>
+      <Link to={detailPath || `/markets/${market.id}`} className="block group">
+        <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer rounded-none md:rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_4px_20px_rgba(0,0,0,0.2)] hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.25)] hover:md:-translate-y-1', className)}>
         {market.images && market.images.length > 0 && (
           <div className="relative h-80">
             <img
               src={market.images[0]}
               alt={market.name}
               className="w-full h-full object-cover"
+            />
+            {/* Scroll-based overlay on mobile, hover-based on desktop */}
+            <div 
+              className="absolute inset-0 bg-white pointer-events-none md:bg-white/10 md:group-hover:bg-transparent md:transition-all md:duration-300"
+              style={{ opacity: overlayOpacity }}
             />
             <div className="absolute top-3 left-3">
               <Badge variant="outline" className={cn(MARKET_CATEGORY_COLORS[market.category])}>
@@ -1067,5 +1167,6 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         </div>
       </Card>
     </Link>
+  </div>
   )
 }

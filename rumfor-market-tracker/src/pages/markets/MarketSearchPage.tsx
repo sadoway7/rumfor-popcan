@@ -113,9 +113,10 @@ export const MarketSearchPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  // Ensure advanced search sidebar is hidden when entering this page
+  // Show sidebar by default on desktop, hide on mobile
   useEffect(() => {
-    setSidebarOpen(false);
+    const isDesktop = window.innerWidth >= 1024;
+    setSidebarOpen(isDesktop);
   }, []);
 
   // Intersection Observer for infinite scroll
