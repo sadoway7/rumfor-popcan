@@ -28,7 +28,7 @@ interface MarketCardProps {
   showTrackButton?: boolean
   variant?: 'default' | 'compact' | 'featured' | 'minimal' | 'profile'
   detailPath?: string // Custom path for market detail page
-  trackingStatus?: 'interested' | 'applied' | 'booked' | 'completed' | 'cancelled' // Current tracking status
+  trackingStatus?: string // Current tracking status
   relatedMarketIds?: string[] // IDs of related markets (for split markets)
 }
 
