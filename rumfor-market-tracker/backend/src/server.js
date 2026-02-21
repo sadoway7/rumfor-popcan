@@ -84,7 +84,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:", "blob:", "http://localhost:3001"],
-      connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca", process.env.FRONTEND_URL].filter(Boolean),
+      connectSrc: ["'self'", "https://api.unsplash.com", "https://rumfor.sadoway.ca", "https://rumfor.com", "https://photon.komoot.io", process.env.FRONTEND_URL].filter(Boolean),
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
