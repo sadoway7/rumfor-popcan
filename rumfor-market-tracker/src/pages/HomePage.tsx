@@ -253,7 +253,7 @@ export function HomePage() {
                         key={cat.name}
                         to={`/markets?category=${cat.slug}`}
                       >
-                        <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3">
+                        <div className={`flex items-center justify-between gap-2 p-3 rounded-lg bg-surface hover:-translate-y-0.5 hover:shadow-md transition-all border border-surface-3 ${count === 0 ? 'opacity-50' : ''}`}>
                           <div className="flex items-center gap-2 min-w-0">
                             <Icon
                               className="h-5 w-5 text-amber-500 flex-shrink-0"
@@ -342,18 +342,9 @@ export function HomePage() {
         </div>
 
         {/* Market Categories */}
-        <div className="hidden md:flex max-w-[1440px] mx-auto gap-2 mt-2 animate-[fadeIn_0.3s_ease-out_both]">
-          {/* Browse All Markets Button - Left Side */}
-          <Link to="/markets" className="flex-shrink-0">
-            <div className="h-full min-w-[80px] px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 flex items-center justify-center text-center active:translate-y-0.5 active:shadow-inner">
-              <span className="text-amber-500 font-bold text-sm uppercase tracking-wide">
-                All
-              </span>
-            </div>
-          </Link>
-
+        <div className="hidden md:block max-w-[1440px] mx-auto mt-2 animate-[fadeIn_0.3s_ease-out_both]">
           {/* Categories Grid - 2 rows of 5 */}
-          <div className="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
+          <div className="grid grid-cols-5 grid-rows-2 gap-2">
             {marketCategories.map((cat, index) => {
               const Icon = cat.icon;
               const count = categoryStats?.[cat.slug] || 0;
@@ -364,7 +355,7 @@ export function HomePage() {
                   className="animate-[fadeIn_0.3s_ease-out_both]"
                   style={{ animationDelay: `${index * 0.03}s` }}
                 >
-                  <div className="flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:bg-surface-2 transition-colors border border-surface-3 h-full">
+                  <div className={`flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:-translate-y-0.5 hover:shadow-md transition-all border border-surface-3 h-full ${count === 0 ? 'opacity-50' : ''}`}>
                     <div className="flex items-center gap-2 min-w-0">
                       <Icon
                         className="h-5 w-5 text-amber-500 shrink-0"
@@ -384,14 +375,26 @@ export function HomePage() {
               );
             })}
           </div>
+
+          {/* Browse All Listings - Below Categories, Centered */}
+          <div className="flex justify-center mt-3">
+            <Link to="/markets" className="animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.15s' }}>
+              <Button variant="ghost" size="sm" className="text-amber-500">
+                Browse All Listings →
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Recently Added */}
         <section>
           <div className="flex items-center justify-between pt-6 mb-4 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
-            <h2 className="text-2xl font-bold text-foreground">
-              Recently Added
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
+              <h2 className="text-2xl font-bold text-foreground">
+                Recently Added
+              </h2>
+            </div>
             <Link to="/markets">
               <Button variant="ghost" size="sm" className="text-amber-500">
                 See All
@@ -439,9 +442,12 @@ export function HomePage() {
         {/* New Vendors */}
         <section className="mt-10 mb-10">
           <div className="flex items-center justify-between mb-6 pt-6 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.3s' }}>
-            <h2 className="text-2xl font-bold text-foreground">
-              New Vendors
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
+              <h2 className="text-2xl font-bold text-foreground">
+                New Vendors
+              </h2>
+            </div>
             <Link to="/vendors">
               <Button variant="ghost" size="sm" className="text-amber-500">
                 See All

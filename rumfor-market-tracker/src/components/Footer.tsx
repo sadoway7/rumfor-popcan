@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { BugReportModal } from '@/components/BugReportModal'
 
 export function Footer() {
+  const [showBugReport, setShowBugReport] = useState(false)
+
   return (
-    <footer className="bg-surface border-t border-border">
+    <>
+      <footer className="bg-surface border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -89,10 +94,19 @@ export function Footer() {
               <Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors text-sm">
                 Cookie Policy
               </Link>
+              <button 
+                onClick={() => setShowBugReport(true)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+              >
+                Report a Bug
+              </button>
             </div>
           </div>
         </div>
       </div>
     </footer>
+
+    <BugReportModal isOpen={showBugReport} onClose={() => setShowBugReport(false)} />
+  </>
   )
 }

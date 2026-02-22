@@ -36,7 +36,7 @@ export const ChatNotificationIcon: React.FC<{ count: number; size?: 'sm' | 'md' 
       
       {count > 0 && (
         <div
-          className={`absolute -top-1 -left-1 ${badgeClasses[size]} text-white rounded-full flex items-center justify-center font-semibold shadow-md z-[60]`}
+          className={`absolute -top-1 -left-1 ${badgeClasses[size]} text-white rounded-full flex items-center justify-center font-semibold shadow-md`}
           style={{ backgroundColor: '#22C55E' }}
         >
           {count}

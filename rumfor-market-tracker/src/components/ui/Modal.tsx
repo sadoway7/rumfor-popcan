@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/utils/cn'
 import { Button } from './Button'
 
@@ -120,9 +121,9 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null
 
-  return (
+  return createPortal(
     <div
-      className={cn("fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 bg-background/80 backdrop-blur-sm", backdropClassName)}
+      className={cn("fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto p-4 bg-background/80 backdrop-blur-sm", backdropClassName)}
       onClick={handleOverlayClick}
     >
       <div
@@ -180,7 +181,8 @@ const Modal: React.FC<ModalProps> = ({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

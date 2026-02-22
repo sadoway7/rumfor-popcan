@@ -68,12 +68,10 @@ export function VendorTrackedMarketsPage() {
   }, [searchedMarkets])
 
   const handleUntrackMarket = async (marketId: string) => {
-    if (window.confirm('Untrack this market?')) {
-      try {
-        await untrackMarket(marketId)
-      } catch (error) {
-        console.error('Failed to untrack:', error)
-      }
+    try {
+      await untrackMarket(marketId)
+    } catch (error) {
+      console.error('Failed to untrack:', error)
     }
   }
 

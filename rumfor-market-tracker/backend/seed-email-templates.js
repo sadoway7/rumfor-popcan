@@ -568,6 +568,52 @@ Hi {{firstName}},
     category: 'system',
     isActive: true,
     isSystem: true
+  },
+  {
+    slug: 'bug-report',
+    name: 'Bug Report',
+    description: 'Notification when a user submits a bug report',
+    subject: 'Bug Report: {{bugTitle}}',
+    htmlContent: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #d32f2f; text-align: center;">🐛 Bug Report</h2>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Title:</strong> {{bugTitle}}</p>
+          <p style="margin: 5px 0;"><strong>Severity:</strong> {{severity}}</p>
+          <p style="margin: 5px 0;"><strong>Reported By:</strong> {{reporterEmail}}</p>
+          <p style="margin: 5px 0;"><strong>Submitted:</strong> {{submittedAt}}</p>
+        </div>
+        <h3 style="color: #333;">Description:</h3>
+        <div style="background-color: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+          <p style="margin: 0; white-space: pre-wrap;">{{bugDescription}}</p>
+        </div>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          © {{currentYear}} {{appName}}. All rights reserved.
+        </p>
+      </div>
+    `,
+    textContent: `Bug Report
+
+Title: {{bugTitle}}
+Severity: {{severity}}
+Reported By: {{reporterEmail}}
+Submitted: {{submittedAt}}
+
+Description:
+{{bugDescription}}
+
+© {{currentYear}} {{appName}}. All rights reserved.`,
+    variables: [
+      { name: 'bugTitle', description: 'Title of the bug report', example: 'Login button not working', required: true },
+      { name: 'bugDescription', description: 'Detailed description of the bug', example: 'When I click the login button, nothing happens...', required: true },
+      { name: 'severity', description: 'Severity level', example: 'Medium', required: true },
+      { name: 'reporterEmail', description: 'Email of the reporter', example: 'user@example.com', required: true },
+      { name: 'submittedAt', description: 'Submission timestamp', example: '2024-01-15 10:30 AM', required: true }
+    ],
+    category: 'system',
+    isActive: true,
+    isSystem: true
   }
 ]
 

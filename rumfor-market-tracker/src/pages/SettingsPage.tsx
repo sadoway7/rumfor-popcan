@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui'
 import { Button } from '@/components/ui'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
 import { Alert } from '@/components/ui/Alert'
+import { BugReportModal } from '@/components/BugReportModal'
 
 export function SettingsPage() {
   const { user, deleteProfile, isLoading } = useAuthStore()
@@ -12,6 +13,7 @@ export function SettingsPage() {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showBugReport, setShowBugReport] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   return (
@@ -107,6 +109,28 @@ export function SettingsPage() {
           </Card>
         </section>
 
+        <section>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Help & Support</h2>
+          <Card padding="none">
+            <CardContent className="divide-y divide-surface-3 px-4">
+              <div className="flex items-center justify-between py-3">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground">Report a Bug</p>
+                  <p className="text-xs text-muted-foreground">Found an issue? Let us know</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-accent hover:text-accent-light h-9 px-3 flex-shrink-0"
+                  onClick={() => setShowBugReport(true)}
+                >
+                  Report
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
         <Card padding="none">
           <CardContent className="px-4">
             <div className="flex items-center justify-between py-3">
@@ -192,6 +216,12 @@ export function SettingsPage() {
           </Button>
         </ModalFooter>
       </Modal>
+
+      {/* Bug Report Modal */}
+      <BugReportModal 
+        isOpen={showBugReport} 
+        onClose={() => setShowBugReport(false)} 
+      />
     </div>
   )
 }

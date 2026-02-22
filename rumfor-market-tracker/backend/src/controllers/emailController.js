@@ -4,6 +4,15 @@ const emailService = require('../services/emailService')
 const emailTemplateService = require('../services/emailTemplateService')
 const { encrypt, decrypt, mask } = require('../utils/encryption')
 
+const transformTemplate = (template) => {
+  if (!template) return null
+  const obj = template.toObject ? template.toObject() : template
+  obj.id = obj._id.toString()
+  delete obj._id
+  delete obj.__v
+  return obj
+}
+
 /**
  * Get current email configuration
  * GET /api/v1/admin/email/config
@@ -195,7 +204,7 @@ const getEmailTemplates = async (req, res) => {
     
     res.json({
       success: true,
-      data: templates
+      data: templates.map(transformTemplate)
     })
   } catch (error) {
     console.error('Error getting email templates:', error)
@@ -229,7 +238,7 @@ const getEmailTemplate = async (req, res) => {
     
     res.json({
       success: true,
-      data: template
+      data: transformTemplate(template)
     })
   } catch (error) {
     console.error('Error getting email template:', error)
@@ -294,7 +303,7 @@ const createEmailTemplate = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Template created successfully',
-      data: template
+      data: transformTemplate(template)
     })
   } catch (error) {
     console.error('Error creating email template:', error)
@@ -349,7 +358,7 @@ const updateEmailTemplate = async (req, res) => {
     res.json({
       success: true,
       message: 'Template updated successfully',
-      data: template
+      data: transformTemplate(template)
     })
   } catch (error) {
     console.error('Error updating email template:', error)

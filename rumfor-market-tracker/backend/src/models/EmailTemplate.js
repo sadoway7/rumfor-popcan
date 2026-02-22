@@ -16,7 +16,8 @@ const emailTemplateSchema = new mongoose.Schema({
       'market-update',
       'new-market-alert',
       'reminder',
-      'admin-notification'
+      'admin-notification',
+      'bug-report'
     ]
   },
   name: { 

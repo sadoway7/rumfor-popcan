@@ -19,7 +19,8 @@ import {
   MoreVertical,
   AlertTriangle,
   Eye,
-  Archive
+  Archive,
+  BookmarkMinus
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -32,7 +33,6 @@ import { ChatNotificationIcon } from '@/components/ui/ChatNotificationIcon'
 import { useCommentsModalStore } from '@/features/comments/commentsModalStore'
 import { communityApi } from '@/features/community/communityApi'
 import { useQuery } from '@tanstack/react-query'
-import { StatusChangeModal } from '@/components/StatusChangeModal'
 import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
 
 interface VendorMarketTracking {
@@ -53,7 +53,7 @@ interface VendorTrackedMarketRowProps {
   tracking?: VendorMarketTracking
   onViewDetails?: (marketId: string) => void
   onManage?: (marketId: string) => void
-  onUntrack?: (marketId: string) => void
+  onUntrack?: (marketId: string) => Promise<void>
   onToggleTodo?: (todoId: string) => void
   onChangeStatus?: (marketId: string, status: string) => void
   className?: string
@@ -72,7 +72,8 @@ export const VendorTrackedMarketRow: React.FC<VendorTrackedMarketRowProps> = ({
   const { todos, toggleTodo } = useTodos(market.id)
   const { expenses, updateExpense } = useExpenses(market.id)
   const { openComments } = useCommentsModalStore()
-  const [showStatusModal, setShowStatusModal] = useState(false)
+  const [showUntrackConfirm, setShowUntrackConfirm] = useState(false)
+  const [isUntracking, setIsUntracking] = useState(false)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const { data: commentsData } = useQuery({
@@ -180,7 +181,19 @@ const formatSchedule = (schedule: Market['schedule']): string => {
     if (onChangeStatus) {
       onChangeStatus(market.id, newStatus)
     }
-    setShowStatusModal(false)
+  }
+
+  const handleConfirmUntrack = async () => {
+    if (!onUntrack) return
+    setIsUntracking(true)
+    try {
+      await onUntrack(market.id)
+      setShowUntrackConfirm(false)
+    } catch (error) {
+      console.error('Failed to untrack:', error)
+    } finally {
+      setIsUntracking(false)
+    }
   }
 
   const handleCardClick = () => {
@@ -252,21 +265,54 @@ const formatSchedule = (schedule: Market['schedule']): string => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setShowStatusModal(true)
-                    }}
-                    className={cn('flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
-                  >
-                    <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn('flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
+                      >
+                        <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      {TRACKING_STATUS_OPTIONS.map((option) => (
+                        <DropdownMenuItem
+                          key={option.value}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleStatusChange(option.value)
+                          }}
+                          className={cn(
+                            "flex items-center gap-2",
+                            currentStatus === option.value && "bg-accent/10"
+                          )}
+                        >
+                          <div className={cn("w-3 h-3 rounded-full", option.color)} />
+                          <span>{option.label}</span>
+                          {currentStatus === option.value && (
+                            <span className="ml-auto text-accent">✓</span>
+                          )}
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+<DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowUntrackConfirm(true)
+                        }}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Untrack Market
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Chat button */}
                 <div 
-                  className="absolute bottom-6 right-2 cursor-pointer z-50"
+                  className="absolute bottom-6 right-2 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation()
                     openComments(market.id, market.name)
@@ -521,23 +567,56 @@ const formatSchedule = (schedule: Market['schedule']): string => {
               </DropdownMenu>
             </div>
 
-            {/* Status badge - clickable with icon */}
+            {/* Status badge - dropdown */}
             <div className="absolute right-2 top-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowStatusModal(true)
-                }}
-                className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
-              >
-                <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
-                <ChevronDown className="w-3 h-3" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn('flex items-center gap-1 text-xs font-semibold text-white border-0 shadow-lg px-2.5 py-1 rounded-full cursor-pointer hover:opacity-90 transition-opacity', TRACKING_STATUS_COLORS[currentStatus])}
+                  >
+                    <span>{TRACKING_STATUS_LABELS[currentStatus]}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  {TRACKING_STATUS_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStatusChange(option.value)
+                      }}
+                      className={cn(
+                        "flex items-center gap-2",
+                        currentStatus === option.value && "bg-accent/10"
+                      )}
+                    >
+                      <div className={cn("w-3 h-3 rounded-full", option.color)} />
+                      <span>{option.label}</span>
+                      {currentStatus === option.value && (
+                        <span className="ml-auto text-accent">✓</span>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowUntrackConfirm(true)
+                    }}
+                    className="text-red-600 focus:text-red-600 flex items-center gap-2"
+                  >
+                    <BookmarkMinus className="w-4 h-4" />
+                    Untrack Market
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Chat button */}
             <div 
-              className="absolute bottom-6 right-2 cursor-pointer z-50"
+              className="absolute bottom-6 right-2 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation()
                 openComments(market.id, market.name)
@@ -733,14 +812,43 @@ const formatSchedule = (schedule: Market['schedule']): string => {
         </div>
       </div>
 
-      {/* Status Change Modal */}
-      <StatusChangeModal
-        isOpen={showStatusModal}
-        onClose={() => setShowStatusModal(false)}
-        currentStatus={currentStatus}
-        statusOptions={TRACKING_STATUS_OPTIONS}
-        onStatusChange={handleStatusChange}
-      />
+      {/* Untrack Confirmation Modal */}
+      {showUntrackConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setShowUntrackConfirm(false)}
+        >
+          <div
+            className="rounded-xl shadow-2xl max-w-sm w-full border-2 border-border bg-background p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-foreground">Untrack Market?</h3>
+                <p className="text-sm text-muted-foreground">This will remove it from your list.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowUntrackConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 text-foreground font-medium border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUntrack}
+                disabled={isUntracking}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
+              >
+                {isUntracking ? 'Removing...' : 'Untrack'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

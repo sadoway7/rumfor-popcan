@@ -17,10 +17,16 @@ import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye } from 'lucide-react'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye, BookmarkMinus, AlertTriangle } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
-import { StatusChangeModal } from '@/components/StatusChangeModal'
 import { RelatedMarketDates } from '@/components/RelatedMarketDates'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 
 const categoryLabels = MARKET_CATEGORY_LABELS
 const categoryFlagColors: Record<string, string> = {
@@ -41,7 +47,8 @@ export const MarketDetailPage: React.FC = () => {
   const navigate = useNavigate()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showReportModal, setShowReportModal] = useState(false)
-  const [showStatusModal, setShowStatusModal] = useState(false)
+  const [showUntrackConfirm, setShowUntrackConfirm] = useState(false)
+  const [isUntracking, setIsUntracking] = useState(false)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
   const [vendorSearchTerm, setVendorSearchTerm] = useState('')
   const [isPageLoaded, setIsPageLoaded] = useState(false)
@@ -136,12 +143,23 @@ export const MarketDetailPage: React.FC = () => {
   const handleStatusChange = async (newStatus: string) => {
     try {
       await trackMarket(market.id, newStatus)
-      setShowStatusModal(false)
       setTimeout(() => {
         refetchVendors()
       }, 1000)
     } catch (error) {
       console.error('Failed to update status:', error)
+    }
+  }
+
+  const handleConfirmUntrack = async () => {
+    setIsUntracking(true)
+    try {
+      await untrackMarket(market.id)
+      setShowUntrackConfirm(false)
+    } catch (error) {
+      console.error('Failed to untrack:', error)
+    } finally {
+      setIsUntracking(false)
     }
   }
 
@@ -286,16 +304,45 @@ export const MarketDetailPage: React.FC = () => {
         {/* Track/Status Button - Top Right */}
         <div className="absolute top-0 right-0 p-3 z-10">
           {isMarketTracked(market.id) ? (
-            <button
-              onClick={() => setShowStatusModal(true)}
-              className={cn(
-                'flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity',
-                TRACKING_STATUS_COLORS[trackingStatus]
-              )}
-            >
-              <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
-              <ChevronDown className="w-4 h-4" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    'flex items-center gap-2 text-sm font-semibold text-white border-0 shadow-lg px-4 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity',
+                    TRACKING_STATUS_COLORS[trackingStatus]
+                  )}
+                >
+                  <span>{TRACKING_STATUS_LABELS[trackingStatus]}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {TRACKING_STATUS_OPTIONS.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => handleStatusChange(option.value)}
+                    className={cn(
+                      "flex items-center gap-2",
+                      trackingStatus === option.value && "bg-accent/10"
+                    )}
+                  >
+                    <div className={cn("w-3 h-3 rounded-full", option.color)} />
+                    <span>{option.label}</span>
+                    {trackingStatus === option.value && (
+                      <span className="ml-auto text-accent">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setShowUntrackConfirm(true)}
+                  className="text-red-600 focus:text-red-600 flex items-center gap-2"
+                >
+                  <BookmarkMinus className="w-4 h-4" />
+                  Untrack Market
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <TrackButton
               isTracked={false}
@@ -821,15 +868,43 @@ export const MarketDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* Status Update Modal */}
-      <StatusChangeModal
-        isOpen={showStatusModal}
-        onClose={() => setShowStatusModal(false)}
-        currentStatus={trackingStatus as string}
-        statusOptions={TRACKING_STATUS_OPTIONS}
-        onStatusChange={handleStatusChange}
-        onUntrack={handleTrackToggle}
-      />
+      {/* Untrack Confirmation Modal */}
+      {showUntrackConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setShowUntrackConfirm(false)}
+        >
+          <div
+            className="rounded-xl shadow-2xl max-w-sm w-full border-2 border-border bg-background p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-foreground">Untrack Market?</h3>
+                <p className="text-sm text-muted-foreground">This will remove it from your list.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowUntrackConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-lg bg-surface hover:bg-surface-2 text-foreground font-medium border border-border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmUntrack}
+                disabled={isUntracking}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium disabled:opacity-50"
+              >
+                {isUntracking ? 'Removing...' : 'Untrack'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom spacer for floating navbar */}
       <div className="h-24" />

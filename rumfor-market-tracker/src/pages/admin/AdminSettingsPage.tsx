@@ -3,10 +3,13 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
 import { useToast } from '@/components/ui/Toast'
-import { useAdminSystemSettings, useAdminEmailTemplates, useAdminEmailConfig } from '@/features/admin/hooks/useAdmin'
-import { Settings, Mail, Shield, Bell, Palette, Database, Save, RefreshCw } from 'lucide-react'
+import { useAdminSystemSettings, useAdminEmailTemplates, useAdminEmailConfig, useAdminBugReports } from '@/features/admin/hooks/useAdmin'
+import { Settings, Mail, Shield, Bell, Palette, Database, Save, RefreshCw, Bug } from 'lucide-react'
 import { useState, useCallback, useEffect } from 'react'
+import { EmailTemplateDrawer } from '@/components/admin/EmailTemplateDrawer'
+import { EmailTemplate } from '@/types'
 
 export function AdminSettingsPage() {
   const { systemSettings, isLoadingSettings, refreshSettings, handleUpdateSetting } = useAdminSystemSettings()
@@ -21,7 +24,8 @@ export function AdminSettingsPage() {
     handleTestConnection,
     handleSendTestEmail
   } = useAdminEmailConfig()
-  const [activeTab, setActiveTab] = useState<'general' | 'moderation' | 'notifications' | 'email' | 'appearance' | 'security'>('general')
+  const { bugReports, isLoading: isLoadingBugs, pagination: bugsPagination, fetchBugReports, updateBugReport, deleteBugReport } = useAdminBugReports()
+  const [activeTab, setActiveTab] = useState<'general' | 'moderation' | 'notifications' | 'email' | 'appearance' | 'security' | 'bugs'>('general')
   const [unsavedChanges, setUnsavedChanges] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [emailFormData, setEmailFormData] = useState({
@@ -37,14 +41,20 @@ export function AdminSettingsPage() {
     isActive: true
   })
   const [testEmail, setTestEmail] = useState('')
+  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null)
+  const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false)
   const { addToast } = useToast()
 
-  // Load email config when component mounts or when tab changes to email
+  // Load email config and templates when component mounts or when tab changes to email
   useEffect(() => {
     if (activeTab === 'email') {
       refreshEmailConfig()
+      refreshTemplates()
     }
-  }, [activeTab, refreshEmailConfig])
+    if (activeTab === 'bugs') {
+      fetchBugReports()
+    }
+  }, [activeTab, refreshEmailConfig, refreshTemplates, fetchBugReports])
 
   // Update form data when email config is loaded
   useEffect(() => {
@@ -99,7 +109,8 @@ export function AdminSettingsPage() {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'email', label: 'Email Settings', icon: Mail },
     { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'security', label: 'Security', icon: Database }
+    { id: 'security', label: 'Security', icon: Database },
+    { id: 'bugs', label: 'Bug Reports', icon: Bug }
   ] as const
 
   const renderGeneralTab = () => (
@@ -564,14 +575,21 @@ export function AdminSettingsPage() {
                   <Badge variant={template.isActive ? 'default' : 'outline'}>
                     {template.isActive ? 'Active' : 'Inactive'}
                   </Badge>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedTemplate(template)
+                      setIsTemplateDrawerOpen(true)
+                    }}
+                  >
                     Edit
                   </Button>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-2">{template.subject}</p>
               <div className="text-xs text-muted-foreground">
-                Variables: {template.variables.join(', ')}
+                Variables: {template.variables.map(v => v.name).join(', ')}
               </div>
             </div>
           ))}
@@ -659,6 +677,138 @@ export function AdminSettingsPage() {
     </div>
   )
 
+  const renderBugsTab = () => (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Bug Reports</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchBugReports()}
+            disabled={isLoadingBugs}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingBugs ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+        
+        {isLoadingBugs ? (
+          <div className="text-center py-8 text-muted-foreground">Loading bug reports...</div>
+        ) : bugReports.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">No bug reports found</div>
+        ) : (
+          <div className="space-y-4">
+            {bugReports.map((report: any) => (
+              <div key={report.id || report._id} className="p-4 border rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-medium">{report.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={
+                      report.severity === 'Critical' ? 'destructive' :
+                      report.severity === 'High' ? 'warning' :
+                      report.severity === 'Medium' ? 'default' : 'outline'
+                    }>
+                      {report.severity}
+                    </Badge>
+                    <Badge variant={
+                      report.status === 'open' ? 'default' :
+                      report.status === 'in-progress' ? 'warning' :
+                      report.status === 'resolved' ? 'success' : 'outline'
+                    }>
+                      {report.status}
+                    </Badge>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{report.description}</p>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Reported by: {report.reporter?.email || report.reporter?.firstName || 'Unknown'}</span>
+                  <span>{new Date(report.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await updateBugReport(report.id || report._id, { status: 'in-progress' })
+                        fetchBugReports()
+                        addToast({ variant: 'success', title: 'Status updated', description: 'Bug marked as in progress' })
+                      } catch (error) {
+                        addToast({ variant: 'destructive', title: 'Error', description: 'Failed to update status' })
+                      }
+                    }}
+                    disabled={report.status === 'in-progress'}
+                  >
+                    Mark In Progress
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await updateBugReport(report.id || report._id, { status: 'resolved' })
+                        fetchBugReports()
+                        addToast({ variant: 'success', title: 'Status updated', description: 'Bug marked as resolved' })
+                      } catch (error) {
+                        addToast({ variant: 'destructive', title: 'Error', description: 'Failed to update status' })
+                      }
+                    }}
+                    disabled={report.status === 'resolved'}
+                  >
+                    Mark Resolved
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to delete this bug report?')) {
+                        try {
+                          await deleteBugReport(report.id || report._id)
+                          fetchBugReports()
+                          addToast({ variant: 'success', title: 'Deleted', description: 'Bug report deleted' })
+                        } catch (error) {
+                          addToast({ variant: 'destructive', title: 'Error', description: 'Failed to delete' })
+                        }
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {bugsPagination.pages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={bugsPagination.current === 1}
+              onClick={() => fetchBugReports({ page: bugsPagination.current - 1 })}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {bugsPagination.current} of {bugsPagination.pages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={bugsPagination.current === bugsPagination.pages}
+              onClick={() => fetchBugReports({ page: bugsPagination.current + 1 })}
+            >
+              Next
+            </Button>
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -721,11 +871,23 @@ export function AdminSettingsPage() {
           {activeTab === 'email' && renderEmailTab()}
           {activeTab === 'appearance' && renderAppearanceTab()}
           {activeTab === 'security' && renderSecurityTab()}
+          {activeTab === 'bugs' && renderBugsTab()}
         </div>
       </Card>
 
       {/* Additional Tools */}
       <AdminTools />
+
+      {/* Email Template Drawer */}
+      <EmailTemplateDrawer
+        isOpen={isTemplateDrawerOpen}
+        onClose={() => {
+          setIsTemplateDrawerOpen(false)
+          setSelectedTemplate(null)
+        }}
+        template={selectedTemplate}
+        onSave={refreshTemplates}
+      />
     </div>
   )
 }

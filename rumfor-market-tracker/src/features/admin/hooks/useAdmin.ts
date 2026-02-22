@@ -1,7 +1,8 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useAdminStore } from '../adminStore'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AdminFilters, EmailConfig } from '@/types'
+import { adminApi } from '../adminApi'
 
 // Main admin hook
 export function useAdmin() {
@@ -397,5 +398,58 @@ export function useAdminAuditLogs() {
     auditPagination,
     isLoadingAudit,
     refreshAuditLogs
+  }
+}
+
+// Bug Reports hook
+export function useAdminBugReports() {
+  const [bugReports, setBugReports] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [pagination, setPagination] = useState({ current: 1, pages: 1, total: 0 })
+
+  const fetchBugReports = useCallback(async (params?: { status?: string; severity?: string; page?: number }) => {
+    setIsLoading(true)
+    try {
+      const response = await adminApi.getBugReports(params)
+      if (response.success) {
+        setBugReports(response.data)
+        if (response.pagination) {
+          setPagination(response.pagination)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch bug reports:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const updateBugReport = useCallback(async (id: string, data: { status?: string; resolution?: string }) => {
+    try {
+      const response = await adminApi.updateBugReport(id, data)
+      return response
+    } catch (error) {
+      console.error('Failed to update bug report:', error)
+      throw error
+    }
+  }, [])
+
+  const deleteBugReport = useCallback(async (id: string) => {
+    try {
+      const response = await adminApi.deleteBugReport(id)
+      return response
+    } catch (error) {
+      console.error('Failed to delete bug report:', error)
+      throw error
+    }
+  }, [])
+
+  return {
+    bugReports,
+    isLoading,
+    pagination,
+    fetchBugReports,
+    updateBugReport,
+    deleteBugReport
   }
 }

@@ -5,6 +5,7 @@ const Notification = require('../models/Notification')
 const User = require('../models/User')
 const { validateApplicationCreation, validateMongoId, validatePagination } = require('../middleware/validation')
 const { canMarketAcceptApplications, canVendorApplyToMarket, shouldAutoApproveApplication } = require('../utils/marketLogic')
+const { sendEmail } = require('../services/emailSender')
 
 // Get all applications (for promoters/admin)
 const getApplications = catchAsync(async (req, res, next) => {
@@ -184,7 +185,8 @@ const updateApplicationStatus = catchAsync(async (req, res, next) => {
   const { status, reviewNotes = '' } = req.body
 
   const application = await UserMarketTracking.findById(id)
-    .populate('market', 'promoter name')
+    .populate('market', 'promoter name dates location')
+    .populate('user', 'email firstName lastName')
 
   if (!application) {
     return next(new AppError('Application not found', 404))
@@ -213,7 +215,7 @@ const updateApplicationStatus = catchAsync(async (req, res, next) => {
 
   // Create notification for applicant
   await Notification.create({
-    recipient: application.user,
+    recipient: application.user._id,
     type: 'application-status-change',
     title: `Application ${status === 'booked' ? 'Approved' : 'Rejected'}`,
     message: `Your application for ${application.market.name} has been ${status === 'booked' ? 'approved' : 'rejected'}`,
@@ -225,6 +227,24 @@ const updateApplicationStatus = catchAsync(async (req, res, next) => {
     },
     priority: status === 'booked' ? 'high' : 'medium'
   })
+
+  // Send email notification (non-blocking)
+  const marketDate = application.market.dates?.start 
+    ? new Date(application.market.dates.start).toLocaleDateString('en-US', { dateStyle: 'long' })
+    : 'TBD'
+  
+  sendEmail({
+    to: application.user.email,
+    type: status === 'booked' ? 'application-approved' : 'application-rejected',
+    userId: application.user._id,
+    data: {
+      firstName: application.user.firstName,
+      marketName: application.market.name,
+      marketDate,
+      dashboardUrl: `${process.env.FRONTEND_URL || 'https://rumfor.com'}/dashboard`,
+      reason: reviewNotes || undefined
+    }
+  }).catch(err => console.error('[EMAIL] Failed to send application status email:', err.message))
 
   const updatedApplication = await UserMarketTracking.findById(id)
     .populate({
@@ -408,7 +428,8 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
   // This ensures we have promoter information for authorization checks
   const applications = await UserMarketTracking.find({
     _id: { $in: applicationIds }
-  }).populate('market', 'promoter name')
+  }).populate('market', 'promoter name dates')
+    .populate('user', 'email firstName lastName')
 
   // Authorization check: Verify user has permission to modify ALL applications
   // This prevents partial success scenarios where some applications succeed and others fail
@@ -429,7 +450,7 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
     // Send notification to the applicant about status change
     // Priority is higher for approvals (booked) than rejections (cancelled)
     await Notification.create({
-      recipient: application.user,
+      recipient: application.user._id,
       type: 'application-status-change',
       title: `Application ${status === 'booked' ? 'Approved' : 'Rejected'}`,
       message: `Your application for ${application.market.name} has been ${status === 'booked' ? 'approved' : 'rejected'}`,
@@ -441,6 +462,24 @@ const bulkUpdateStatus = catchAsync(async (req, res, next) => {
       },
       priority: status === 'booked' ? 'high' : 'medium'
     })
+
+    // Send email notification (non-blocking)
+    const marketDate = application.market.dates?.start 
+      ? new Date(application.market.dates.start).toLocaleDateString('en-US', { dateStyle: 'long' })
+      : 'TBD'
+    
+    sendEmail({
+      to: application.user.email,
+      type: status === 'booked' ? 'application-approved' : 'application-rejected',
+      userId: application.user._id,
+      data: {
+        firstName: application.user.firstName,
+        marketName: application.market.name,
+        marketDate,
+        dashboardUrl: `${process.env.FRONTEND_URL || 'https://rumfor.com'}/dashboard`,
+        reason: reviewNotes || undefined
+      }
+    }).catch(err => console.error('[EMAIL] Failed to send application status email:', err.message))
 
     return application
   })

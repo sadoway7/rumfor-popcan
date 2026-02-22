@@ -928,3 +928,25 @@ export interface VendorAttendance {
   notes?: string;
   lastUpdated: string;
 }
+
+// Bug Report Types
+export interface BugReport {
+  id: string;
+  title: string;
+  description: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  reporter: User;
+  assignedTo?: User;
+  resolution?: string;
+  resolvedAt?: string;
+  resolvedBy?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BugReportInput {
+  title: string;
+  description: string;
+  severity?: 'Low' | 'Medium' | 'High' | 'Critical';
+}

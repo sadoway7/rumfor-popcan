@@ -72,6 +72,11 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   trackingStatus,
   relatedMarketIds
 }) => {
+  // Debug log for onUntrack prop
+  React.useEffect(() => {
+    console.log('[MarketCard] onUntrack prop:', !!onUntrack, 'for market:', market.id)
+  }, [onUntrack, market.id])
+  
   const [dominantColor, setDominantColor] = React.useState<string>('')
   const [, setIsLightBackground] = React.useState(false)
   const [isTrackedOptimistic, setIsTrackedOptimistic] = React.useState(isTracked)
@@ -218,12 +223,17 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   }
 
   const handleUntrack = () => {
+    console.log('[MarketCard] handleUntrack called for market:', market.id)
+    console.log('[MarketCard] onUntrack exists:', !!onUntrack)
     setShowStatusDropdown(false)
     setIsTrackedOptimistic(false)
     setOptimisticStatus(undefined)
     setIsPendingOptimistic(true)
     if (onUntrack) {
+      console.log('[MarketCard] Calling onUntrack with market.id:', market.id)
       onUntrack(market.id)
+    } else {
+      console.log('[MarketCard] onUntrack is undefined!')
     }
   }
 
@@ -233,8 +243,15 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         setShowStatusDropdown(false)
       }
     }
+    const handleScroll = () => {
+      setShowStatusDropdown(false)
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
   }, [])
 
   React.useEffect(() => {
@@ -867,15 +884,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
           </Link>
         {showStatusDropdown && createPortal(
           <div 
-            className="fixed bg-white shadow-xl border border-gray-200 overflow-hidden z-[9999] w-44 rounded-bl-lg rounded-br-lg rounded-tl-lg"
+            className="fixed bg-white shadow-xl border border-gray-200 overflow-hidden z-[9999] w-44 rounded-bl-lg rounded-br-lg rounded-tl-lg pointer-events-auto"
             style={{
               top: dropdownPosition.top,
               right: dropdownPosition.right
-            }}
-            onClick={(e) => {
-              console.log('[MarketCard] Dropdown container clicked')
-              e.preventDefault()
-              e.stopPropagation()
             }}
           >
             {TRACKING_STATUS_OPTIONS.map((option) => (
@@ -906,6 +918,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
             <div className="border-t border-gray-200" />
             <button
               type="button"
+              onMouseDown={(e) => {
+                console.log('[MarketCard] Untrack button mousedown')
+                e.stopPropagation()
+              }}
               onClick={(e) => {
                 console.log('[MarketCard] Untrack button clicked')
                 e.preventDefault()

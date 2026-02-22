@@ -1175,5 +1175,72 @@ export const adminApi = {
       const response = await httpClient.delete<ApiResponse<any>>(endpoint)
       return response
     }
+  },
+
+  // Bug Reports
+  async getBugReports(params?: { status?: string; severity?: string; page?: number; limit?: number }): Promise<ApiResponse<any> & { pagination?: { current: number; pages: number; total: number } }> {
+    if (isMockMode) {
+      await delay(300)
+      return {
+        success: true,
+        data: [],
+        pagination: { current: 1, pages: 1, total: 0 }
+      }
+    } else {
+      const queryParams = new URLSearchParams()
+      if (params?.status) queryParams.append('status', params.status)
+      if (params?.severity) queryParams.append('severity', params.severity)
+      if (params?.page) queryParams.append('page', String(params.page))
+      if (params?.limit) queryParams.append('limit', String(params.limit))
+      const queryString = queryParams.toString()
+      const response = await httpClient.get<any>(`/bug-reports${queryString ? `?${queryString}` : ''}`)
+      return response
+    }
+  },
+
+  async getBugReport(id: string): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(200)
+      return { success: false, error: 'Bug report not found' } as any
+    } else {
+      const response = await httpClient.get<ApiResponse<any>>(`/bug-reports/${id}`)
+      return response
+    }
+  },
+
+  async updateBugReport(id: string, data: { status?: string; assignedTo?: string; resolution?: string }): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(300)
+      return { success: true, data: { id, ...data } }
+    } else {
+      const response = await httpClient.put<ApiResponse<any>>(`/bug-reports/${id}`, data)
+      return response
+    }
+  },
+
+  async deleteBugReport(id: string): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(200)
+      return { success: true, message: 'Bug report deleted' }
+    } else {
+      const response = await httpClient.delete<ApiResponse<any>>(`/bug-reports/${id}`)
+      return response
+    }
+  },
+
+  async getBugReportStats(): Promise<ApiResponse<any>> {
+    if (isMockMode) {
+      await delay(200)
+      return {
+        success: true,
+        data: {
+          byStatus: { open: 0, 'in-progress': 0, resolved: 0, closed: 0 },
+          bySeverity: { Low: 0, Medium: 0, High: 0, Critical: 0 }
+        }
+      }
+    } else {
+      const response = await httpClient.get<ApiResponse<any>>('/bug-reports/stats')
+      return response
+    }
   }
 }

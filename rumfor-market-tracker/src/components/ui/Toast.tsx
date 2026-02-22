@@ -214,7 +214,7 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
         
         <div
           className={cn(
-            'fixed z-50 flex flex-col space-y-2 w-96 max-w-sm',
+            'fixed z-[100] flex flex-col space-y-2 w-96 max-w-sm',
             positionClasses[position]
           )}
           aria-live="polite"

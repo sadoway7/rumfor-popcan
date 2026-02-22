@@ -490,20 +490,6 @@ export const MarketSearchPage: React.FC = () => {
                     {isSearching
                       ? 'Searching...'
                       : `${total || markets.length} markets found`}
-                    {filters.search && (
-                      <>
-                        {' · '}
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleClearFilters();
-                          }}
-                          className="text-muted-foreground hover:text-foreground underline"
-                        >
-                          Clear search
-                        </button>
-                      </>
-                    )}
                   </div>
                   <div className="relative" ref={sortRef}>
                     <button

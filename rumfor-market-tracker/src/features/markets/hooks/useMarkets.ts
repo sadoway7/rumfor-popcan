@@ -639,7 +639,9 @@ const useUntrackMarketMutation = () => {
 
   return useMutation({
     mutationFn: async (marketId: string) => {
+      console.log('[useUntrackMarketMutation] mutationFn called with marketId:', marketId)
       const response = await marketsApi.untrackMarket(marketId);
+      console.log('[useUntrackMarketMutation] API response:', response)
       if (!response.success) {
         throw new Error(response.error || 'Failed to untrack market');
       }
@@ -842,6 +844,7 @@ export const useTrackedMarkets = (): UseTrackedMarketsReturn => {
 
   const handleUntrackMarket = useCallback(
     (marketId: string) => {
+      console.log('[useTrackedMarkets] handleUntrackMarket called with marketId:', marketId)
       untrackMutation.mutate(marketId);
     },
     [untrackMutation]

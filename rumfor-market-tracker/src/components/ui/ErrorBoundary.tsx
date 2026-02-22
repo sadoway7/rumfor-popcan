@@ -1,7 +1,5 @@
 import React, { Component, ReactNode } from 'react'
-import { AlertTriangle } from 'lucide-react'
-import { Button } from './Button'
-import { Card } from './Card'
+import { ErrorFallback } from './ErrorFallback'
 
 interface Props {
   children: ReactNode
@@ -36,31 +34,10 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Card className="p-6">
-          <div className="text-center">
-            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-            <h3 className="text-lg font-semibold mb-2 text-foreground">Something went wrong</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              We encountered an error while loading this content. Please try refreshing the page.
-            </p>
-            <Button
-              onClick={() => this.setState({ hasError: false, error: undefined })}
-              variant="outline"
-            >
-              Try Again
-            </Button>
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mt-4 text-left">
-                <summary className="cursor-pointer text-sm text-muted-foreground">
-                  Error details (development)
-                </summary>
-                <pre className="text-xs bg-muted p-2 mt-2 rounded overflow-auto">
-                  {this.state.error.toString()}
-                </pre>
-              </details>
-            )}
-          </div>
-        </Card>
+        <ErrorFallback 
+          error={this.state.error}
+          onRetry={() => this.setState({ hasError: false, error: undefined })}
+        />
       )
     }
 

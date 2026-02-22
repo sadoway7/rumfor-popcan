@@ -20,10 +20,12 @@ import {
   Users,
   Store,
   Pencil,
+  Bug,
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useThemeStore } from '@/features/theme/themeStore'
 import { UserAvatar } from '@/components/UserAvatar'
+import { BugReportModal } from '@/components/BugReportModal'
 
 interface UserDropdownProps {
   onSetLocation: () => void
@@ -37,8 +39,10 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
   const { user, logout } = useAuthStore()
   const { theme, toggleTheme } = useThemeStore()
   const [open, setOpen] = useState(false)
+  const [showBugReport, setShowBugReport] = useState(false)
 
   return (
+    <>
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
@@ -171,6 +175,17 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         <DropdownMenuItem
           onClick={() => {
             setOpen(false)
+            setShowBugReport(true)
+          }}
+          className="flex items-center py-3 md:py-2 text-foreground focus:text-foreground"
+        >
+          <Bug className="h-5 w-5 mr-3 text-muted-foreground" />
+          <span className="text-base md:text-sm">Report a Bug</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => {
+            setOpen(false)
             logout()
           }}
           className="flex items-center py-3 md:py-2 text-foreground focus:text-foreground"
@@ -180,6 +195,8 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <BugReportModal isOpen={showBugReport} onClose={() => setShowBugReport(false)} />
+  </>
   )
 }
 
