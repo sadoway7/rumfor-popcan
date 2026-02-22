@@ -380,7 +380,7 @@ export const MarketDetailPage: React.FC = () => {
           />
           
           {/* Content */}
-          <div className="relative px-4 pt-4 pb-6 z-10">
+          <div className="relative px-4 sm:px-6 pt-4 pb-6 z-10">
             {/* Thumbnail preview button */}
             {market.images && market.images.length > 0 && (
               <button
@@ -409,7 +409,7 @@ export const MarketDetailPage: React.FC = () => {
             >
               <p
                 ref={descriptionRef}
-                className="text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md"
+                className="text-white/90 text-base font-medium leading-relaxed mt-2 drop-shadow-md break-words pr-8"
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
               >
                 {market.description}

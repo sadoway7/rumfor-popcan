@@ -29,7 +29,7 @@ const sizeClasses = {
   md: 'w-10 h-10 text-sm',
   lg: 'w-16 h-16 text-xl',
   xl: 'w-28 h-28 text-4xl',
-  header: 'w-10 h-10 md:w-9 md:h-9 text-xs',
+  header: 'w-11 h-11 md:w-10 md:h-10 text-sm',
 }
 
 const shapeClasses = {
