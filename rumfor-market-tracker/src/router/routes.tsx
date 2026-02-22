@@ -221,7 +221,13 @@ export function AppRoutes() {
       <Route path="/vendor/add-market/vendor" element={
         <ProtectedRoute>
           <RoleRoute allowedRoles={['vendor', 'promoter', 'admin']}>
-            <DashboardLayout role="vendor"><Suspense fallback={<PageLoader />}><VendorAddMarketForm /></Suspense></DashboardLayout>
+            <div className="min-h-screen bg-background">
+              <main className="flex-1 overflow-y-auto">
+                <div className="py-4 px-3 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+                  <Suspense fallback={<PageLoader />}><VendorAddMarketForm /></Suspense>
+                </div>
+              </main>
+            </div>
           </RoleRoute>
         </ProtectedRoute>
       } />

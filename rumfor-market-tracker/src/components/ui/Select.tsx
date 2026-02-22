@@ -28,6 +28,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       onValueChange,
       onChange,
       id,
+      value,
       ...props
     },
     ref
@@ -38,6 +39,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       onValueChange?.(e.target.value)
       onChange?.(e)
     }
+
+    const hasValue = value !== undefined && value !== ''
 
     return (
       <div className="w-full">
@@ -51,8 +54,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </label>
         )}
         <select
+          value={value}
           className={cn(
-            'flex h-10 w-full rounded-md border border-gray-300 bg-surface px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            'flex min-h-[44px] w-full rounded-lg border border-gray-300 bg-surface px-3 py-2 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            hasValue ? 'text-foreground' : 'text-muted-foreground',
             error && 'border-red-500 focus-visible:ring-red-500',
             className
           )}

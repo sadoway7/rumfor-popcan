@@ -3,11 +3,16 @@ import { LocationModal } from './components/LocationModal'
 import { CommentsModal } from './components/CommentsModal'
 import { BottomNav } from './components/BottomNav'
 import { useAuthStore } from '@/features/auth/authStore'
+import { useLocation } from 'react-router-dom'
 
 function App() {
   console.log('App is rendering')
   const { user, isAuthenticated } = useAuthStore()
   const userRole = isAuthenticated && user ? user.role : 'visitor'
+  const location = useLocation()
+  
+  // Hide bottom nav on certain pages
+  const hideBottomNav = location.pathname.includes('/vendor/add-market')
 
   return (
     <div className="App min-h-screen bg-background">
@@ -15,7 +20,7 @@ function App() {
       <LocationModal />
       <CommentsModal />
       {/* Bottom Navigation - Moved to App level to prevent re-rendering */}
-      <BottomNav role={userRole} />
+      {!hideBottomNav && <BottomNav role={userRole} />}
     </div>
   )
 }

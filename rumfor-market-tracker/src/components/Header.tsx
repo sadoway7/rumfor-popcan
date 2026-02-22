@@ -139,16 +139,17 @@ export function Header() {
         <div className="grid grid-cols-[auto,1fr,auto] items-center h-18 md:h-16 gap-2 md:gap-4 py-2">
           {/* Logo - Left */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/">
-              <div className={`w-10 h-10 md:w-8 md:h-8 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 ${
+            <Link to="/" className="flex items-center gap-2">
+              <div className={`w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 ${
               theme === 'light'
                 ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                 : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
             }`}>
-                <span className="text-accent-foreground font-bold text-base md:text-sm">
+                <span className="text-accent-foreground font-bold text-lg">
                   R
                 </span>
               </div>
+              <span className="hidden md:block font-bold text-lg text-foreground">RUMFOR</span>
             </Link>
           </div>
 
@@ -181,35 +182,35 @@ export function Header() {
             </div>
             
             {/* Browse Markets & Vendors Buttons - Desktop Only */}
-            <div className="hidden md:flex gap-2">
+            <div className="hidden md:flex gap-1.5">
               <Link to="/markets">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
+                  className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200"
                   title="Browse Markets"
                 >
-                  <Store className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                  <Store className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/vendors">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
+                  className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200"
                   title="Browse Vendors"
                 >
-                  <Users className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                  <Users className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/vendor/add-market/vendor">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="bg-amber-500 hover:bg-amber-600 text-white transition-all duration-300 scale-[0.96]"
+                  className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200"
                   title="Add Market"
                 >
-                  <Plus className="h-5 w-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" />
+                  <Plus className="h-5 w-5" />
                 </Button>
               </Link>
             </div>

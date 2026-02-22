@@ -28,7 +28,9 @@ import {
   CheckCircle,
   Plus,
   X,
-  Upload
+  Upload,
+  ChevronDown,
+  Info
 } from 'lucide-react'
 
 interface MarketFormData {
@@ -179,6 +181,7 @@ export function VendorAddMarketForm() {
   const [tagInputValue, setTagInputValue] = useState('')
   const [marketImage, setMarketImage] = useState<string | undefined>(undefined)
   const [isMarketNameFocused, setIsMarketNameFocused] = useState(false)
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false)
   const tagSuggestionsRef = useRef<HTMLDivElement>(null)
   const tagInputRef = useRef<HTMLInputElement>(null)
 
@@ -284,6 +287,7 @@ startDate: formatLocalDate(new Date().toISOString()),
     if (validateStep(currentStep)) {
       console.log('validation passed, moving to step', currentStep + 1)
       setCurrentStep(currentStep + 1)
+      window.scrollTo(0, 0)
     } else {
       console.log('validation failed')
     }
@@ -291,6 +295,7 @@ startDate: formatLocalDate(new Date().toISOString()),
 
   const prevStep = () => {
     setCurrentStep(currentStep - 1)
+    window.scrollTo(0, 0)
   }
 
   const handleSubmit = async () => {
@@ -685,40 +690,38 @@ const schedules = formData.schedule.map(s => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-3 animate-in slide-in-from-bottom-8 duration-500">
+    <div className="space-y-3 animate-in slide-in-from-bottom-8 duration-500">
       <style>{`
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      {/* Progress Steps */}
-      <div className="flex items-center justify-between gap-3 px-1">
-        {/* Back Button */}
+      {/* Progress Steps - Mobile Friendly */}
+      <div className="flex items-center gap-3 py-2">
         <Button 
           variant="ghost" 
           onClick={handleBack}
-          className="p-2"
+          className="p-2 h-10 w-10 shrink-0"
           title={currentStep > 1 ? "Go to previous step" : "Go back to previous page"}
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
 
-        {/* Step indicator */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 justify-center">
           {steps.map((step, index) => (
             <div key={step.number} className="flex items-center">
               <div className={cn(
-                "flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold transition-colors",
+                "flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-colors",
                 currentStep >= step.number 
                   ? "bg-accent text-accent-foreground" 
-                  : "bg-transparent text-muted-foreground border border-border"
+                  : "bg-white text-foreground border border-border"
               )}>
                 {currentStep > step.number ? <CheckCircle className="w-4 h-4" /> : step.number}
               </div>
               {index < steps.length - 1 && (
                 <div className={cn(
-                  "w-8 h-0.5 mx-2",
+                  "w-6 h-0.5",
                   currentStep > step.number ? "bg-accent" : "bg-border"
                 )} />
               )}
@@ -726,13 +729,12 @@ const schedules = formData.schedule.map(s => {
           ))}
         </div>
 
-          {/* Current step label */}
-          <div className="w-24 text-left">
-            <span className="text-sm font-medium text-muted-foreground">
-              {steps[currentStep - 1]?.title}
-            </span>
-          </div>
+        <div className="w-24 shrink-0">
+          <span className="text-sm font-medium text-muted-foreground">
+            {steps[currentStep - 1]?.title}
+          </span>
         </div>
+      </div>
 
       {/* API Error Display */}
       {Object.keys(apiErrors).length > 0 && (
@@ -768,81 +770,46 @@ const schedules = formData.schedule.map(s => {
 
       {/* Form Steps */}
       {currentStep === 1 && (
-        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
-          <div>
-
-          </div>
-
-          {/* Community Info Banner */}
-          <div className="p-3 rounded-lg border-2 border-orange-400/50 bg-orange-50/20 backdrop-blur-sm shadow-sm -mx-3 sm:mx-0">
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-<li>Market listings are public - search first to avoid duplicates</li>
-              <li>More details help other vendors</li>
-              <li>Admin-Managed - Edits require requests</li>
-            </ul>
-          </div>
-
-            {/* Photo & Category Row */}
-            <div className="grid grid-cols-2 gap-3 -mx-3 sm:mx-0">
-              {/* Market Image Upload */}
-              <div className="space-y-1.5">
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    id="market-image-upload"
-                    accept={ALLOWED_IMAGE_TYPES.join(',')}
-                    onChange={handleImageUpload}
-                    className="hidden"
+        <>
+          <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
+            {/* Banner Photo */}
+            <div className="space-y-1.5">
+              <input
+                type="file"
+                id="market-image-upload"
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              {marketImage ? (
+                <div className="relative group w-full h-28 rounded-lg overflow-hidden">
+                  <img 
+                    src={marketImage} 
+                    alt="Market preview" 
+                    className="w-full h-full object-cover" 
                   />
-                  {marketImage ? (
-                    <div className="relative group flex-1 h-10">
-                      <img 
-                        src={marketImage} 
-                        alt="Market preview" 
-                        className="w-full h-full object-cover rounded-lg" 
-                      />
-                      <label
-                        htmlFor="market-image-upload"
-                        className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-lg"
-                      >
-                        <div className="bg-white rounded-full p-1">
-                          <Upload className="w-3 h-3" />
-                        </div>
-                      </label>
+                  <label
+                    htmlFor="market-image-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <div className="bg-white rounded-full p-2">
+                      <Upload className="w-5 h-5" />
                     </div>
-                  ) : (
-                    <label
-                      htmlFor="market-image-upload"
-                      className="flex-1 h-10 px-3 border border-dashed border-input rounded-lg cursor-pointer hover:bg-white transition-colors flex items-center gap-2 text-muted-foreground bg-white"
-                    >
-                      <Upload className="w-4 h-4" />
-                      <span className="text-sm">Banner photo</span>
-                    </label>
-                  )}
+                  </label>
                 </div>
-              </div>
-
-              {/* Category */}
-              <div className="space-y-1.5">
-
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => {
-                    setFormData(prev => ({ ...prev, category: value }))
-                    clearFieldError('category')
-                  }}
-                  placeholder="Category"
-                  options={categories.map(category => ({ value: category.value, label: category.label }))}
-                />
-                {(errors.category || apiErrors.category) && (
-                  <p className="text-red-500 text-xs">{errors.category || apiErrors.category}</p>
-                )}
-              </div>
+              ) : (
+                <label
+                  htmlFor="market-image-upload"
+                  className="w-full h-28 border-2 border-dashed border-orange-300 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors flex flex-col items-center justify-center gap-1 text-muted-foreground bg-orange-50/50"
+                >
+                  <Upload className="w-6 h-6" />
+                  <span className="text-base font-semibold">Add Banner Photo</span>
+                </label>
+              )}
             </div>
 
         {/* Market Name */}
-            <div className="space-y-1.5 -mx-3 sm:mx-0">
+            <div className="space-y-1.5">
               <label className="text-sm font-bold text-foreground">Market Name *</label>
               <div className="relative">
                 <Input
@@ -854,7 +821,7 @@ const schedules = formData.schedule.map(s => {
                   onFocus={() => setIsMarketNameFocused(true)}
                   onBlur={() => setIsMarketNameFocused(false)}
                   placeholder="Market Name *"
-                  className={cn((errors.name || apiErrors.name) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+                  className={cn((errors.name || apiErrors.name) && "border-red-500", "text-base font-semibold placeholder:text-muted-foreground/70")}
                 />
                 <MarketNameSuggestions
                   value={formData.name}
@@ -872,25 +839,38 @@ const schedules = formData.schedule.map(s => {
             </div>
 
       {/* Description */}
-      <div className="space-y-1.5 -mx-3 sm:mx-0">
+      <div className="space-y-1.5">
 
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Brief description..."
-                rows={2}
-                  className="text-sm font-semibold placeholder:text-muted-foreground/70"
+                rows={4}
+                  className="text-base font-semibold placeholder:text-muted-foreground/70"
               />
             </div>
 
+            {/* Category */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ ...prev, category: value }))
+                    clearFieldError('category')
+                  }}
+                  placeholder="Category"
+                  options={categories.map(category => ({ value: category.value, label: category.label }))}
+                />
+                {(errors.category || apiErrors.category) && (
+                  <p className="text-red-500 text-xs">{errors.category || apiErrors.category}</p>
+                )}
+              </div>
+            </div>
+
     {/* Location */}
-    <div className="space-y-3 -mx-3 sm:mx-0">
-            <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
-              <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
-              Location *
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-3 -mx-3 sm:mx-0">
+    <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <CityAutocomplete
                   value={formData.location.city}
@@ -918,7 +898,7 @@ const schedules = formData.schedule.map(s => {
                       })
                     }
                   }}
-                  placeholder="City *"
+                  placeholder="Search City *"
                   error={!!(errors.city || apiErrors.city)}
                 />
                 {(errors.city || apiErrors.city) && (
@@ -952,7 +932,7 @@ const schedules = formData.schedule.map(s => {
                     location: { ...prev.location, address: e.target.value }
                   }))}
                   placeholder="Street address"
-              className="text-sm font-semibold placeholder:text-muted-foreground/70"
+              className="text-base font-semibold placeholder:text-muted-foreground/70"
                 />
               </div>
               
@@ -964,35 +944,31 @@ const schedules = formData.schedule.map(s => {
                     location: { ...prev.location, zipCode: e.target.value }
                   }))}
                   placeholder="Postal/Zip Code"
-                  className="text-sm font-semibold placeholder:text-muted-foreground/70 sm:max-w-xs"
+                  className="text-base font-semibold placeholder:text-muted-foreground/70 sm:max-w-xs"
                 />
               </div>
             </div>
           </div>
         </Card>
+        </>
       )}
 
       {currentStep === 2 && (
-        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
-          <div>
-
-            <p className="text-xs sm:text-sm text-muted-foreground">When does this market operate?</p>
-          </div>
-
+        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
           {/* Schedule */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+                <Calendar className="w-4 h-4" />
                 Schedule *
               </h3>
             </div>
 
-            <div className="space-y-2 -mx-3 sm:mx-0">
+            <div className="space-y-2">
               {formData.schedule.map((item, index) => (
-                <div key={index} className="p-3 sm:p-4 rounded-lg space-y-3 bg-muted/20 shadow-md">
+                <div key={index} className="p-3 rounded-lg space-y-3 bg-muted/20 shadow-md">
                   <div className="relative">
-                    <h4 className="text-sm font-bold text-foreground text-center">Date {index + 1}</h4>
+                    <h4 className="text-base font-bold text-foreground text-center">Date {index + 1}</h4>
                     {formData.schedule.length > 1 && (
                       <Button 
                         variant="ghost" 
@@ -1017,7 +993,7 @@ const schedules = formData.schedule.map(s => {
                             input.showPicker()
                           }
                         }}
-                        className="w-full h-10 px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-2 relative z-10"
+                        className="w-full h-12 px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-base flex items-center justify-center gap-2 relative z-10"
                       >
                         <Calendar className="w-4 h-4" />
                         <span>
@@ -1050,7 +1026,7 @@ const schedules = formData.schedule.map(s => {
                             input.showPicker()
                           }
                         }}
-                        className="w-full h-10 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-1 relative z-10"
+                        className="w-full h-12 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-base flex items-center justify-center gap-1 relative z-10"
                       >
                         <span>{item.startTime ? formatTime12Hour(item.startTime) : 'Start'}</span>
                       </button>
@@ -1078,7 +1054,7 @@ const schedules = formData.schedule.map(s => {
                             input.showPicker()
                           }
                         }}
-                        className="w-full h-10 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-1 relative z-10"
+                        className="w-full h-12 px-2 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-base flex items-center justify-center gap-1 relative z-10"
                       >
                         <span>{item.endTime ? formatTime12Hour(item.endTime) : 'End'}</span>
                       </button>
@@ -1152,21 +1128,16 @@ const schedules = formData.schedule.map(s => {
       {currentStep === 3 && (
         <div className="space-y-4">
           {/* Contact & Additional Info */}
-        <Card className="sm:px-4 sm:px-6 py-4 sm:py-6 space-y-4 rounded-none sm:rounded-lg shadow-none sm:shadow-sm border-none sm:border sm:border-border bg-transparent sm:bg-background">
-            <div>
-
-              <p className="text-xs sm:text-sm text-muted-foreground">Help other vendors with extra details.</p>
-            </div>
-
+        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
             {/* Promoters Contact Information */}
             <div className="space-y-3">
-              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
-                <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+                <Phone className="w-4 h-4" />
                 Promoter's Contact
               </h3>
               
-              <div className="grid grid-cols-1 gap-3 -mx-3 sm:mx-0">
-                <div className="space-y-1.5 -mx-3 sm:mx-0">
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-1.5">
                    <Input
                     value={formData.contact.website || ''}
                     onChange={(e) => {
@@ -1177,7 +1148,7 @@ const schedules = formData.schedule.map(s => {
                       clearFieldError('website')
                     }}
                     placeholder="Official Website/Link *"
-                    className={cn((errors.website || apiErrors.website) && "border-red-500", "font-semibold placeholder:text-muted-foreground/70")}
+                    className={cn((errors.website || apiErrors.website) && "border-red-500", "text-base font-semibold placeholder:text-muted-foreground/70")}
                   />
                   {(errors.website || apiErrors.website) && (
                     <p className="text-red-500 text-xs">{errors.website || apiErrors.website}</p>
@@ -1215,8 +1186,8 @@ const schedules = formData.schedule.map(s => {
             </div>
 
             {/* Application Information */}
-              <div className="grid grid-cols-1 gap-3 -mx-3 sm:mx-0">
-                <div className="space-y-1.5 -mx-3 sm:mx-0">
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-1.5">
                   <Input
                     value={formData.applicationSettings?.applicationLink || ''}
                     onChange={(e) => {
@@ -1226,11 +1197,11 @@ const schedules = formData.schedule.map(s => {
                       }))
                     }}
                     placeholder="Application Link"
-                    className="font-semibold placeholder:text-muted-foreground/70"
+                    className="text-base font-semibold placeholder:text-muted-foreground/70"
                   />
                 </div>
                 
-                <div className="space-y-1.5 -mx-3 sm:mx-0">
+                <div className="space-y-1.5">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1240,7 +1211,7 @@ const schedules = formData.schedule.map(s => {
                         input.showPicker()
                       }
                     }}
-                    className="w-full h-10 px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-sm flex items-center justify-center gap-2 relative z-10"
+                    className="w-full min-h-[44px] px-3 rounded-lg bg-white shadow-md hover:bg-accent hover:text-accent-foreground text-base font-semibold flex items-center justify-center gap-2 relative z-10"
                   >
                     <Calendar className="w-4 h-4" />
                     <span>
@@ -1265,230 +1236,10 @@ const schedules = formData.schedule.map(s => {
                 </div>
               </div>
 
-            {/* Accessibility Features */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-foreground flex items-center gap-2 text-sm sm:text-base">
-                <Accessibility className="w-3 h-3 sm:w-4 sm:h-4" />
-                Accessibility & Amenities
-              </h3>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 -mx-3 sm:mx-0">
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="wheelchair"
-                    checked={formData.accessibility.wheelchairAccessible}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, wheelchairAccessible: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="wheelchair" className="text-xs sm:text-sm text-foreground">
-                    Wheelchair Accessible
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="handicap-parking"
-                    checked={formData.accessibility.handicapParking}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, handicapParking: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="handicap-parking" className="text-xs sm:text-sm text-foreground">
-                    Handicap Parking
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="parking"
-                    checked={formData.accessibility.parkingAvailable}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, parkingAvailable: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="parking" className="text-xs sm:text-sm text-foreground">
-                    Parking Available
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="restrooms"
-                    checked={formData.accessibility.restroomsAvailable}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, restroomsAvailable: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="restrooms" className="text-xs sm:text-sm text-foreground">
-                    Restrooms
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="covered"
-                    checked={formData.accessibility.covered}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, covered: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="covered" className="text-xs sm:text-sm text-foreground">
-                    Covered Area
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="indoor"
-                    checked={formData.accessibility.indoor}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, indoor: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="indoor" className="text-xs sm:text-sm text-foreground">
-                    Indoor
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="outdoor-seating"
-                    checked={formData.accessibility.outdoorSeating}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, outdoorSeating: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="outdoor-seating" className="text-xs sm:text-sm text-foreground">
-                    Outdoor Seating
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="wifi"
-                    checked={formData.accessibility.wifi}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, wifi: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="wifi" className="text-xs sm:text-sm text-foreground">
-                    WiFi
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="atm"
-                    checked={formData.accessibility.atm}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, atm: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="atm" className="text-xs sm:text-sm text-foreground">
-                    ATM
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="food-court"
-                    checked={formData.accessibility.foodCourt}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, foodCourt: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="food-court" className="text-xs sm:text-sm text-foreground">
-                    Food Court
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="live-music"
-                    checked={formData.accessibility.liveMusic}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, liveMusic: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="live-music" className="text-xs sm:text-sm text-foreground">
-                    Live Music
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="alcohol"
-                    checked={formData.accessibility.alcoholAvailable}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, alcoholAvailable: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="alcohol" className="text-xs sm:text-sm text-foreground">
-                    Alcohol
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="family"
-                    checked={formData.accessibility.familyFriendly}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, familyFriendly: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="family" className="text-xs sm:text-sm text-foreground">
-                    Family Friendly
-                  </label>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="pets"
-                    checked={formData.accessibility.petFriendly}
-                    onValueChange={(checked) => setFormData(prev => ({
-                      ...prev,
-                      accessibility: { ...prev.accessibility, petFriendly: checked }
-                    }))}
-                    className="h-5 w-5 sm:h-4 sm:w-4"
-                  />
-                  <label htmlFor="pets" className="text-xs sm:text-sm text-foreground">
-                    Pet Friendly
-                  </label>
-                </div>
-              </div>
-            </div>
-
             {/* Tags */}
-            <div className="space-y-2 -mx-3 sm:mx-0">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-foreground text-sm">Tags (max 3)</h3>
+                <h3 className="font-bold text-foreground text-base">Tags (max 3)</h3>
                 <span className="text-xs text-muted-foreground">
                   {formData.additionalInfo.tags.length}/3
                 </span>
@@ -1521,7 +1272,7 @@ const schedules = formData.schedule.map(s => {
                       }
                     }}
                     placeholder="Type tag..."
-                    className="font-semibold placeholder:text-muted-foreground/70"
+                    className="text-base font-semibold placeholder:text-muted-foreground/70"
                   />
                   {tagInputValue && formData.additionalInfo.tags.length < 3 && (
                     <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -1552,7 +1303,7 @@ const schedules = formData.schedule.map(s => {
 
             {/* Market Size Estimate */}
             <div className="space-y-1.5">
-              <label className="text-sm font-bold text-foreground">Estimated Market Size</label>
+              <label className="text-base font-bold text-foreground">Estimated Market Size</label>
               <Select
                 value={formData.additionalInfo.attendanceEstimate || ''}
                 onValueChange={(value) => setFormData(prev => ({
@@ -1563,6 +1314,198 @@ const schedules = formData.schedule.map(s => {
                 options={attendanceOptions.map(option => ({ value: option.value, label: option.label }))}
               />
             </div>
+
+            {/* Accessibility Features */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+                <Accessibility className="w-4 h-4" />
+                Accessibility & Amenities
+              </h3>
+              
+              <div className="grid grid-cols-1 gap-1">
+                <label htmlFor="wheelchair" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="wheelchair"
+                    checked={formData.accessibility.wheelchairAccessible}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, wheelchairAccessible: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Wheelchair Accessible</span>
+                </label>
+                
+                <label htmlFor="handicap-parking" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="handicap-parking"
+                    checked={formData.accessibility.handicapParking}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, handicapParking: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Handicap Parking</span>
+                </label>
+                
+                <label htmlFor="parking" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="parking"
+                    checked={formData.accessibility.parkingAvailable}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, parkingAvailable: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Parking Available</span>
+                </label>
+                
+                <label htmlFor="restrooms" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="restrooms"
+                    checked={formData.accessibility.restroomsAvailable}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, restroomsAvailable: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Restrooms</span>
+                </label>
+                
+                <label htmlFor="covered" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="covered"
+                    checked={formData.accessibility.covered}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, covered: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Covered Area</span>
+                </label>
+                
+                <label htmlFor="indoor" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="indoor"
+                    checked={formData.accessibility.indoor}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, indoor: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Indoor</span>
+                </label>
+                
+                <label htmlFor="outdoor-seating" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="outdoor-seating"
+                    checked={formData.accessibility.outdoorSeating}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, outdoorSeating: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Outdoor Seating</span>
+                </label>
+                
+                <label htmlFor="wifi" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="wifi"
+                    checked={formData.accessibility.wifi}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, wifi: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">WiFi</span>
+                </label>
+                
+                <label htmlFor="atm" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="atm"
+                    checked={formData.accessibility.atm}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, atm: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">ATM</span>
+                </label>
+                
+                <label htmlFor="food-court" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="food-court"
+                    checked={formData.accessibility.foodCourt}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, foodCourt: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Food Court</span>
+                </label>
+                
+                <label htmlFor="live-music" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="live-music"
+                    checked={formData.accessibility.liveMusic}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, liveMusic: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Live Music</span>
+                </label>
+                
+                <label htmlFor="alcohol" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="alcohol"
+                    checked={formData.accessibility.alcoholAvailable}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, alcoholAvailable: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Alcohol</span>
+                </label>
+                
+                <label htmlFor="family" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="family"
+                    checked={formData.accessibility.familyFriendly}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, familyFriendly: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Family Friendly</span>
+                </label>
+                
+                <label htmlFor="pets" className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <Checkbox
+                    id="pets"
+                    checked={formData.accessibility.petFriendly}
+                    onValueChange={(checked) => setFormData(prev => ({
+                      ...prev,
+                      accessibility: { ...prev.accessibility, petFriendly: checked }
+                    }))}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-base">Pet Friendly</span>
+                </label>
+              </div>
+            </div>
           </Card>
 
           {/* Market Preview */}
@@ -1572,7 +1515,7 @@ const schedules = formData.schedule.map(s => {
               Preview
             </h3>
             
-            <div className="bg-surface border border-border rounded-lg p-3 space-y-2 -mx-3 sm:mx-0">
+            <div className="bg-surface border border-border rounded-lg p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h4 className="font-semibold text-foreground text-sm">{formData.name || 'Market Name'}</h4>
@@ -1601,39 +1544,59 @@ const schedules = formData.schedule.map(s => {
               )}
             </div>
           </Card>
+
+          {/* Notes Banner */}
+          <button
+            type="button"
+            onClick={() => setIsNotesExpanded(!isNotesExpanded)}
+            className="w-full flex items-center justify-between p-2 rounded-lg border border-orange-400/50 bg-orange-50/20"
+          >
+            <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              Notes
+            </span>
+            <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", isNotesExpanded && "rotate-180")} />
+          </button>
+          {isNotesExpanded && (
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside p-2">
+              <li>Market listings are public</li>
+              <li>More details help other vendors</li>
+              <li>Admin-Managed - Edits require requests</li>
+            </ul>
+          )}
         </div>
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-3 px-1">
         <div className="flex gap-2">
           {currentStep > 1 && (
-            <Button variant="outline" onClick={prevStep} size="sm">
-              <ArrowLeft className="w-3 h-3 mr-1.5" />
+            <Button variant="outline" onClick={prevStep} className="h-12 px-4 text-base font-semibold">
+              <ArrowLeft className="w-5 h-5 mr-2" />
               Back
             </Button>
           )}
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('/vendor/tracked-markets')} size="sm">
+          <Button variant="outline" onClick={() => navigate('/vendor/tracked-markets')} className="h-12 px-4 text-base font-semibold">
             Cancel
           </Button>
           
           {currentStep < 3 ? (
-            <Button onClick={nextStep} size="sm">
+            <Button onClick={nextStep} className="h-12 px-6 text-base font-semibold">
               Next
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting} size="sm">
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="h-12 px-6 text-base font-semibold">
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                   Adding...
                 </>
               ) : (
                 <>
-                  <Plus className="w-3 h-3 mr-1.5" />
+                  <Plus className="w-5 h-5 mr-2" />
                   Add Market
                 </>
               )}

@@ -2,6 +2,23 @@ import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
+const stateAbbreviations: Record<string, string> = {
+  'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
+  'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
+  'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+  'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+  'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
+  'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+  'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH',
+  'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+  'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
+  'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY',
+  'alberta': 'AB', 'british columbia': 'BC', 'manitoba': 'MB', 'new brunswick': 'NB',
+  'newfoundland and labrador': 'NL', 'northwest territories': 'NT', 'nova scotia': 'NS',
+  'nunavut': 'NU', 'ontario': 'ON', 'prince edward island': 'PE', 'quebec': 'QC',
+  'saskatchewan': 'SK', 'yukon': 'YT'
+}
+
 interface CitySuggestion {
   display_name?: string
   name?: string
@@ -44,7 +61,7 @@ export function CityAutocomplete({
   onStateChange,
   onSelect,
   onError,
-  placeholder = 'City *',
+  placeholder = 'Search City',
   className,
   error
 }: CityAutocompleteProps) {
@@ -118,7 +135,13 @@ export function CityAutocomplete({
   const handleSelect = (suggestion: CitySuggestion) => {
     const props = suggestion.properties || suggestion
     const cityName = props.name || props.display_name?.split(',')[0] || ''
-    const state = props.state || props.province || ''
+    let state = props.state || props.province || ''
+    
+    // Convert full state name to abbreviation
+    const stateLower = state.toLowerCase()
+    if (stateAbbreviations[stateLower]) {
+      state = stateAbbreviations[stateLower]
+    }
     
     setIsSelecting(true)
     setQuery(cityName)
@@ -219,8 +242,9 @@ export function CityAutocomplete({
           placeholder={placeholder}
           autoComplete="new-password"
           className={cn(
-            'w-full h-12 sm:h-10 px-4 sm:px-3 rounded-lg border bg-white shadow-sm',
-            'text-base sm:text-sm font-semibold placeholder:text-muted-foreground/70 pr-10',
+            'w-full min-h-[44px] px-3 py-2 rounded-lg border bg-white shadow-sm',
+            'text-base font-semibold placeholder:text-muted-foreground/70 pr-10',
+            'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2',
             (error || hasSelectionError) && 'border-red-500',
             className
           )}
@@ -229,31 +253,36 @@ export function CityAutocomplete({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-9 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded-full"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-orange-100 rounded-full"
           >
-            <X className="w-4 h-4 text-muted-foreground" />
+            <X className="w-4 h-4 text-muted-foreground hover:text-accent" />
           </button>
         )}
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <ul className="absolute z-50 w-full mt-1 bg-white rounded-lg border shadow-lg max-h-60 overflow-y-auto">
-          {suggestions.map((suggestion, index) => (
-            <li key={index}>
-              <button
-                type="button"
-                onMouseDown={() => handleSelect(suggestion)}
-                className="w-full px-4 py-3 sm:px-3 sm:py-2 text-left text-base sm:text-sm hover:bg-muted/50 transition-colors"
-              >
-                {getDisplayName(suggestion)}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="absolute z-50 w-full bottom-full mb-1 bg-white rounded-lg border-2 border-accent shadow-lg overflow-hidden">
+          <div className="px-4 py-3 bg-accent font-bold text-base text-accent-foreground">
+            Select City
+          </div>
+          <ul className="max-h-80 overflow-y-auto">
+            {suggestions.map((suggestion, index) => (
+              <li key={index}>
+                <button
+                  type="button"
+                  onMouseDown={() => handleSelect(suggestion)}
+                  className="w-full px-4 py-4 text-left text-base hover:bg-orange-50 transition-colors"
+                >
+                  {getDisplayName(suggestion)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {isOpen && query.length >= 2 && !isLoading && suggestions.length === 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg border shadow-lg p-4 sm:p-3 text-base sm:text-sm text-muted-foreground text-center">
+        <div className="absolute z-50 w-full bottom-full mb-1 bg-white rounded-lg border-2 border-accent shadow-lg p-4 text-base text-muted-foreground text-center">
           No cities found
         </div>
       )}
