@@ -273,7 +273,7 @@ export const MarketDetailPage: React.FC = () => {
     )}>
       <div className="w-full max-w-6xl mx-auto sm:px-4">
       {/* HERO SECTION - Matching MarketCard minimal variant */}
-      <div className="relative flex flex-col justify-end overflow-hidden rounded-none sm:rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3 min-h-[28rem] md:min-h-[36rem]">
+      <div className="relative flex flex-col justify-end overflow-hidden rounded-none sm:rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3 min-h-[22rem] md:min-h-[24rem]">
         {/* Market Image - Fixed height background */}
         <div className="absolute inset-0">
           {market.images && market.images.length > 0 ? (
@@ -290,7 +290,7 @@ export const MarketDetailPage: React.FC = () => {
         </div>
 
         {/* Back Button - Top Left */}
-        <div className="absolute top-0 left-0 p-3 z-10">
+        <div className="absolute top-0 left-0 p-3 z-20">
           <Button
             variant="outline"
             size="sm"
@@ -385,7 +385,7 @@ export const MarketDetailPage: React.FC = () => {
             {market.images && market.images.length > 0 && (
               <button
                 onClick={() => setShowImagePreview(true)}
-                className="max-w-36 max-h-36 rounded-lg overflow-hidden border-2 border-white hover:border-white transition-all mb-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] inline-block relative"
+                className="max-w-36 max-h-36 rounded-lg overflow-hidden border-2 border-white hover:border-white transition-all mt-8 mb-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] inline-block relative"
               >
                 <img
                   src={market.images[selectedImageIndex]}
@@ -403,7 +403,7 @@ export const MarketDetailPage: React.FC = () => {
             <div
               className="overflow-hidden"
               style={{
-                maxHeight: isDescriptionExpanded ? '2000px' : '3rem',
+                maxHeight: isDescriptionExpanded ? '2000px' : '4.5rem',
                 transition: 'max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >

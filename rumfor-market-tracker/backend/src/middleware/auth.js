@@ -37,14 +37,14 @@ setInterval(() => {
 }, 5 * 60 * 1000) // Run every 5 minutes
 
 // Add access token to blacklist
-const addAccessTokenToBlacklist = async (token, expiresIn = '24h') => {
+const addAccessTokenToBlacklist = async (token, expiresIn = '7d') => {
   const ttl = parseExpiresIn(expiresIn)
   const expiryTime = Date.now() + ttl
   accessTokenBlacklist.set(token, expiryTime)
 }
 
 // Add refresh token to blacklist
-const addRefreshTokenToBlacklist = async (token, expiresIn = '7d') => {
+const addRefreshTokenToBlacklist = async (token, expiresIn = '365d') => {
   const ttl = parseExpiresIn(expiresIn)
   const expiryTime = Date.now() + ttl
   refreshTokenBlacklist.set(token, expiryTime)
@@ -109,7 +109,7 @@ const clearUserCache = async (userId) => {
 // Helper to parse expiresIn string to milliseconds
 const parseExpiresIn = (expiresIn) => {
   const match = /^(\d+)([smhd])$/.exec(expiresIn)
-  if (!match) return 24 * 60 * 60 * 1000 // default 24h
+  if (!match) return 7 * 24 * 60 * 60 * 1000 // default 7d
   const value = parseInt(match[1])
   const unit = match[2]
   switch (unit) {
@@ -117,7 +117,7 @@ const parseExpiresIn = (expiresIn) => {
     case 'm': return value * 60 * 1000
     case 'h': return value * 60 * 60 * 1000
     case 'd': return value * 24 * 60 * 60 * 1000
-    default: return 24 * 60 * 60 * 1000
+    default: return 7 * 24 * 60 * 60 * 1000
   }
 }
 
@@ -651,7 +651,7 @@ const requireEmailVerification = (req, res, next) => {
 }
 
 // Generate JWT token
-const generateToken = (userId, tokenVersion = 0, expiresIn = '24h') => {
+const generateToken = (userId, tokenVersion = 0, expiresIn = '7d') => {
   if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is not set')
   }
@@ -663,7 +663,7 @@ const generateToken = (userId, tokenVersion = 0, expiresIn = '24h') => {
 }
 
 // Generate refresh token
-const generateRefreshToken = (userId, tokenVersion = 0, expiresIn = '7d') => {
+const generateRefreshToken = (userId, tokenVersion = 0, expiresIn = '365d') => {
   if (!process.env.JWT_REFRESH_SECRET) {
     throw new Error('JWT_REFRESH_SECRET environment variable is not set')
   }
@@ -676,8 +676,8 @@ const generateRefreshToken = (userId, tokenVersion = 0, expiresIn = '7d') => {
 
 // Generate tokens pair
 const generateTokens = (userId, tokenVersion = 0) => {
-  const accessToken = generateToken(userId, tokenVersion, process.env.JWT_EXPIRES_IN || '24h')
-  const refreshToken = generateRefreshToken(userId, tokenVersion, process.env.JWT_REFRESH_EXPIRES_IN || '7d')
+  const accessToken = generateToken(userId, tokenVersion, process.env.JWT_EXPIRES_IN || '7d')
+  const refreshToken = generateRefreshToken(userId, tokenVersion, process.env.JWT_REFRESH_EXPIRES_IN || '365d')
   
   return {
     accessToken,

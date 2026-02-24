@@ -84,24 +84,28 @@ export const CommentReactions: React.FC<CommentReactionsProps> = ({
           <span className={cn('text-[12px] font-bold', hoveredReaction === 'picker' ? 'text-zinc-200' : 'text-zinc-600')}>
             {totalCount}
           </span>
+          <span className={cn('text-[11px] font-bold', hoveredReaction === 'picker' ? 'text-zinc-300' : 'text-zinc-500')}>
+            React
+          </span>
         </div>
       ) : (
         <button
           onClick={() => setHoveredReaction(hoveredReaction ? null : 'picker')}
           className={cn(
-            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all text-[12px] font-bold border",
-            hoveredReaction === 'picker' ? 'bg-zinc-900 text-white shadow-lg border-zinc-900' : 'text-zinc-500 hover:text-zinc-900 bg-zinc-100/50 hover:bg-zinc-100 border-transparent hover:border-zinc-200/50'
+            "flex items-center gap-1 px-2 py-1 rounded-full transition-all text-[11px] font-bold",
+            hoveredReaction === 'picker' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-zinc-900'
           )}
         >
-          <svg className={cn("w-3.5 h-3.5", hoveredReaction === 'picker' ? 'text-white' : 'text-zinc-800')} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
+          React
         </button>
       )}
 
       {hoveredReaction === 'picker' && (
         <div
-          className="absolute bottom-full right-0 mb-4 z-50 bg-white border border-zinc-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] p-5 flex gap-2.5 animate-in fade-in zoom-in-95 duration-200 origin-bottom-right"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 bg-white border border-zinc-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[24px] p-4 flex gap-2 animate-in fade-in zoom-in-95 duration-200 origin-bottom-center"
           onMouseLeave={() => setHoveredReaction(null)}
         >
           {Object.entries(reactionEmojis).map(([type, emoji]) => {

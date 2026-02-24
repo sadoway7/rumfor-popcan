@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { CommentForm } from './CommentForm'
 import { CommentItem } from './CommentItem'
+import { CommentTreeLines } from './CommentTreeLines'
 import { useComments } from '@/features/community/hooks/useComments'
 import { cn } from '@/utils/cn'
 import styles from './CommentList.module.css'
@@ -17,6 +18,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   className
 }) => {
   const [showAllComments, setShowAllComments] = useState(false)
+  const listContainerRef = useRef<HTMLDivElement>(null)
   
   const {
     comments,
@@ -103,7 +105,8 @@ export const CommentList: React.FC<CommentListProps> = ({
           </p>
         </div>
       ) : (
-        <div className="px-4 sm:px-0">
+        <div className="px-4 sm:px-0 relative" ref={listContainerRef}>
+          <CommentTreeLines comments={comments} containerRef={listContainerRef} />
           <ul style={{ '--depth': 0 } as React.CSSProperties} className={cn('space-y-6', styles.commentList)}>
             {visibleTopLevelComments.map((comment) => (
               <CommentItem
