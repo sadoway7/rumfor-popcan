@@ -50,7 +50,8 @@ export function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 space-y-4">
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-md mx-auto space-y-4">
       {showAndroidPrompt && (
         <div className="fixed inset-x-4 top-4 bg-surface border border-border rounded-lg p-4 shadow-lg z-50">
           <div className="flex items-start justify-between mb-2">
@@ -90,11 +91,8 @@ export function WelcomePage() {
         <p className="text-sm text-muted-foreground">Your account is ready</p>
       </div>
 
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-center">
-        <h2 className="text-lg font-bold text-amber-600 dark:text-amber-400 mb-2">Limited Beta</h2>
-        <p className="text-sm text-foreground">
-          Email verification may not be working correctly. Your account works fine—we'll ask you to verify later.
-        </p>
+      <div className="text-center text-muted-foreground text-sm">
+        <span className="font-medium">Limited Beta</span> · Email verification is now working. Check your inbox!
       </div>
 
       <div className="rounded-lg overflow-hidden">
@@ -208,7 +206,7 @@ export function WelcomePage() {
       </div>
 
       <div className="border-t pt-4 grid gap-2">
-        <Link to="/vendor/profile" className="block p-3 bg-accent/20 rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
+        <Link to="/vendor/profile" className="block p-3 bg-accent text-white rounded-lg font-medium text-sm flex items-center active:opacity-90 shadow-md">
           <Store className="w-4 h-4 mr-3" />
           Setup your vendor profile
         </Link>
@@ -228,6 +226,7 @@ export function WelcomePage() {
           <strong>Find a bug or have a suggestion?</strong> Contact <span className="text-foreground">James / Rupert Rooster</span>.<br />
           In-app feedback submission form coming to your avatar.
         </p>
+      </div>
       </div>
     </div>
   )
