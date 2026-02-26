@@ -215,7 +215,6 @@ export const MarketSearchPage: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({ showPastMarkets: true });
     setSearchParams({});
-    setSidebarOpen(false);
   };
 
   const getActiveFilterCount = () => {
