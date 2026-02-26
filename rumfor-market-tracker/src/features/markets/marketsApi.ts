@@ -438,7 +438,7 @@ export const marketsApi = {
         if (filters.status?.length)
           queryParams.append('status', filters.status[0]);
         if (filters.category?.length)
-          queryParams.append('category', filters.category[0]);
+          queryParams.append('category', filters.category.join(','));
         if (filters.location?.city || filters.location?.state) {
           const locationParts = [];
           if (filters.location.city) locationParts.push(filters.location.city);

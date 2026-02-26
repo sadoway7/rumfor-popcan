@@ -69,7 +69,14 @@ const getMarkets = catchAsync(async (req, res, next) => {
   // Build query
 
   if (category) {
-    query.category = category;
+    const categories = category.split(',').map(c => c.trim()).filter(Boolean);
+    console.log('=== CATEGORY FILTER DEBUG ===');
+    console.log('Raw category param:', category);
+    console.log('Parsed categories array:', categories);
+    console.log('MongoDB $in query:', { $in: categories });
+    query.category = { $in: categories };
+    console.log('Query.category set to:', JSON.stringify(query.category));
+    console.log('=== END DEBUG ===');
   }
 
   if (dates) {
@@ -152,6 +159,8 @@ const getMarkets = catchAsync(async (req, res, next) => {
  
     Object.assign(query, dateFilter);
   }
+
+  console.log('[DEBUG getMarkets] Final query:', JSON.stringify(query, null, 2));
 
   // Execute query with lean() for 50% faster performance
   const markets = await Market.find(query)
@@ -778,7 +787,9 @@ const searchMarkets = catchAsync(async (req, res, next) => {
   }
 
   if (category) {
-    query.category = category;
+    const categories = category.split(',').map(c => c.trim()).filter(Boolean);
+    console.log('[DEBUG searchMarkets] Category filter - raw:', category, 'parsed:', categories);
+    query.category = { $in: categories };
   }
 
   if (location) {
