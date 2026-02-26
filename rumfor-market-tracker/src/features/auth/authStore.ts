@@ -4,30 +4,24 @@ import { AuthState, User, LoginCredentials, RegisterData, PasswordResetRequest, 
 import { authApi } from './authApi'
 
 interface AuthStore extends AuthState {
-  // Hydration state
   isHydrated: boolean
 
-  // Core auth methods
   login: (credentials: LoginCredentials) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
   
-  // Password reset methods
   forgotPassword: (request: PasswordResetRequest) => Promise<void>
   resetPassword: (request: PasswordResetConfirm) => Promise<void>
   
-  // Email verification methods
   verifyEmail: (request: EmailVerificationRequest) => Promise<void>
   resendVerification: (request: ResendVerificationRequest) => Promise<void>
   
-  // Token management
   refreshTokens: () => Promise<void>
+  syncTokensFromStorage: () => void
   
-  // Profile management
   updateProfile: (data: Partial<User>) => Promise<void>
   deleteProfile: () => Promise<void>
   
-  // Utility methods
   updateUser: (user: Partial<User>) => void
   clearError: () => void
   setLoading: (loading: boolean) => void
@@ -36,8 +30,24 @@ interface AuthStore extends AuthState {
   clearPasswordResetSuccess: () => void
   clearEmailVerificationSuccess: () => void
   
-  // Check if email needs verification
   needsEmailVerification: () => boolean
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth:logout', () => {
+    useAuthStore.getState().logout()
+  })
+  
+  window.addEventListener('auth:tokens-refreshed', ((event: CustomEvent) => {
+    const { accessToken, refreshToken } = event.detail
+    const state = useAuthStore.getState()
+    if (state.token !== accessToken) {
+      useAuthStore.setState({
+        token: accessToken,
+        refreshToken: refreshToken,
+      })
+    }
+  }) as EventListener)
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -378,6 +388,27 @@ export const useAuthStore = create<AuthStore>()(
       needsEmailVerification: () => {
         const { user, isEmailVerified } = get()
         return user ? !isEmailVerified : false
+      },
+
+      syncTokensFromStorage: () => {
+        try {
+          const authStorage = localStorage.getItem('auth-storage')
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage)
+            const storedToken = parsed.state?.token
+            const storedRefreshToken = parsed.state?.refreshToken
+            const currentToken = get().token
+            
+            if (storedToken && storedToken !== currentToken) {
+              set({
+                token: storedToken,
+                refreshToken: storedRefreshToken,
+              })
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing tokens from storage:', error)
+        }
       },
     }),
     {

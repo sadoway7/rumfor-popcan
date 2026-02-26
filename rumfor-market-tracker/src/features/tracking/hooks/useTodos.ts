@@ -32,55 +32,77 @@ export const useTodos = (marketId?: string) => {
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
 
-  // Create todo mutation
+  // Create todo mutation with optimistic update
   const createTodoMutation = useMutation({
     mutationFn: async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated')
-      // Backend expects 'market' field, not 'marketId'
       const todoWithMarket = { ...todo, market: marketId }
-      console.log('[DEBUG] Creating todo:', JSON.stringify(todoWithMarket, null, 2))
       return trackingApi.createTodo(todoWithMarket as any)
     },
-    onSuccess: () => {
-      console.log('[DEBUG] Todo created successfully, invalidating queries')
-      // Invalidate all todo queries to force refetch
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    onMutate: async (newTodo) => {
+      await queryClient.cancelQueries({ queryKey: ['todos', user?.id, marketId] })
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+      const optimisticTodo: Todo = {
+        ...newTodo,
+        id: `temp-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        market: marketId || ''
+      } as Todo
+      queryClient.setQueryData<Todo[]>(['todos', user?.id, marketId], [...previousTodos, optimisticTodo])
+      return { previousTodos }
     },
-    onError: (error) => {
-      console.error('Failed to create todo:', error)
-      throw error
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(['todos', user?.id, marketId], context?.previousTodos)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     }
   })
 
-  // Update todo mutation
+  // Update todo mutation with optimistic update
   const updateTodoMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Todo> }) => {
       return trackingApi.updateTodo(id, updates)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['todos', user?.id, marketId] })
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+      queryClient.setQueryData<Todo[]>(['todos', user?.id, marketId], 
+        previousTodos.map(todo => todo.id === id ? { ...todo, ...updates } : todo)
+      )
+      return { previousTodos }
     },
-    onError: (error) => {
-      console.error('Failed to update todo:', error)
-      throw error
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['todos', user?.id, marketId], context?.previousTodos)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     }
   })
 
-  // Delete todo mutation
+  // Delete todo mutation with optimistic update
   const deleteTodoMutation = useMutation({
     mutationFn: async (id: string) => {
       return trackingApi.deleteTodo(id)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['todos', user?.id, marketId] })
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+      queryClient.setQueryData<Todo[]>(['todos', user?.id, marketId], 
+        previousTodos.filter(todo => todo.id !== id)
+      )
+      return { previousTodos }
     },
-    onError: (error) => {
-      console.error('Failed to delete todo:', error)
-      throw error
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['todos', user?.id, marketId], context?.previousTodos)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     }
   })
 
-  // Toggle todo mutation
+  // Toggle todo mutation with optimistic update
   const toggleTodoMutation = useMutation({
     mutationFn: async (id: string) => {
       const todos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
@@ -88,12 +110,19 @@ export const useTodos = (marketId?: string) => {
       if (!todo) throw new Error('Todo not found')
       return trackingApi.updateTodo(id, { completed: !todo.completed })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['todos', user?.id, marketId] })
+      const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+      queryClient.setQueryData<Todo[]>(['todos', user?.id, marketId], 
+        previousTodos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo)
+      )
+      return { previousTodos }
     },
-    onError: (error) => {
-      console.error('Failed to toggle todo:', error)
-      throw error
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['todos', user?.id, marketId], context?.previousTodos)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] })
     }
   })
 

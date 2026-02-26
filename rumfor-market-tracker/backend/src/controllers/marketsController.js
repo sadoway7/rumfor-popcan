@@ -1849,6 +1849,7 @@ const getMarketVendors = catchAsync(async (req, res, next) => {
     color: t.user.vendorProfile?.cardColor || null,
     profileImage: t.user.vendorProfile?.profileImage || t.user.profileImage || '',
     productCategories: t.user.vendorProfile?.productCategories || [],
+    galleryImages: t.user.vendorProfile?.galleryImages || [],
     status: t.status,
     joinedAt: t.createdAt,
   }));

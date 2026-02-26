@@ -771,7 +771,7 @@ const schedules = formData.schedule.map(s => {
       {/* Form Steps */}
       {currentStep === 1 && (
         <>
-          <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
+          <Card className="px-3 py-4 space-y-4 -mx-3 rounded-xl border-0 shadow-none">
             {/* Banner Photo */}
             <div className="space-y-1.5">
               <input
@@ -954,7 +954,7 @@ const schedules = formData.schedule.map(s => {
       )}
 
       {currentStep === 2 && (
-        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
+        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-xl border-0 shadow-none">
           {/* Schedule */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -1128,7 +1128,7 @@ const schedules = formData.schedule.map(s => {
       {currentStep === 3 && (
         <div className="space-y-4">
           {/* Contact & Additional Info */}
-        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-none border-0 shadow-none">
+        <Card className="px-3 py-4 space-y-4 -mx-3 rounded-xl border-0 shadow-none">
             {/* Promoters Contact Information */}
             <div className="space-y-3">
               <h3 className="font-bold text-foreground flex items-center gap-2 text-base">

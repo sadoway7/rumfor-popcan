@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
-import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles } from 'lucide-react'
 
 interface VendorTodoListProps {
   marketId: string
@@ -242,12 +242,20 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
         <div className="flex gap-1 ml-auto">
           <Button
             size="sm"
-            onClick={() => { setEditingTodo(null); setShowForm(true); setNewTitle(''); }}
+            onClick={() => setShowPresets(true)}
             className="h-8 px-3"
+            variant="outline"
           >
-            <Plus className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
           </Button>
-        </div>
+           <Button
+             size="sm"
+             onClick={() => { setEditingTodo(null); setShowForm(true); setNewTitle(''); }}
+             className="h-8 px-3"
+           >
+             <Plus className="w-4 h-4" />
+           </Button>
+         </div>
       </div>
 
       {/* Overdue alert */}

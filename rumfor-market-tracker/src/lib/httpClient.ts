@@ -5,9 +5,84 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
 
-/**
- * Get auth token from localStorage
- */
+let isRefreshing = false
+let refreshSubscribers: Array<(token: string) => void> = []
+
+function subscribeTokenRefresh(callback: (token: string) => void) {
+  refreshSubscribers.push(callback)
+}
+
+function onTokenRefreshed(token: string) {
+  refreshSubscribers.forEach((callback) => callback(token))
+  refreshSubscribers = []
+}
+
+function getRefreshToken(): string | null {
+  try {
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage)
+      return parsed.state?.refreshToken || null
+    }
+  } catch (error) {
+    console.error('Error parsing refresh token:', error)
+  }
+  return null
+}
+
+function updateStoredTokens(accessToken: string, refreshToken: string) {
+  try {
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage)
+      parsed.state.token = accessToken
+      parsed.state.refreshToken = refreshToken
+      localStorage.setItem('auth-storage', JSON.stringify(parsed))
+      window.dispatchEvent(new CustomEvent('auth:tokens-refreshed', {
+        detail: { accessToken, refreshToken }
+      }))
+    }
+  } catch (error) {
+    console.error('Error updating stored tokens:', error)
+  }
+}
+
+function clearStoredAuth() {
+  localStorage.removeItem('auth-storage')
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    return null
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = await response.json()
+    if (data.success && data.data?.tokens) {
+      const { accessToken, refreshToken: newRefreshToken } = data.data.tokens
+      updateStoredTokens(accessToken, newRefreshToken)
+      return accessToken
+    }
+    return null
+  } catch (error) {
+    console.error('Token refresh failed:', error)
+    return null
+  }
+}
+
 function getAuthToken(): string | null {
   try {
     const authStorage = localStorage.getItem('auth-storage')
@@ -36,12 +111,7 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Fetch wrapper with error handling
- */
-async function fetchWithErrorHandling<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const token = getAuthToken()
-
+async function fetchWithToken<T>(url: string, options: RequestInit, token: string | null): Promise<T> {
   const config: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
@@ -51,55 +121,85 @@ async function fetchWithErrorHandling<T>(url: string, options: RequestInit = {})
     ...options,
   }
 
+  const response = await fetch(url, config)
+
+  let responseData
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    responseData = await response.json()
+  } else {
+    responseData = await response.text()
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      (typeof responseData === 'object' && responseData?.message) ||
+      (typeof responseData === 'string' && responseData) ||
+      `HTTP Error: ${response.status}`
+
+    const errorCode = typeof responseData === 'object' ? responseData?.code : undefined
+    const errorDetails = typeof responseData === 'object' ? responseData?.details : undefined
+
+    throw new ApiError(errorMessage, response.status, errorCode, errorDetails)
+  }
+
+  if (typeof responseData === 'object') {
+    return responseData as T
+  }
+  return { success: true, data: responseData } as unknown as T
+}
+
+async function handleTokenRefresh<T>(url: string, options: RequestInit): Promise<T> {
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      subscribeTokenRefresh((newToken: string) => {
+        fetchWithToken<T>(url, options, newToken).then(resolve).catch(reject)
+      })
+    })
+  }
+
+  isRefreshing = true
+
   try {
-    const response = await fetch(url, config)
+    const newToken = await refreshAccessToken()
 
-    // Parse response
-    let responseData
-    const contentType = response.headers.get('content-type')
-    if (contentType && contentType.includes('application/json')) {
-      responseData = await response.json()
-    } else {
-      responseData = await response.text()
+    if (!newToken) {
+      clearStoredAuth()
+      window.dispatchEvent(new CustomEvent('auth:logout', { detail: { reason: 'token_refresh_failed' } }))
+      throw new ApiError('Session expired. Please log in again.', 401, 'SESSION_EXPIRED')
     }
 
-    // Handle non-2xx responses
-    if (!response.ok) {
-      const errorMessage = 
-        (typeof responseData === 'object' && responseData?.message) || 
-        (typeof responseData === 'string' && responseData) || 
-        `HTTP Error: ${response.status}`
-      
-      const errorCode = typeof responseData === 'object' ? responseData?.code : undefined
-      const errorDetails = typeof responseData === 'object' ? responseData?.details : undefined
+    onTokenRefreshed(newToken)
+    return fetchWithToken<T>(url, options, newToken)
+  } finally {
+    isRefreshing = false
+  }
+}
 
-      throw new ApiError(
-        errorMessage,
-        response.status,
-        errorCode,
-        errorDetails
-      )
-    }
+async function fetchWithErrorHandling<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const token = getAuthToken()
+  const skipRefresh = options.headers && 'X-Skip-Refresh' in options.headers
 
-    // Return parsed response
-    if (typeof responseData === 'object') {
-      return responseData as T
-    }
-    return { success: true, data: responseData } as unknown as T
+  try {
+    return await fetchWithToken<T>(url, options, token)
   } catch (error) {
+    if (error instanceof ApiError && error.statusCode === 401 && !skipRefresh) {
+      const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh-token')
+      
+      if (!isAuthRoute && token) {
+        console.log('[httpClient] Token expired, attempting refresh...')
+        return handleTokenRefresh<T>(url, options)
+      }
+    }
+
     if (error instanceof ApiError) {
       throw error
     }
-    
-    // Network errors or JSON parsing errors
+
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new ApiError(
-        'Network error. Please check your connection.',
-        0,
-        'NETWORK_ERROR'
-      )
+      throw new ApiError('Network error. Please check your connection.', 0, 'NETWORK_ERROR')
     }
-    
+
     throw new ApiError(
       error instanceof Error ? error.message : 'An unexpected error occurred',
       0,

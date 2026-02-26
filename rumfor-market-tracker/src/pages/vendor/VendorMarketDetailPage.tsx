@@ -11,7 +11,10 @@ import {
   Car,
   AlertCircle,
   X,
-  ChevronDown
+  ChevronDown,
+  CheckSquare,
+  DollarSign,
+  BarChart3
 } from 'lucide-react'
 import { useMarket } from '@/features/markets/hooks/useMarkets'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
@@ -402,7 +405,7 @@ const { id } = useParams<{ id: string }>()
   return (
     <div className="min-h-screen bg-background -m-4">
       {/* Hero Image with Overlay - like VendorTrackedMarketRow */}
-      <div className="relative w-full h-40 bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className="relative w-full h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-none sm:rounded-t-3xl overflow-hidden">
         {market.images && market.images.length > 0 ? (
           <img 
             src={market.images[selectedImageIndex]} 
@@ -489,31 +492,33 @@ const { id } = useParams<{ id: string }>()
       </div>
 
       {/* Tabs */}
-      <div className="px-4 py-3">
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          variant="pills"
-          size="md"
-          items={[
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        variant="pills"
+        size="md"
+        listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-none sm:rounded-b-3xl"
+        items={[
             {
               key: 'tasks',
               label: 'Tasks',
+              icon: <CheckSquare className="w-4 h-4" />,
               content: <TasksTabContent />
             },
             {
               key: 'budgeting',
               label: 'Budget',
+              icon: <DollarSign className="w-4 h-4" />,
               content: <BudgetingTabContent />
             },
             {
               key: 'info',
               label: 'Stats',
+              icon: <BarChart3 className="w-4 h-4" />,
               content: <MarketInfoTabContent />
             }
           ]}
         />
-      </div>
 
       {/* Status Change Modal */}
       <StatusChangeModal

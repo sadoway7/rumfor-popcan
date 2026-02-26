@@ -30,6 +30,7 @@ import {
   Menu,
   LayoutDashboard,
   Store,
+  Bookmark,
   Users,
 } from 'lucide-react';
 import { useDebouncedCallback } from '@/utils/debounce';
@@ -284,7 +285,7 @@ export function Header() {
                       size="sm"
                       className="bg-white text-black hover:bg-gray-100 transition-colors duration-200 rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40"
                     >
-                      <Store className="h-4 w-4 mr-2" />
+                      <Bookmark className="h-4 w-4 mr-2" />
                       My Markets
                     </Button>
                   </Link>

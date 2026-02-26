@@ -121,6 +121,7 @@ export interface VendorCardData {
   profileImage: string;
   productCategories: string[];
   website?: string;
+  galleryImages?: string[];
 }
 
 export interface VendorPublicProfile extends VendorCardData {
@@ -172,6 +173,7 @@ export interface VendorMarketDisplay {
   color: string | null;
   profileImage: string;
   productCategories: string[];
+  galleryImages?: string[];
   status: string;
   joinedAt: string;
 }

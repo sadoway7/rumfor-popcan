@@ -273,7 +273,7 @@ export function HomePage() {
                     );
                   })}
                 </div>
-                <Link to="/markets" className="block mt-3">
+                <Link to="/markets" className="block mt-3 pb-32">
                   <button className="w-full py-2 text-sm text-amber-500 font-medium hover:underline">
                     View All Categories →
                   </button>
@@ -306,26 +306,15 @@ export function HomePage() {
             </div>
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-6 px-6 md:px-12">
-              {/* First Column - Main Message */}
-              <div className="flex flex-col">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.1s' }}>
-                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.15s' }}>Find Markets.</span>
-                  <br />
-                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.25s' }}>Sell Stuff.</span>
-                  <br />
-                  <span className="inline-block text-amber-600 animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.35s' }}>Build Your Empire.</span>
-                </h1>
-              </div>
-
-              {/* Second Column - YOUR MARKET ORGANIZER */}
-              <div className="flex flex-col items-center md:items-end animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-right">
+              {/* First Column - YOUR MARKET ORGANIZER */}
+              <div className="flex flex-col items-center md:items-start animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-left">
                   Your Market
                   <br />
                   <span className="text-amber-600">Organizer</span>
                 </h2>
 
-                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-end text-sm animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.4s' }}>
+                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-start text-sm animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.4s' }}>
                   <span className="text-foreground/70">
                     Save Markets
                   </span>
@@ -336,6 +325,17 @@ export function HomePage() {
                   <span className="text-surface-3">•</span>
                   <span className="text-foreground/70">Expenses</span>
                 </div>
+              </div>
+
+              {/* Second Column - Main Message */}
+              <div className="flex flex-col items-end">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight text-right animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.1s' }}>
+                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.15s' }}>Find Markets.</span>
+                  <br />
+                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.25s' }}>Sell Stuff.</span>
+                  <br />
+                  <span className="inline-block text-amber-600 animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.35s' }}>Build Your Empire.</span>
+                </h1>
               </div>
             </div>
           </div>
@@ -474,7 +474,7 @@ export function HomePage() {
           </div>
         </section>
 
-        <div className="h-10"></div>
+        <div className="h-32 md:h-10"></div>
       </div>
     </div>
   );

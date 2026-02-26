@@ -31,49 +31,93 @@ export const useExpenses = (marketId?: string) => {
 
   const paginatedData = queryResult.data as PaginatedResponse<Expense> | undefined
 
-  // Create expense mutation
+  // Create expense mutation with optimistic update
   const createExpenseMutation = useMutation({
     mutationFn: async (expense: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
       if (!user?.id) throw new Error('User not authenticated')
       return trackingApi.createExpense(expense)
     },
-    onSuccess: () => {
+    onMutate: async (newExpense) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', user?.id, marketId] })
+      const previous = queryClient.getQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId])
+      const optimisticExpense: Expense = {
+        ...newExpense,
+        id: `temp-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as Expense
+      if (previous) {
+        queryClient.setQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId], {
+          ...previous,
+          data: [...previous.data, optimisticExpense],
+          pagination: { ...previous.pagination, total: previous.pagination.total + 1 }
+        })
+      }
+      return { previous }
+    },
+    onError: (err, newExpense, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['expenses', user?.id, marketId], context.previous)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-    },
-    onError: (error) => {
-      console.error('Failed to create expense:', error)
-      throw error
     }
   })
 
-  // Update expense mutation
+  // Update expense mutation with optimistic update
   const updateExpenseMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Expense> }) => {
       return trackingApi.updateExpense(id, updates)
     },
-    onSuccess: () => {
+    onMutate: async ({ id, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', user?.id, marketId] })
+      const previous = queryClient.getQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId])
+      if (previous) {
+        queryClient.setQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId], {
+          ...previous,
+          data: previous.data.map(exp => exp.id === id ? { ...exp, ...updates } : exp)
+        })
+      }
+      return { previous }
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['expenses', user?.id, marketId], context.previous)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-    },
-    onError: (error) => {
-      console.error('Failed to update expense:', error)
-      throw error
     }
   })
 
-  // Delete expense mutation
+  // Delete expense mutation with optimistic update
   const deleteExpenseMutation = useMutation({
     mutationFn: async (id: string) => {
       return trackingApi.deleteExpense(id)
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', user?.id, marketId] })
+      const previous = queryClient.getQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId])
+      if (previous) {
+        queryClient.setQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId], {
+          ...previous,
+          data: previous.data.filter(exp => exp.id !== id),
+          pagination: { ...previous.pagination, total: Math.max(0, previous.pagination.total - 1) }
+        })
+      }
+      return { previous }
+    },
+    onError: (err, id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['expenses', user?.id, marketId], context.previous)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses'] })
       queryClient.invalidateQueries({ queryKey: ['expense-summary'] })
-    },
-    onError: (error) => {
-      console.error('Failed to delete expense:', error)
-      throw error
     }
   })
 

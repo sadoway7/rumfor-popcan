@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 import { getFullUploadUrl } from '@/config/constants'
 import type { VendorCardData, VendorMarketDisplay } from '@/types'
+import { X } from 'lucide-react'
 
 // Default gradient colors for vendors without a custom color
 const DEFAULT_GRADIENTS = [
@@ -47,6 +49,8 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   showLink = true,
   className,
 }) => {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+  
   // Normalize data — VendorMarketDisplay has nested user, VendorCardData has flat fields
   const isMarketDisplay = 'user' in vendor
   const vendorId = isMarketDisplay ? (vendor as VendorMarketDisplay).user.id : vendor.id
@@ -67,17 +71,30 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   const profileImage = isMarketDisplay
     ? (vendor as VendorMarketDisplay).profileImage
     : vendor.profileImage
+  const galleryImages = isMarketDisplay
+    ? (vendor as VendorMarketDisplay).galleryImages || []
+    : (vendor as VendorCardData).galleryImages || []
 
-  console.log('[VendorCard] profileImage:', profileImage, 'vendorId:', vendorId)
+  console.log('[VendorCard] variant:', variant, 'isMarketDisplay:', isMarketDisplay, 'vendor:', vendor, 'galleryImages:', galleryImages)
 
   const initials = getInitials(firstName, lastName)
   const gradientClass = color || `bg-gradient-to-br ${getGradientForVendor(vendorId)}`
+
+  const lightbox = lightboxImage && createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80" onClick={() => setLightboxImage(null)}>
+      <button className="absolute top-4 right-4 p-2 bg-white rounded-full" onClick={() => setLightboxImage(null)}>
+        <X className="w-5 h-5" />
+      </button>
+      <img src={lightboxImage} alt="Gallery" className="max-w-[90vw] max-h-[90vh] object-contain" onClick={(e) => e.stopPropagation()} />
+    </div>,
+    document.body
+  )
 
   // Compact variant (MarketDetailPage)
   if (variant === 'compact') {
     const card = (
       <div className={cn(
-        'border border-surface-3 rounded-xl overflow-hidden',
+        'border border-surface-3 rounded-2xl overflow-hidden',
         gradientClass,
         className
       )}>
@@ -86,19 +103,19 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             <img
               src={getFullUploadUrl(profileImage)}
               alt={name}
-              className="w-24 h-24 flex-shrink-0 object-cover"
+              className="w-24 h-24 flex-shrink-0 object-cover rounded-l-2xl"
             />
           ) : (
             <div
               className={cn(
-                'w-24 h-24 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-foreground',
+                'w-24 h-24 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-foreground rounded-l-2xl',
                 'bg-white/30'
               )}
             >
               {initials}
             </div>
           )}
-          <div className="flex-1 min-w-0 flex flex-col bg-surface/80 rounded-r-xl">
+          <div className="flex-1 min-w-0 flex flex-col bg-surface/80">
             <div className="px-3 pt-2 pb-0.5">
               <h3 className="font-bold text-foreground text-sm truncate">{name}</h3>
             </div>
@@ -113,56 +130,68 @@ export const VendorCard: React.FC<VendorCardProps> = ({
               )}
             </div>
           </div>
+          {galleryImages.length > 0 && (
+            <div className="flex flex-row gap-1 p-1.5 pr-2 bg-surface/80 items-center rounded-r-2xl self-stretch">
+              {galleryImages.slice(0, 3).map((img, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLightboxImage(getFullUploadUrl(img) || ''); }}
+                  className="w-10 h-10 flex-shrink-0 cursor-pointer"
+                >
+                  <img
+                    src={getFullUploadUrl(img)}
+                    alt={`${name} gallery ${i + 1}`}
+                    className="w-full h-full object-cover rounded border border-surface-3 hover:opacity-80 transition-opacity pointer-events-none"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
 
-    if (showLink) {
-      return (
-        <Link to={`/vendors/${vendorId}`} className="block hover:opacity-90 transition-opacity">
-          {card}
-        </Link>
-      )
-    }
-    return card
+    return (
+      <>
+        {showLink ? (
+          <Link to={`/vendors/${vendorId}`} className="block hover:opacity-90 transition-opacity">
+            {card}
+          </Link>
+        ) : card}
+        {lightbox}
+      </>
+    )
   }
 
   // Default variant (Homepage, Vendor Listing)
-    const card = (
-      <div
-        className={cn(
-          'hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-xl overflow-visible',
-          gradientClass,
-          className
-        )}
-      >
-      {showLink && (
-        <Link
-          to={`/vendors/${vendorId}`}
-          className="text-xs text-amber-500 hover:text-amber-600 underline absolute top-2 right-2 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          vendor profile
-        </Link>
+  const card = (
+    <div
+      className={cn(
+        'hover:shadow-md transition-all duration-200 border border-surface-3 relative rounded-2xl overflow-hidden',
+        gradientClass,
+        className
       )}
+    >
       <div className="flex items-stretch">
         {profileImage ? (
           <img
             src={getFullUploadUrl(profileImage)}
             alt={name}
-            className="w-32 h-32 flex-shrink-0 object-cover border-2 border-surface-3 shadow-sm"
+            className="w-32 h-32 flex-shrink-0 object-cover rounded-l-2xl"
           />
         ) : (
           <div
             className={cn(
-              'w-32 h-32 flex items-center justify-center text-4xl font-bold text-foreground border-2 border-surface-3 shadow-sm flex-shrink-0',
+              'w-32 h-32 flex items-center justify-center text-4xl font-bold text-foreground flex-shrink-0 rounded-l-2xl',
               'bg-white/30'
             )}
           >
             {initials}
           </div>
         )}
-        <div className="flex-1 min-w-0 flex flex-col bg-surface/80 rounded-r-xl">
+        <div className="flex-1 min-w-0 flex flex-col bg-surface/80">
           <div className="px-4 pt-3 pb-1">
             <h3 className="font-bold text-foreground text-lg truncate" title={name}>
               {name}
@@ -187,11 +216,39 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             )}
           </div>
         </div>
+        {galleryImages.length > 0 && (
+          <div className="flex flex-row gap-1 p-1.5 pr-2 bg-surface/80 items-center justify-center rounded-r-2xl">
+            {galleryImages.slice(0, 3).map((img, i) => (
+              <button
+                key={i}
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLightboxImage(getFullUploadUrl(img) || ''); }}
+                className="w-12 h-12 flex-shrink-0 cursor-pointer"
+              >
+                <img
+                  src={getFullUploadUrl(img)}
+                  alt={`${name} gallery ${i + 1}`}
+                  className="w-full h-full object-cover rounded-lg border border-surface-3 hover:opacity-80 transition-opacity pointer-events-none"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 
-  return card
+  return (
+    <>
+      {showLink ? (
+        <Link to={`/vendors/${vendorId}`} className="block hover:opacity-90 transition-opacity">
+          {card}
+        </Link>
+      ) : card}
+      {lightbox}
+    </>
+  )
 }
 
 VendorCard.displayName = 'VendorCard'
