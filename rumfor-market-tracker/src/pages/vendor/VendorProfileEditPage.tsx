@@ -2,14 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Camera, X, Plus, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Camera, X, Plus, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardContent } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { VendorCard } from '@/components/VendorCard'
 import { CityAutocomplete } from '@/components/ui/CityAutocomplete'
 import { Select } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useUpdateVendorProfileMutation } from '@/features/vendor/hooks/useVendors'
 import { compressAndResizeImage } from '@/utils/imageUtils'
@@ -127,12 +129,17 @@ const profileSchema = z.object({
 type FormData = z.infer<typeof profileSchema>
 
 export const VendorProfileEditPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user, updateUser } = useAuthStore()
   const updateMutation = useUpdateVendorProfileMutation()
   const [categories, setCategories] = useState<string[]>([])
   const [cardColor, setCardColor] = useState<string | null>(null)
   const [galleryImages, setGalleryImages] = useState<string[]>([])
   const [saved, setSaved] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false)
+  const [isDeletingAvatar, setIsDeletingAvatar] = useState(false)
+  const [deletingGalleryIndex, setDeletingGalleryIndex] = useState<number | null>(null)
 
   const { register, handleSubmit, watch, formState: { errors }, reset } = useForm<FormData>({
     resolver: zodResolver(profileSchema),
@@ -194,28 +201,35 @@ export const VendorProfileEditPage: React.FC = () => {
   const uploadPhoto = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    setIsUploadingAvatar(true)
     try {
       const dataUrl = await compressAndResizeImage(file, { maxWidth: 500, maxHeight: 500, quality: 0.8 })
       await updateMutation.mutateAsync({ id: user.id, data: { profileImage: dataUrl } })
       updateUser({ vendorProfile: { ...user.vendorProfile, profileImage: dataUrl } })
     } catch (err) {
       console.error('Upload failed:', err)
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }, [user, updateMutation, updateUser])
 
   const removePhoto = useCallback(async () => {
     if (!user) return
+    setIsDeletingAvatar(true)
     try {
       await updateMutation.mutateAsync({ id: user.id, data: { profileImage: '' } })
       updateUser({ vendorProfile: { ...user.vendorProfile, profileImage: undefined } })
     } catch (err) {
       console.error('Remove failed:', err)
+    } finally {
+      setIsDeletingAvatar(false)
     }
   }, [user, updateMutation, updateUser])
 
   const uploadGalleryImage = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user || galleryImages.length >= MAX_GALLERY_IMAGES) return
+    setIsUploadingGallery(true)
     try {
       const dataUrl = await compressAndResizeImage(file, { maxWidth: 800, maxHeight: 600, quality: 0.8 })
       const newImages = [...galleryImages, dataUrl]
@@ -225,11 +239,14 @@ export const VendorProfileEditPage: React.FC = () => {
       updateUser({ vendorProfile: { ...user.vendorProfile, galleryImages: newImages } })
     } catch (err) {
       console.error('Gallery upload failed:', err)
+    } finally {
+      setIsUploadingGallery(false)
     }
   }, [user, updateMutation, updateUser, galleryImages])
 
   const removeGalleryImage = useCallback(async (index: number) => {
     if (!user) return
+    setDeletingGalleryIndex(index)
     try {
       const newImages = galleryImages.filter((_, i) => i !== index)
       await updateMutation.mutateAsync({ id: user.id, data: { galleryImages: newImages } })
@@ -237,6 +254,8 @@ export const VendorProfileEditPage: React.FC = () => {
       updateUser({ vendorProfile: { ...user.vendorProfile, galleryImages: newImages } })
     } catch (err) {
       console.error('Remove gallery image failed:', err)
+    } finally {
+      setDeletingGalleryIndex(null)
     }
   }, [user, updateMutation, updateUser, galleryImages])
 
@@ -299,302 +318,207 @@ export const VendorProfileEditPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 sm:py-8">
-      {/* Card Preview */}
-      <section className="mb-6">
-        <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Vendor Card Preview</h2>
-        <VendorCard vendor={previewData} showLink={false} />
-      </section>
+    <div className="space-y-3 animate-in slide-in-from-bottom-8 duration-500">
+      <div className="flex items-center gap-3 py-2 px-3 sm:px-0">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)}
+          className="p-2 h-10 w-10 shrink-0"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="flex-1">
+          <span className="text-base font-bold text-foreground">Edit Profile</span>
+        </div>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Photo & Card Color */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Photo & Card</h2>
-          <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
-              <div className="py-4">
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <div className="relative group flex-shrink-0 mx-auto sm:mx-0">
-                    <div className="w-64 h-40 rounded-xl overflow-hidden bg-surface-2">
-                      {profileImage ? (
-                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground">
-                          {user.firstName?.[0]}{user.lastName?.[0]}
-                        </div>
-                      )}
-                    </div>
-                    <label className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-xl group/badge">
-                      <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded-md text-xs flex items-center gap-1 opacity-80 group-hover/badge:opacity-100 transition-opacity">
-                        <Camera className="w-3.5 h-3.5" />
-                        <span>Change photo</span>
-                      </div>
-                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
-                    </label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:px-0">
+        <div className="flex gap-3 sm:justify-center">
+          <Card className="px-3 py-3 sm:px-4 sm:mx-0 -mx-3 rounded-xl sm:rounded-lg border-0 sm:border-0 shadow-none sm:bg-transparent flex-shrink-0 w-36 sm:w-[480px]">
+            <div className="text-xs text-muted-foreground mb-2 text-center">Avatar/Banner</div>
+            <div className="relative group w-full aspect-square sm:aspect-[2/1] mx-auto">
+              <div className="w-full h-full rounded-xl overflow-hidden bg-surface-2">
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-muted-foreground">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
                   </div>
-                  <div className="flex-1 flex flex-col justify-center">
-                    <p className="text-base font-medium text-foreground">
-                      {watched.businessName || `${user.firstName} ${user.lastName}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-4">{user.email}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <label className="cursor-pointer">
-                        <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
-                        <Button type="button" variant="outline" size="sm" disabled={updateMutation.isPending}>
-                          {updateMutation.isPending ? 'Uploading...' : 'Upload new'}
-                        </Button>
-                      </label>
-                      {profileImage && (
-                        <Button type="button" variant="ghost" size="sm" onClick={removePhoto} className="text-destructive hover:text-destructive">
-                          Remove
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="py-3">
-                <p className="text-sm font-medium text-foreground mb-2">Card color</p>
-                <div className="flex flex-wrap gap-2">
-                  {CARD_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setCardColor(cardColor === color ? null : color)}
-                      className={`w-8 h-8 rounded-lg ${color} transition-all ${
-                        cardColor === color ? 'ring-2 ring-accent ring-offset-2' : 'hover:opacity-80'
-                      }`}
-                    />
-                  ))}
-                </div>
-                {cardColor && (
-                  <button type="button" onClick={() => setCardColor(null)} className="text-xs text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1">
-                    <X className="w-3 h-3" /> Reset
-                  </button>
                 )}
               </div>
-            </CardContent>
+              {(isUploadingAvatar || isDeletingAvatar) && (
+                <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+                  <Spinner className="w-8 h-8 text-white" />
+                </div>
+              )}
+              {!isUploadingAvatar && !isDeletingAvatar && (
+                <label className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-xl group/badge">
+                  <div className="absolute bottom-1 right-1 bg-black/60 text-white p-1 rounded opacity-80 group-hover/badge:opacity-100 transition-opacity">
+                    <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </div>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
+                </label>
+              )}
+              {profileImage && !isUploadingAvatar && !isDeletingAvatar && (
+                <button
+                  type="button"
+                  onClick={removePhoto}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
           </Card>
-        </section>
 
-        {/* Product Gallery */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Product Gallery</h2>
-          <Card padding="none">
-            <CardContent className="px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-3">Add up to {MAX_GALLERY_IMAGES} photos of your products or setup</p>
-              <div className="flex flex-wrap gap-3">
-                {galleryImages.map((img, index) => (
-                  <div key={index} className="relative group">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-surface-2">
-                      <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+          <Card className="px-3 py-3 sm:px-4 flex-1 sm:flex-initial sm:w-96 -mx-3 sm:mx-0 rounded-xl sm:rounded-lg border-0 sm:border-0 shadow-none sm:bg-transparent">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Product Gallery</span>
+              <span className="text-xs text-muted-foreground">{galleryImages.length}/{MAX_GALLERY_IMAGES}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {galleryImages.map((img, index) => (
+                <div key={index} className="relative group aspect-square">
+                  <div className="w-full h-full rounded-lg overflow-hidden bg-surface-2">
+                    <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                  {deletingGalleryIndex === index && (
+                    <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                      <Spinner className="w-5 h-5 text-white" />
                     </div>
+                  )}
+                  {deletingGalleryIndex !== index && (
                     <button
                       type="button"
                       onClick={() => removeGalleryImage(index)}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     </button>
+                  )}
+                </div>
+              ))}
+              {isUploadingGallery && (
+                <div className="aspect-square rounded-lg bg-surface-2 flex items-center justify-center">
+                  <Spinner className="w-5 h-5" />
+                </div>
+              )}
+              {galleryImages.length < MAX_GALLERY_IMAGES && !isUploadingGallery && (
+                <label className="cursor-pointer aspect-square">
+                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadGalleryImage} />
+                  <div className="w-full h-full rounded-lg border-2 border-dashed border-surface-3 flex flex-col items-center justify-center text-muted-foreground hover:border-accent hover:text-accent transition-colors">
+                    <Plus className="w-5 h-5" />
                   </div>
-                ))}
-                {galleryImages.length < MAX_GALLERY_IMAGES && (
-                  <label className="cursor-pointer">
-                    <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadGalleryImage} />
-                    <div className="w-24 h-24 rounded-lg border-2 border-dashed border-surface-3 flex flex-col items-center justify-center text-muted-foreground hover:border-accent hover:text-accent transition-colors">
-                      <Plus className="w-6 h-6" />
-                      <span className="text-xs mt-1">Add</span>
-                    </div>
-                  </label>
-                )}
-              </div>
-            </CardContent>
+                </label>
+              )}
+            </div>
           </Card>
-        </section>
+        </div>
 
-        {/* Info */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Info</h2>
-          <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Business name</p>
-                  <span className="text-xs text-muted-foreground">Vendor Card, Profile</span>
-                </div>
-                <Input {...register('businessName')} placeholder="Artisan Crafts Co." className="text-sm" />
-                {errors.businessName && <p className="text-xs text-destructive mt-1">{errors.businessName.message}</p>}
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Tagline</p>
-                  <span className="text-xs text-muted-foreground">Vendor Card, Profile</span>
-                </div>
-                <Input {...register('tagline')} placeholder="Handcrafted goods made with love" className="text-sm" />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Short description</p>
-                  <span className="text-xs text-muted-foreground">Vendor Card</span>
-                </div>
-                <textarea
-                  {...register('blurb')}
-                  placeholder="Brief description of what you sell..."
-                  rows={2}
-                  className="w-full px-3 py-2 bg-surface border border-gray-300 rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent text-sm"
-                />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Bio</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <textarea
-                  {...register('bio')}
-                  placeholder="Tell your story..."
-                  rows={3}
-                  className="w-full px-3 py-2 bg-surface border border-gray-300 rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent text-sm"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        <Card className="px-3 py-4 space-y-4 sm:mx-0 -mx-3 rounded-xl sm:rounded-lg border-0 sm:border shadow-none sm:shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input {...register('businessName')} placeholder="Business Name" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('tagline')} placeholder="Tagline" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-sm font-bold text-foreground">Short Description</label>
+            <Textarea {...register('blurb')} placeholder="Brief description of what you sell..." rows={2} className="text-base font-semibold placeholder:text-muted-foreground/70" />
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-sm font-bold text-foreground">Full Bio</label>
+            <Textarea {...register('bio')} placeholder="Tell your story..." rows={3} className="text-base font-semibold placeholder:text-muted-foreground/70" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <CityAutocomplete
+              value={watch('city') || ''}
+              onChange={(value) => {
+                const event = { target: { name: 'city', value } }
+                register('city').onChange(event)
+              }}
+              onStateChange={(state) => {
+                const event = { target: { name: 'state', value: state } }
+                register('state').onChange(event)
+              }}
+              placeholder="City"
+            />
+            <Select
+              value={watch('state') || ''}
+              onValueChange={(value) => {
+                const event = { target: { name: 'state', value } }
+                register('state').onChange(event)
+              }}
+              placeholder="Province/State"
+              options={PROVINCES_AND_STATES}
+            />
+          </div>
+        </Card>
 
-        {/* Location */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Location</h2>
-          <Card padding="none">
-            <CardContent className="px-4 py-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium text-foreground">City</p>
-                    <span className="text-xs text-muted-foreground">Profile</span>
-                  </div>
-                  <CityAutocomplete
-                    value={watch('city') || ''}
-                    onChange={(value) => {
-                      const event = { target: { name: 'city', value } }
-                      register('city').onChange(event)
-                    }}
-                    onStateChange={(state) => {
-                      const event = { target: { name: 'state', value: state } }
-                      register('state').onChange(event)
-                    }}
-                    placeholder="Enter your city"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium text-foreground">Province/State</p>
-                    <span className="text-xs text-muted-foreground">Profile</span>
-                  </div>
-                  <Select
-                    value={watch('state') || ''}
-                    onValueChange={(value) => {
-                      const event = { target: { name: 'state', value } }
-                      register('state').onChange(event)
-                    }}
-                    placeholder="Select province/state"
-                    options={PROVINCES_AND_STATES}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        <Card className="px-3 py-4 space-y-4 sm:mx-0 -mx-3 rounded-xl sm:rounded-lg border-0 sm:border shadow-none sm:shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input {...register('publicPhone')} placeholder="Phone" type="tel" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('website')} placeholder="Website" type="url" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('instagram')} placeholder="Instagram" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('facebook')} placeholder="Facebook" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('tiktok')} placeholder="TikTok" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('etsy')} placeholder="Etsy Shop URL" type="url" className="text-base font-semibold placeholder:text-muted-foreground/70" />
+            <Input {...register('shoppingLink')} placeholder="Online Store URL" type="url" className="text-base font-semibold placeholder:text-muted-foreground/70 sm:col-span-2" />
+          </div>
+          {(errors.website || errors.etsy || errors.shoppingLink) && (
+            <p className="text-red-500 text-xs">Please enter a valid URL</p>
+          )}
+        </Card>
 
-        {/* Contact & Links */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Contact & Links</h2>
-          <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Phone</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('publicPhone')} placeholder="(555) 123-4567" type="tel" className="text-sm" />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Website</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('website')} placeholder="https://yoursite.com" type="url" className="text-sm" />
-                {errors.website && <p className="text-xs text-destructive mt-1">{errors.website.message}</p>}
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Instagram</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('instagram')} placeholder="username" className="text-sm" />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Facebook</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('facebook')} placeholder="username or page name" className="text-sm" />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">TikTok</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('tiktok')} placeholder="@username" className="text-sm" />
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Etsy Shop</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('etsy')} placeholder="https://etsy.com/shop/yourshop" type="url" className="text-sm" />
-                {errors.etsy && <p className="text-xs text-destructive mt-1">{errors.etsy.message}</p>}
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm font-medium text-foreground">Online Store</p>
-                  <span className="text-xs text-muted-foreground">Profile</span>
-                </div>
-                <Input {...register('shoppingLink')} placeholder="https://shop.yoursite.com" type="url" className="text-sm" />
-                {errors.shoppingLink && <p className="text-xs text-destructive mt-1">{errors.shoppingLink.message}</p>}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        <Card className="px-3 py-4 space-y-4 sm:mx-0 -mx-3 rounded-xl sm:rounded-lg border-0 sm:border shadow-none sm:shadow-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-foreground text-base">Categories</h3>
+            <span className="text-xs text-muted-foreground">{categories.length}/{MAX_CATEGORIES}</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PRODUCT_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => toggleCategory(cat)}
+                disabled={categories.length >= MAX_CATEGORIES && !categories.includes(cat)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  categories.includes(cat)
+                    ? 'bg-accent text-accent-foreground'
+                    : 'bg-white border border-border hover:bg-accent/10 text-foreground disabled:opacity-40'
+                }`}
+              >
+                {cat.replace(/-/g, ' ')}
+              </button>
+            ))}
+          </div>
+        </Card>
 
-        {/* Categories */}
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Categories</h2>
-          <Card padding="none">
-            <CardContent className="px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-3">Select up to {MAX_CATEGORIES} categories</p>
-              <div className="flex flex-wrap gap-2">
-                {PRODUCT_CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleCategory(cat)}
-                    disabled={categories.length >= MAX_CATEGORIES && !categories.includes(cat)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      categories.includes(cat)
-                        ? 'bg-accent text-accent-foreground'
-                        : 'bg-surface border border-surface-3 hover:bg-surface-2 text-foreground disabled:opacity-40'
-                    }`}
-                  >
-                    {cat.replace(/-/g, ' ')}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+        <Card className="px-3 py-4 space-y-4 sm:mx-0 -mx-3 rounded-xl sm:rounded-lg border-0 sm:border shadow-none sm:shadow-sm">
+          <h3 className="font-bold text-foreground text-base">Card Preview</h3>
+          <VendorCard vendor={previewData} showLink={false} />
+          <div className="flex flex-wrap gap-2">
+            {CARD_COLORS.map(color => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => setCardColor(cardColor === color ? null : color)}
+                className={`w-8 h-8 rounded-lg ${color} transition-all ${
+                  cardColor === color ? 'ring-2 ring-accent ring-offset-2' : 'hover:opacity-80'
+                }`}
+              />
+            ))}
+          </div>
+          {cardColor && (
+            <button type="button" onClick={() => setCardColor(null)} className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <X className="w-4 h-4" /> Reset
+            </button>
+          )}
+        </Card>
 
-        {/* Submit */}
-        <div className="flex items-center gap-4 pt-2">
-          <Button type="submit" variant="primary" disabled={updateMutation.isPending} isLoading={updateMutation.isPending}>
+        <div className="flex items-center gap-4 px-3 sm:px-0 pb-4">
+          <Button type="submit" variant="primary" disabled={updateMutation.isPending} isLoading={updateMutation.isPending} className="flex-1 sm:flex-none sm:min-w-[120px]">
             Save
           </Button>
           {saved && <span className="text-sm text-success font-medium">Saved!</span>}

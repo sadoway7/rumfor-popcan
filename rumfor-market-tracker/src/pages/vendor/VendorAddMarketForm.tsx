@@ -684,8 +684,7 @@ const schedules = formData.schedule.map(s => {
     if (currentStep > 1) {
       prevStep();
     } else {
-      // On first section, behave like browser back button
-      window.history.back();
+      navigate('/markets');
     }
   }
 

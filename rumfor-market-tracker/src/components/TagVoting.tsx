@@ -11,12 +11,14 @@ interface TagVotingProps {
   marketTags: string[]
   marketId: string
   className?: string
+  hideHeading?: boolean
 }
 
 export const TagVoting: React.FC<TagVotingProps> = ({
   marketTags,
   marketId,
-  className
+  className,
+  hideHeading = false
 }) => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
@@ -106,9 +108,11 @@ export const TagVoting: React.FC<TagVotingProps> = ({
     <div className={cn('space-y-4', className)}>
       {/* Market Tags with Voting */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between pt-4">
-          <h3 className="text-lg font-medium">Market Tags</h3>
-        </div>
+        {!hideHeading && (
+          <div className="flex items-center justify-between pt-4">
+            <h3 className="text-lg font-medium">Market Tags</h3>
+          </div>
+        )}
 <motion.div 
             className="flex flex-wrap gap-3"
           >

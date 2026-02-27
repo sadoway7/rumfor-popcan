@@ -17,7 +17,7 @@ import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye, BookmarkMinus, AlertTriangle } from 'lucide-react'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye, BookmarkMinus, AlertTriangle, FileText } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
 import { RelatedMarketDates } from '@/components/RelatedMarketDates'
 import {
@@ -465,160 +465,318 @@ export const MarketDetailPage: React.FC = () => {
       {/* TABS */}
       <div className="mb-2 sm:mb-2 overflow-hidden">
         <Tabs
-          inactiveTextColor="text-gray-400"
-          variant="pills"
+          variant="glow-pills"
           size="lg"
-          listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-none sm:rounded-b-3xl"
+          listClassName="px-2 sm:px-4 py-2"
+          contentClassName=""
           items={[
             {
               key: 'details',
               label: 'Info',
               icon: <Info className="w-5 h-5" />,
               content: (
-                <div className="space-y-4 pb-4 pt-0 px-4 pb-[100px]">
-                  {/* Quick Actions - Share, Report & Update */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 hover:text-accent hover:border-accent"
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({ title: market.name, url: window.location.href })
-                        }
-                      }}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      Share
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 text-muted-foreground/40 hover:text-muted-foreground/40 hover:bg-transparent"
-                      onClick={() => setShowReportModal(true)}
-                    >
-                      <Flag className="w-4 h-4 mr-2" />
-                      Report
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 text-muted-foreground/40 hover:text-muted-foreground/40 hover:bg-transparent"
-                      onClick={() => setShowUpdateModal(true)}
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Update
-                    </Button>
+                <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-t-3xl mt-3">
+                  {/* Action Bar - Mobile Above Location */}
+                   <div className="md:hidden flex flex-wrap gap-4 py-4 justify-center">
+                     {market.location?.address && (
+                       <button
+                         onClick={() => {
+                           const address = formatLocation(market.location)
+                           window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+                         }}
+                         className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                       >
+                         <MapPin className="h-5 w-5" />
+                       </button>
+                     )}
+                     {market.contact?.website && (
+                       <a
+                         href={market.contact.website}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                       >
+                         <Globe className="h-5 w-5" />
+                       </a>
+                     )}
+                     <button
+                       onClick={() => {
+                         if (navigator.share) {
+                           navigator.share({ title: market.name, url: window.location.href })
+                         }
+                       }}
+                       className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                     >
+                       <Share2 className="h-5 w-5" />
+                     </button>
+                     {market.applicationSettings?.applicationLink && (
+                       <a
+                         href={market.applicationSettings.applicationLink}
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         className="h-10 px-4 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
+                       >
+                         Apply Here
+                       </a>
+                     )}
+                   </div>
+
+                  {/* Location Bar - Desktop Only + Mobile Location Below Actions */}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4 border-b border-gray-200">
+                    {/* Mobile Location */}
+                    <div className="md:hidden flex items-center justify-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0" />
+                        <strong className="text-base font-medium">
+                          {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
+                        </strong>
+                        {market.location?.address && market.location.address !== 'TBD' && (
+                          <>
+                            <span className="text-muted-foreground text-base">·</span>
+                            <span className="text-base text-muted-foreground">{market.location.address}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Desktop Layout: Location Left, Buttons Right */}
+                    <div className="hidden md:flex items-center gap-4 w-full">
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0" />
+                        <strong className="text-base font-medium">
+                          {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
+                        </strong>
+                        {market.location?.address && market.location.address !== 'TBD' && (
+                          <>
+                            <span className="text-muted-foreground text-base">·</span>
+                            <span className="text-base text-muted-foreground">{market.location.address}</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      {/* Desktop Action Buttons */}
+                       <div className="flex gap-2 ml-auto">
+                         {market.location?.address && (
+                           <button
+                             onClick={() => {
+                               const address = formatLocation(market.location)
+                               window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+                             }}
+                             className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                           >
+                             <MapPin className="h-5 w-5" />
+                           </button>
+                         )}
+                         {market.contact?.website && (
+                           <a
+                             href={market.contact.website}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                           >
+                             <Globe className="h-5 w-5" />
+                           </a>
+                         )}
+                         <button
+                           onClick={() => {
+                             if (navigator.share) {
+                               navigator.share({ title: market.name, url: window.location.href })
+                             }
+                           }}
+                           className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                         >
+                           <Share2 className="h-5 w-5" />
+                         </button>
+                         {market.applicationSettings?.applicationLink && (
+                           <a
+                             href={market.applicationSettings.applicationLink}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="h-10 px-4 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
+                           >
+                             Apply Here
+                           </a>
+                         )}
+                       </div>
+                    </div>
                   </div>
 
-                  {/* Left: Location + Schedule / Right: Action Links */}
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Left Column */}
-                    <div className="space-y-4">
-                      {/* Location */}
-                      <div className="flex items-center gap-3">
-                        <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                        <p className="text-sm">{formatLocation(market.location)}</p>
-                      </div>
+
+
+                  {/* Main Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-0 pt-6">
+                    
+                    {/* Left: Dates Column */}
+                    <div className="pr-0 md:pr-6">
+                      {/* Section Label */}
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">
+                        {scheduleDates.length > 0 ? new Date(scheduleDates[0].startDate).getFullYear() : new Date().getFullYear()} Dates
+                      </p>
 
                       {/* Schedule - only show if NOT a split market */}
                       {!market.tags?.some(tag => tag.startsWith('split-market:')) && (
-                        <div className="space-y-2">
+                        <div className="flex flex-col gap-0.5">
                           {scheduleDates.length > 0 ? (
-                            scheduleDates.map((scheduleItem: any, index) => {
-                              const dateObj = parseLocalDate(scheduleItem.startDate)
-                              const displayDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                            (() => {
+                              // Calculate first upcoming date index
+                              const today = new Date()
+                              today.setHours(0, 0, 0, 0)
+                              const firstUpcomingIndex = scheduleDates.findIndex(s => {
+                                const d = parseLocalDate(s.startDate)
+                                d.setHours(0, 0, 0, 0)
+                                return d >= today
+                              })
                               
-                              return (
-                                <div key={index} className="flex items-start gap-2">
-                                  <Calendar className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
-                                  <div>
-                                    <p className="font-medium text-sm">{displayDate}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatTime12Hour(scheduleItem.startTime)} - {formatTime12Hour(scheduleItem.endTime)}
-                                    </p>
+                              return scheduleDates.map((scheduleItem: any, index: number) => {
+                                const dateObj = parseLocalDate(scheduleItem.startDate)
+                                const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                                const dayNum = dateObj.getDate()
+                                const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
+                                const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
+                                const isFirstUpcoming = index === firstUpcomingIndex
+                                
+                                return (
+                                  <div
+                                    key={index}
+                                    className={cn(
+                                      "flex items-center gap-3 px-2 py-2 rounded-lg cursor-default",
+                                      isFirstUpcoming && "bg-amber-50"
+                                    )}
+                                  >
+                                    <div className={cn(
+                                       "w-12 h-12 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
+                                       isFirstUpcoming 
+                                         ? "bg-white border-amber-400" 
+                                         : "bg-white border-gray-400"
+                                     )}>
+                                      <span className="text-[11px] font-bold uppercase text-amber-500 leading-none">{monthAbbr}</span>
+                                      <span className="text-xl font-bold text-gray-800 leading-tight">{dayNum}</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
+                                      <p className="text-sm text-gray-400">
+                                        {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
+                                      </p>
+                                    </div>
+                                    {isFirstUpcoming && (
+                                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
+                                        Next
+                                      </span>
+                                    )}
                                   </div>
-                                </div>
-                              )
-                            })
+                                )
+                              })
+                            })()
                           ) : (
-                            <p className="text-sm text-muted-foreground">Schedule not available</p>
+                            <p className="text-sm text-muted-foreground py-3">Schedule not available</p>
                           )}
                         </div>
                       )}
                       
                       {/* Related Market Dates - for split markets */}
                       {market.tags?.some(tag => tag.startsWith('split-market:')) && (
-                        <div className="mt-3">
-                          <div className="mb-3">
-                            <h3 className="text-base font-bold flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-accent" />
-                              Rotating Vendors
-                            </h3>
-                            <span className="text-xs text-muted-foreground ml-7">(select date to view)</span>
-                          </div>
-                          <RelatedMarketDates market={market} variant="tabs" />
+                        <div>
+                          <RelatedMarketDates market={market} variant="schedule" />
                         </div>
                       )}
+
+                      {/* Tags Section */}
+                      <div className="mt-6 pt-5 border-t border-gray-200">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Market Tags</p>
+                        <TagVoting
+                          marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
+                          marketId={id!}
+                          hideHeading={true}
+                        />
+                      </div>
                     </div>
 
-                    {/* Right Column: Action Links */}
-                    <div className="space-y-4 text-right flex flex-col items-end">
-                      {market.applicationSettings?.applicationLink && (
-                        <a
-                          href={market.applicationSettings.applicationLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2"
-                        >
-                          Apply Here
-                          <Globe className="w-4 h-4" />
-                        </a>
-                      )}
-                      {market.applicationSettings?.applicationDeadline && (
-                        <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-2">
-                          App Deadline: {new Date(market.applicationSettings.applicationDeadline + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          <Clock className="w-4 h-4" />
-                        </span>
-                      )}
-                      {market.promoter && (
-                        <span className="text-xs font-bold text-accent inline-flex items-center gap-2">
-                          {market.marketType === 'promoter-managed' ? 'Promoter Managed' : 'Community Submitted'}
-                          <Users className="w-4 h-4" />
-                        </span>
-                      )}
-                      {market.contact?.website && (
-                        <a
-                          href={market.contact.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2"
-                        >
-                          Official Website
-                          <Globe className="w-4 h-4" />
-                        </a>
-                      )}
-                      {market.location?.address && (
+                    {/* Right: Sidebar */}
+                    <div className="border-l-0 md:border-l border-gray-200 pl-0 md:pl-6 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0">
+                      {/* Listing Info */}
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Listing Info</p>
+                      <div className="space-y-1.5 mb-6">
+                        {market.promoter && (
+                          <div className="px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors">
+                            <span className="text-sm font-medium text-amber-600 uppercase tracking-wide">
+                              Community Submitted
+                            </span>
+                          </div>
+                        )}
                         <button
-                          className="text-base font-medium text-primary hover:underline inline-flex items-center gap-2 cursor-pointer"
-                          onClick={() => {
-                            const address = formatLocation(market.location)
-                            window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
-                          }}
+                          onClick={() => setShowUpdateModal(true)}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
                         >
-                          Directions
-                          <MapPin className="w-4 h-4" />
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm font-medium">Suggest an Update</span>
+                          </div>
+                          <span className="text-gray-300 text-lg">›</span>
                         </button>
-                      )}
+                        <button
+                           onClick={() => setShowReportModal(true)}
+                           className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
+                         >
+                           <div className="flex items-center gap-2">
+                             <Flag className="w-4 h-4 text-gray-400" />
+                             <span className="text-sm font-medium">Report Issue</span>
+                           </div>
+                           <span className="text-gray-300 text-lg">›</span>
+                         </button>
+                       </div>
+
+                       {/* Quick Links */}
+                       <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Quick Links</p>
+                       <div className="space-y-1.5">
+                         {market.applicationSettings?.applicationLink && (
+                           <a
+                             href={market.applicationSettings.applicationLink}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
+                           >
+                             <div className="flex items-center gap-2">
+                               <FileText className="w-4 h-4 text-gray-400" />
+                               <span className="text-sm font-medium">Vendor Application</span>
+                             </div>
+                             <span className="text-gray-300 text-lg">›</span>
+                           </a>
+                         )}
+                         {market.contact?.website && (
+                           <a
+                             href={market.contact.website}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
+                           >
+                             <div className="flex items-center gap-2">
+                               <Globe className="w-4 h-4 text-gray-400" />
+                               <span className="text-sm font-medium">Official Website</span>
+                             </div>
+                             <span className="text-gray-300 text-lg">›</span>
+                           </a>
+                         )}
+                         {market.location?.address && (
+                           <button
+                             onClick={() => {
+                               const address = formatLocation(market.location)
+                               window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+                             }}
+                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
+                           >
+                             <div className="flex items-center gap-2">
+                               <MapPin className="w-4 h-4 text-gray-400" />
+                               <span className="text-sm font-medium">Get Directions</span>
+                             </div>
+                             <span className="text-gray-300 text-lg">›</span>
+                           </button>
+                         )}
+                         {!market.applicationSettings?.applicationLink && !market.contact?.website && !market.location?.address && (
+                           <p className="text-sm text-muted-foreground py-2">No quick links available</p>
+                         )}
+                       </div>
                     </div>
                   </div>
-
-                  {/* Tags */}
-                  <TagVoting
-                    marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
-                    marketId={id!}
-                    className="mt-8 mb-6"
-                  />
 
 {/* Booth Fee */}
                   {market.pricing?.boothFee !== undefined && market.pricing?.boothFee !== 0 && (
@@ -777,7 +935,7 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Photos',
               icon: <Image className="w-5 h-5" />,
               content: (
-                <div className="pb-4 pt-4 px-4 pb-[100px]">
+                <div className="pb-4 pt-4 px-4 pb-[100px] bg-white rounded-t-3xl mt-3">
                   <p className="text-center text-muted-foreground py-8">Disabled at the moment</p>
                 </div>
               )
@@ -787,7 +945,7 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Comments',
               icon: <MessageSquare className="w-5 h-5" />,
               content: (
-                <div className="py-2 px-0 sm:py-4 sm:px-4 pb-[100px]">
+                <div className="bg-white py-2 px-0 sm:py-4 sm:px-4 pb-[100px] rounded-t-3xl mt-3">
                   <CommentList marketId={commentsMarketId} />
                 </div>
               )
