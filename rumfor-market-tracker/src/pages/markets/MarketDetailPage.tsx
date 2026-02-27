@@ -374,14 +374,24 @@ export const MarketDetailPage: React.FC = () => {
 
                 {/* Title + Description */}
         <div className="relative">
-          {/* Dark gradient background */}
+          {/* Dark gradient background - collapsed */}
           <div 
-            className="absolute left-0 right-0 bottom-0 pointer-events-none transition-all duration-300"
+            className="absolute left-0 right-0 bottom-0 pointer-events-none"
             style={{
               top: 0,
-              background: isDescriptionExpanded 
-                ? 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 30%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,0.7) 85%, rgba(0,0,0,0.4) 100%)'
-                : 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.45) 85%, transparent 100%)'
+              opacity: isDescriptionExpanded ? 0 : 1,
+              transition: `opacity ${isDescriptionExpanded ? '0.3s' : '1.5s'} ease`,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.45) 85%, transparent 100%)'
+            }}
+          />
+          {/* Dark gradient background - expanded */}
+          <div 
+            className="absolute left-0 right-0 bottom-0 pointer-events-none"
+            style={{
+              top: 0,
+              opacity: isDescriptionExpanded ? 1 : 0,
+              transition: `opacity ${isDescriptionExpanded ? '0.3s' : '1.5s'} ease`,
+              background: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 30%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.5) 75%, rgba(0,0,0,0.2) 90%, transparent 100%)'
             }}
           />
           
