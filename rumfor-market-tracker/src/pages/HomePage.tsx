@@ -8,6 +8,7 @@ import { MarketGrid } from '@/components/MarketGrid';
 import { MarketCard } from '@/components/MarketCard';
 import { SubHeader } from '@/components/SubHeader';
 import { VendorCard } from '@/components/VendorCard';
+import { WebGLShader } from '@/components/WebGLShader';
 import { marketsApi } from '@/features/markets/marketsApi';
 import { useVendors } from '@/features/vendor/hooks/useVendors';
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets';
@@ -288,26 +289,20 @@ export function HomePage() {
 
       {/* Main Content */}
       <div
-        className={`flex-1 px-6 py-1 space-y-1 ${isSidebarOpen ? 'hidden md:block' : 'block'}`}
+        className={`flex-1 py-1 space-y-1 ${isSidebarOpen ? 'hidden md:block' : 'block'}`}
       >
         {isAuthenticated && <SubHeader />}
 
-        {/* Hero Banner - Full Width */}
-        <div className="w-full max-w-[1600px] mx-auto">
+        {/* Hero Banner - Full Width Background */}
+        <div className="w-full relative overflow-hidden bg-gradient-to-br from-surface-2 via-surface to-surface-3">
+          {/* WebGL Shader Background - Full Width */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+            <WebGLShader />
+          </div>
 
-          {/* Hero Content */}
-          <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3">
-            {/* Lava Lamp Bubbles */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
-              <div className="absolute top-1/3 right-1/4 w-24 h-24 bg-orange-500/20 rounded-full blur-xl animate-float-2" />
-              <div className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-amber-500/15 rounded-full blur-xl animate-float-3" />
-              <div className="absolute top-1/2 right-1/3 w-20 h-20 bg-amber-400/25 rounded-full blur-xl animate-float-4" />
-              <div className="absolute bottom-1/3 right-1/4 w-28 h-28 bg-orange-400/20 rounded-full blur-xl animate-float-5" />
-              <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
-            </div>
-
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center pt-8 pb-14 px-6 md:px-12">
+          {/* Hero Content - Constrained Width */}
+          <div className="w-full max-w-[1600px] mx-auto relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center pt-8 pb-14 px-6 md:px-12">
               {/* First Column - YOUR MARKET ORGANIZER */}
               <div className="flex flex-col items-center md:items-start animate-[fadeIn_0.4s_ease-out_both] md:col-span-1" style={{ animationDelay: '0.2s' }}>
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-left">
