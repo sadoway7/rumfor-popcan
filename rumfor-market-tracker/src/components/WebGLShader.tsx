@@ -43,11 +43,12 @@ export function WebGLShader() {
       void main() {
         vec2 p = (gl_FragCoord.xy * 2.0 - resolution) / min(resolution.x, resolution.y);
         
-        float d = length(p) * distortion;
+        float leftBias = smoothstep(0.5, -1.5, p.x);
+        float d = length(p) * distortion * (1.0 + leftBias * 2.0);
         
-        float rx = p.x * (1.0 + d);
+        float rx = p.x * (1.0 + d * 0.6);
         float gx = p.x;
-        float bx = p.x * (1.0 - d);
+        float bx = p.x * (1.0 - d * 0.6);
 
         float r = 0.4 / abs(p.y + sin((rx + time) * xScale) * yScale);
         float g = 0.4 / abs(p.y + sin((gx + time) * xScale) * yScale);
@@ -55,7 +56,7 @@ export function WebGLShader() {
         
         float verticalFade = smoothstep(-1.2, -0.3, p.y) * smoothstep(1.2, 0.3, p.y);
         
-        float alpha = min((r + g + b) / 3.0 * 0.6, 0.8) * verticalFade;
+        float alpha = min((r + g + b) / 3.0 * 0.8, 0.9) * verticalFade;
         
         gl_FragColor = vec4(r, g, b, alpha);
       }
@@ -72,9 +73,9 @@ export function WebGLShader() {
       refs.uniforms = {
         resolution: { value: [canvas.clientWidth, canvas.clientHeight] },
         time: { value: 0.0 },
-        xScale: { value: 1.0 },
+        xScale: { value: 0.6 },
         yScale: { value: 0.5 },
-        distortion: { value: 0.05 },
+        distortion: { value: 0.02 },
       }
 
       const position = [
@@ -105,7 +106,7 @@ export function WebGLShader() {
     }
 
     const animate = () => {
-      if (refs.uniforms) refs.uniforms.time.value += 0.006
+      if (refs.uniforms) refs.uniforms.time.value -= 0.01
       if (refs.renderer && refs.scene && refs.camera) {
         refs.renderer.render(refs.scene, refs.camera)
       }

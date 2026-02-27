@@ -137,20 +137,16 @@ export function Header() {
       className={`sticky top-0 z-[60] bg-background/90 backdrop-blur-xl transition-transform duration-300 ${isHidden ? '-translate-y-full' : ''}`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-[auto,1fr,auto] items-center h-18 md:h-16 gap-2 md:gap-4 py-2">
+        <div className="grid grid-cols-[auto,1fr,auto] items-center h-16 gap-2 md:gap-4 py-2">
           {/* Logo - Left */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/" className={`flex items-center gap-2 ${isHomePage ? 'md:invisible' : ''}`}>
-              <div className={`w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 ${
-              theme === 'light'
-                ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
-                : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
-            }`}>
-                <span className="text-accent-foreground font-bold text-lg">
+            <Link to="/" className="flex items-center gap-2.5 whitespace-nowrap">
+              <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-gray-500/40 -mt-0.5">
+                <span className="text-accent-foreground font-bold text-xl">
                   R
                 </span>
               </div>
-              <span className="hidden md:block font-bold text-lg text-foreground">RUMFOR</span>
+              <span className="hidden md:block font-bold text-xl text-foreground">RUMFOR</span>
             </Link>
           </div>
 

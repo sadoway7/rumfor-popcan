@@ -26,6 +26,7 @@ import {
   Archive,
   Store,
   ArrowRight,
+  Bookmark,
 } from 'lucide-react';
 
 // Fallback mock vendors when API returns empty
@@ -200,7 +201,7 @@ export function HomePage() {
               <div className="relative bg-gradient-to-br from-surface-2 to-surface px-5 py-10 border-b border-surface-3">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-3 mb-6">
-                  <div className="w-20 h-20 bg-accent rounded-xl flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-gray-500/40">
+                  <div className="w-20 h-20 bg-accent rounded-[18px] flex items-center justify-center transform -rotate-3 shadow-[4px_4px_0px_0px] shadow-gray-500/40">
                     <span className="text-accent-foreground font-bold text-5xl">
                       R
                     </span>
@@ -223,7 +224,7 @@ export function HomePage() {
 
                 {/* Primary Action */}
                 <div className="max-w-xs mx-auto">
-                  {!isAuthenticated ? (
+                  {!isAuthenticated && (
                     <Link to="/auth/register" className="block">
                       <Button
                         size="lg"
@@ -232,21 +233,29 @@ export function HomePage() {
                         Get Started
                       </Button>
                     </Link>
-                  ) : (
-                    <Link to="/vendor/tracked-markets" className="block">
-                      <Button size="lg" variant="outline" className="w-full">
-                        My Markets
-                      </Button>
-                    </Link>
                   )}
                 </div>
               </div>
 
               {/* Browse by Category */}
               <div className="px-4 py-4">
-                <h3 className="text-sm font-bold text-foreground uppercase tracking-wide mb-3 text-center">
-                  Explore
-                </h3>
+                <Link to="/markets" className="block mb-3">
+                  <div className="flex items-center justify-between gap-1 p-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 hover:-translate-y-0.5 hover:shadow-md transition-all border border-amber-600">
+                    <div className="flex items-center gap-1.5">
+                      <Store
+                        className="h-4 w-4 text-white shrink-0"
+                        strokeWidth={2}
+                      />
+                      <span className="font-semibold text-white text-sm">
+                        Browse All
+                      </span>
+                    </div>
+                    <ArrowRight
+                      className="h-3 w-3 text-white flex-shrink-0"
+                      strokeWidth={2}
+                    />
+                  </div>
+                </Link>
                 <div className="grid grid-cols-2 gap-2">
                   {marketCategories.map(cat => {
                     const Icon = cat.icon;
@@ -276,11 +285,6 @@ export function HomePage() {
                     );
                   })}
                 </div>
-                <Link to="/markets" className="block mt-3 pb-32">
-                  <button className="w-full py-2 text-sm text-amber-500 font-medium hover:underline">
-                    View All Categories →
-                  </button>
-                </Link>
               </div>
             </div>
           </div>
@@ -392,12 +396,12 @@ export function HomePage() {
               className="hidden md:flex flex-col items-center justify-center h-[384px] animate-[fadeIn_1.5s_ease-out_0.75s_both]"
             >
               <div className="flex flex-col items-center space-y-4 transform -rotate-3">
-                <div className="w-[130px] h-[130px] bg-accent rounded-xl flex items-center justify-center shadow-[4px_4px_0px_0px] shadow-gray-500/40">
-                  <span className="text-accent-foreground font-bold text-[80px]">
+                <div className="w-[140px] h-[140px] bg-accent rounded-[28px] flex items-center justify-center shadow-[8px_8px_0px_0px] shadow-gray-600/60">
+                  <span className="text-accent-foreground font-black text-[90px]">
                     R
                   </span>
                 </div>
-                <span className="font-bold text-[54px] text-foreground tracking-tighter uppercase">
+                <span className="font-black text-[58px] text-foreground tracking-tighter uppercase">
                   Rumfor
                 </span>
               </div>
