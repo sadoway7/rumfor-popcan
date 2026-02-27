@@ -743,7 +743,7 @@ export const MarketDetailPage: React.FC = () => {
                     </div>
 
                     {/* Right: Sidebar */}
-                    <div className="border-l-0 md:border-l border-gray-200 pl-0 md:pl-6 mt-6 md:mt-0 pt-6 md:pt-0 border-t md:border-t-0">
+                    <div className="hidden md:block border-l border-gray-200 pl-6">
                       {/* Listing Info */}
                       <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Listing Info</p>
                       <div className="space-y-1.5 mb-6">
@@ -780,21 +780,7 @@ export const MarketDetailPage: React.FC = () => {
                        <div className="hidden md:block">
                         <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Quick Links</p>
                         <div className="space-y-1.5">
-                         {market.applicationSettings?.applicationLink && (
-                           <a
-                             href={market.applicationSettings.applicationLink}
-                             target="_blank"
-                             rel="noopener noreferrer"
-                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors text-left"
-                           >
-                             <div className="flex items-center gap-2">
-                               <FileText className="w-4 h-4 text-gray-400" />
-                               <span className="text-sm font-medium">Vendor Application</span>
-                             </div>
-                             <span className="text-gray-300 text-lg">›</span>
-                           </a>
-                         )}
-                         {market.contact?.website && (
+                          {market.contact?.website && (
                            <a
                              href={market.contact.website}
                              target="_blank"
@@ -921,6 +907,32 @@ export const MarketDetailPage: React.FC = () => {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Mobile Listing Info - after vendors */}
+                  <div className="md:hidden mt-6 pt-6 border-t border-gray-200">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Listing Info</p>
+                    <div className="flex flex-wrap gap-2">
+                      {market.promoter && (
+                        <div className="px-3 py-2 rounded-lg border border-gray-100">
+                          <span className="text-xs font-medium text-amber-600 uppercase tracking-wide">
+                            Community Submitted
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setShowUpdateModal(true)}
+                        className="px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors"
+                      >
+                        <span className="text-xs font-medium">Suggest an Update</span>
+                      </button>
+                      <button
+                        onClick={() => setShowReportModal(true)}
+                        className="px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors"
+                      >
+                        <span className="text-xs font-medium">Report Issue</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
