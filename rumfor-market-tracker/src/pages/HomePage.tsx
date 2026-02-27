@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useSidebarStore } from '@/features/theme/themeStore';
 import { MarketGrid } from '@/components/MarketGrid';
@@ -388,72 +389,55 @@ export function HomePage() {
         </div>
 
         {/* Recently Added */}
-        <section className="pt-2">
-          {/* Market Grid with Logo as 1st card */}
+        <section className="pt-2 pb-12 px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
-            {/* RUMFOR Logo Card - 1st Position */}
-            <div
-              className="hidden md:flex flex-col items-center justify-center h-[384px] animate-[fadeIn_1.5s_ease-out_0.75s_both]"
-            >
-              <div className="flex flex-col items-center space-y-4 transform -rotate-3">
-                <div className="w-[140px] h-[140px] bg-accent rounded-[28px] flex items-center justify-center shadow-[8px_8px_0px_0px] shadow-gray-600/60">
-                  <span className="text-accent-foreground font-black text-[90px]">
-                    R
-                  </span>
-                </div>
-                <span className="font-black text-[58px] text-foreground tracking-tighter uppercase">
-                  Rumfor
-                </span>
-              </div>
-            </div>
-
-            {/* Market cards (show first 5) */}
-            {featuredMarkets?.data?.slice(0, 5).map((market: any, index: number) => (
-              <div key={market.id} className="animate-[fadeIn_0.5s_ease-out_both]" style={{ animationDelay: `${index * 0.1}s` }}>
-                <MarketCard
-                  market={market}
-                  variant="minimal"
-                  onTrack={trackMarket}
-                  onUntrack={untrackMarket}
-                  onStatusChange={trackMarket}
-                  isTracked={trackedMarketIds?.includes(market.id)}
-                  trackingStatus={trackingData?.find(t => t.marketId === market.id)?.status}
-                  isLoading={marketsLoading}
-                  className="h-full"
-                />
-              </div>
-            ))}
+            {marketsLoading ? (
+              <>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <SkeletonCard key={i} variant="market" />
+                ))}
+              </>
+            ) : (
+              <>
+                {featuredMarkets?.data?.slice(0, 6).map((market: any, index: number) => (
+                  <div key={market.id} className="animate-[fadeIn_0.5s_ease-out_both]" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <MarketCard
+                      market={market}
+                      variant="minimal"
+                      onTrack={trackMarket}
+                      onUntrack={untrackMarket}
+                      onStatusChange={trackMarket}
+                      isTracked={trackedMarketIds?.includes(market.id)}
+                      trackingStatus={trackingData?.find(t => t.marketId === market.id)?.status}
+                      isLoading={marketsLoading}
+                      className="h-full"
+                    />
+                  </div>
+                ))}
+              </>
+            )}
           </div>
-          <div className="flex justify-center mt-4">
+          <div className="relative flex justify-center mt-4 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 group-hover:bg-amber-600 transition-colors"></div>
             <Link to="/markets">
-              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-8 py-3 shadow-lg">
-                More
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-8 py-3 shadow-lg rounded-tl-none rounded-tr-none rounded-bl-[2rem] rounded-br-[2rem]">
+                See More
               </Button>
             </Link>
-          </div>
+           </div>
         </section>
 
         {/* New Vendors */}
-        <section className="mt-10 mb-10">
+        <section className="mt-16 mb-10 px-6">
           <div className="flex items-center justify-between mb-6 pt-6 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.3s' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
-              <h2 className="text-2xl font-bold text-foreground">
-                New Vendors
-              </h2>
-            </div>
-            <Link to="/vendors">
-              <Button variant="ghost" size="sm" className="text-amber-500">
-                See All
-              </Button>
-            </Link>
+            <h2 className="text-2xl font-bold text-foreground">
+              New Vendors
+            </h2>
           </div>
-
           <div className="grid grid-cols-2 gap-6 p-1">
             {vendorsLoading ? (
-              // Skeleton loading state
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-48 rounded-xl bg-surface animate-pulse border border-surface-3" />
+                <SkeletonCard key={i} variant="vendor" />
               ))
             ) : (
               displayVendors.map((vendor, index) => (
@@ -465,6 +449,14 @@ export function HomePage() {
                 </div>
               ))
             )}
+          </div>
+          <div className="relative flex justify-center mt-4 group">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-amber-500 group-hover:bg-amber-600 transition-colors"></div>
+            <Link to="/vendors">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-8 py-3 shadow-lg rounded-tl-none rounded-tr-none rounded-bl-[2rem] rounded-br-[2rem]">
+                See More
+              </Button>
+            </Link>
           </div>
         </section>
 

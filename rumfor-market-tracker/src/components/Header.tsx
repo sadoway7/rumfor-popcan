@@ -307,7 +307,7 @@ export function Header() {
                 <Link to="/auth/register" className="inline">
                   <Button
                     size="sm"
-                    className="bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200 rounded-lg"
+                    className="bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200 rounded-xl"
                   >
                     Sign Up
                   </Button>
