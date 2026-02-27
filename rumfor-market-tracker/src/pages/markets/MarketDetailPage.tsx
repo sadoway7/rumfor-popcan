@@ -460,7 +460,7 @@ export const MarketDetailPage: React.FC = () => {
               content: (
                 <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-t-3xl mt-3">
                   {/* Action Bar - Mobile Above Location */}
-                   <div className="md:hidden flex flex-wrap gap-12 py-2 justify-center">
+                   <div className="md:hidden flex flex-nowrap gap-6 py-2 justify-center overflow-x-auto">
                      {market.location?.address && (
                        <div className="flex flex-col items-center gap-1">
                          <button
