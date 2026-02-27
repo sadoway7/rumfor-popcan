@@ -275,7 +275,10 @@ export const MarketDetailPage: React.FC = () => {
       {/* HERO SECTION - Matching MarketCard minimal variant */}
       <div className="relative flex flex-col justify-end overflow-hidden rounded-none sm:rounded-t-3xl shadow-[0_1px_3px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04),0_-1px_3px_rgba(0,0,0,0.06),0_-2px_6px_rgba(0,0,0,0.03)] mt-3 min-h-[22rem] md:min-h-[24rem]">
         {/* Market Image - Fixed height background */}
-        <div className="absolute inset-0">
+        <button
+          onClick={() => market.images && market.images.length > 0 && setShowImagePreview(true)}
+          className="absolute inset-0 cursor-pointer"
+        >
           {market.images && market.images.length > 0 ? (
             <img
               src={market.images[selectedImageIndex]}
@@ -287,7 +290,7 @@ export const MarketDetailPage: React.FC = () => {
               <span className="text-muted-foreground">No image</span>
             </div>
           )}
-        </div>
+        </button>
 
         {/* Back Button - Top Left */}
         <div className="absolute top-0 left-0 p-3 z-20">
@@ -295,7 +298,7 @@ export const MarketDetailPage: React.FC = () => {
             variant="outline"
             size="sm"
             onClick={() => navigate(-1)}
-            className="bg-white !border !border-[#9CA3AF] text-black hover:bg-white/90 h-8 px-3 shadow-[0_2px_6px_rgba(0,0,0,0.15)]"
+            className="bg-white !border !border-[#9CA3AF] text-black hover:bg-white hover:brightness-105 h-8 px-3 shadow-[0_2px_6px_rgba(0,0,0,0.15)] focus-visible:ring-0 focus-visible:ring-offset-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -373,38 +376,32 @@ export const MarketDetailPage: React.FC = () => {
         <div className="relative">
           {/* Dark gradient background */}
           <div 
-            className="absolute left-0 right-0 bottom-0 top-0"
+            className="absolute left-0 right-0 bottom-0 pointer-events-none transition-all duration-300"
             style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.3) 85%, transparent 100%)'
+              top: 0,
+              background: isDescriptionExpanded 
+                ? 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.98) 30%, rgba(0,0,0,0.9) 60%, rgba(0,0,0,0.7) 85%, rgba(0,0,0,0.4) 100%)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.45) 85%, transparent 100%)'
             }}
           />
           
           {/* Content */}
-          <div className="relative px-4 sm:px-6 pt-4 pb-6 z-10">
-            {/* Thumbnail preview button */}
-            {market.images && market.images.length > 0 && (
-              <button
-                onClick={() => setShowImagePreview(true)}
-                className="max-w-36 max-h-36 rounded-lg overflow-hidden border-2 border-white hover:border-white transition-all mt-8 mb-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)] inline-block relative"
-              >
-                <img
-                  src={market.images[selectedImageIndex]}
-                  alt={market.name}
-                  className="max-w-full max-h-36 object-contain"
-                />
-                <div className="absolute bottom-1 left-1 bg-white/90 rounded p-1.5 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-                  <Eye className="w-4 h-4 text-black" />
-                </div>
-              </button>
-            )}
+          <div 
+            className="relative px-4 sm:px-6 z-10"
+            style={{
+              paddingTop: isDescriptionExpanded ? '4.25rem' : '1rem',
+              paddingBottom: isDescriptionExpanded ? '2rem' : '0.25rem',
+              transition: isDescriptionExpanded ? 'padding-top 0.15s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.15s cubic-bezier(0.4, 0, 0.2, 1)' : 'padding-top 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, padding-bottom 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s'
+            }}
+          >
             <h1 className="text-white font-quicksand font-bold text-xl leading-tight line-clamp-2 drop-shadow-lg" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3)' }}>
               {market.name}
             </h1>
             <div
               className="overflow-hidden"
               style={{
-                maxHeight: isDescriptionExpanded ? '2000px' : '4.5rem',
-                transition: 'max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1)'
+ maxHeight: isDescriptionExpanded ? '500px' : '4.5rem',
+                transition: isDescriptionExpanded ? 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               <p
@@ -420,47 +417,23 @@ export const MarketDetailPage: React.FC = () => {
           {isTextTruncated && (
             <button
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              className="absolute bottom-4 right-0 z-20 flex items-center gap-1.5 bg-white text-black text-xs font-semibold px-3 py-1.5 rounded-l-full hover:bg-white/90 transition-opacity shadow-lg"
+              className="absolute bottom-2 right-4 z-20 flex items-center gap-1.5 bg-black text-white/80 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-black/90 transition-opacity shadow-[0_0_0_1.5px_rgba(255,255,255,0.6)]"
             >
-              {isDescriptionExpanded ? (
+{isDescriptionExpanded ? (
                 <>
                   <span>Show less</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4 rotate-180" />
                 </>
               ) : (
                 <>
                   <span>Read more</span>
-                  <ChevronDown className="w-4 h-4 rotate-180" />
+                  <ChevronDown className="w-4 h-4" />
                 </>
               )}
             </button>
           )}
         </div>
       </div>
-
-      {/* Thumbnail Strip */}
-      {market.images && market.images.length > 1 && (
-        <div className="flex gap-1.5 p-2 overflow-x-auto bg-muted/30">
-          {market.images.map((image, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedImageIndex(index)}
-              className={cn(
-                "flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
-                selectedImageIndex === index
-                  ? "border-accent ring-2 ring-accent/30"
-                  : "border-transparent hover:border-muted-foreground/30"
-              )}
-            >
-              <img
-                src={image}
-                alt={`${market.name} ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* TABS */}
       <div className="mb-2 sm:mb-2 overflow-hidden">
@@ -477,47 +450,58 @@ export const MarketDetailPage: React.FC = () => {
               content: (
                 <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-t-3xl mt-3">
                   {/* Action Bar - Mobile Above Location */}
-                   <div className="md:hidden flex flex-wrap gap-4 py-4 justify-center">
+                   <div className="md:hidden flex flex-wrap gap-12 py-2 justify-center">
                      {market.location?.address && (
-                       <button
-                         onClick={() => {
-                           const address = formatLocation(market.location)
-                           window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
-                         }}
-                         className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
-                       >
-                         <MapPin className="h-5 w-5" />
-                       </button>
+                       <div className="flex flex-col items-center gap-1">
+                         <button
+                           onClick={() => {
+                             const address = formatLocation(market.location)
+                             window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+                           }}
+                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                         >
+                           <MapPin className="h-6 w-6" />
+                         </button>
+                         <span className="text-[10px] text-muted-foreground">Directions</span>
+                       </div>
                      )}
                      {market.contact?.website && (
-                       <a
-                         href={market.contact.website}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
-                       >
-                         <Globe className="h-5 w-5" />
-                       </a>
+                       <div className="flex flex-col items-center gap-1">
+                         <a
+                           href={market.contact.website}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                         >
+                           <Globe className="h-6 w-6" />
+                         </a>
+                         <span className="text-[10px] text-muted-foreground">Website</span>
+                       </div>
                      )}
-                     <button
-                       onClick={() => {
-                         if (navigator.share) {
-                           navigator.share({ title: market.name, url: window.location.href })
-                         }
-                       }}
-                       className="h-10 w-10 hover:bg-accent hover:text-accent-foreground text-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
-                     >
-                       <Share2 className="h-5 w-5" />
-                     </button>
-                     {market.applicationSettings?.applicationLink && (
-                       <a
-                         href={market.applicationSettings.applicationLink}
-                         target="_blank"
-                         rel="noopener noreferrer"
-                         className="h-10 px-4 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
+                     <div className="flex flex-col items-center gap-1">
+                       <button
+                         onClick={() => {
+                           if (navigator.share) {
+                             navigator.share({ title: market.name, url: window.location.href })
+                           }
+                         }}
+                         className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
                        >
-                         Apply Here
-                       </a>
+                         <Share2 className="h-6 w-6" />
+                       </button>
+                       <span className="text-[10px] text-muted-foreground">Share</span>
+                     </div>
+                     {market.applicationSettings?.applicationLink && (
+                       <div className="flex flex-col items-center gap-1">
+                         <a
+                           href={market.applicationSettings.applicationLink}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="h-12 px-5 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
+                         >
+                           Apply Here
+                         </a>
+                       </div>
                      )}
                    </div>
 
@@ -628,43 +612,35 @@ export const MarketDetailPage: React.FC = () => {
                               })
                               
                               return scheduleDates.map((scheduleItem: any, index: number) => {
-                                const dateObj = parseLocalDate(scheduleItem.startDate)
-                                const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
-                                const dayNum = dateObj.getDate()
-                                const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
-                                const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
-                                const isFirstUpcoming = index === firstUpcomingIndex
-                                
-                                return (
-                                  <div
-                                    key={index}
-                                    className={cn(
-                                      "flex items-center gap-3 px-2 py-2 rounded-lg cursor-default",
-                                      isFirstUpcoming && "bg-amber-50"
-                                    )}
-                                  >
-                                    <div className={cn(
-                                       "w-12 h-12 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
-                                       isFirstUpcoming 
-                                         ? "bg-white border-amber-400" 
-                                         : "bg-white border-gray-400"
-                                     )}>
-                                      <span className="text-[11px] font-bold uppercase text-amber-500 leading-none">{monthAbbr}</span>
-                                      <span className="text-xl font-bold text-gray-800 leading-tight">{dayNum}</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
-                                      <p className="text-sm text-gray-400">
-                                        {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
-                                      </p>
-                                    </div>
-                                    {isFirstUpcoming && (
-                                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
-                                        Next
-                                      </span>
-                                    )}
-                                  </div>
-                                )
+                                 const dateObj = parseLocalDate(scheduleItem.startDate)
+                                 const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                                 const dayNum = dateObj.getDate()
+                                 const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
+                                 const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
+                                 const isFirstUpcoming = index === firstUpcomingIndex
+                                 
+                                 return (
+                                   <div
+                                     key={index}
+                                     className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-default"
+                                   >
+                                     <div className={cn(
+                                        "w-14 h-14 md:w-12 md:h-12 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
+                                        isFirstUpcoming 
+                                          ? "bg-white border-amber-400" 
+                                          : "bg-white border-gray-400"
+                                      )}>
+                                       <span className="text-xs md:text-[11px] font-bold uppercase text-amber-500 leading-none">{monthAbbr}</span>
+                                       <span className="text-2xl md:text-xl font-bold text-gray-800 leading-tight">{dayNum}</span>
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-lg md:text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
+                                       <p className="text-sm text-gray-600">
+                                         {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
+                                       </p>
+                                     </div>
+                                   </div>
+                                 )
                               })
                             })()
                           ) : (
@@ -679,6 +655,71 @@ export const MarketDetailPage: React.FC = () => {
                           <RelatedMarketDates market={market} variant="schedule" />
                         </div>
                       )}
+
+                      {/* Accessibility & Amenities */}
+                      <div className="mt-6 pt-5 border-t border-gray-200">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Accessibility & Amenities</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {market.accessibility?.wheelchairAccessible && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Wheelchair</span>
+                            </div>
+                          )}
+                          {market.accessibility?.parkingAvailable && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Parking</span>
+                            </div>
+                          )}
+                          {market.accessibility?.restroomsAvailable && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Restrooms</span>
+                            </div>
+                          )}
+                         {market.accessibility?.familyFriendly && (
+                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                             <span className="text-green-600">✓</span>
+                             <span>Family</span>
+                           </div>
+                         )}
+                         {market.accessibility?.indoor && (
+                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                             <span className="text-green-600">✓</span>
+                             <span>Indoor</span>
+                           </div>
+                         )}
+                         {market.accessibility?.petFriendly && (
+                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                             <span className="text-green-600">✓</span>
+                             <span>Pets</span>
+                           </div>
+                         )}
+                         {market.accessibility?.wifi && (
+                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                             <span className="text-green-600">✓</span>
+                             <span>WiFi</span>
+                           </div>
+                         )}
+                         {market.accessibility?.atm && (
+                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                             <span className="text-green-600">✓</span>
+                             <span>ATM</span>
+                           </div>
+                         )}
+                         {!market.accessibility?.wheelchairAccessible && 
+                          !market.accessibility?.parkingAvailable && 
+                          !market.accessibility?.restroomsAvailable && 
+                          !market.accessibility?.familyFriendly && 
+                          !market.accessibility?.indoor && 
+                          !market.accessibility?.petFriendly && 
+                          !market.accessibility?.wifi && 
+                          !market.accessibility?.atm && (
+                           <p className="text-sm text-muted-foreground col-span-2 py-2">No accessibility info available</p>
+                         )}
+                        </div>
+                      </div>
 
                       {/* Tags Section */}
                       <div className="mt-6 pt-5 border-t border-gray-200">
@@ -726,8 +767,9 @@ export const MarketDetailPage: React.FC = () => {
                        </div>
 
                        {/* Quick Links */}
-                       <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Quick Links</p>
-                       <div className="space-y-1.5">
+                       <div className="hidden md:block">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Quick Links</p>
+                        <div className="space-y-1.5">
                          {market.applicationSettings?.applicationLink && (
                            <a
                              href={market.applicationSettings.applicationLink}
@@ -772,10 +814,11 @@ export const MarketDetailPage: React.FC = () => {
                            </button>
                          )}
                          {!market.applicationSettings?.applicationLink && !market.contact?.website && !market.location?.address && (
-                           <p className="text-sm text-muted-foreground py-2">No quick links available</p>
-                         )}
+                         <p className="text-sm text-muted-foreground py-2">No quick links available</p>
+                          )}
+                        </div>
                        </div>
-                    </div>
+                     </div>
                   </div>
 
 {/* Booth Fee */}
@@ -790,64 +833,6 @@ export const MarketDetailPage: React.FC = () => {
                       </p>
                     </div>
                   )}
-
-                  {/* Spacer before Accessibility */}
-                  <div className="h-2" />
-
-                  {/* Accessibility - Grid */}
-                  <div className="mt-12 space-y-2">
-                    <h2 className="text-lg font-medium">Accessibility & Amenities</h2>
-                      <div className="grid grid-cols-2 gap-2">
-                        {market.accessibility?.wheelchairAccessible && (
-                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                            <span className="text-green-600">✓</span>
-                            <span>Wheelchair</span>
-                          </div>
-                        )}
-                        {market.accessibility?.parkingAvailable && (
-                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                            <span className="text-green-600">✓</span>
-                            <span>Parking</span>
-                          </div>
-                        )}
-                        {market.accessibility?.restroomsAvailable && (
-                          <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                            <span className="text-green-600">✓</span>
-                            <span>Restrooms</span>
-                          </div>
-                        )}
-                       {market.accessibility?.familyFriendly && (
-                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                           <span className="text-green-600">✓</span>
-                           <span>Family</span>
-                         </div>
-                       )}
-                       {market.accessibility?.indoor && (
-                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                           <span className="text-green-600">✓</span>
-                           <span>Indoor</span>
-                         </div>
-                       )}
-                       {market.accessibility?.petFriendly && (
-                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                           <span className="text-green-600">✓</span>
-                           <span>Pets</span>
-                         </div>
-                       )}
-                       {market.accessibility?.wifi && (
-                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                           <span className="text-green-600">✓</span>
-                           <span>WiFi</span>
-                         </div>
-                       )}
-                       {market.accessibility?.atm && (
-                         <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                           <span className="text-green-600">✓</span>
-                           <span>ATM</span>
-                         </div>
-                       )}
-                        </div>
-                     </div>
 
                   <hr className="border-t border-gray-200 my-8" />
 
