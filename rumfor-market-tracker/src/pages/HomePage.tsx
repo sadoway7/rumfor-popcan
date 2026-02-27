@@ -23,6 +23,8 @@ import {
   Moon,
   MapPin,
   Archive,
+  Store,
+  ArrowRight,
 } from 'lucide-react';
 
 // Fallback mock vendors when API returns empty
@@ -291,10 +293,10 @@ export function HomePage() {
         {isAuthenticated && <SubHeader />}
 
         {/* Hero Banner - Full Width */}
-        <div className="w-full max-w-[1440px] mx-auto">
+        <div className="w-full max-w-[1600px] mx-auto">
 
           {/* Hero Content */}
-          <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3 border border-surface-3">
+          <div className="w-full mx-auto relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-2 via-surface to-surface-3">
             {/* Lava Lamp Bubbles */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-amber-400/20 rounded-full blur-xl animate-float-1" />
@@ -305,16 +307,16 @@ export function HomePage() {
               <div className="absolute top-1/6 left-1/2 w-16 h-16 bg-amber-300/20 rounded-full blur-xl animate-float-6" />
             </div>
 
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 items-center py-6 px-6 md:px-12">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center pt-8 pb-14 px-6 md:px-12">
               {/* First Column - YOUR MARKET ORGANIZER */}
-              <div className="flex flex-col items-center md:items-start animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
+              <div className="flex flex-col items-center md:items-start animate-[fadeIn_0.4s_ease-out_both] md:col-span-1" style={{ animationDelay: '0.2s' }}>
                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-center md:text-left">
                   Your Market
                   <br />
                   <span className="text-amber-600">Organizer</span>
                 </h2>
 
-                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-start text-sm animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.4s' }}>
+                <div className="mt-3 flex flex-wrap gap-2 justify-center md:justify-start text-base animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.4s' }}>
                   <span className="text-foreground/70">
                     Save Markets
                   </span>
@@ -327,81 +329,67 @@ export function HomePage() {
                 </div>
               </div>
 
-              {/* Second Column - Main Message */}
-              <div className="flex flex-col items-end">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight text-right animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.1s' }}>
-                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.15s' }}>Find Markets.</span>
-                  <br />
-                  <span className="inline-block animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.25s' }}>Sell Stuff.</span>
-                  <br />
-                  <span className="inline-block text-amber-600 animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.35s' }}>Build Your Empire.</span>
-                </h1>
+              {/* Second Column - Market Categories */}
+              <div className="flex flex-col items-end md:col-span-2">
+                <div className="grid grid-cols-4 gap-2 w-full animate-[fadeIn_0.4s_ease-out_both]" style={{ animationDelay: '0.1s' }}>
+                  {marketCategories.map((cat, index) => {
+                    const Icon = cat.icon;
+                    const count = categoryStats?.[cat.slug] || 0;
+                    return (
+                      <Link
+                        key={cat.name}
+                        to={`/markets?category=${cat.slug}`}
+                        className="animate-[fadeIn_0.3s_ease-out_both]"
+                        style={{ animationDelay: `${index * 0.03}s` }}
+                      >
+                        <div className={`flex items-center justify-between gap-1 p-2.5 rounded-lg bg-surface hover:-translate-y-0.5 hover:shadow-md transition-all border border-surface-3 h-full ${count === 0 ? 'opacity-50' : ''}`}>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Icon
+                              className="h-4 w-4 text-amber-500 shrink-0"
+                              strokeWidth={2}
+                            />
+                            <span className="font-semibold text-foreground text-sm truncate">
+                              {cat.name}
+                            </span>
+                          </div>
+                          {count > 0 && (
+                            <span className="text-xs text-muted-foreground font-semibold flex-shrink-0 pr-1">
+                              {count}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                  <Link
+                    to="/markets"
+                    className="animate-[fadeIn_0.3s_ease-out_both]"
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    <div className="flex items-center justify-between gap-1 p-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 hover:-translate-y-0.5 hover:shadow-md transition-all border border-amber-600 h-full">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Store
+                          className="h-4 w-4 text-white shrink-0"
+                          strokeWidth={2}
+                        />
+                        <span className="font-semibold text-white text-sm truncate">
+                          Browse All
+                        </span>
+                      </div>
+                      <ArrowRight
+                        className="h-3 w-3 text-white flex-shrink-0"
+                        strokeWidth={2}
+                      />
+                    </div>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Market Categories */}
-        <div className="hidden md:block max-w-[1440px] mx-auto mt-2 animate-[fadeIn_0.3s_ease-out_both]">
-          {/* Categories Grid - 2 rows of 5 */}
-          <div className="grid grid-cols-5 grid-rows-2 gap-2">
-            {marketCategories.map((cat, index) => {
-              const Icon = cat.icon;
-              const count = categoryStats?.[cat.slug] || 0;
-              return (
-                <Link
-                  key={cat.name}
-                  to={`/markets?category=${cat.slug}`}
-                  className="animate-[fadeIn_0.3s_ease-out_both]"
-                  style={{ animationDelay: `${index * 0.03}s` }}
-                >
-                  <div className={`flex items-center justify-between gap-1 p-3 rounded-lg bg-surface hover:-translate-y-0.5 hover:shadow-md transition-all border border-surface-3 h-full ${count === 0 ? 'opacity-50' : ''}`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Icon
-                        className="h-5 w-5 text-amber-500 shrink-0"
-                        strokeWidth={2}
-                      />
-                      <span className="font-medium text-foreground text-sm truncate">
-                        {cat.name}
-                      </span>
-                    </div>
-                    {count > 0 && (
-                      <span className="text-sm text-muted-foreground font-medium flex-shrink-0">
-                        {count}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Browse All Listings - Below Categories, Centered */}
-          <div className="flex justify-center mt-3">
-            <Link to="/markets" className="animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.15s' }}>
-              <Button variant="ghost" size="sm" className="text-amber-500">
-                Browse All Listings →
-              </Button>
-            </Link>
-          </div>
-        </div>
-
         {/* Recently Added */}
-        <section>
-          <div className="flex items-center justify-between pt-6 mb-4 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-1 h-8 bg-amber-500 rounded-full"></div>
-              <h2 className="text-2xl font-bold text-foreground">
-                Recently Added
-              </h2>
-            </div>
-            <Link to="/markets">
-              <Button variant="ghost" size="sm" className="text-amber-500">
-                See All
-              </Button>
-            </Link>
-          </div>
-
+        <section className="pt-2">
           {/* Market Grid with Logo as 1st card */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
             {/* RUMFOR Logo Card - 1st Position */}
@@ -436,6 +424,13 @@ export function HomePage() {
                 />
               </div>
             ))}
+          </div>
+          <div className="flex justify-center mt-4">
+            <Link to="/markets">
+              <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-8 py-3 shadow-lg">
+                More
+              </Button>
+            </Link>
           </div>
         </section>
 

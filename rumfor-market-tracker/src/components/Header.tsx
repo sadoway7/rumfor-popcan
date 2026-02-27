@@ -140,7 +140,7 @@ export function Header() {
         <div className="grid grid-cols-[auto,1fr,auto] items-center h-18 md:h-16 gap-2 md:gap-4 py-2">
           {/* Logo - Left */}
           <div className="flex items-center flex-shrink-0">
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" className={`flex items-center gap-2 ${isHomePage ? 'md:invisible' : ''}`}>
               <div className={`w-10 h-10 bg-accent rounded-lg flex items-center justify-center transform -rotate-3 ${
               theme === 'light'
                 ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
