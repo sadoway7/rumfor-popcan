@@ -465,9 +465,9 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Info',
               icon: <Info className="w-5 h-5" />,
               content: (
-                <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-t-3xl mt-3">
+                <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-none md:rounded-t-3xl md:mt-3">
                   {/* Action Bar - Mobile Above Location */}
-                   <div className="md:hidden flex flex-nowrap gap-6 py-2 justify-center overflow-x-auto">
+                   <div className="md:hidden flex flex-nowrap gap-6 py-2 justify-center overflow-x-auto border-b border-gray-200 mb-2">
                      {market.location?.address && (
                        <div className="flex flex-col items-center gap-1">
                          <button
@@ -508,32 +508,30 @@ export const MarketDetailPage: React.FC = () => {
                        </button>
                        <span className="text-[10px] text-muted-foreground">Share</span>
                      </div>
-                     {market.applicationSettings?.applicationLink && (
-                       <div className="flex flex-col items-center gap-1">
-                         <a
-                           href={market.applicationSettings.applicationLink}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="h-12 px-5 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
-                         >
-                           Apply Here
-                         </a>
-                       </div>
-                     )}
+                      {market.applicationSettings?.applicationLink && (
+                        <div className="flex flex-col items-center gap-1" style={{ paddingTop: '14px' }}>
+                          <a
+                            href={market.applicationSettings.applicationLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-12 px-5 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium whitespace-nowrap"
+                          >
+                            Apply Here
+                          </a>
+                          <span className="text-[10px] text-transparent">.</span>
+                        </div>
+                      )}
                    </div>
 
                   {/* Location Bar - Desktop Only + Mobile Location Below Actions */}
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4 border-b border-gray-200">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-2 py-1 md:py-4 md:border-b md:border-gray-200">
                     {/* Mobile Location */}
-                    <div className="md:hidden flex flex-col gap-0.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0" />
-                        <strong className="text-base font-medium">
-                          {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
-                        </strong>
-                      </div>
+                    <div className="md:hidden flex flex-col gap-0.5 px-2">
+                      <strong className="text-base font-medium">
+                        {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
+                      </strong>
                       {market.location?.address && market.location.address !== 'TBD' && (
-                        <span className="text-sm text-muted-foreground pl-6">{market.location.address}</span>
+                        <span className="text-sm text-muted-foreground">{market.location.address}</span>
                       )}
                     </div>
 
@@ -602,12 +600,12 @@ export const MarketDetailPage: React.FC = () => {
 
 
                   {/* Main Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-0 pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-0 pt-2 md:pt-6">
                     
                     {/* Left: Dates Column */}
                     <div className="pr-0 md:pr-6">
                       {/* Section Label */}
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">
+                      <p className="hidden md:block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">
                         {scheduleDates.length > 0 ? new Date(scheduleDates[0].startDate).getFullYear() : new Date().getFullYear()} Dates
                       </p>
 
@@ -977,12 +975,6 @@ export const MarketDetailPage: React.FC = () => {
                           </span>
                         </div>
                       )}
-                      <button
-                        onClick={() => setShowUpdateModal(true)}
-                        className="px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors"
-                      >
-                        <span className="text-xs font-medium">Suggest an Update</span>
-                      </button>
                       <button
                         onClick={() => setShowReportModal(true)}
                         className="px-3 py-2 rounded-lg border border-gray-100 hover:border-amber-400 hover:text-amber-500 transition-colors"
