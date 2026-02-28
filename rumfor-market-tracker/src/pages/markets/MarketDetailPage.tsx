@@ -434,7 +434,7 @@ export const MarketDetailPage: React.FC = () => {
           {isTextTruncated && (
             <button
               onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-              className="absolute bottom-2 right-4 z-20 flex items-center gap-1.5 bg-black text-white/80 text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-black/90 transition-opacity shadow-[0_0_0_1.5px_rgba(255,255,255,0.6)]"
+              className="absolute bottom-2 right-4 z-20 flex items-center gap-1.5 bg-gray-100/80 text-black border border-black text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-gray-200/80 transition-colors"
             >
 {isDescriptionExpanded ? (
                 <>
@@ -465,60 +465,60 @@ export const MarketDetailPage: React.FC = () => {
               label: 'Info',
               icon: <Info className="w-5 h-5" />,
               content: (
-                <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-none md:rounded-t-3xl md:mt-3">
-                  {/* Action Bar - Mobile Above Location */}
-                   <div className="md:hidden flex flex-nowrap gap-6 py-2 justify-center overflow-x-auto border-b border-gray-200 mb-2">
+                 <div className="bg-white pb-4 pt-0 px-4 pb-[100px] rounded-none md:rounded-t-3xl md:mt-3">
+                   {/* Action Bar - Mobile Above Location */}
+                    <div className="md:hidden flex items-center justify-around pt-2 pb-3 border-b border-gray-200 mb-2 bg-gray-100 -mx-4 px-4 shadow-[inset_0_4px_8px_rgba(0,0,0,0.15)]">
                      {market.location?.address && (
-                       <div className="flex flex-col items-center gap-1">
+                       <div className="group flex flex-col items-center">
                          <button
                            onClick={() => {
                              const address = formatLocation(market.location)
                              window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
                            }}
-                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-700 rounded-full transition-all duration-200 inline-flex items-center justify-center -mb-0.5"
                          >
                            <MapPin className="h-6 w-6" />
                          </button>
-                         <span className="text-[10px] text-muted-foreground">Directions</span>
+                         <span className="text-[11px] text-gray-700 leading-none group-hover:text-transparent transition-colors">Map</span>
                        </div>
                      )}
                      {market.contact?.website && (
-                       <div className="flex flex-col items-center gap-1">
+                       <div className="group flex flex-col items-center">
                          <a
                            href={market.contact.website}
                            target="_blank"
                            rel="noopener noreferrer"
-                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                           className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-700 rounded-full transition-all duration-200 inline-flex items-center justify-center -mb-0.5"
                          >
                            <Globe className="h-6 w-6" />
                          </a>
-                         <span className="text-[10px] text-muted-foreground">Website</span>
+                         <span className="text-[11px] text-gray-700 leading-none group-hover:text-transparent transition-colors">Website</span>
                        </div>
                      )}
-                     <div className="flex flex-col items-center gap-1">
+                     <div className="group flex flex-col items-center">
                        <button
                          onClick={() => {
                            if (navigator.share) {
                              navigator.share({ title: market.name, url: window.location.href })
                            }
                          }}
-                         className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-500 rounded-full transition-all duration-200 inline-flex items-center justify-center"
+                         className="h-12 w-12 hover:bg-accent hover:text-accent-foreground text-gray-700 rounded-full transition-all duration-200 inline-flex items-center justify-center -mb-0.5"
                        >
                          <Share2 className="h-6 w-6" />
                        </button>
-                       <span className="text-[10px] text-muted-foreground">Share</span>
+                       <span className="text-[11px] text-gray-700 leading-none group-hover:text-transparent transition-colors">Share</span>
                      </div>
                       {market.applicationSettings?.applicationLink && (
-                        <div className="flex flex-col items-center gap-1" style={{ paddingTop: '14px' }}>
+                        <div className="flex flex-col items-center">
                           <a
                             href={market.applicationSettings.applicationLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="h-12 px-5 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium whitespace-nowrap"
+                            className="h-12 px-5 bg-transparent border border-gray-400 text-gray-700 hover:bg-accent hover:text-accent-foreground hover:border-accent rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium whitespace-nowrap -mb-0.5 translate-y-2"
                           >
-                            Apply Here
+                            Vendor Call
                           </a>
-                          <span className="text-[10px] text-transparent">.</span>
+                          <span className="text-[11px] text-transparent leading-none">.</span>
                         </div>
                       )}
                    </div>
@@ -526,7 +526,7 @@ export const MarketDetailPage: React.FC = () => {
                   {/* Location Bar - Desktop Only + Mobile Location Below Actions */}
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 md:gap-2 py-1 md:py-4 md:border-b md:border-gray-200">
                     {/* Mobile Location */}
-                    <div className="md:hidden flex flex-col gap-0.5 px-2">
+                     <div className="md:hidden flex flex-col gap-0.5 px-2 mt-2">
                       <strong className="text-base font-medium">
                         {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
                       </strong>
@@ -583,16 +583,16 @@ export const MarketDetailPage: React.FC = () => {
                          >
                            <Share2 className="h-5 w-5" />
                          </button>
-                         {market.applicationSettings?.applicationLink && (
-                           <a
-                             href={market.applicationSettings.applicationLink}
-                             target="_blank"
-                             rel="noopener noreferrer"
-                             className="h-10 px-4 bg-accent text-accent-foreground hover:bg-accent/90 rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
-                           >
-                             Apply Here
-                           </a>
-                         )}
+                          {market.applicationSettings?.applicationLink && (
+                            <a
+                              href={market.applicationSettings.applicationLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="h-10 px-4 bg-transparent border border-gray-400 text-gray-700 hover:bg-accent hover:text-accent-foreground hover:border-accent rounded-full transition-all duration-200 inline-flex items-center justify-center text-sm font-medium"
+                            >
+                              Vendor Call
+                            </a>
+                          )}
                        </div>
                     </div>
                   </div>
@@ -673,126 +673,126 @@ export const MarketDetailPage: React.FC = () => {
                       )}
                       
                       {/* Related Market Dates - for split markets */}
-                      {market.tags?.some(tag => tag.startsWith('split-market:')) && (
-                        <div>
-                          <RelatedMarketDates market={market} variant="schedule" />
-                        </div>
-                      )}
-
-                      {/* Accessibility & Amenities */}
-                      <div className="mt-6 pt-5 border-t border-gray-200">
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {market.accessibility?.wheelchairAccessible && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Wheelchair Accessible</span>
-                            </div>
-                          )}
-                          {market.accessibility?.handicapParking && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Handicap Parking</span>
-                            </div>
-                          )}
-                          {market.accessibility?.parkingAvailable && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Parking</span>
-                            </div>
-                          )}
-                          {market.accessibility?.restroomsAvailable && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Restrooms</span>
-                            </div>
-                          )}
-                          {market.accessibility?.covered && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Covered</span>
-                            </div>
-                          )}
-                          {market.accessibility?.indoor && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Indoor</span>
-                            </div>
-                          )}
-                          {market.accessibility?.outdoorSeating && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Outdoor Seating</span>
-                            </div>
-                          )}
-                          {market.accessibility?.wifi && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>WiFi</span>
-                            </div>
-                          )}
-                          {market.accessibility?.atm && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>ATM</span>
-                            </div>
-                          )}
-                          {market.accessibility?.foodCourt && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Food Court</span>
-                            </div>
-                          )}
-                          {market.accessibility?.liveMusic && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Live Music</span>
-                            </div>
-                          )}
-                          {market.accessibility?.alcoholAvailable && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Alcohol</span>
-                            </div>
-                          )}
-                          {market.accessibility?.familyFriendly && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Family Friendly</span>
-                            </div>
-                          )}
-                          {market.accessibility?.petFriendly && (
-                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                              <span className="text-green-600">✓</span>
-                              <span>Pet Friendly</span>
-                            </div>
-                          )}
-                          {!market.accessibility?.wheelchairAccessible && 
-                           !market.accessibility?.handicapParking &&
-                           !market.accessibility?.parkingAvailable && 
-                           !market.accessibility?.restroomsAvailable && 
-                           !market.accessibility?.covered &&
-                           !market.accessibility?.indoor && 
-                           !market.accessibility?.outdoorSeating &&
-                           !market.accessibility?.wifi && 
-                           !market.accessibility?.atm &&
-                           !market.accessibility?.foodCourt &&
-                           !market.accessibility?.liveMusic &&
-                           !market.accessibility?.alcoholAvailable &&
-                           !market.accessibility?.familyFriendly && 
-                           !market.accessibility?.petFriendly && (
-                            <p className="text-sm text-muted-foreground col-span-2 py-2">No accessibility info available</p>
-                          )}
+                       {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                         <div>
+                           <RelatedMarketDates market={market} variant="schedule" />
                          </div>
+                       )}
+
+                       {/* Tags Section */}
+                       <div className="mt-4 pt-4 pb-2 border-t border-gray-200">
+                         <TagVoting
+                           marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
+                           marketId={id!}
+                           hideHeading={true}
+                         />
                        </div>
 
-                      {/* Tags Section */}
-                      <div className="mt-6 pt-5 border-t border-gray-200">
-                        <TagVoting
-                          marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
-                          marketId={id!}
-                          hideHeading={true}
-                        />
-                      </div>
+                       {/* Accessibility & Amenities */}
+                       <div className="mt-4 pt-4 border-t border-gray-200">
+                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                           {market.accessibility?.wheelchairAccessible && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Wheelchair Accessible</span>
+                             </div>
+                           )}
+                           {market.accessibility?.handicapParking && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Handicap Parking</span>
+                             </div>
+                           )}
+                           {market.accessibility?.parkingAvailable && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Parking</span>
+                             </div>
+                           )}
+                           {market.accessibility?.restroomsAvailable && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Restrooms</span>
+                             </div>
+                           )}
+                           {market.accessibility?.covered && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Covered</span>
+                             </div>
+                           )}
+                           {market.accessibility?.indoor && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Indoor</span>
+                             </div>
+                           )}
+                           {market.accessibility?.outdoorSeating && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Outdoor Seating</span>
+                             </div>
+                           )}
+                           {market.accessibility?.wifi && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>WiFi</span>
+                             </div>
+                           )}
+                           {market.accessibility?.atm && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>ATM</span>
+                             </div>
+                           )}
+                           {market.accessibility?.foodCourt && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Food Court</span>
+                             </div>
+                           )}
+                           {market.accessibility?.liveMusic && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Live Music</span>
+                             </div>
+                           )}
+                           {market.accessibility?.alcoholAvailable && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Alcohol</span>
+                             </div>
+                           )}
+                           {market.accessibility?.familyFriendly && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Family Friendly</span>
+                             </div>
+                           )}
+                           {market.accessibility?.petFriendly && (
+                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                               <span className="text-green-600">✓</span>
+                               <span>Pet Friendly</span>
+                             </div>
+                           )}
+                           {!market.accessibility?.wheelchairAccessible && 
+                            !market.accessibility?.handicapParking &&
+                            !market.accessibility?.parkingAvailable && 
+                            !market.accessibility?.restroomsAvailable && 
+                            !market.accessibility?.covered &&
+                            !market.accessibility?.indoor && 
+                            !market.accessibility?.outdoorSeating &&
+                            !market.accessibility?.wifi && 
+                            !market.accessibility?.atm &&
+                            !market.accessibility?.foodCourt &&
+                            !market.accessibility?.liveMusic &&
+                            !market.accessibility?.alcoholAvailable &&
+                            !market.accessibility?.familyFriendly && 
+                            !market.accessibility?.petFriendly && (
+                             <p className="text-sm text-muted-foreground col-span-2 py-2">No accessibility info available</p>
+                           )}
+                          </div>
+                        </div>
                     </div>
 
                     {/* Right: Sidebar */}
