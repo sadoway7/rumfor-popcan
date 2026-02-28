@@ -214,7 +214,7 @@ const { id } = useParams<{ id: string }>()
 
   // Tab Content Components
   const MarketInfoTabContent = () => (
-    <div className="space-y-4 -mt-2">
+    <div className="space-y-4 -mt-2 p-4">
       {/* Quick Stats Row */}
       <div className="grid grid-cols-3 gap-2">
         <Card className="p-3 text-center">
@@ -383,7 +383,7 @@ const { id } = useParams<{ id: string }>()
   )
 
   const TasksTabContent = () => (
-    <div className="space-y-4 -mt-2">
+    <div className="space-y-4 -mt-2 p-4">
       <ErrorBoundary fallback={<TabErrorFallback />}>
         <Suspense fallback={<TabContentLoader />}>
           <VendorTodoList marketId={market.id} />
@@ -393,7 +393,7 @@ const { id } = useParams<{ id: string }>()
   )
 
   const BudgetingTabContent = () => (
-    <div className="-mt-2">
+    <div className="-mt-2 p-4">
       <ErrorBoundary fallback={<TabErrorFallback />}>
         <Suspense fallback={<TabContentLoader />}>
           <VendorBudgetList marketId={market.id} />

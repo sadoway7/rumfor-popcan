@@ -127,7 +127,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
     return (
       <div className={cn(
         "flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]",
-        todo.completed && "bg-muted/30 border-transparent opacity-60",
+        todo.completed && "border-transparent",
         isOverdue && "border-red-200 bg-red-50/50"
       )}>
         {/* Checkbox */}
@@ -277,7 +277,7 @@ export const VendorTodoList: React.FC<VendorTodoListProps> = ({ marketId, classN
 
       {/* Completed Tasks - collapsible */}
       {completedTodos.length > 0 && (
-        <details className="group">
+        <details className="group" open>
           <summary className="text-sm text-muted-foreground cursor-pointer py-2 list-none flex items-center gap-1 min-h-[44px]">
             <span>{completedTodos.length} completed</span>
             <ChevronLeft className="w-4 h-4 transition-transform group-open:rotate-90" />

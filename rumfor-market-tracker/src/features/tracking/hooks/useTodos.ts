@@ -104,21 +104,18 @@ export const useTodos = (marketId?: string) => {
 
   // Toggle todo mutation with optimistic update
   const toggleTodoMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const todos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
-      const todo = todos.find(t => t.id === id)
-      if (!todo) throw new Error('Todo not found')
-      return trackingApi.updateTodo(id, { completed: !todo.completed })
+    mutationFn: async ({ id, newCompleted }: { id: string; newCompleted: boolean }) => {
+      return trackingApi.updateTodo(id, { completed: newCompleted })
     },
-    onMutate: async (id) => {
+    onMutate: async ({ id, newCompleted }) => {
       await queryClient.cancelQueries({ queryKey: ['todos', user?.id, marketId] })
       const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
       queryClient.setQueryData<Todo[]>(['todos', user?.id, marketId], 
-        previousTodos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo)
+        previousTodos.map(todo => todo.id === id ? { ...todo, completed: newCompleted } : todo)
       )
       return { previousTodos }
     },
-    onError: (err, id, context) => {
+    onError: (err, variables, context) => {
       queryClient.setQueryData(['todos', user?.id, marketId], context?.previousTodos)
     },
     onSettled: () => {
@@ -140,7 +137,11 @@ export const useTodos = (marketId?: string) => {
   }
 
   const toggleTodoById = (id: string) => {
-    toggleTodoMutation.mutate(id)
+    const todos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId]) || []
+    const todo = todos.find(t => t.id === id)
+    if (todo) {
+      toggleTodoMutation.mutate({ id, newCompleted: !todo.completed })
+    }
   }
 
   return {
