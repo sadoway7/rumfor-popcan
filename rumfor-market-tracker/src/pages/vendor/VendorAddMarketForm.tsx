@@ -1243,57 +1243,85 @@ const schedules = formData.schedule.map(s => {
                   {formData.additionalInfo.tags.length}/3
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {formData.additionalInfo.tags.map(tag => (
-                  <Badge key={tag} variant="outline" className="flex items-center gap-1 text-xs font-medium">
+                  <Badge key={tag} variant="outline" className="flex items-center gap-1.5 text-base font-medium px-3 py-1.5">
                     {tag}
                     <X 
-                      className="w-3 h-3 cursor-pointer" 
+                      className="w-4 h-4 cursor-pointer" 
                       onClick={() => removeTag(tag)}
                     />
                   </Badge>
                 ))}
               </div>
               {formData.additionalInfo.tags.length < 3 && (
-                <div className="relative">
+                <div className="relative z-[9999]">
                   <Input
                     ref={tagInputRef}
                     value={tagInputValue}
                     onChange={(e) => setTagInputValue(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ',') {
+                      if (e.key === 'Enter') {
                         e.preventDefault()
-                        const value = tagInputValue.trim().replace(/,/g, '')
-                        if (value) {
-                          addTag(value)
-                          setTagInputValue('')
-                        }
                       }
                     }}
                     placeholder="Type tag..."
-                    className="text-base font-semibold placeholder:text-muted-foreground/70"
+                    className="text-base font-semibold placeholder:text-muted-foreground/70 pr-14"
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const value = tagInputValue.trim().replace(/,/g, '')
+                      if (value) {
+                        addTag(value)
+                        setTagInputValue('')
+                      }
+                    }}
+                    disabled={!tagInputValue.trim()}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center bg-primary text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="w-6 h-6 stroke-[3]" />
+                  </button>
                   {tagInputValue && formData.additionalInfo.tags.length < 3 && (
-                    <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-10 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      {ALLOWED_MARKET_TAGS
-                        .filter(tag => 
-                          !formData.additionalInfo.tags.includes(tag) &&
-                          tag.toLowerCase().includes(tagInputValue.toLowerCase())
+                    <div ref={tagSuggestionsRef} className="absolute top-full left-0 right-0 z-[9999] mt-1 bg-white rounded-lg border-2 border-accent shadow-lg overflow-hidden">
+                      {(() => {
+                        const filteredTags = ALLOWED_MARKET_TAGS
+                          .filter(tag => 
+                            !formData.additionalInfo.tags.includes(tag) &&
+                            tag.toLowerCase().includes(tagInputValue.toLowerCase())
+                          )
+                          .slice(0, 8)
+                        
+                        if (filteredTags.length === 0) {
+                          return (
+                            <div className="px-4 py-4 text-base text-muted-foreground text-center">
+                              No tags found. Try something else.
+                            </div>
+                          )
+                        }
+                        
+                        return (
+                          <ul className="max-h-40 overflow-y-auto p-2 flex flex-wrap gap-2">
+                            {filteredTags.map(tag => (
+                              <li key={tag}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    addTag(tag)
+                                    setTagInputValue('')
+                                  }}
+                                  className="flex items-center px-3 py-1.5 text-base font-medium border border-border rounded-full hover:bg-orange-50 hover:border-accent transition-colors"
+                                >
+                                  {tag}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
                         )
-                        .slice(0, 8)
-                        .map(tag => (
-                          <button
-                            key={tag}
-                            type="button"
-                            onClick={() => {
-                              addTag(tag)
-                              setTagInputValue('')
-                            }}
-                            className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted transition-colors"
-                          >
-                            {tag}
-                          </button>
-                        ))}
+                      })()}
+                      <div className="px-4 py-3 bg-accent font-bold text-base text-accent-foreground">
+                        Select Tag
+                      </div>
                     </div>
                   )}
                 </div>

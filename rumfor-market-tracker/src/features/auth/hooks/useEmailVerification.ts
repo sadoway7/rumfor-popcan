@@ -1,6 +1,6 @@
 import { useAuth } from './useAuth'
 import { EmailVerificationRequest, ResendVerificationRequest } from '@/types'
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 
 /**
  * Specialized hook for email verification functionality
@@ -14,7 +14,7 @@ export function useEmailVerification() {
   /**
    * Verify email with the provided token
    */
-  const verifyEmail = async (token: string) => {
+  const verifyEmail = useCallback(async (token: string) => {
     if (!token) {
       return { 
         success: false, 
@@ -35,12 +35,12 @@ export function useEmailVerification() {
     } finally {
       setIsVerifyingEmail(false)
     }
-  }
+  }, [auth])
 
   /**
    * Resend verification email to the provided email address
    */
-  const resendVerificationEmail = async (email: string) => {
+  const resendVerificationEmail = useCallback(async (email: string) => {
     if (!email) {
       return { 
         success: false, 
@@ -70,111 +70,71 @@ export function useEmailVerification() {
     } finally {
       setIsResendingVerification(false)
     }
-  }
-
-  /**
-   * Check if email verification is required
-   */
-  const needsVerification = (): boolean => {
-    return auth.needsEmailVerification()
-  }
-
-  /**
-   * Check if email is already verified
-   */
-  const isEmailVerified = (): boolean => {
-    return auth.isEmailVerified
-  }
+  }, [auth])
 
   /**
    * Clear email verification errors
    */
-  const clearEmailVerificationErrors = () => {
+  const clearEmailVerificationErrors = useCallback(() => {
     auth.clearEmailVerificationError()
-  }
+  }, [auth])
 
   /**
    * Clear email verification success state
    */
-  const clearEmailVerificationSuccess = () => {
+  const clearEmailVerificationSuccess = useCallback(() => {
     auth.clearEmailVerificationSuccess()
-  }
-
-  /**
-   * Check if email verification is in progress
-   */
-  const isVerificationInProgress = (): boolean => {
-    return isVerifyingEmail || auth.isEmailVerificationLoading
-  }
-
-  /**
-   * Check if resending verification is in progress
-   */
-  const isResendingInProgress = (): boolean => {
-    return isResendingVerification || auth.isEmailVerificationLoading
-  }
-
-  /**
-   * Get email verification error message
-   */
-  const getVerificationError = (): string | null => {
-    return auth.emailVerificationError
-  }
-
-  /**
-   * Check if email verification was successful
-   */
-  const isVerificationSuccessful = (): boolean => {
-    return auth.emailVerificationSuccess
-  }
-
-  /**
-   * Get user email from auth context
-   */
-  const getUserEmail = (): string | null => {
-    return auth.user?.email || null
-  }
+  }, [auth])
 
   /**
    * Reset all email verification state
    */
-  const resetEmailVerificationState = () => {
+  const resetEmailVerificationState = useCallback(() => {
     clearEmailVerificationErrors()
     clearEmailVerificationSuccess()
     setIsVerifyingEmail(false)
     setIsResendingVerification(false)
-  }
+  }, [clearEmailVerificationErrors, clearEmailVerificationSuccess])
 
   /**
    * Check if the user can resend verification email
    * (to prevent spam, only allow resending after a delay)
    */
-  const canResendVerification = (): boolean => {
+  const canResendVerification = useCallback((): boolean => {
     // For now, always allow resending
     // In a real app, you might want to implement rate limiting
-    return !isResendingInProgress()
-  }
+    return !(isResendingVerification || auth.isEmailVerificationLoading)
+  }, [isResendingVerification, auth.isEmailVerificationLoading])
 
   /**
    * Get the time remaining until resending is allowed
    * (for rate limiting implementation)
    */
-  const getTimeUntilResendAllowed = (): number => {
+  const getTimeUntilResendAllowed = useCallback((): number => {
     // This would be implemented with rate limiting logic
     // For now, always return 0
     return 0
-  }
+  }, [])
 
-  return {
+  // Memoize computed values to prevent unnecessary re-renders
+  const isVerifying = isVerifyingEmail || auth.isEmailVerificationLoading
+  const isResending = isResendingVerification || auth.isEmailVerificationLoading
+  const error = auth.emailVerificationError
+  const success = auth.emailVerificationSuccess
+  const emailVerified = auth.isEmailVerified
+  const needsEmailVerificationFlag = auth.needsEmailVerification()
+  const userEmailValue = auth.user?.email || null
+
+  return useMemo(() => ({
     // State
-    isVerifying: isVerificationInProgress(),
-    isResending: isResendingInProgress(),
-    error: getVerificationError(),
-    success: isVerificationSuccessful(),
+    isVerifying,
+    isResending,
+    error,
+    success,
     isLoading: auth.isEmailVerificationLoading,
-    isEmailVerified: isEmailVerified(),
-    needsVerification: needsVerification(),
-    userEmail: getUserEmail(),
+    isEmailVerified: emailVerified,
+    needsVerification: needsEmailVerificationFlag,
+    userEmail: userEmailValue,
 
     // Methods
     verifyEmail,
@@ -186,7 +146,23 @@ export function useEmailVerification() {
     // Utilities
     canResendVerification,
     getTimeUntilResendAllowed,
-    isVerificationInProgress: isVerificationInProgress(),
-    isResendingInProgress: isResendingInProgress(),
-  }
+    isVerificationInProgress: isVerifying,
+    isResendingInProgress: isResending,
+  }), [
+    isVerifying,
+    isResending,
+    error,
+    success,
+    auth.isEmailVerificationLoading,
+    emailVerified,
+    needsEmailVerificationFlag,
+    userEmailValue,
+    verifyEmail,
+    resendVerificationEmail,
+    clearEmailVerificationErrors,
+    clearEmailVerificationSuccess,
+    resetEmailVerificationState,
+    canResendVerification,
+    getTimeUntilResendAllowed,
+  ])
 }

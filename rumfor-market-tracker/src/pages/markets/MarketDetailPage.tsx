@@ -681,8 +681,7 @@ export const MarketDetailPage: React.FC = () => {
 
                       {/* Accessibility & Amenities */}
                       <div className="mt-6 pt-5 border-t border-gray-200">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Accessibility & Amenities</p>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                           {market.accessibility?.wheelchairAccessible && (
                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
                               <span className="text-green-600">✓</span>
@@ -788,7 +787,6 @@ export const MarketDetailPage: React.FC = () => {
 
                       {/* Tags Section */}
                       <div className="mt-6 pt-5 border-t border-gray-200">
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2.5">Market Tags</p>
                         <TagVoting
                           marketTags={(market.tags || []).filter(tag => !tag.startsWith('split-market:'))}
                           marketId={id!}

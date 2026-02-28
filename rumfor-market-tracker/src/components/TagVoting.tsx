@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
 import { useHashtags } from '@/features/community/hooks/useHashtags'
 import { useAuthStore } from '@/features/auth/authStore'
 import { useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/utils/cn'
-import { ThumbsUp, ThumbsDown } from 'lucide-react'
+import { ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface TagVotingProps {
@@ -22,6 +22,7 @@ export const TagVoting: React.FC<TagVotingProps> = ({
 }) => {
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
+  const [shuffledTags, setShuffledTags] = useState<string[]>([])
   const {
     hashtags,
     isLoading,
@@ -43,17 +44,32 @@ export const TagVoting: React.FC<TagVotingProps> = ({
       .slice(0, 30)
   }, [hashtags])
 
-  // Generate 8 random suggested tags (excluding already used tags)
-  const suggestedTags = useMemo(() => {
+  // Generate shuffled tags only on initial load or refresh
+  const generateShuffledTags = () => {
     if (!predefinedHashtags) return []
-
     const usedTags = new Set(hashtags.map(h => h.name))
     const availableTags = predefinedHashtags.filter(tag => !usedTags.has(tag))
-
-    // Shuffle and take 8
     const shuffled = [...availableTags].sort(() => 0.5 - Math.random())
     return shuffled.slice(0, 8)
-  }, [predefinedHashtags, marketTags, hashtags])
+  }
+
+  // Initialize on first load
+  useEffect(() => {
+    if (predefinedHashtags && shuffledTags.length === 0) {
+      setShuffledTags(generateShuffledTags())
+    }
+  }, [predefinedHashtags])
+
+  // Suggested tags - filter out any that have been added, without reshuffling
+  const suggestedTags = useMemo(() => {
+    const usedTags = new Set(hashtags.map(h => h.name))
+    return shuffledTags.filter(tag => !usedTags.has(tag))
+  }, [shuffledTags, hashtags])
+
+  // Refresh button - regenerate the shuffled list
+  const handleRefresh = () => {
+    setShuffledTags(generateShuffledTags())
+  }
 
   // Track user's voting limit (3 votes total)
   const userVotes = useMemo(() => {
@@ -140,44 +156,37 @@ export const TagVoting: React.FC<TagVotingProps> = ({
 
       {/* Suggested Tags */}
       {suggestedTags.length > 0 && user && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="pt-6 space-y-4"
-        >
-          <div>
-            <h3 className="text-base font-medium text-muted-foreground/70 mb-3">Do any of these tags match?</h3>
+        <div className="pt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-muted-foreground/70">Do any of these tags match?</h3>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="p-1.5 rounded-full hover:bg-muted transition-colors"
+              title="Refresh suggestions"
+            >
+              <RefreshCw className="w-4 h-4 text-muted-foreground" />
+            </button>
           </div>
 
-<motion.div 
-            className="flex flex-wrap gap-3 overflow-hidden max-w-full"
-          >
-            <AnimatePresence mode="popLayout">
-              {suggestedTags.map((tag) => (
-                <motion.button
-                  key={tag}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleAddSuggestedTag(tag)}
-                  disabled={isAddingTag}
-                  className={cn(
-                    "relative inline-flex items-center gap-1 px-2 py-0.5 bg-white/50 rounded-full text-xs shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.06)] transition-all whitespace-nowrap",
-                    "hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_8px_rgba(0,0,0,0.08)]",
-                    "disabled:opacity-50 disabled:cursor-not-allowed"
-                  )}
-                >
-                  <span className="text-primary font-bold text-[10px]">+</span>
-                  <span className="font-medium">{tag}</span>
-                </motion.button>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        </motion.div>
+          <div className="flex flex-wrap gap-3 overflow-hidden max-w-full">
+            {suggestedTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => handleAddSuggestedTag(tag)}
+                disabled={isAddingTag}
+                className={cn(
+                  "relative inline-flex items-center gap-1 px-2 py-0.5 bg-white/50 rounded-full text-xs shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_4px_rgba(0,0,0,0.06)] whitespace-nowrap",
+                  "hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_8px_rgba(0,0,0,0.08)] hover:bg-white",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <span className="text-primary font-bold text-[10px]">+</span>
+                <span className="font-medium">{tag}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Error Message */}

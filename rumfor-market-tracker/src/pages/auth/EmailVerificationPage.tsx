@@ -52,7 +52,6 @@ export function EmailVerificationPage() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
-    // Clear state on unmount
     return () => {
       resetState()
     }
