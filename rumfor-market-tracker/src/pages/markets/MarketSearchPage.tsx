@@ -328,7 +328,7 @@ export const MarketSearchPage: React.FC = () => {
                     </button>
                   )}
                 </div>
-                <CityAutocomplete
+<CityAutocomplete
                   value={filters.location?.city || ''}
                   onChange={city => {
                     handleFiltersChange({
@@ -350,6 +350,7 @@ export const MarketSearchPage: React.FC = () => {
                   }}
                   placeholder="City"
                   className="w-full"
+                  dropdownPosition="bottom"
                 />
               </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/features/auth/authStore'
+import { usePreferencesStore } from '@/features/theme/themeStore'
 import { Card, CardContent } from '@/components/ui'
 import { Button } from '@/components/ui'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/Modal'
@@ -9,6 +10,7 @@ import { BugReportModal } from '@/components/BugReportModal'
 
 export function SettingsPage() {
   const { user, deleteProfile, isLoading } = useAuthStore()
+  const { temperatureUnit, setTemperatureUnit } = usePreferencesStore()
   const navigate = useNavigate()
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
@@ -64,6 +66,42 @@ export function SettingsPage() {
                 <Button variant="ghost" size="sm" className="text-accent hover:text-accent-light h-9 px-3 flex-shrink-0">
                   Change
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Display</h2>
+          <Card padding="none">
+            <CardContent className="divide-y divide-surface-3 px-4">
+              <div className="flex items-center justify-between py-3">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground">Temperature Unit</p>
+                  <p className="text-xs text-muted-foreground">Choose how temperatures are displayed</p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => setTemperatureUnit('celsius')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-l-lg border transition-colors ${
+                      temperatureUnit === 'celsius'
+                        ? 'bg-accent text-white border-accent'
+                        : 'bg-surface-2 text-foreground border-surface-3 hover:bg-surface-3'
+                    }`}
+                  >
+                    °C
+                  </button>
+                  <button
+                    onClick={() => setTemperatureUnit('fahrenheit')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-r-lg border transition-colors ${
+                      temperatureUnit === 'fahrenheit'
+                        ? 'bg-accent text-white border-accent'
+                        : 'bg-surface-2 text-foreground border-surface-3 hover:bg-surface-3'
+                    }`}
+                  >
+                    °F
+                  </button>
+                </div>
               </div>
             </CardContent>
           </Card>

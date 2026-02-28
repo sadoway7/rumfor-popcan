@@ -53,6 +53,7 @@ interface CityAutocompleteProps {
   placeholder?: string
   className?: string
   error?: boolean
+  dropdownPosition?: 'top' | 'bottom'
 }
 
 export function CityAutocomplete({
@@ -63,7 +64,8 @@ export function CityAutocomplete({
   onError,
   placeholder = 'Search City',
   className,
-  error
+  error,
+  dropdownPosition = 'top'
 }: CityAutocompleteProps) {
   const [query, setQuery] = useState(value)
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([])
@@ -261,10 +263,15 @@ export function CityAutocomplete({
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full bottom-full mb-1 bg-white rounded-lg border-2 border-accent shadow-lg overflow-hidden">
-          <div className="px-4 py-3 bg-accent font-bold text-base text-accent-foreground">
-            Select City
-          </div>
+        <div className={cn(
+          "absolute z-50 w-full bg-white rounded-lg border-2 border-accent shadow-lg overflow-hidden",
+          dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+        )}>
+          {dropdownPosition === 'top' && (
+            <div className="px-4 py-3 bg-accent font-bold text-base text-accent-foreground">
+              Select City
+            </div>
+          )}
           <ul className="max-h-80 overflow-y-auto">
             {suggestions.map((suggestion, index) => (
               <li key={index}>
@@ -278,11 +285,19 @@ export function CityAutocomplete({
               </li>
             ))}
           </ul>
+          {dropdownPosition === 'bottom' && (
+            <div className="px-4 py-3 bg-accent font-bold text-base text-accent-foreground">
+              Select City
+            </div>
+          )}
         </div>
       )}
 
       {isOpen && query.length >= 2 && !isLoading && suggestions.length === 0 && (
-        <div className="absolute z-50 w-full bottom-full mb-1 bg-white rounded-lg border-2 border-accent shadow-lg p-4 text-base text-muted-foreground text-center">
+        <div className={cn(
+          "absolute z-50 w-full bg-white rounded-lg border-2 border-accent shadow-lg p-4 text-base text-muted-foreground text-center",
+          dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+        )}>
           No cities found
         </div>
       )}

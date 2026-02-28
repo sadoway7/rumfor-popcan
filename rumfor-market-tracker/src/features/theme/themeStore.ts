@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 type Theme = 'light' | 'dark';
+type TemperatureUnit = 'celsius' | 'fahrenheit';
 
 interface ThemeStore {
   theme: Theme;
@@ -141,6 +142,31 @@ export const useLocationStore = create<LocationStore>()(
     }),
     {
       name: 'rumfor-location',
+    }
+  )
+);
+
+interface PreferencesStore {
+  temperatureUnit: TemperatureUnit;
+  setTemperatureUnit: (unit: TemperatureUnit) => void;
+  formatTemperature: (celsius: number) => string;
+}
+
+export const usePreferencesStore = create<PreferencesStore>()(
+  persist(
+    (set, get) => ({
+      temperatureUnit: 'celsius',
+      setTemperatureUnit: unit => set({ temperatureUnit: unit }),
+      formatTemperature: (celsius: number) => {
+        const unit = get().temperatureUnit;
+        if (unit === 'fahrenheit') {
+          return `${Math.round(celsius * 9 / 5 + 32)}°F`;
+        }
+        return `${Math.round(celsius)}°C`;
+      },
+    }),
+    {
+      name: 'rumfor-preferences',
     }
   )
 );

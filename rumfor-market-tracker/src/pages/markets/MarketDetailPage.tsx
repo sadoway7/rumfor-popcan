@@ -4,12 +4,16 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Spinner } from '@/components/ui/Spinner'
 import { Tabs } from '@/components/ui/Tabs'
+import { Modal } from '@/components/ui/Modal'
 import { useMarket, useTrackedMarkets, useMarketVendors } from '@/features/markets/hooks/useMarkets'
+import { useWeather } from '@/features/markets/hooks/useWeather'
+import { usePreferencesStore } from '@/features/theme/themeStore'
 import { CommentList } from '@/components/CommentList'
 import { PhotoGallery } from '@/components/PhotoGallery'
 import TagVoting from '@/components/TagVoting'
 import { VendorCard } from '@/components/VendorCard'
 import { ReportIssueModal } from '@/components/ReportIssueModal'
+import { SuggestUpdateModal } from '@/components/SuggestUpdateModal'
 import { useAuthStore } from '@/features/auth/authStore'
 import { cn } from '@/utils/cn'
 import { formatCurrency } from '@/utils/formatCurrency'
@@ -17,7 +21,7 @@ import { formatTime12Hour } from '@/utils/formatTime'
 import { parseLocalDate } from '@/utils/formatDate'
 import { MARKET_CATEGORY_LABELS, MARKET_CATEGORY_COLORS, MARKET_STATUS_COLORS } from '@/config/constants'
 import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS } from '@/config/trackingStatus'
-import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye, BookmarkMinus, AlertTriangle, FileText } from 'lucide-react'
+import { Search, MapPin, Globe, Phone, Mail, User, Share2, Flag, MessageSquare, Image, DollarSign, Calendar, ArrowLeft, ArrowRight, Car, Footprints, Users, RefreshCw, Info, X, ChevronDown, Clock, Eye, BookmarkMinus, AlertTriangle, FileText, Cloud } from 'lucide-react'
 import { TrackButton } from '@/components/TrackButton'
 import { RelatedMarketDates } from '@/components/RelatedMarketDates'
 import {
@@ -55,9 +59,12 @@ export const MarketDetailPage: React.FC = () => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [isTextTruncated, setIsTextTruncated] = useState(false)
   const [showImagePreview, setShowImagePreview] = useState(false)
+  const [selectedWeatherDay, setSelectedWeatherDay] = useState<any>(null)
   const descriptionRef = React.useRef<HTMLParagraphElement>(null)
   
   const { market, isLoading, error, refetch } = useMarket(id!)
+  const { weather } = useWeather(market)
+  const { formatTemperature } = usePreferencesStore()
   
   useEffect(() => {
     setIsPageLoaded(true)
@@ -518,19 +525,16 @@ export const MarketDetailPage: React.FC = () => {
                   {/* Location Bar - Desktop Only + Mobile Location Below Actions */}
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-4 border-b border-gray-200">
                     {/* Mobile Location */}
-                    <div className="md:hidden flex items-center justify-center gap-2">
-                      <div className="flex items-center gap-3">
+                    <div className="md:hidden flex flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0" />
                         <strong className="text-base font-medium">
                           {[market.location?.city, market.location?.state].filter(Boolean).join(', ')}
                         </strong>
-                        {market.location?.address && market.location.address !== 'TBD' && (
-                          <>
-                            <span className="text-muted-foreground text-base">·</span>
-                            <span className="text-base text-muted-foreground">{market.location.address}</span>
-                          </>
-                        )}
                       </div>
+                      {market.location?.address && market.location.address !== 'TBD' && (
+                        <span className="text-sm text-muted-foreground pl-6">{market.location.address}</span>
+                      )}
                     </div>
 
                     {/* Desktop Layout: Location Left, Buttons Right */}
@@ -622,35 +626,46 @@ export const MarketDetailPage: React.FC = () => {
                               })
                               
                               return scheduleDates.map((scheduleItem: any, index: number) => {
-                                 const dateObj = parseLocalDate(scheduleItem.startDate)
-                                 const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
-                                 const dayNum = dateObj.getDate()
-                                 const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
-                                 const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
-                                 const isFirstUpcoming = index === firstUpcomingIndex
-                                 
-                                 return (
-                                   <div
-                                     key={index}
-                                     className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-default"
-                                   >
-                                     <div className={cn(
-                                        "w-14 h-14 md:w-12 md:h-12 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
-                                        isFirstUpcoming 
-                                          ? "bg-white border-amber-400" 
-                                          : "bg-white border-gray-400"
-                                      )}>
-                                       <span className="text-xs md:text-[11px] font-bold uppercase text-amber-500 leading-none">{monthAbbr}</span>
-                                       <span className="text-2xl md:text-xl font-bold text-gray-800 leading-tight">{dayNum}</span>
-                                     </div>
-                                     <div className="flex-1 min-w-0">
-                                       <p className="text-lg md:text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
-                                       <p className="text-sm text-gray-600">
-                                         {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
-                                       </p>
-                                     </div>
-                                   </div>
-                                 )
+                                  const dateObj = parseLocalDate(scheduleItem.startDate)
+                                  const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
+                                  const dayNum = dateObj.getDate()
+                                  const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
+                                  const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
+                                  const isFirstUpcoming = index === firstUpcomingIndex
+                                  const dateStr = scheduleItem.startDate
+                                  const dayWeather = weather?.days?.find((d: any) => d.date === dateStr)
+                                  
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-default"
+                                    >
+                                      <div className={cn(
+                                         "w-14 h-14 md:w-12 md:h-12 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
+                                         isFirstUpcoming 
+                                           ? "bg-white border-amber-400" 
+                                           : "bg-white border-gray-400"
+                                       )}>
+                                        <span className="text-xs md:text-[11px] font-bold uppercase text-amber-500 leading-none">{monthAbbr}</span>
+                                        <span className="text-2xl md:text-xl font-bold text-gray-800 leading-tight">{dayNum}</span>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-lg md:text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
+                                        <p className="text-sm text-gray-600">
+                                          {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
+                                        </p>
+                                      </div>
+                                      {dayWeather && (
+                                        <button
+                                          onClick={() => setSelectedWeatherDay(dayWeather)}
+                                          className="flex flex-col items-center justify-start flex-shrink-0 w-14 h-14 md:w-12 md:h-12 bg-white border border-gray-200 rounded-lg hover:border-amber-400 transition-all pt-1 shadow-sm hover:shadow active:translate-y-0.5"
+                                        >
+                                          <span className="text-xl md:text-lg leading-none">{dayWeather.icon}</span>
+                                          <p className="text-base md:text-sm font-bold leading-tight">{formatTemperature(dayWeather.high)}</p>
+                                        </button>
+                                      )}
+                                    </div>
+                                  )
                               })
                             })()
                           ) : (
@@ -673,7 +688,13 @@ export const MarketDetailPage: React.FC = () => {
                           {market.accessibility?.wheelchairAccessible && (
                             <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
                               <span className="text-green-600">✓</span>
-                              <span>Wheelchair</span>
+                              <span>Wheelchair Accessible</span>
+                            </div>
+                          )}
+                          {market.accessibility?.handicapParking && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Handicap Parking</span>
                             </div>
                           )}
                           {market.accessibility?.parkingAvailable && (
@@ -688,48 +709,84 @@ export const MarketDetailPage: React.FC = () => {
                               <span>Restrooms</span>
                             </div>
                           )}
-                         {market.accessibility?.familyFriendly && (
-                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                             <span className="text-green-600">✓</span>
-                             <span>Family</span>
-                           </div>
-                         )}
-                         {market.accessibility?.indoor && (
-                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                             <span className="text-green-600">✓</span>
-                             <span>Indoor</span>
-                           </div>
-                         )}
-                         {market.accessibility?.petFriendly && (
-                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                             <span className="text-green-600">✓</span>
-                             <span>Pets</span>
-                           </div>
-                         )}
-                         {market.accessibility?.wifi && (
-                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                             <span className="text-green-600">✓</span>
-                             <span>WiFi</span>
-                           </div>
-                         )}
-                         {market.accessibility?.atm && (
-                           <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
-                             <span className="text-green-600">✓</span>
-                             <span>ATM</span>
-                           </div>
-                         )}
-                         {!market.accessibility?.wheelchairAccessible && 
-                          !market.accessibility?.parkingAvailable && 
-                          !market.accessibility?.restroomsAvailable && 
-                          !market.accessibility?.familyFriendly && 
-                          !market.accessibility?.indoor && 
-                          !market.accessibility?.petFriendly && 
-                          !market.accessibility?.wifi && 
-                          !market.accessibility?.atm && (
-                           <p className="text-sm text-muted-foreground col-span-2 py-2">No accessibility info available</p>
-                         )}
-                        </div>
-                      </div>
+                          {market.accessibility?.covered && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Covered</span>
+                            </div>
+                          )}
+                          {market.accessibility?.indoor && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Indoor</span>
+                            </div>
+                          )}
+                          {market.accessibility?.outdoorSeating && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Outdoor Seating</span>
+                            </div>
+                          )}
+                          {market.accessibility?.wifi && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>WiFi</span>
+                            </div>
+                          )}
+                          {market.accessibility?.atm && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>ATM</span>
+                            </div>
+                          )}
+                          {market.accessibility?.foodCourt && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Food Court</span>
+                            </div>
+                          )}
+                          {market.accessibility?.liveMusic && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Live Music</span>
+                            </div>
+                          )}
+                          {market.accessibility?.alcoholAvailable && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Alcohol</span>
+                            </div>
+                          )}
+                          {market.accessibility?.familyFriendly && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Family Friendly</span>
+                            </div>
+                          )}
+                          {market.accessibility?.petFriendly && (
+                            <div className="flex items-center gap-2 text-sm p-2 bg-white rounded">
+                              <span className="text-green-600">✓</span>
+                              <span>Pet Friendly</span>
+                            </div>
+                          )}
+                          {!market.accessibility?.wheelchairAccessible && 
+                           !market.accessibility?.handicapParking &&
+                           !market.accessibility?.parkingAvailable && 
+                           !market.accessibility?.restroomsAvailable && 
+                           !market.accessibility?.covered &&
+                           !market.accessibility?.indoor && 
+                           !market.accessibility?.outdoorSeating &&
+                           !market.accessibility?.wifi && 
+                           !market.accessibility?.atm &&
+                           !market.accessibility?.foodCourt &&
+                           !market.accessibility?.liveMusic &&
+                           !market.accessibility?.alcoholAvailable &&
+                           !market.accessibility?.familyFriendly && 
+                           !market.accessibility?.petFriendly && (
+                            <p className="text-sm text-muted-foreground col-span-2 py-2">No accessibility info available</p>
+                          )}
+                         </div>
+                       </div>
 
                       {/* Tags Section */}
                       <div className="mt-6 pt-5 border-t border-gray-200">
@@ -972,45 +1029,12 @@ export const MarketDetailPage: React.FC = () => {
         marketName={market.name}
       />
 
-      {/* Update Request Modal */}
-      {showUpdateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-t-xl sm:rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-4 border-b sticky top-0 bg-background">
-              <h3 className="font-semibold">Request Update</h3>
-            </div>
-            <div className="p-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Help keep this market information up to date. Report any changes, updates, or corrections needed.
-              </p>
-              <textarea
-                className="w-full p-3 text-sm bg-surface rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px]"
-                placeholder="Describe what needs to be updated..."
-              />
-            </div>
-            <div className="p-4 border-t sticky bottom-0 bg-background">
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowUpdateModal(false)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    // TODO: Implement update submission
-                    setShowUpdateModal(false)
-                  }}
-                  className="flex-1"
-                >
-                  Submit
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <SuggestUpdateModal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        marketId={market.id}
+        marketName={market.name}
+      />
 
       {/* Image Preview Modal */}
       {showImagePreview && market.images && market.images.length > 0 && (
@@ -1070,6 +1094,80 @@ export const MarketDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Weather Detail Modal */}
+      <Modal isOpen={!!selectedWeatherDay} onClose={() => setSelectedWeatherDay(null)} size="sm" showCloseButton={false}>
+        {selectedWeatherDay && (
+          <div className="relative">
+            <button
+              onClick={() => setSelectedWeatherDay(null)}
+              className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-3 pr-8">
+              <span className="text-7xl leading-none">{selectedWeatherDay.icon}</span>
+              <div className="flex-1">
+                <p className="text-xl font-bold">{selectedWeatherDay.dayName}, {selectedWeatherDay.monthName} {selectedWeatherDay.dayNumber}</p>
+                <p className="text-sm text-muted-foreground">{selectedWeatherDay.condition}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs text-muted-foreground font-medium">H</span>
+                <span className="text-3xl font-bold">{formatTemperature(selectedWeatherDay.high)}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs text-muted-foreground font-medium">L</span>
+                <span className="text-2xl font-semibold text-muted-foreground">{formatTemperature(selectedWeatherDay.low)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Rain</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.precipitation}%</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Wind</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.windSpeed}<span className="text-[10px] font-normal">km/h</span></p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Sunrise</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.sunrise}</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Sunset</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.sunset}</p>
+              </div>
+            </div>
+
+            {selectedWeatherDay.hourly?.length > 0 && (
+              <div className="overflow-x-auto -mx-2 px-2">
+                <div className="flex gap-2">
+                  {selectedWeatherDay.hourly.map((h: any) => (
+                    <div 
+                      key={h.hour} 
+                      className={cn(
+                        "flex flex-col items-center py-2 px-1.5 rounded-lg min-w-[38px]",
+                        h.hour >= 6 && h.hour <= 20 ? "bg-surface-1 border border-surface-3" : "opacity-50"
+                      )}
+                    >
+                      <p className="text-[10px] text-muted-foreground mb-1 font-medium">
+                        {h.hour === 0 ? '12am' : h.hour === 12 ? '12pm' : h.hour > 12 ? `${h.hour - 12}pm` : `${h.hour}am`}
+                      </p>
+                      <span className="text-lg">{h.icon}</span>
+                      <p className="text-xs font-semibold mt-0.5">{formatTemperature(h.temp)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
 
       {/* Bottom spacer for floating navbar */}
       <div className="h-24" />

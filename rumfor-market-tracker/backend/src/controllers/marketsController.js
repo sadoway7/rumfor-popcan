@@ -1744,7 +1744,7 @@ const getLogistics = catchAsync(async (req, res, next) => {
   sendSuccess(res, logistics, 'Logistics information retrieved successfully');
 });
 
-// Get weather forecast for market dates
+// Get weather forecast for market dates using Open-Meteo (free, no API key)
 const getWeatherForecast = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
@@ -1753,27 +1753,84 @@ const getWeatherForecast = catchAsync(async (req, res, next) => {
     return next(new AppError('Market not found', 404));
   }
 
-  // For now, return a mock weather forecast
-  // In a real implementation, this would integrate with a weather API
-  const mockForecast = {
-    market: {
-      id: market._id,
-      name: market.name,
-      location: market.location,
-      dates: market.dates,
-    },
-    forecast: [
-      {
-        date: new Date().toISOString().split('T')[0],
-        condition: 'Sunny',
-        temperature: { high: 75, low: 55 },
-        precipitation: 10,
-      },
-    ],
-    note: 'This is mock data. Integrate with a weather service API for real forecasts.',
-  };
+  if (!market.location?.latitude || !market.location?.longitude) {
+    return sendSuccess(res, {
+      market: { id: market._id, name: market.name },
+      forecast: null,
+      error: 'Location coordinates not available'
+    }, 'Weather unavailable - no coordinates');
+  }
 
-  sendSuccess(res, mockForecast, 'Weather forecast retrieved successfully');
+  try {
+    const lat = market.location.latitude;
+    const lon = market.location.longitude;
+    
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=14`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Weather API failed');
+    }
+    
+    const data = await response.json();
+    
+    const weatherCodeMap = {
+      0: { condition: 'Clear', icon: '☀️' },
+      1: { condition: 'Mainly Clear', icon: '🌤️' },
+      2: { condition: 'Partly Cloudy', icon: '⛅' },
+      3: { condition: 'Overcast', icon: '☁️' },
+      45: { condition: 'Foggy', icon: '🌫️' },
+      48: { condition: 'Rime Fog', icon: '🌫️' },
+      51: { condition: 'Light Drizzle', icon: '🌦️' },
+      53: { condition: 'Drizzle', icon: '🌦️' },
+      55: { condition: 'Heavy Drizzle', icon: '🌧️' },
+      61: { condition: 'Light Rain', icon: '🌧️' },
+      63: { condition: 'Rain', icon: '🌧️' },
+      65: { condition: 'Heavy Rain', icon: '🌧️' },
+      71: { condition: 'Light Snow', icon: '🌨️' },
+      73: { condition: 'Snow', icon: '❄️' },
+      75: { condition: 'Heavy Snow', icon: '❄️' },
+      80: { condition: 'Light Showers', icon: '🌦️' },
+      81: { condition: 'Showers', icon: '🌧️' },
+      82: { condition: 'Heavy Showers', icon: '⛈️' },
+      95: { condition: 'Thunderstorm', icon: '⛈️' },
+      96: { condition: 'Thunderstorm with Hail', icon: '⛈️' },
+      99: { condition: 'Severe Thunderstorm', icon: '⛈️' },
+    };
+    
+    const forecast = data.daily.time.map((date, i) => {
+      const code = data.daily.weather_code[i];
+      const weather = weatherCodeMap[code] || { condition: 'Unknown', icon: '🌡️' };
+      return {
+        date,
+        condition: weather.condition,
+        icon: weather.icon,
+        temperature: {
+          high: Math.round(data.daily.temperature_2m_max[i]),
+          low: Math.round(data.daily.temperature_2m_min[i])
+        },
+        precipitation: data.daily.precipitation_probability_max[i] || 0
+      };
+    });
+
+    sendSuccess(res, {
+      market: {
+        id: market._id,
+        name: market.name,
+        location: market.location,
+      },
+      forecast,
+      timezone: data.timezone,
+    }, 'Weather forecast retrieved successfully');
+  } catch (error) {
+    console.error('Weather fetch error:', error.message);
+    sendSuccess(res, {
+      market: { id: market._id, name: market.name },
+      forecast: null,
+      error: 'Unable to fetch weather data'
+    }, 'Weather unavailable');
+  }
 });
 
 // Get calendar integration data

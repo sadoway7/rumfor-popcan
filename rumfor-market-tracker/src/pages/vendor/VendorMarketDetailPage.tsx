@@ -14,9 +14,12 @@ import {
   ChevronDown,
   CheckSquare,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Navigation
 } from 'lucide-react'
 import { useMarket } from '@/features/markets/hooks/useMarkets'
+import { useWeather } from '@/features/markets/hooks/useWeather'
+import { usePreferencesStore } from '@/features/theme/themeStore'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
@@ -28,6 +31,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import { Tabs } from '@/components/ui/Tabs'
 import { Spinner } from '@/components/ui/Spinner'
+import { Modal } from '@/components/ui/Modal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 import { cn } from '@/utils/cn'
@@ -124,11 +128,14 @@ const { id } = useParams<{ id: string }>()
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedDates, setSelectedDates] = useState<string[]>([])
   const [hasInitializedDates, setHasInitializedDates] = useState(false)
+  const [selectedWeatherDay, setSelectedWeatherDay] = useState<any>(null)
 
   const { market, isLoading, error } = useMarket(id!)
   const { myApplications } = useVendorApplications()
   const { todos } = useTodos(id!)
   const { getTrackingStatus, trackMarket, trackingData } = useTrackedMarkets()
+  const { weather, isLoading: weatherLoading } = useWeather(market)
+  const { formatTemperature } = usePreferencesStore()
 
   // Initialize selected dates from tracking data once after mount
   useEffect(() => {
@@ -213,43 +220,152 @@ const { id } = useParams<{ id: string }>()
   }
 
   // Tab Content Components
-  const MarketInfoTabContent = () => (
+  const MarketInfoTabContent = () => {
+    const isCommunityMarket = market.marketType === 'vendor-created'
+    
+    return (
     <div className="space-y-4 -mt-2 p-4">
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2">
-        <Card className="p-3 text-center">
-          <p className="text-xs text-muted-foreground">Status</p>
-          <Badge className={cn(statusColors[market.status], "text-xs")}>{market.status}</Badge>
-        </Card>
-        <Card className="p-3 text-center">
-          <p className="text-xs text-muted-foreground">Category</p>
-          <span className="text-sm font-medium">{categoryLabels[market.category]?.split(' ')[0]}</span>
-        </Card>
-        <Card className="p-3 text-center">
-          <p className="text-xs text-muted-foreground">Next</p>
-          <span className="text-sm font-medium">{nextDate ? format(nextDate, 'MMM d') : 'TBD'}</span>
-        </Card>
-      </div>
+      {/* Location */}
+      {market.location?.city && (
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-surface-1 border border-surface-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-bold">
+              {[market.location.city, market.location.state].filter(Boolean).join(', ')}
+            </p>
+            {market.location.address && (
+              <p className="text-sm text-muted-foreground mt-0.5">{market.location.address}</p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              const address = [market.location.address, market.location.city, market.location.state].filter(Boolean).join(', ')
+              window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, '_blank')
+            }}
+            className="h-10 w-10 flex-shrink-0 bg-white border border-gray-200 shadow-sm hover:bg-accent hover:border-accent hover:text-accent-foreground text-muted-foreground rounded-full transition-all duration-200 inline-flex items-center justify-center"
+          >
+            <MapPin className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
-{/* Schedule & Location */}
-      <Card className="p-4">
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span>{formatSchedule(market.schedule)}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground" />
-            <span>{formatLocation(market.location)}</span>
-          </div>
-          {nextDate && (
-            <div className="flex items-center gap-2 text-success">
-              <Clock className="w-4 h-4" />
-              <span>{format(nextDate, 'EEEE, MMM d')}</span>
+      {/* Weather Panel */}
+      {nextDate && (
+        <Card className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Cloud className="w-5 h-5 text-muted-foreground" />
+              <h3 className="font-semibold text-sm">Weather Forecast</h3>
             </div>
+            <span className="text-xs text-muted-foreground">{market.location?.city}</span>
+          </div>
+          
+          {weatherLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Spinner className="w-5 h-5" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading weather...</span>
+            </div>
+          ) : weather?.days ? (
+            <div className="overflow-x-auto -mx-4 px-4">
+              <div className="flex gap-3">
+                {weather.days.map((day, idx) => {
+                  const dateObj = new Date(day.date + 'T12:00:00')
+                  const dayNum = dateObj.getDate()
+                  
+                  return (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedWeatherDay(day)}
+                    className={cn(
+                      "flex-shrink-0 rounded-xl p-3 min-w-[80px] transition-all active:scale-95",
+                      day.isMarketDay 
+                        ? "bg-gradient-to-b from-accent/20 to-accent/5 border-2 border-accent/40" 
+                        : "bg-surface-1 hover:bg-surface-2 border border-transparent"
+                    )}
+                  >
+                    <div className="text-center">
+                      <p className={cn(
+                        "text-xs font-medium mb-1",
+                        day.isMarketDay ? "text-accent" : "text-muted-foreground"
+                      )}>{day.dayName} {dayNum}</p>
+                      <div className="text-3xl mb-1.5">{day.icon}</div>
+                      <p className="text-xs">
+                        <span className="font-bold">{formatTemperature(day.high)}</span>
+                        <span className="text-muted-foreground ml-1">{formatTemperature(day.low)}</span>
+                      </p>
+                      {day.isMarketDay && (
+                        <p className="text-[10px] text-accent font-semibold mt-1.5">Market Day</p>
+                      )}
+                    </div>
+                  </button>
+                )})}
+              </div>
+            </div>
+          ) : market.location?.city ? (
+            <a
+              href={`https://www.google.com/search?q=weather+${encodeURIComponent(market.location.city)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center py-4 text-sm text-accent hover:underline"
+            >
+              View {market.location.city} weather →
+            </a>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">No location set</p>
+          )}
+        </Card>
+      )}
+
+      {/* Dates */}
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+          {market.schedule?.length > 0 ? new Date(market.schedule[0].startDate).getFullYear() : new Date().getFullYear()} Dates
+        </p>
+        <div className="flex flex-col gap-0.5">
+          {market.schedule && market.schedule.length > 0 ? (
+            market.schedule.map((scheduleItem: any, index: number) => {
+              const dateObj = new Date(scheduleItem.startDate + 'T12:00:00')
+              const monthAbbr = dateObj.toLocaleDateString('en-US', { month: 'short' })
+              const dayNum = dateObj.getDate()
+              const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' })
+              const fullMonth = dateObj.toLocaleDateString('en-US', { month: 'long' })
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              const itemDate = new Date(scheduleItem.startDate)
+              itemDate.setHours(0, 0, 0, 0)
+              const isFirstUpcoming = itemDate >= today && index === market.schedule.findIndex((s: any) => {
+                const d = new Date(s.startDate)
+                d.setHours(0, 0, 0, 0)
+                return d >= today
+              })
+              
+              return (
+                <div
+                  key={scheduleItem.id || index}
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg bg-surface-1"
+                >
+                  <div className={cn(
+                    "w-14 h-14 rounded-lg border flex flex-col items-center justify-center flex-shrink-0",
+                    isFirstUpcoming 
+                      ? "bg-white border-accent" 
+                      : "bg-white border-gray-300"
+                  )}>
+                    <span className="text-xs font-bold uppercase text-accent leading-none">{monthAbbr}</span>
+                    <span className="text-2xl font-bold text-gray-800 leading-tight">{dayNum}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold">{weekday}, {fullMonth} {dayNum}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatTime12Hour(scheduleItem.startTime)} – {formatTime12Hour(scheduleItem.endTime)}
+                    </p>
+                  </div>
+                </div>
+              )
+            })
+          ) : (
+            <p className="text-sm text-muted-foreground py-3 px-2">Schedule not available</p>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Multi-date attendance selection */}
       {Array.isArray(market.schedule) && market.schedule.length > 1 && (
@@ -305,50 +421,6 @@ const { id } = useParams<{ id: string }>()
         </Card>
       )}
 
-      {/* Application Status */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-accent" />
-            <div>
-              <p className="font-medium text-sm">Application</p>
-              {existingApplication ? (
-                <Badge variant="outline" className={cn("text-xs", 
-                  existingApplication.status === 'approved' && "bg-success/10 text-success",
-                  existingApplication.status === 'submitted' && "bg-warning/10 text-warning",
-                  existingApplication.status === 'rejected' && "bg-destructive/10 text-destructive"
-                )}>
-                  {existingApplication.status}
-                </Badge>
-              ) : (
-                <span className="text-xs text-muted-foreground">Not applied</span>
-              )}
-            </div>
-          </div>
-          <Button size="sm" onClick={() => existingApplication ? navigate(`/applications/${existingApplication.id}`) : navigate(`/markets/${id}/apply`)}>
-            {existingApplication ? 'View' : 'Apply'}
-          </Button>
-        </div>
-      </Card>
-
-      {/* Weather */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-muted-foreground" />
-            <span className="text-sm">Weather</span>
-          </div>
-          {nextDate ? (
-            <div className="text-right">
-              <p className="text-sm font-medium">72°F</p>
-              <p className="text-xs text-muted-foreground">Partly Cloudy</p>
-            </div>
-          ) : (
-            <span className="text-sm text-muted-foreground">No upcoming dates</span>
-          )}
-        </div>
-      </Card>
-
       {/* About */}
       <Card className="p-4">
         <h3 className="font-semibold mb-2">About</h3>
@@ -365,22 +437,27 @@ const { id } = useParams<{ id: string }>()
         </div>
       </Card>
 
-      {/* Logistics & Communication placeholders */}
-      <Card className="p-4">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">
-          <Car className="w-4 h-4" /> Logistics
-        </h3>
-        <p className="text-sm text-muted-foreground">Parking & transportation planning coming soon.</p>
-      </Card>
+      {/* Logistics - only for promoter-created markets */}
+      {!isCommunityMarket && (
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <Car className="w-4 h-4" /> Logistics
+          </h3>
+          <p className="text-sm text-muted-foreground">Parking & transportation planning coming soon.</p>
+        </Card>
+      )}
 
-      <Card className="p-4">
-        <h3 className="font-semibold mb-2 flex items-center gap-2">
-          <MessageCircle className="w-4 h-4" /> Communication
-        </h3>
-        <p className="text-sm text-muted-foreground">Direct messaging coming soon.</p>
-      </Card>
+      {/* Communication - only for promoter-created markets */}
+      {!isCommunityMarket && (
+        <Card className="p-4">
+          <h3 className="font-semibold mb-2 flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" /> Communication
+          </h3>
+          <p className="text-sm text-muted-foreground">Direct messaging coming soon.</p>
+        </Card>
+      )}
     </div>
-  )
+  )}
 
   const TasksTabContent = () => (
     <div className="space-y-4 -mt-2 p-4">
@@ -528,6 +605,80 @@ const { id } = useParams<{ id: string }>()
         statusOptions={TRACKING_STATUS_OPTIONS}
         onStatusChange={handleStatusChange}
       />
+
+      {/* Weather Detail Modal */}
+      <Modal isOpen={!!selectedWeatherDay} onClose={() => setSelectedWeatherDay(null)} size="sm" showCloseButton={false}>
+        {selectedWeatherDay && (
+          <div className="relative">
+            <button
+              onClick={() => setSelectedWeatherDay(null)}
+              className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-gray-600 transition-colors z-10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-3 pr-8">
+              <span className="text-7xl leading-none">{selectedWeatherDay.icon}</span>
+              <div className="flex-1">
+                <p className="text-xl font-bold">{selectedWeatherDay.dayName}, {selectedWeatherDay.monthName} {selectedWeatherDay.dayNumber}</p>
+                <p className="text-sm text-muted-foreground">{selectedWeatherDay.condition}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs text-muted-foreground font-medium">H</span>
+                <span className="text-3xl font-bold">{formatTemperature(selectedWeatherDay.high)}</span>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs text-muted-foreground font-medium">L</span>
+                <span className="text-2xl font-semibold text-muted-foreground">{formatTemperature(selectedWeatherDay.low)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Rain</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.precipitation}%</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Wind</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.windSpeed}<span className="text-[10px] font-normal">km/h</span></p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Sunrise</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.sunrise}</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-surface-1 border border-surface-3">
+                <p className="text-[10px] text-muted-foreground font-medium mb-0.5">Sunset</p>
+                <p className="text-sm font-bold">{selectedWeatherDay.sunset}</p>
+              </div>
+            </div>
+
+            {selectedWeatherDay.hourly?.length > 0 && (
+              <div className="overflow-x-auto">
+                <div className="flex gap-2">
+                  {selectedWeatherDay.hourly.map((h: any) => (
+                    <div 
+                      key={h.hour} 
+                      className={cn(
+                        "flex flex-col items-center py-2 px-1.5 rounded-lg min-w-[38px]",
+                        h.hour >= 6 && h.hour <= 20 ? "bg-surface-1 border border-surface-3" : "opacity-50"
+                      )}
+                    >
+                      <p className="text-[10px] text-muted-foreground mb-1 font-medium">
+                        {h.hour === 0 ? '12am' : h.hour === 12 ? '12pm' : h.hour > 12 ? `${h.hour - 12}pm` : `${h.hour}am`}
+                      </p>
+                      <span className="text-lg">{h.icon}</span>
+                      <p className="text-xs font-semibold mt-0.5">{formatTemperature(h.temp)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
