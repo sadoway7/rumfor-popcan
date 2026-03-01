@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import { useAdminStore } from '../adminStore'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AdminFilters, EmailConfig } from '@/types'
@@ -36,8 +36,10 @@ export function useAdmin() {
 
   // Initialize admin data only when user is authenticated as admin
   // Only run once on mount when user is admin
+  const hasInitialized = useRef(false)
+  
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || hasInitialized.current) return
     
     // Check if user is admin - only run if true
     if (!isAdmin()) return
@@ -48,11 +50,12 @@ export function useAdmin() {
       fetchModerationQueue()
       fetchPromoterVerifications()
       fetchSystemSettings()
+      hasInitialized.current = true
       // Note: fetchUsers() is called in AdminUsersPage component
     }, 100)
 
     return () => clearTimeout(timer)
-  }, [isAuthenticated]) // Only re-run if auth state changes
+  }, [isAuthenticated, isAdmin]) // Re-run if auth state or admin status changes
 
   return {
     stats,
@@ -451,5 +454,117 @@ export function useAdminBugReports() {
     fetchBugReports,
     updateBugReport,
     deleteBugReport
+  }
+}
+
+// Markets management hook
+export function useAdminMarkets() {
+  const [markets, setMarkets] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 })
+  const [selectedMarkets, setSelectedMarkets] = useState<string[]>([])
+  const [filters, setFilters] = useState<{
+    status?: string
+    category?: string
+    search?: string
+  }>({})
+
+  const fetchMarkets = useCallback(async (newFilters?: typeof filters) => {
+    setIsLoading(true)
+    try {
+      const activeFilters = newFilters || filters
+      const response = await adminApi.getAdminMarkets({
+        ...activeFilters,
+        page: pagination.page,
+        limit: pagination.limit
+      })
+      setMarkets(response.data)
+      setPagination(prev => ({ ...prev, ...response.pagination }))
+    } catch (error) {
+      console.error('Failed to fetch markets:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [filters, pagination.page, pagination.limit])
+
+  const refreshMarkets = useCallback(() => {
+    fetchMarkets()
+  }, [fetchMarkets])
+
+  const handleFilterChange = useCallback((newFilters: typeof filters) => {
+    setFilters(newFilters)
+    setPagination(prev => ({ ...prev, page: 1 }))
+    fetchMarkets(newFilters)
+  }, [fetchMarkets])
+
+  const handlePageChange = useCallback((page: number) => {
+    setPagination(prev => ({ ...prev, page }))
+  }, [])
+
+  const handleToggleStatus = useCallback(async (marketId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+    try {
+      await adminApi.updateAdminMarket(marketId, { status: newStatus })
+      setMarkets(prev => prev.map(m => m.id === marketId ? { ...m, status: newStatus } : m))
+    } catch (error) {
+      console.error('Failed to toggle market status:', error)
+      throw error
+    }
+  }, [])
+
+  const handleToggleApplications = useCallback(async (marketId: string, currentValue: boolean) => {
+    try {
+      await adminApi.updateAdminMarket(marketId, { applicationsEnabled: !currentValue })
+      setMarkets(prev => prev.map(m => m.id === marketId ? { ...m, applicationsEnabled: !currentValue } : m))
+    } catch (error) {
+      console.error('Failed to toggle applications:', error)
+      throw error
+    }
+  }, [])
+
+  const handleDeleteMarket = useCallback(async (marketId: string) => {
+    if (confirm('Are you sure you want to delete this market? This action cannot be undone.')) {
+      try {
+        await adminApi.deleteAdminMarket(marketId, 'Deleted by admin')
+        setMarkets(prev => prev.filter(m => m.id !== marketId))
+        return { success: true }
+      } catch (error) {
+        console.error('Failed to delete market:', error)
+        throw error
+      }
+    }
+    return { success: false }
+  }, [])
+
+  const selectMarket = useCallback((marketId: string) => {
+    setSelectedMarkets(prev => 
+      prev.includes(marketId) ? prev.filter(id => id !== marketId) : [...prev, marketId]
+    )
+  }, [])
+
+  const selectMarkets = useCallback((marketIds: string[]) => {
+    setSelectedMarkets(marketIds)
+  }, [])
+
+  const clearMarketSelection = useCallback(() => {
+    setSelectedMarkets([])
+  }, [])
+
+  return {
+    markets,
+    isLoading,
+    pagination,
+    selectedMarkets,
+    filters,
+    fetchMarkets,
+    refreshMarkets,
+    handleFilterChange,
+    handlePageChange,
+    handleToggleStatus,
+    handleToggleApplications,
+    handleDeleteMarket,
+    selectMarket,
+    selectMarkets,
+    clearMarketSelection
   }
 }

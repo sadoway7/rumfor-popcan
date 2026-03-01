@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Users, 
@@ -8,8 +8,6 @@ import {
   ShieldX,
   UserX,
   UserCheck,
-  CheckSquare,
-  Square,
   Download,
   RefreshCw,
   Edit,
@@ -22,14 +20,30 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select, SelectOption } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
-import { Table } from '@/components/ui/Table'
 import { Avatar } from '@/components/ui/Avatar'
+import { 
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeader,
+  DataTableRow,
+} from '@/components/ui/DataTable'
+import { ModernCheckbox } from '@/components/ui/ModernCheckbox'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/DropdownMenu'
 import { useAdminUsers } from '@/features/admin/hooks/useAdmin'
 import { UserRole, UserWithStats } from '@/types'
 import { cn } from '@/utils/cn'
 
 interface AdminUserTableProps {
   className?: string
+  stats?: {
+    total: number
+    active: number
+    pending: number
+    verified: number
+    suspended: number
+  }
 }
 
 function UserActionsDropdown({ 
@@ -47,113 +61,64 @@ function UserActionsDropdown({
   onSuspend: () => void
   onDelete: () => void
 }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isOpen])
-
   const handleResend = async () => {
     await onResendVerification()
-    setIsOpen(false)
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        className="h-8 w-8 p-0"
-      >
-        <MoreVertical className="h-4 w-4" />
-      </Button>
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-border rounded-md shadow-lg z-50 py-1">
-          <button
-            onClick={() => {
-              onEdit()
-              setIsOpen(false)
-            }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            Edit User
-          </button>
-          <button
-            onClick={() => {
-              onVerify()
-              setIsOpen(false)
-            }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
-          >
-            {record.isEmailVerified ? (
-              <>
-                <ShieldX className="h-4 w-4" />
-                Unverify Email
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="h-4 w-4" />
-                Verify Email
-              </>
-            )}
-          </button>
-          {!record.isEmailVerified && (
-            <button
-              onClick={handleResend}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
-            >
-              <Mail className="h-4 w-4" />
-              Resend Verification
-            </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" side="bottom">
+        <DropdownMenuItem onClick={onEdit}>
+          <Edit className="h-4 w-4 mr-2" />
+          Edit User
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onVerify}>
+          {record.isEmailVerified ? (
+            <>
+              <ShieldX className="h-4 w-4 mr-2" />
+              Unverify Email
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="h-4 w-4 mr-2" />
+              Verify Email
+            </>
           )}
-          <button
-            onClick={() => {
-              onSuspend()
-              setIsOpen(false)
-            }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2"
-          >
-            {record.isActive ? (
-              <>
-                <UserX className="h-4 w-4" />
-                Suspend User
-              </>
-            ) : (
-              <>
-                <UserCheck className="h-4 w-4" />
-                Activate User
-              </>
-            )}
-          </button>
-          <div className="h-px bg-border my-1" />
-          <button
-            onClick={() => {
-              onDelete()
-              setIsOpen(false)
-            }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-surface/80 flex items-center gap-2 text-red-500"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete User
-          </button>
-        </div>
-      )}
-    </div>
+        </DropdownMenuItem>
+        {!record.isEmailVerified && (
+          <DropdownMenuItem onClick={handleResend}>
+            <Mail className="h-4 w-4 mr-2" />
+            Resend Verification
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={onSuspend}>
+          {record.isActive ? (
+            <>
+              <UserX className="h-4 w-4 mr-2" />
+              Suspend User
+            </>
+          ) : (
+            <>
+              <UserCheck className="h-4 w-4 mr-2" />
+              Activate User
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDelete} className="text-red-600">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete User
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
-export function AdminUserTable({ className }: AdminUserTableProps) {
+export function AdminUserTable({ className, stats }: AdminUserTableProps) {
   const navigate = useNavigate()
   const {
     users,
@@ -182,7 +147,6 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
 
   const filteredUsers = useMemo(() => {
     if (!searchTerm) return users
-    
     const search = searchTerm.toLowerCase()
     return users.filter(user => 
       user.firstName.toLowerCase().includes(search) ||
@@ -226,12 +190,10 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
 
   const handleBulkAction = () => {
     if (!bulkAction || selectedUsers.length === 0) return
-
     let value: any = bulkValue
     if (bulkAction === 'verify') {
       value = bulkValue === 'true'
     }
-
     handleBulkUpdate(selectedUsers, bulkAction as any, value)
     setBulkAction('')
     setBulkValue('')
@@ -246,7 +208,6 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
     }
   }
 
-  // Select options
   const roleFilterOptions: SelectOption[] = [
     { value: '', label: 'All Roles' },
     { value: 'visitor', label: 'Visitor' },
@@ -282,294 +243,166 @@ export function AdminUserTable({ className }: AdminUserTableProps) {
     { value: 'false', label: 'Unverify' }
   ] : []
 
-  const roleChangeOptions: SelectOption[] = [
-    { value: 'visitor', label: 'Visitor' },
-    { value: 'vendor', label: 'Vendor' },
-    { value: 'promoter', label: 'Promoter' },
-    { value: 'admin', label: 'Admin' }
-  ]
-
-  // Table columns
-  const columns = [
-    {
-      key: 'select',
-      title: '',
-      width: '48px',
-      render: (_: any, record: UserWithStats) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => selectUser(record.id)}
-          className="h-8 w-8 p-0"
-        >
-          {selectedUsers.includes(record.id) ? (
-            <CheckSquare className="h-4 w-4" />
-          ) : (
-            <Square className="h-4 w-4" />
-          )}
-        </Button>
-      )
-    },
-    {
-      key: 'user',
-      title: 'User',
-      render: (_: any, record: UserWithStats) => (
-        <div className="flex items-center gap-3">
-          <Avatar src={record.avatar} alt={record.firstName} />
-          <div>
-            <div className="font-medium">
-              {record.firstName} {record.lastName}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {record.email}
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'role',
-      title: 'Role',
-      render: (_: any, record: UserWithStats) => (
-        <Select
-          value={record.role}
-          onValueChange={(value) => handleRoleChange(record.id, value as UserRole)}
-          options={roleChangeOptions}
-          className="w-28"
-        />
-      )
-    },
-    {
-      key: 'status',
-      title: 'Status',
-      render: (_: any, record: UserWithStats) => getStatusBadge(record)
-    },
-    {
-      key: 'stats',
-      title: 'Stats',
-      render: (_: any, record: UserWithStats) => getUserStats(record)
-    },
-    {
-      key: 'lastActive',
-      title: 'Last Active',
-      render: (_: any, record: UserWithStats) => (
-        <span className="text-sm text-muted-foreground">
-          {new Date(record.lastActiveAt).toLocaleDateString()}
-        </span>
-      )
-    },
-    {
-      key: 'actions',
-      title: '',
-      width: '48px',
-      render: (_: any, record: UserWithStats) => (
-        <UserActionsDropdown
-          record={record}
-          onEdit={() => navigate(`/admin/users/${record.id}`)}
-          onVerify={() => handleVerifyUser(record.id, !record.isEmailVerified)}
-          onResendVerification={async () => {
-            const result = await handleResendVerification(record.id)
-            if (result.success) {
-              alert('Verification email sent to ' + record.email)
-            } else {
-              alert('Failed to send verification email: ' + (result.error || 'Unknown error'))
-            }
-          }}
-          onSuspend={() => handleSuspendUser(record.id, !record.isActive)}
-          onDelete={() => handleDeleteUser(record.id)}
-        />
-      )
-    }
-  ]
-
   const getStatusBadge = (user: UserWithStats) => {
-    if (!user.isActive) {
-      return <Badge variant="destructive">Suspended</Badge>
-    }
-    if (!user.isEmailVerified) {
-      return <Badge variant="outline">Unverified</Badge>
-    }
-    if (user.isVerified) {
-      return <Badge variant="default">Verified</Badge>
-    }
+    if (!user.isActive) return <Badge variant="destructive">Suspended</Badge>
+    if (!user.isEmailVerified) return <Badge variant="warning">Unverified</Badge>
+    if (user.isVerified) return <Badge variant="success">Verified</Badge>
     return <Badge variant="default">Active</Badge>
   }
 
-  const getUserStats = (user: UserWithStats) => {
-    return (
-      <div className="text-sm text-muted-foreground space-y-1">
-        <div>Applications: {user.totalApplications}</div>
-        <div>Approved: {user.approvedApplications}</div>
-        <div>Reports: {user.reportedContent}</div>
-      </div>
-    )
-  }
-
   return (
-    <Card className={cn('p-6', className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-primary" />
-          <div>
-            <h2 className="text-lg font-semibold">User Management</h2>
-            <p className="text-sm text-muted-foreground">
-              Manage user accounts, roles, and permissions
-            </p>
+    <div className={cn('w-full', className)}>
+      <Card className="overflow-hidden">
+        {/* Header */}
+        <div className="p-4 border-b bg-muted/20">
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-3">
+              <Users className="h-5 w-5 text-primary" />
+              <h2 className="text-base font-semibold">User Management</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => refreshUsers()} disabled={isLoadingUsers} className="h-8">
+                <RefreshCw className={cn('h-3 w-3', isLoadingUsers && 'animate-spin')} />
+              </Button>
+              <Button variant="outline" size="sm" className="h-8">
+                <Download className="h-3 w-3" />
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refreshUsers()}
-            disabled={isLoadingUsers}
-          >
-            <RefreshCw className={cn('h-4 w-4 mr-2', isLoadingUsers && 'animate-spin')} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
+          {/* Stats Row */}
+          {stats && (
+            <div className="flex items-center gap-3 text-xs border-b pb-3 mb-3">
+              <span>Total: <b>{stats.total}</b></span>
+              <span>Active: <b className="text-green-600">{stats.active}</b></span>
+              <span>Pending: <b className="text-yellow-600">{stats.pending}</b></span>
+              <span>Verified: <b className="text-blue-600">{stats.verified}</b></span>
+              <span>Suspended: <b className="text-red-600">{stats.suspended}</b></span>
+            </div>
+          )}
+
+          {/* Search and Filters */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-9 h-8 text-sm"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn("h-8 px-3", showFilters && "bg-primary text-primary-foreground")}
+            >
+              <Filter className="h-3 w-3" />
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
+
+          {showFilters && (
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t">
+              <Select placeholder="Role" value={userFilters?.role?.[0] || ''} onValueChange={handleRoleFilter} options={roleFilterOptions} className="w-28" />
+              <Select placeholder="Status" value={userFilters?.isActive === true ? 'active' : userFilters?.isActive === false ? 'inactive' : ''} onValueChange={handleStatusFilter} options={statusFilterOptions} className="w-28" />
+            </div>
+          )}
         </div>
 
-        {showFilters && (
-          <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/50">
-            <Select
-              placeholder="Filter by role"
-              value={userFilters?.role?.[0] || ''}
-              onValueChange={handleRoleFilter}
-              options={roleFilterOptions}
-            />
-            <Select
-              placeholder="Filter by status"
-              value={
-                userFilters?.isActive === true ? 'active' : 
-                userFilters?.isActive === false ? 'inactive' : ''
-              }
-              onValueChange={handleStatusFilter}
-              options={statusFilterOptions}
-            />
+        {/* Bulk Actions */}
+        {selectedUsers.length > 0 && (
+          <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b text-sm">
+            <ModernCheckbox checked={selectedUsers.length === filteredUsers.length} onCheckedChange={handleSelectAll} />
+            <span className="font-medium">{selectedUsers.length} selected</span>
+            <Select placeholder="Action" value={bulkAction} onValueChange={setBulkAction} options={bulkActionOptions} className="w-28" />
+            {bulkAction && <Select placeholder="Value" value={bulkValue} onValueChange={setBulkValue} options={bulkValueOptions} className="w-28" />}
+            {bulkAction && bulkValue && <Button size="sm" onClick={handleBulkAction}>Apply</Button>}
+            <Button variant="ghost" size="sm" onClick={clearUserSelection}>Clear</Button>
           </div>
         )}
-      </div>
 
-      {/* Bulk Actions */}
-      {selectedUsers.length > 0 && (
-        <div className="flex items-center gap-4 mb-4 p-4 border rounded-lg bg-muted/50">
-          <span className="text-sm font-medium">
-            {selectedUsers.length} user(s) selected
-          </span>
-          <Select
-            placeholder="Bulk action"
-            value={bulkAction}
-            onValueChange={setBulkAction}
-            options={bulkActionOptions}
-            className="w-40"
-          />
-          {bulkAction && (
-            <Select
-              placeholder="Value"
-              value={bulkValue}
-              onValueChange={setBulkValue}
-              options={bulkValueOptions}
-              className="w-40"
-            />
-          )}
-          {bulkAction && bulkValue && (
-            <Button onClick={handleBulkAction}>
-              Apply
-            </Button>
-          )}
-          <Button variant="outline" onClick={clearUserSelection}>
-            Clear Selection
-          </Button>
+        {/* Table */}
+        <div className="overflow-auto">
+          <DataTable>
+            <DataTableHeader className="sticky top-0 bg-background z-10">
+              <DataTableRow>
+                <DataTableHead className="h-10"><ModernCheckbox checked={selectedUsers.length === filteredUsers.length} onCheckedChange={handleSelectAll} /></DataTableHead>
+                <DataTableHead className="h-10">User</DataTableHead>
+                <DataTableHead className="h-10">Role</DataTableHead>
+                <DataTableHead className="h-10">Status</DataTableHead>
+                <DataTableHead className="h-10">Apps</DataTableHead>
+                <DataTableHead className="h-10">Reports</DataTableHead>
+                <DataTableHead className="h-10">Last Active</DataTableHead>
+                <DataTableHead className="h-10 w-12"></DataTableHead>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
+              {isLoadingUsers ? (
+                <DataTableRow>
+                  <DataTableCell colSpan={8} className="text-center py-6">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-muted border-t-accent rounded-full animate-spin" />
+                      Loading...
+                    </div>
+                  </DataTableCell>
+                </DataTableRow>
+              ) : filteredUsers.length === 0 ? (
+                <DataTableRow>
+                  <DataTableCell colSpan={8} className="text-center py-6 text-muted-foreground">No users found</DataTableCell>
+                </DataTableRow>
+              ) : (
+                filteredUsers.map((user) => (
+                  <DataTableRow key={user.id} className="hover:bg-muted/30">
+                    <DataTableCell className="py-2"><ModernCheckbox checked={selectedUsers.includes(user.id)} onCheckedChange={() => selectUser(user.id)} /></DataTableCell>
+                    <DataTableCell className="py-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar src={user.avatar} alt={user.firstName} size="sm" fallback={`${user.firstName} ${user.lastName}`} />
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{user.firstName} {user.lastName}</div>
+                          <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                        </div>
+                      </div>
+                    </DataTableCell>
+                    <DataTableCell className="py-2"><Badge variant={getRoleBadgeVariant(user.role)} className="text-xs">{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge></DataTableCell>
+                    <DataTableCell className="py-2">{getStatusBadge(user)}</DataTableCell>
+                    <DataTableCell className="py-2"><div className="text-xs">{user.totalApplications} <span className="text-muted-foreground">({user.approvedApplications})</span></div></DataTableCell>
+                    <DataTableCell className="py-2"><span className={cn("text-xs", user.reportedContent > 0 && "text-red-600")}>{user.reportedContent}</span></DataTableCell>
+                    <DataTableCell className="py-2"><span className="text-xs text-muted-foreground">{new Date(user.lastActiveAt).toLocaleDateString()}</span></DataTableCell>
+                    <DataTableCell className="py-2">
+                      <UserActionsDropdown
+                        record={user}
+                        onEdit={() => navigate(`/admin/users/${user.id}`)}
+                        onVerify={() => handleVerifyUser(user.id, !user.isEmailVerified)}
+                        onResendVerification={async () => {
+                          const result = await handleResendVerification(user.id)
+                          alert(result.success ? 'Verification email sent to ' + user.email : 'Failed: ' + (result.error || 'Unknown error'))
+                        }}
+                        onSuspend={() => handleSuspendUser(user.id, !user.isActive)}
+                        onDelete={() => handleDeleteUser(user.id)}
+                      />
+                    </DataTableCell>
+                  </DataTableRow>
+                ))
+              )}
+            </DataTableBody>
+          </DataTable>
         </div>
-      )}
 
-      {/* Select All Header */}
-      <div className="flex items-center justify-between mb-4 p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSelectAll}
-          className="h-8 w-8 p-0"
-        >
-          {selectedUsers.length === filteredUsers.length ? (
-            <CheckSquare className="h-4 w-4" />
-          ) : (
-            <Square className="h-4 w-4" />
-          )}
-        </Button>
-        <span className="text-sm text-muted-foreground">
-          {selectedUsers.length === filteredUsers.length && filteredUsers.length > 0 ? 'All selected' : 'Select all'}
-        </span>
-      </div>
-
-      {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <Table
-          columns={columns}
-          data={filteredUsers}
-          loading={isLoadingUsers}
-          emptyText="No users found"
-        />
-      </div>
-
-      {/* Pagination */}
-      {usersPagination && usersPagination.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-muted-foreground">
-            Showing {(usersPagination.page - 1) * usersPagination.limit + 1} to{' '}
-            {Math.min(usersPagination.page * usersPagination.limit, usersPagination.total)} of{' '}
-            {usersPagination.total} users
+        {/* Pagination */}
+        {usersPagination && usersPagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t text-xs">
+            <div className="text-muted-foreground">
+              {(usersPagination.page - 1) * usersPagination.limit + 1}-{Math.min(usersPagination.page * usersPagination.limit, usersPagination.total)} of {usersPagination.total}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" disabled={usersPagination.page <= 1} onClick={() => handlePageChange(usersPagination.page - 1)} className="h-7 px-2">Prev</Button>
+              <span className="px-2">{usersPagination.page}/{usersPagination.totalPages}</span>
+              <Button variant="ghost" size="sm" disabled={usersPagination.page >= usersPagination.totalPages} onClick={() => handlePageChange(usersPagination.page + 1)} className="h-7 px-2">Next</Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={usersPagination.page <= 1}
-              onClick={() => handlePageChange(usersPagination.page - 1)}
-            >
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {usersPagination.page} of {usersPagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={usersPagination.page >= usersPagination.totalPages}
-              onClick={() => handlePageChange(usersPagination.page + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-    </Card>
+        )}
+      </Card>
+    </div>
   )
 }

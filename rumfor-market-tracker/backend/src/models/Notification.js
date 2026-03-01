@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, 'Notification type is required'],
-    enum: [
+enum: [
       'application-status-change',
       'new-application',
       'market-updates',
@@ -23,7 +23,8 @@ const notificationSchema = new mongoose.Schema({
       'weekly-digest',
       'market-trending',
       'expense-reminder',
-      'todo-deadline'
+      'todo-deadline',
+      'admin-action'
     ]
   },
   title: {
