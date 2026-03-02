@@ -511,19 +511,29 @@ export interface HashtagVote {
 // Vendor Tracking Types
 export interface Todo {
   id: string;
-  vendorId?: string; // Set by backend from auth
-  marketId?: string; // Set by backend from request
+  vendorId?: string;
+  marketId?: string;
   title: string;
   description?: string;
-  completed?: boolean; // Set by backend (defaults to false)
+  completed?: boolean;
   priority: TodoPriority;
   dueDate?: string;
   category: string;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export type TodoPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export type PlanningItemType = 'todo' | 'expense';
+
+export interface PlanningItem {
+  id: string;
+  type: PlanningItemType;
+  data: Todo | Expense;
+  sortOrder: number;
+}
 
 export interface Expense {
   id: string;
@@ -531,11 +541,12 @@ export interface Expense {
   marketId: string;
   title: string;
   description?: string;
-  amount: number; // Expected/budgeted amount
-  actualAmount?: number; // Actual spent amount (optional, defaults to amount)
+  amount: number;
+  actualAmount?: number;
   category: ExpenseCategory;
   date: string;
   receipt?: string;
+  sortOrder?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -13,7 +13,6 @@ import {
   X,
   ChevronDown,
   CheckSquare,
-  DollarSign,
   BarChart3,
   Navigation
 } from 'lucide-react'
@@ -40,8 +39,7 @@ import { TRACKING_STATUS_OPTIONS, TRACKING_STATUS_COLORS, TRACKING_STATUS_LABELS
 import { StatusChangeModal } from '@/components/StatusChangeModal'
 
 // Lazy load heavy components for better performance
-const VendorTodoList = React.lazy(() => import('@/components/VendorTodoList').then(module => ({ default: module.VendorTodoList })))
-const VendorBudgetList = React.lazy(() => import('@/components/VendorBudgetList').then(module => ({ default: module.VendorBudgetList })))
+const VendorPlanningList = React.lazy(() => import('@/components/VendorPlanningList').then(module => ({ default: module.VendorPlanningList })))
 
 // Loading component for lazy-loaded content
 const TabContentLoader: React.FC = () => (
@@ -124,7 +122,7 @@ export const VendorMarketDetailPage: React.FC = () => {
 const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [activeTab, setActiveTab] = useState('tasks')
+  const [activeTab, setActiveTab] = useState('planning')
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [selectedDates, setSelectedDates] = useState<string[]>([])
   const [hasInitializedDates, setHasInitializedDates] = useState(false)
@@ -459,21 +457,11 @@ const { id } = useParams<{ id: string }>()
     </div>
   )}
 
-  const TasksTabContent = () => (
+  const PlanningTabContent = () => (
     <div className="space-y-4 -mt-2 p-4">
       <ErrorBoundary fallback={<TabErrorFallback />}>
         <Suspense fallback={<TabContentLoader />}>
-          <VendorTodoList marketId={market.id} />
-        </Suspense>
-      </ErrorBoundary>
-    </div>
-  )
-
-  const BudgetingTabContent = () => (
-    <div className="-mt-2 p-4">
-      <ErrorBoundary fallback={<TabErrorFallback />}>
-        <Suspense fallback={<TabContentLoader />}>
-          <VendorBudgetList marketId={market.id} />
+          <VendorPlanningList marketId={market.id} />
         </Suspense>
       </ErrorBoundary>
     </div>
@@ -577,16 +565,10 @@ const { id } = useParams<{ id: string }>()
         listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-none sm:rounded-b-3xl"
         items={[
             {
-              key: 'tasks',
-              label: 'Tasks',
+              key: 'planning',
+              label: 'Planning',
               icon: <CheckSquare className="w-4 h-4" />,
-              content: <TasksTabContent />
-            },
-            {
-              key: 'budgeting',
-              label: 'Budget',
-              icon: <DollarSign className="w-4 h-4" />,
-              content: <BudgetingTabContent />
+              content: <PlanningTabContent />
             },
             {
               key: 'info',

@@ -110,6 +110,12 @@ export const trackingApi = {
     return response
   },
 
+  async updatePlanningOrder(items: { id: string; type: 'todo' | 'expense'; sortOrder: number }[]): Promise<ApiResponse<{ updated: boolean }>> {
+    const response = await httpClient.post<ApiResponse<{ updated: boolean }>>('/planning/reorder', { items })
+    if (!response.success) throw new Error(response.error || 'Failed to update order')
+    return response
+  },
+
   async getExpenseSummary(marketId?: string): Promise<ApiResponse<{
     totalExpenses: number
     expensesByCategory: Record<ExpenseCategory, number>
