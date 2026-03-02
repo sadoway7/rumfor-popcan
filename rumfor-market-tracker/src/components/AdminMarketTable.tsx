@@ -38,13 +38,6 @@ import { cn } from '@/utils/cn'
 
 interface AdminMarketTableProps {
   className?: string
-  stats?: {
-    total: number
-    active: number
-    draft: number
-    pending: number
-    inactive: number
-  }
 }
 
 function MarketActionsDropdown({ 
@@ -145,7 +138,7 @@ const statusFilterOptions: SelectOption[] = [
   { value: 'completed', label: 'Completed' }
 ]
 
-export function AdminMarketTable({ className, stats }: AdminMarketTableProps) {
+export function AdminMarketTable({ className }: AdminMarketTableProps) {
   const navigate = useNavigate()
   const {
     markets,
@@ -158,6 +151,10 @@ export function AdminMarketTable({ className, stats }: AdminMarketTableProps) {
     handleToggleStatus,
     handleToggleApplications,
     handleDeleteMarket,
+    handleBulkStatusChange,
+    handleBulkEnableApplications,
+    handleBulkDisableApplications,
+    handleBulkDelete,
     selectMarket,
     selectMarkets,
     clearMarketSelection
@@ -171,6 +168,16 @@ export function AdminMarketTable({ className, stats }: AdminMarketTableProps) {
   useEffect(() => {
     refreshMarkets()
   }, [refreshMarkets])
+
+  const stats = useMemo(() => {
+    return {
+      total: markets.length,
+      active: markets.filter(m => m.status === 'active').length,
+      draft: markets.filter(m => m.status === 'draft').length,
+      pending: markets.filter(m => m.status === 'pending_approval').length,
+      inactive: markets.filter(m => ['inactive', 'suspended', 'cancelled'].includes(m.status)).length
+    }
+  }, [markets])
 
   const filteredMarkets = useMemo(() => {
     if (!searchTerm) return markets
@@ -302,10 +309,26 @@ export function AdminMarketTable({ className, stats }: AdminMarketTableProps) {
         </div>
 
         {selectedMarkets.length > 0 && (
-          <div className="flex items-center gap-3 px-4 py-2 bg-muted/30 border-b text-sm">
+          <div className="flex items-center gap-3 px-4 py-2 bg-primary/10 border-b text-sm">
             <ModernCheckbox checked={selectedMarkets.length === filteredMarkets.length} onCheckedChange={handleSelectAll} />
             <span className="font-medium">{selectedMarkets.length} selected</span>
-            <Button variant="ghost" size="sm" onClick={clearMarketSelection}>Clear</Button>
+            <div className="flex-1" />
+            <Button variant="outline" size="sm" onClick={() => handleBulkStatusChange('active')} className="h-7 text-xs">
+              <Play className="h-3 w-3 mr-1" /> Activate
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleBulkStatusChange('inactive')} className="h-7 text-xs">
+              <Pause className="h-3 w-3 mr-1" /> Deactivate
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleBulkEnableApplications} className="h-7 text-xs">
+              <ToggleRight className="h-3 w-3 mr-1" /> Enable Apps
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleBulkDisableApplications} className="h-7 text-xs">
+              <ToggleLeft className="h-3 w-3 mr-1" /> Disable Apps
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete} className="h-7 text-xs">
+              <Trash2 className="h-3 w-3 mr-1" /> Delete
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearMarketSelection} className="h-7 text-xs">Clear</Button>
           </div>
         )}
 

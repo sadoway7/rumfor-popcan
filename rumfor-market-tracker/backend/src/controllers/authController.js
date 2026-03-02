@@ -461,9 +461,9 @@ const sendTestVerificationEmail = catchAsync(async (req, res, next) => {
 
 // Admin: Resend verification email to a user
 const adminResendVerification = catchAsync(async (req, res, next) => {
-  const { userId } = req.params
+  const { id } = req.params
 
-  const user = await User.findById(userId)
+  const user = await User.findById(id)
   
   if (!user) {
     return next(new AppError('User not found', 404))

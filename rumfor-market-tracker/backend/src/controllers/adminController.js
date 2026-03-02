@@ -1,4 +1,5 @@
 const { catchAsync, sendSuccess, sendError } = require('../middleware/errorHandler')
+const mongoose = require('mongoose')
 const User = require('../models/User')
 const Market = require('../models/Market')
 const Comment = require('../models/Comment')
@@ -239,12 +240,36 @@ const getUsers = catchAsync(async (req, res, next) => {
 
 const updateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params
-  const { role, isActive, isEmailVerified } = req.body
-
-  const updateData = { updatedAt: new Date() }
-  if (role !== undefined) updateData.role = role
-  if (isActive !== undefined) updateData.isActive = isActive
-  if (isEmailVerified !== undefined) updateData.isEmailVerified = isEmailVerified
+  
+  const allowedFields = [
+    'firstName', 'lastName', 'username', 'displayName', 'bio', 'phone',
+    'role', 'isActive', 'isEmailVerified', 'twoFactorEnabled',
+    'businessName', 'businessDescription', 'businessLicense', 
+    'insuranceCertificate', 'taxId',
+    'organizationName', 'organizationDescription',
+    'profileImage'
+  ]
+  
+  const updateData = { updatedAt: new Date(), updatedBy: req.user.id }
+  
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      updateData[field] = req.body[field]
+    }
+  }
+  
+  if (req.body.preferences) {
+    updateData.preferences = {
+      emailNotifications: req.body.preferences.emailNotifications ?? true,
+      smsNotifications: req.body.preferences.smsNotifications ?? false,
+      locationTracking: req.body.preferences.locationTracking ?? true,
+      theme: req.body.preferences.theme ?? 'light'
+    }
+  }
+  
+  if (req.body.vendorProfile) {
+    updateData.vendorProfile = req.body.vendorProfile
+  }
 
   const user = await User.findByIdAndUpdate(id, updateData, {
     new: true,
@@ -255,7 +280,6 @@ const updateUser = catchAsync(async (req, res, next) => {
     return sendError(res, 'User not found', 404)
   }
 
-  // Create notification
   await Notification.create({
     recipient: user._id,
     type: 'admin-action',
@@ -265,18 +289,7 @@ const updateUser = catchAsync(async (req, res, next) => {
     priority: 'medium'
   })
 
-  sendSuccess(res, { user: {
-    id: user._id.toString(),
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    role: user.role,
-    avatar: user.profileImage,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-    isEmailVerified: user.isEmailVerified,
-    isActive: user.isActive
-  } }, 'User updated successfully')
+  sendSuccess(res, { user: user.toJSON() }, 'User updated successfully')
 })
 
 // Delete user (for re-registration scenarios)
@@ -384,32 +397,13 @@ const getUser = catchAsync(async (req, res, next) => {
   
   const followingCount = trackingWithApplications[0]?.total || 0
   
+  const userJson = user.toJSON()
+  
   sendSuccess(res, {
     user: {
-      id: user._id.toString(),
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username,
-      displayName: user.displayName,
-      role: user.role,
+      ...userJson,
+      profileImage: user.profileImage,
       avatar: user.profileImage,
-      bio: user.bio,
-      phone: user.phone,
-      businessName: user.businessName,
-      businessDescription: user.businessDescription,
-      businessLicense: user.businessLicense,
-      insuranceCertificate: user.insuranceCertificate,
-      taxId: user.taxId,
-      organizationName: user.organizationName,
-      organizationDescription: user.organizationDescription,
-      preferences: user.preferences,
-      twoFactorEnabled: user.twoFactorEnabled,
-      isEmailVerified: user.isEmailVerified,
-      isActive: user.isActive,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
       totalApplications: userStats.totalApplications,
       approvedApplications: userStats.approvedApplications,
       rejectedApplications: userStats.rejectedApplications,
@@ -509,6 +503,11 @@ const getUserActivity = catchAsync(async (req, res, next) => {
     updatedAt: t.updatedAt
   }))
   
+  const createdMarkets = await Market.find({ createdBy: id })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean()
+  
   sendSuccess(res, {
     applications: transformedApplications,
     comments: comments.map(c => ({
@@ -525,7 +524,18 @@ const getUserActivity = catchAsync(async (req, res, next) => {
       url: p.url,
       createdAt: p.createdAt
     })),
-    tracking: transformedTracking
+    tracking: transformedTracking,
+    createdMarkets: createdMarkets.map(m => ({
+      id: m._id.toString(),
+      name: m.name,
+      category: m.category,
+      status: m.status,
+      isActive: m.isActive,
+      createdByType: m.createdByType,
+      city: m.location?.address?.city,
+      state: m.location?.address?.state,
+      createdAt: m.createdAt
+    }))
   }, 'User activity retrieved successfully')
 })
 
@@ -544,8 +554,20 @@ const getMarkets = catchAsync(async (req, res, next) => {
   let query = {}
 
   if (category) query.category = category
-  if (status === 'active') query.isActive = true
-  if (status === 'inactive') query.isActive = false
+  
+  // Handle status filter
+  if (status && status !== '') {
+    if (status === 'active') {
+      query.status = 'active'
+    } else if (status === 'inactive') {
+      query.status = 'inactive'
+    } else {
+      query.status = status
+    }
+  } else {
+    // By default, exclude cancelled (deleted) markets
+    query.status = { $ne: 'cancelled' }
+  }
 
   if (search) {
     query.$or = [

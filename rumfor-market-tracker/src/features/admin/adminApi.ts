@@ -454,6 +454,16 @@ export const adminApi = {
       status: string
       updatedAt: string
     }>
+    createdMarkets: Array<{
+      id: string
+      name: string
+      category?: string
+      status?: string
+      isActive?: boolean
+      city?: string
+      state?: string
+      createdAt: string
+    }>
   }>> {
     const response = await httpClient.get<ApiResponse<any>>(`/admin/users/${userId}/activity`)
     if (response.success && response.data) {
@@ -525,6 +535,56 @@ export const adminApi = {
       }
       return { success: false, data: response.data } as any
     }
+  },
+
+  async updateUserProfile(userId: string, data: {
+    firstName?: string
+    lastName?: string
+    username?: string
+    displayName?: string
+    bio?: string
+    phone?: string
+    role?: UserRole
+    isActive?: boolean
+    isEmailVerified?: boolean
+    twoFactorEnabled?: boolean
+    businessName?: string
+    businessDescription?: string
+    businessLicense?: string
+    insuranceCertificate?: string
+    taxId?: string
+    organizationName?: string
+    organizationDescription?: string
+    profileImage?: string
+    preferences?: {
+      emailNotifications?: boolean
+      smsNotifications?: boolean
+      locationTracking?: boolean
+      theme?: string
+    }
+    vendorProfile?: {
+      tagline?: string
+      blurb?: string
+      website?: string
+      productCategories?: string[]
+      cardColor?: string
+      profileImage?: string
+      instagram?: string
+      facebook?: string
+      tiktok?: string
+      publicPhone?: string
+      galleryImages?: string[]
+      etsy?: string
+      shoppingLink?: string
+      city?: string
+      state?: string
+    }
+  }): Promise<ApiResponse<User>> {
+    const response = await httpClient.patch<ApiResponse<any>>(`/admin/users/${userId}`, data)
+    if (response.success && response.data) {
+      return { success: true, data: response.data.user }
+    }
+    return { success: false, data: response.data } as any
   },
 
   async resendVerificationEmail(userId: string): Promise<ApiResponse<{ message: string }>> {

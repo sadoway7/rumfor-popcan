@@ -536,6 +536,89 @@ export function useAdminMarkets() {
     return { success: false }
   }, [])
 
+  const handleBulkStatusChange = useCallback(async (newStatus: 'active' | 'inactive') => {
+    if (selectedMarkets.length === 0) return
+    const confirmed = confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} ${selectedMarkets.length} markets?`)
+    if (!confirmed) return
+    
+    try {
+      await Promise.all(
+        selectedMarkets.map(id => adminApi.updateAdminMarket(id, { 
+          status: newStatus, 
+          isActive: newStatus === 'active' 
+        }))
+      )
+      setMarkets(prev => prev.map(m => 
+        selectedMarkets.includes(m.id) 
+          ? { ...m, status: newStatus, isActive: newStatus === 'active' } 
+          : m
+      ))
+      setSelectedMarkets([])
+    } catch (error) {
+      console.error('Failed to update markets:', error)
+      throw error
+    }
+  }, [selectedMarkets])
+
+  const handleBulkEnableApplications = useCallback(async () => {
+    if (selectedMarkets.length === 0) return
+    const confirmed = confirm(`Enable applications for ${selectedMarkets.length} markets?`)
+    if (!confirmed) return
+    
+    try {
+      await Promise.all(
+        selectedMarkets.map(id => adminApi.updateAdminMarket(id, { applicationsEnabled: true }))
+      )
+      setMarkets(prev => prev.map(m => 
+        selectedMarkets.includes(m.id) 
+          ? { ...m, applicationsEnabled: true } 
+          : m
+      ))
+      setSelectedMarkets([])
+    } catch (error) {
+      console.error('Failed to enable applications:', error)
+      throw error
+    }
+  }, [selectedMarkets])
+
+  const handleBulkDisableApplications = useCallback(async () => {
+    if (selectedMarkets.length === 0) return
+    const confirmed = confirm(`Disable applications for ${selectedMarkets.length} markets?`)
+    if (!confirmed) return
+    
+    try {
+      await Promise.all(
+        selectedMarkets.map(id => adminApi.updateAdminMarket(id, { applicationsEnabled: false }))
+      )
+      setMarkets(prev => prev.map(m => 
+        selectedMarkets.includes(m.id) 
+          ? { ...m, applicationsEnabled: false } 
+          : m
+      ))
+      setSelectedMarkets([])
+    } catch (error) {
+      console.error('Failed to disable applications:', error)
+      throw error
+    }
+  }, [selectedMarkets])
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedMarkets.length === 0) return
+    const confirmed = confirm(`Are you sure you want to delete ${selectedMarkets.length} markets? This cannot be undone.`)
+    if (!confirmed) return
+    
+    try {
+      await Promise.all(
+        selectedMarkets.map(id => adminApi.deleteAdminMarket(id, 'Bulk deleted by admin'))
+      )
+      setMarkets(prev => prev.filter(m => !selectedMarkets.includes(m.id)))
+      setSelectedMarkets([])
+    } catch (error) {
+      console.error('Failed to delete markets:', error)
+      throw error
+    }
+  }, [selectedMarkets])
+
   const selectMarket = useCallback((marketId: string) => {
     setSelectedMarkets(prev => 
       prev.includes(marketId) ? prev.filter(id => id !== marketId) : [...prev, marketId]
@@ -563,6 +646,10 @@ export function useAdminMarkets() {
     handleToggleStatus,
     handleToggleApplications,
     handleDeleteMarket,
+    handleBulkStatusChange,
+    handleBulkEnableApplications,
+    handleBulkDisableApplications,
+    handleBulkDelete,
     selectMarket,
     selectMarkets,
     clearMarketSelection

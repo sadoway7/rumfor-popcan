@@ -22,7 +22,6 @@ export function EmailVerificationPage() {
     resendVerificationEmail,
     clearErrors,
     clearSuccess,
-    resetState,
     isEmailVerified,
     userEmail,
   } = useEmailVerification()
@@ -44,32 +43,23 @@ export function EmailVerificationPage() {
   })
 
   React.useEffect(() => {
-    // Auto-verify if token is present in URL (only once)
     if (tokenFromUrl && !hasAttemptedVerification.current) {
       hasAttemptedVerification.current = true
-      handleVerifyToken(tokenFromUrl)
+      verifyEmail(tokenFromUrl)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tokenFromUrl, verifyEmail])
 
   React.useEffect(() => {
     return () => {
-      resetState()
+      clearErrors()
+      clearSuccess()
     }
-  }, [resetState])
-
-  const handleVerifyToken = async (token: string) => {
-    clearErrors()
-    clearSuccess()
-    
-    const result = await verifyEmail(token)
-    
-    if (!result.success) {
-      console.error('Email verification failed:', result.error)
-    }
-  }
+  }, [clearErrors, clearSuccess])
 
   const onSubmit = async (data: VerificationFormData) => {
-    await handleVerifyToken(data.token)
+    clearErrors()
+    clearSuccess()
+    await verifyEmail(data.token)
   }
 
   const handleResendVerification = async () => {
