@@ -104,11 +104,15 @@ const todoSchema = new mongoose.Schema({
     type: String,
     maxlength: [100, 'Template name must be less than 100 characters']
   },
-  isDeleted: {
+isDeleted: {
     type: Boolean,
     default: false
   },
   deletedAt: Date,
+  sortOrder: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -185,6 +189,7 @@ todoSchema.index({ priority: 1 })
 todoSchema.index({ category: 1 })
 todoSchema.index({ isTemplate: 1 })
 todoSchema.index({ createdAt: -1 })
+todoSchema.index({ sortOrder: 1 })
 
 // Method to mark as completed
 todoSchema.methods.complete = function(completedBy) {

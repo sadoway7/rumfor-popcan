@@ -55,6 +55,12 @@ export const usePlanning = (marketId?: string) => {
   const planningItems: PlanningItem[] = useMemo(() => {
     const safeExpenses = Array.isArray(expensesData) ? expensesData : []
     const safeTodos = Array.isArray(todos) ? todos : []
+    console.log('[DEBUG] Building planningItems:', {
+      todosCount: safeTodos.length,
+      expensesCount: safeExpenses.length,
+      todos: safeTodos.map(t => ({ id: t.id, title: t.title, sortOrder: t.sortOrder })),
+      expenses: safeExpenses.map(e => ({ id: e.id, title: e.title, sortOrder: e.sortOrder }))
+    })
     return [
       ...safeTodos.map((todo: Todo) => ({
         id: `todo-${todo.id}`,
@@ -73,6 +79,7 @@ export const usePlanning = (marketId?: string) => {
 
   const updateOrderMutation = useMutation({
     mutationFn: async (items: { id: string; type: 'todo' | 'expense'; sortOrder: number }[]) => {
+      console.log('[DEBUG] updateOrder mutation called with:', items)
       const updates = items.map(item => {
         const realId = item.id.replace(/^(todo-|expense-)/, '')
         if (item.type === 'todo') {

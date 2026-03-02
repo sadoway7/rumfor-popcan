@@ -146,6 +146,7 @@ const getExpenses = catchAsync(async (req, res, next) => {
     category: expense.category,
     date: expense.date,
     receipt: expense.receipt?.url,
+    sortOrder: expense.sortOrder ?? 0,
     createdAt: expense.createdAt,
     updatedAt: expense.updatedAt
   }))
@@ -277,7 +278,7 @@ const updateExpense = catchAsync(async (req, res, next) => {
   // Update totalExpenses in UserMarketTracking
   await updateTrackingExpenses(expense.vendor.toString(), expense.market.toString())
 
-  // Transform expense to match frontend types
+// Transform expense to match frontend types
   const transformedExpense = {
     id: updatedExpense._id.toString(),
     vendorId: updatedExpense.vendor?._id?.toString() || updatedExpense.vendor?.toString(),
@@ -289,13 +290,14 @@ const updateExpense = catchAsync(async (req, res, next) => {
     category: updatedExpense.category,
     date: updatedExpense.date,
     receipt: updatedExpense.receipt?.url,
+    sortOrder: updatedExpense.sortOrder ?? 0,
     createdAt: updatedExpense.createdAt,
     updatedAt: updatedExpense.updatedAt
   }
 
   sendSuccess(res, {
     expense: transformedExpense
-  }, 'Expense updated successfully')
+  }, 'Expense created successfully', 201)
 })
 
 // Delete expense (soft delete)

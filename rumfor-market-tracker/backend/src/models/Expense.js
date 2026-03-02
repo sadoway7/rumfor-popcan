@@ -138,6 +138,10 @@ const expenseSchema = new mongoose.Schema({
     default: false
   },
   deletedAt: Date,
+  sortOrder: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -186,6 +190,7 @@ expenseSchema.index({ date: -1 })
 expenseSchema.index({ isTaxDeductible: 1 })
 expenseSchema.index({ taxYear: 1 })
 expenseSchema.index({ isRecurring: 1 })
+expenseSchema.index({ sortOrder: 1 })
 
 // Text search index
 expenseSchema.index({

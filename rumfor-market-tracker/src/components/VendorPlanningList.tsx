@@ -155,12 +155,12 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
     return (
       <div ref={setNodeRef} style={style} className={cn(
-        "flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]",
+        "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]",
         todo.completed && "border-transparent",
         isOverdue && "border-red-200 bg-red-50/50"
       )}>
-        <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
-          <GripVertical className="w-4 h-4" />
+        <button {...attributes} {...listeners} className="touch-none p-1.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+          <GripVertical className="w-5 h-5" />
         </button>
 
         <button
@@ -236,10 +236,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
     setIsEditingActual(false)
   }
 
-  return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-2 px-2.5 rounded-lg border bg-surface touch-manipulation min-h-[44px]">
+return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]">
       <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
-        <GripVertical className="w-4 h-4" />
+        <GripVertical className="w-5 h-5" />
       </button>
 
       <span className={cn(
@@ -314,28 +314,10 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
 export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId, className }) => {
   const { user } = useAuthStore()
-  const { planningItems: serverItems, todos, expenses, isLoading, error, updateOrder, isUpdatingOrder } = usePlanning(marketId)
+  const { planningItems, todos, expenses, isLoading, error, updateOrder, isUpdatingOrder } = usePlanning(marketId)
   const { toggleTodo, deleteTodo: deleteTodoApi, createTodo, updateTodo } = useTodos(marketId)
   const { createExpense, deleteExpense: deleteExpenseApi, updateExpense } = useExpenses(marketId)
 
-  const [localItems, setLocalItems] = useState<PlanningItem[]>(() => {
-    // Try to restore from sessionStorage on mount
-    try {
-      const saved = sessionStorage.getItem(`planning-order-${marketId}`)
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        console.log('[DEBUG] Restored from sessionStorage:', parsed.length, 'items')
-        return parsed
-      }
-    } catch (e) {
-      console.error('Failed to restore planning order:', e)
-    }
-    return []
-  })
-  
-  // Track server IDs - initialize from restored items if available
-  const serverItemIdsRef = React.useRef<Set<string>>(new Set(localItems.map(i => i.id)))
-  
   const [showTodoPresets, setShowTodoPresets] = useState(false)
   const [showBudgetPresets, setShowBudgetPresets] = useState(false)
   const [selectedTodoCategory, setSelectedTodoCategory] = useState<string | null>(null)
@@ -359,57 +341,8 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [newBudgetDescription, setNewBudgetDescription] = useState('')
   const [newBudgetDate, setNewBudgetDate] = useState('')
 
-  // Sync with server - merge fresh data with saved order
-  React.useEffect(() => {
-    if (serverItems.length === 0) return
-
-    const currentServerIds = new Set(serverItems.map(i => i.id))
-    const serverDataMap = new Map(serverItems.map(i => [i.id, i]))
-    
-    setLocalItems(prev => {
-      // First load - use server items
-      if (prev.length === 0) {
-        serverItemIdsRef.current = currentServerIds
-        return serverItems
-      }
-      
-      // Check if we have items that need fresh data
-      const hasStaleData = prev.some(item => {
-        const serverItem = serverDataMap.get(item.id)
-        return serverItem && JSON.stringify(serverItem.data) !== JSON.stringify(item.data)
-      })
-      
-      // Update tracked IDs
-      serverItemIdsRef.current = currentServerIds
-      
-      // Find brand new items
-      const newItems = serverItems.filter(item => !serverItemIdsRef.current.has(item.id))
-      
-      // Merge: keep order, update data, add new items, remove deleted
-      const filtered = prev.filter(item => currentServerIds.has(item.id))
-      const updated = filtered.map(item => {
-        const serverItem = serverDataMap.get(item.id)
-        return serverItem ? { ...item, data: serverItem.data } : item
-      })
-      
-      if (newItems.length > 0) {
-        return [...updated, ...newItems]
-      }
-      
-      if (hasStaleData || filtered.length !== prev.length) {
-        return updated
-      }
-      
-      return prev
-    })
-  }, [serverItems])
-  
-  // Save order to sessionStorage whenever it changes
-  React.useEffect(() => {
-    if (localItems.length > 0) {
-      sessionStorage.setItem(`planning-order-${marketId}`, JSON.stringify(localItems))
-    }
-  }, [localItems, marketId])
+  // Use planning items directly - they come sorted from usePlanning
+  const items = planningItems
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -420,21 +353,18 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const oldIndex = localItems.findIndex(item => item.id === active.id)
-    const newIndex = localItems.findIndex(item => item.id === over.id)
-    const newItems = arrayMove(localItems, oldIndex, newIndex)
-    
-    // Update local state immediately
-    setLocalItems(newItems)
+    const oldIndex = items.findIndex(item => item.id === active.id)
+    const newIndex = items.findIndex(item => item.id === over.id)
+    const newItems = arrayMove(items, oldIndex, newIndex)
 
-    // Save to server in background
+    // Save new order to server
     const orderUpdates = newItems.map((item, index) => ({
       id: item.id,
       type: item.type,
       sortOrder: index
     }))
     updateOrder(orderUpdates)
-  }, [localItems, updateOrder])
+  }, [items, updateOrder])
 
   const handleToggleTodo = (id: string) => {
     toggleTodo(id)
@@ -623,11 +553,11 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </Card>
       )}
 
-      {localItems.length > 0 && (
+      {items.length > 0 && (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={localItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-1">
-              {localItems.map(item => (
+              {items.map(item => (
                 <SortableItem
                   key={item.id}
                   item={item}
@@ -646,7 +576,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </DndContext>
       )}
 
-      {localItems.length === 0 && !isLoading && (
+      {items.length === 0 && !isLoading && (
         <div className="text-center py-6 text-muted-foreground">
           <p className="text-sm">No planning items yet</p>
           <div className="flex gap-2 justify-center mt-2">
