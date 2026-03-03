@@ -765,6 +765,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
 }) => {
   const [isEditingActual, setIsEditingActual] = useState(false)
   const [actualValue, setActualValue] = useState('')
+  const localMenuRef = useRef<HTMLDivElement>(null)
 
   const {
     attributes,
@@ -774,6 +775,21 @@ const SortableItem: React.FC<SortableItemProps> = ({
     transition,
     isDragging,
   } = useSortable({ id: item.id })
+
+  // Use local ref for click outside detection
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (openMenuId && localMenuRef.current && !localMenuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    if (openMenuId === (item.type === 'todo' ? (item.data as Todo).id : (item.data as Expense).id)) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openMenuId, item.type, item.data])
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -834,7 +850,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
           </span>
         )}
 
-        <div className="relative" ref={menuRef}>
+        <div className="relative" ref={localMenuRef}>
           <button onClick={() => setOpenMenuId(openMenuId === todo.id ? null : todo.id)} className="p-1.5 rounded hover:bg-surface/50 touch-manipulation">
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -929,7 +945,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
         {variance === null ? '-' : variance === 0 ? '$0' : (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
       </div>
 
-      <div className="relative" ref={menuRef}>
+      <div className="relative" ref={localMenuRef}>
         <button onClick={() => setOpenMenuId(openMenuId === expense.id ? null : expense.id)} className="p-1.5 rounded hover:bg-surface/50 touch-manipulation">
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
