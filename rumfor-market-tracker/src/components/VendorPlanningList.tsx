@@ -234,6 +234,9 @@ interface FolderRowProps {
   onToggleCollapse: () => void
   onRename: (name: string) => void
   onDelete: () => void
+  onChangeColor?: (color: FolderColor) => void
+  onAddTodo?: () => void
+  onAddBudget?: () => void
   itemCount: number
   onDropItem: (itemId: string, itemType: 'todo' | 'expense') => void
   items?: PlanningItem[]
@@ -253,6 +256,9 @@ const FolderRow: React.FC<FolderRowProps> = ({
   onToggleCollapse, 
   onRename, 
   onDelete, 
+  onChangeColor,
+  onAddTodo,
+  onAddBudget,
   itemCount, 
   onDropItem,
   items = [],
@@ -268,8 +274,11 @@ const FolderRow: React.FC<FolderRowProps> = ({
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(folder.name)
   const [showMenu, setShowMenu] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [menuPosition, setMenuPosition] = useState<'bottom' | 'top'>('bottom')
   const inputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
 
   const { setNodeRef, isOver } = useDroppable({
@@ -283,6 +292,17 @@ const FolderRow: React.FC<FolderRowProps> = ({
       inputRef.current.select()
     }
   }, [isEditing])
+
+  const handleToggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const menuHeight = 250
+      setMenuPosition(spaceBelow < menuHeight ? 'top' : 'bottom')
+    }
+    setShowMenu(!showMenu)
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -376,19 +396,67 @@ const FolderRow: React.FC<FolderRowProps> = ({
         {/* Menu */}
         <div className="relative" ref={menuRef}>
           <button
-            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+            ref={buttonRef}
+            onClick={handleToggleMenu}
             className="p-1.5 rounded hover:bg-black/5 touch-manipulation"
           >
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+            <div className={cn(
+              "absolute right-0 bg-background border rounded-lg shadow-lg py-1 z-20 min-w-[140px]",
+              menuPosition === 'bottom' ? "top-full mt-1" : "bottom-full mb-1"
+            )}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddTodo?.(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Task
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddBudget?.(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <DollarSign className="w-4 h-4" /> Add Budget
+              </button>
+              <div className="border-t my-1" />
+              <div className="relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center justify-between gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <div className={cn("w-4 h-4 rounded", colors.bg, colors.border, "border")} />
+                    Color
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                {showColorPicker && (
+                  <div className="absolute right-full top-0 mr-1 bg-background border rounded-lg shadow-lg p-2 z-30 min-w-[120px]">
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Object.keys(folderColorMap).map((color) => (
+                        <button
+                          key={color}
+                          onClick={(e) => { e.stopPropagation(); onChangeColor?.(color as FolderColor); setShowColorPicker(false); setShowMenu(false); }}
+                          className={cn(
+                            "w-7 h-7 rounded border-2 transition-all flex-shrink-0",
+                            folderColorMap[color as FolderColor].bg,
+                            folderColorMap[color as FolderColor].border,
+                            folder.color === color ? "ring-2 ring-accent ring-offset-1" : "hover:scale-110"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
               >
                 <Edit2 className="w-4 h-4" /> Rename
               </button>
+              <div className="border-t my-1" />
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
@@ -403,7 +471,7 @@ const FolderRow: React.FC<FolderRowProps> = ({
       {/* Folder Contents */}
       {!isCollapsed && items.length > 0 && (
         <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="ml-6 space-y-1 border-l-2 border-dashed border-blue-400 pl-2">
+          <div className={cn("ml-6 space-y-1 border-l-2 border-dashed pl-2", colors.border)}>
             {items.map(item => (
               <SortableItem
                 key={item.id}
@@ -431,6 +499,9 @@ interface FolderHeaderProps {
   onToggleCollapse: () => void
   onRename: (name: string) => void
   onDelete: () => void
+  onChangeColor?: (color: FolderColor) => void
+  onAddTodo?: () => void
+  onAddBudget?: () => void
   itemCount: number
 }
 
@@ -440,13 +511,19 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
   onToggleCollapse,
   onRename,
   onDelete,
+  onChangeColor,
+  onAddTodo,
+  onAddBudget,
   itemCount
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(folder.name)
   const [showMenu, setShowMenu] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [menuPosition, setMenuPosition] = useState<'bottom' | 'top'>('bottom')
   const inputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
 
   const {
@@ -484,6 +561,17 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
       inputRef.current.select()
     }
   }, [isEditing])
+
+  const handleToggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!showMenu && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const menuHeight = 250
+      setMenuPosition(spaceBelow < menuHeight ? 'top' : 'bottom')
+    }
+    setShowMenu(!showMenu)
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -584,21 +672,65 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
-            <button
-              onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
-            >
-              <Edit2 className="w-4 h-4" /> Rename
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" /> Delete
-            </button>
-          </div>
-        )}
+            <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-20 min-w-[140px]">
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddTodo?.(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Task
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddBudget?.(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <DollarSign className="w-4 h-4" /> Add Budget
+              </button>
+              <div className="border-t my-1" />
+              <div className="relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center justify-between gap-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <div className={cn("w-4 h-4 rounded", colors.bg, colors.border, "border")} />
+                    Color
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                {showColorPicker && (
+                  <div className="absolute right-full top-0 mr-1 bg-background border rounded-lg shadow-lg p-2 z-30 min-w-[120px]">
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Object.keys(folderColorMap).map((color) => (
+                        <button
+                          key={color}
+                          onClick={(e) => { e.stopPropagation(); onChangeColor?.(color as FolderColor); setShowColorPicker(false); setShowMenu(false); }}
+                          className={cn(
+                            "w-7 h-7 rounded border-2 transition-all flex-shrink-0",
+                            folderColorMap[color as FolderColor].bg,
+                            folderColorMap[color as FolderColor].border,
+                            folder.color === color ? "ring-2 ring-accent ring-offset-1" : "hover:scale-110"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <Edit2 className="w-4 h-4" /> Rename
+              </button>
+              <div className="border-t my-1" />
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </div>
+          )}
       </div>
     </div>
   )
@@ -839,6 +971,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [isDragging, setIsDragging] = useState(false)
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [activeItem, setActiveItem] = useState<PlanningItem | null>(null)
+  const [pendingFolderId, setPendingFolderId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const hasInitializedFolders = useRef(false)
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -953,6 +1086,20 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     if (confirm('Delete this folder? Items will be moved to root.')) {
       deleteFolder(folderId, 'root')
     }
+  }
+
+  const handleChangeFolderColor = (folderId: string, color: FolderColor) => {
+    updateFolder(folderId, { color })
+  }
+
+  const handleAddTodoToFolder = (folderId: string) => {
+    setPendingFolderId(folderId)
+    setShowTodoForm(true)
+  }
+
+  const handleAddBudgetToFolder = (folderId: string) => {
+    setPendingFolderId(folderId)
+    setShowBudgetForm(true)
   }
 
   const handleDropItemToFolder = (itemId: string, itemType: 'todo' | 'expense', folderId: string) => {
@@ -1154,11 +1301,12 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     if (editingTodo) {
       await updateTodo(editingTodo.id, { title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined })
     } else {
-      createTodo({ title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined })
+      createTodo({ title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined, folderId: pendingFolderId })
     }
     setShowTodoForm(false)
     setEditingTodo(null)
     resetTodoForm()
+    setPendingFolderId(null)
   }
 
   const handleSaveBudget = async () => {
@@ -1171,7 +1319,8 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
       amount: parseFloat(newBudgetExpected),
       actualAmount: newBudgetActual !== '' ? parseFloat(newBudgetActual) : undefined,
       description: newBudgetDescription,
-      date: newBudgetDate || formatLocalDate(new Date().toISOString())
+      date: newBudgetDate || formatLocalDate(new Date().toISOString()),
+      folderId: pendingFolderId
     }
     if (editingExpense) {
       await updateExpense(editingExpense.id, expenseData)
@@ -1181,6 +1330,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     setShowBudgetForm(false)
     setEditingExpense(null)
     resetBudgetForm()
+    setPendingFolderId(null)
   }
 
   const resetTodoForm = () => {
@@ -1345,6 +1495,9 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
                 onToggleCollapse={() => toggleFolderCollapse(folder.id)}
                 onRename={(name) => handleRenameFolder(folder.id, name)}
                 onDelete={() => handleDeleteFolder(folder.id)}
+                onChangeColor={(color) => handleChangeFolderColor(folder.id, color)}
+                onAddTodo={() => handleAddTodoToFolder(folder.id)}
+                onAddBudget={() => handleAddBudgetToFolder(folder.id)}
                 itemCount={folderItems[folder.id]?.length || 0}
               />
               {/* Folder items in their OWN independent SortableContext */}
@@ -1353,7 +1506,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
                   items={folderItems[folder.id].map(i => i.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="ml-6 space-y-1 border-l-2 border-dashed border-blue-400 pl-2">
+                  <div className={cn("ml-6 space-y-1 border-l-2 border-dashed pl-2", folderColorMap[folder.color]?.border || "border-gray-400")}>
                     {folderItems[folder.id].map(item => (
                       <SortableItem
                         key={item.id}
@@ -1501,7 +1654,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </div>
       </Modal>
 
-      <Modal isOpen={showTodoForm} onClose={() => setShowTodoForm(false)} title={editingTodo ? 'Edit Task' : 'New Task'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
+      <Modal isOpen={showTodoForm} onClose={() => { setShowTodoForm(false); setPendingFolderId(null); }} title={editingTodo ? 'Edit Task' : 'New Task'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
         <div className="h-full flex flex-col -mx-4">
           {!editingTodo && (
             <div className="px-4 pb-2 border-b">
@@ -1547,7 +1700,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1 h-10" onClick={handleSaveTodo}>Save</Button>
               {!editingTodo && (
-                <Button variant="secondary" className="flex-1 h-10" onClick={() => { if (newTodoTitle.trim()) { createTodo({ title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined }); resetTodoForm(); } }}>Quick Add</Button>
+                <Button variant="secondary" className="flex-1 h-10" onClick={() => { if (newTodoTitle.trim()) { createTodo({ title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined, folderId: pendingFolderId }); resetTodoForm(); setPendingFolderId(null); } }}>Quick Add</Button>
               )}
             </div>
             {editingTodo && (
@@ -1557,7 +1710,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </div>
       </Modal>
 
-      <Modal isOpen={showBudgetForm} onClose={() => setShowBudgetForm(false)} title={editingExpense ? 'Edit Budget Item' : 'Add Budget Item'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
+      <Modal isOpen={showBudgetForm} onClose={() => { setShowBudgetForm(false); setPendingFolderId(null); }} title={editingExpense ? 'Edit Budget Item' : 'Add Budget Item'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
         <div className="h-full flex flex-col -mx-4">
           {!editingExpense && (
             <div className="px-4 pb-2 border-b">
