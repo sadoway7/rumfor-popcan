@@ -517,7 +517,7 @@ const formatSchedule = (schedule: Market['schedule']): string => {
         </div>
 
         {/* Desktop */}
-        <div className="hidden sm:flex h-36 lg:h-40">
+        <div className="hidden sm:flex min-h-36 lg:min-h-40">
           {/* Image with overlays */}
           <div className="relative w-80 lg:w-96 shrink-0 bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden rounded-l-lg">
             {market.images && market.images.length > 0 && (
@@ -661,21 +661,20 @@ const formatSchedule = (schedule: Market['schedule']): string => {
               </span>
             </div>
 
-            {overdueTodos.length > 0 && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-destructive flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {overdueTodos.length} Overdue Tasks
-                </span>
-              </div>
-            )}
-
-            {overdueExpenses.length > 0 && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-destructive flex items-center gap-1">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {overdueExpenses.length} Overdue Budgets
-                </span>
+            {(overdueTodos.length > 0 || overdueExpenses.length > 0) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
+                {overdueTodos.length > 0 && (
+                  <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {overdueTodos.length} Overdue Tasks
+                  </span>
+                )}
+                {overdueExpenses.length > 0 && (
+                  <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    {overdueExpenses.length} Overdue Budgets
+                  </span>
+                )}
               </div>
             )}
 

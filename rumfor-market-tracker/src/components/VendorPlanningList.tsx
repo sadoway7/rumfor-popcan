@@ -35,7 +35,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
-import { Plus, ChevronLeft, ChevronDown, ChevronRight, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo, FolderPlus, Folder as FolderIcon } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronDown, ChevronRight, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo, FolderPlus, Folder as FolderIcon, ArrowDown } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
 import { formatLocalDate } from '@/utils/formatDate'
 import * as Icons from 'lucide-react'
@@ -155,6 +155,34 @@ const iconMap: Record<string, React.ReactNode> = {
   'clock': <Icons.Clock className="w-4 h-4" />,
 }
 
+interface DropIndicatorProps {
+  dropId: string
+  isDragging: boolean
+}
+
+const DropIndicator: React.FC<DropIndicatorProps> = ({ dropId, isDragging }) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: dropId,
+    data: { isDropZone: true, dropId }
+  })
+  
+  if (!isDragging) return null
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={cn(
+        "h-1 rounded transition-all duration-150 flex items-center justify-center",
+        isOver ? "h-10 bg-accent/20 border-2 border-dashed border-accent rounded-lg my-1" : "my-0.5"
+      )}
+    >
+      {isOver && (
+        <div className="w-full h-1 bg-accent rounded-full" />
+      )}
+    </div>
+  )
+}
+
 interface RootDropZoneProps {
   isOver: boolean
   position?: 'top' | 'bottom'
@@ -174,6 +202,29 @@ const RootDropZone: React.FC<RootDropZoneProps> = ({ isOver, position = 'top' })
         (isOver || droppableOver) ? "bg-accent/30 border-2 border-dashed border-accent h-12 scale-y-110" : ""
       )}
     />
+  )
+}
+
+interface EmptyRootDropZoneProps {}
+
+const EmptyRootDropZone: React.FC<EmptyRootDropZoneProps> = () => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'root-drop-zone-empty',
+    data: { isRootZone: true }
+  })
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={cn(
+        "flex items-center justify-center py-4 border-2 border-dashed rounded-lg text-sm transition-all",
+        isOver 
+          ? "border-accent bg-accent/20 text-accent font-medium" 
+          : "border-muted-foreground/30 text-muted-foreground"
+      )}
+    >
+      Drag items here to remove from folder
+    </div>
   )
 }
 
@@ -218,6 +269,7 @@ const FolderRow: React.FC<FolderRowProps> = ({
   const [editName, setEditName] = useState(folder.name)
   const [showMenu, setShowMenu] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
 
   const { setNodeRef, isOver } = useDroppable({
@@ -231,6 +283,20 @@ const FolderRow: React.FC<FolderRowProps> = ({
       inputRef.current.select()
     }
   }, [isEditing])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showMenu])
 
   const handleSave = () => {
     if (editName.trim() && editName !== folder.name) {
@@ -308,7 +374,7 @@ const FolderRow: React.FC<FolderRowProps> = ({
         </div>
 
         {/* Menu */}
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
             className="p-1.5 rounded hover:bg-black/5 touch-manipulation"
@@ -337,7 +403,7 @@ const FolderRow: React.FC<FolderRowProps> = ({
       {/* Folder Contents */}
       {!isCollapsed && items.length > 0 && (
         <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-          <div className="ml-6 space-y-1 border-l-2 border-border pl-2">
+          <div className="ml-6 space-y-1 border-l-2 border-dashed border-blue-400 pl-2">
             {items.map(item => (
               <SortableItem
                 key={item.id}
@@ -380,6 +446,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
   const [editName, setEditName] = useState(folder.name)
   const [showMenu, setShowMenu] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
 
   const {
@@ -418,6 +485,21 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
     }
   }, [isEditing])
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showMenu])
+
   const handleSave = () => {
     if (editName.trim() && editName !== folder.name) {
       onRename(editName.trim())
@@ -434,7 +516,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
     }
   }
 
-  const IconComponent = iconMap[folder.icon] || <FolderIcon className="w-4 h-4" />
+  const IconComponent = iconMap[folder.icon] || <FolderIcon className="w-6 h-6" />
 
   return (
     <div
@@ -454,7 +536,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
 
       {/* Clickable content area */}
       <div 
-        className="flex-1 flex items-center gap-2 cursor-pointer"
+        className="flex-1 flex items-center gap-3 cursor-pointer"
         onClick={() => !isEditing && onToggleCollapse()}
       >
         {/* Icon */}
@@ -472,29 +554,29 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
-            className="flex-1 px-2 py-0.5 text-sm font-medium bg-white border-2 border-accent rounded outline-none"
+            className="flex-1 px-2 py-0.5 text-base font-semibold bg-white border-2 border-accent rounded outline-none"
           />
         ) : (
-          <span className={cn("flex-1 text-sm font-medium", colors.text)}>
+          <span className={cn("flex-1 text-base font-semibold", colors.text)}>
             {folder.name}
           </span>
         )}
 
         {/* Chevron - on right side */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {itemCount}
+          <span className="text-sm font-medium text-muted-foreground">
+            {itemCount} items
           </span>
           {isCollapsed ? (
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            <ChevronDown className="w-5 h-5 text-muted-foreground" />
           )}
         </div>
       </div>
 
       {/* Menu */}
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button
           onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
           className="p-1.5 rounded hover:bg-black/5 touch-manipulation"
@@ -533,6 +615,7 @@ interface SortableItemProps {
   openMenuId: string | null
   setOpenMenuId: (id: string | null) => void
   isInFolder?: boolean
+  menuRef?: React.RefObject<HTMLDivElement>
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({
@@ -545,7 +628,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
   onUpdateExpenseActual,
   openMenuId,
   setOpenMenuId,
-  isInFolder = false
+  isInFolder = false,
+  menuRef
 }) => {
   const [isEditingActual, setIsEditingActual] = useState(false)
   const [actualValue, setActualValue] = useState('')
@@ -561,7 +645,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: isDragging ? transition : 'all 200ms ease',
+    transition: 'none',
     opacity: isDragging ? 0.5 : 1,
   }
 
@@ -618,7 +702,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
           </span>
         )}
 
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button onClick={() => setOpenMenuId(openMenuId === todo.id ? null : todo.id)} className="p-1.5 rounded hover:bg-surface/50 touch-manipulation">
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
@@ -713,7 +797,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
         {variance === null ? '-' : variance === 0 ? '$0' : (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
       </div>
 
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button onClick={() => setOpenMenuId(openMenuId === expense.id ? null : expense.id)} className="p-1.5 rounded hover:bg-surface/50 touch-manipulation">
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
@@ -747,7 +831,8 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
- const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set())
   const [showFolderModal, setShowFolderModal] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
@@ -912,7 +997,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     const overId = String(over.id)
     
     // Check if dropped on root drop zone
-    if (overId === 'root-drop-zone-top' || overId === 'root-drop-zone-bottom') {
+    if (overId === 'root-drop-zone-top' || overId === 'root-drop-zone-bottom' || overId === 'root-drop-zone-empty') {
       const itemId = activeId.replace(/^(todo-|expense-)/, '')
       const itemType = activeId.startsWith('todo-') ? 'todo' : 'expense'
       moveItemToFolder(itemId, itemType, null)
@@ -1239,7 +1324,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
                 expandTimeoutRef.current = setTimeout(() => {
                   expandFolder(folderId)
                   expandTimeoutRef.current = null
-                }, 300)
+                }, 500)
               }
             }
           } else {
@@ -1250,57 +1335,52 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
           }
         }}
       >
-        {/* Only root items in main SortableContext - folder items are separate */}
-        <SortableContext 
-          items={rootItems.map(i => i.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-1">
-            {/* Render folders with their items inline */}
-            {folders.map(folder => (
-              <React.Fragment key={folder.id}>
-                <FolderHeader
-                  folder={folder}
-                  isCollapsed={collapsedFolders.has(folder.id)}
-                  onToggleCollapse={() => toggleFolderCollapse(folder.id)}
-                  onRename={(name) => handleRenameFolder(folder.id, name)}
-                  onDelete={() => handleDeleteFolder(folder.id)}
-                  itemCount={folderItems[folder.id]?.length || 0}
-                />
-                {/* Folder items in their own SortableContext for reordering within folder */}
-                {!collapsedFolders.has(folder.id) && folderItems[folder.id] && folderItems[folder.id].length > 0 && (
-                  <SortableContext 
-                    items={folderItems[folder.id].map(i => i.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="ml-6 space-y-1 border-l-2 border-border pl-2">
-                      {folderItems[folder.id].map(item => (
-                        <SortableItem
-                          key={item.id}
-                          item={item}
-                          onToggleTodo={handleToggleTodo}
-                          onEditTodo={handleEditTodo}
-                          onEditExpense={handleEditExpense}
-                          onDeleteTodo={handleDeleteTodo}
-                          onDeleteExpense={handleDeleteExpense}
-                          onUpdateExpenseActual={handleUpdateExpenseActual}
-                          openMenuId={openMenuId}
-                          setOpenMenuId={setOpenMenuId}
-                          isInFolder
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                )}
-              </React.Fragment>
-            ))}
-            
-            {/* Root drop zone - shows when dragging items out of folders */}
-            {isDragging && (
-              <RootDropZone isOver={dragOverId === 'root-drop-zone-bottom'} position="bottom" />
-            )}
-            
-            {/* Root items */}
+        <div className="space-y-1">
+          {/* Render folders - each folder is its own independent context */}
+          {folders.map((folder) => (
+            <React.Fragment key={folder.id}>
+              <FolderHeader
+                folder={folder}
+                isCollapsed={collapsedFolders.has(folder.id)}
+                onToggleCollapse={() => toggleFolderCollapse(folder.id)}
+                onRename={(name) => handleRenameFolder(folder.id, name)}
+                onDelete={() => handleDeleteFolder(folder.id)}
+                itemCount={folderItems[folder.id]?.length || 0}
+              />
+              {/* Folder items in their OWN independent SortableContext */}
+              {!collapsedFolders.has(folder.id) && folderItems[folder.id] && folderItems[folder.id].length > 0 && (
+                <SortableContext 
+                  items={folderItems[folder.id].map(i => i.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="ml-6 space-y-1 border-l-2 border-dashed border-blue-400 pl-2">
+                    {folderItems[folder.id].map(item => (
+                      <SortableItem
+                        key={item.id}
+                        item={item}
+                        onToggleTodo={handleToggleTodo}
+                        onEditTodo={handleEditTodo}
+                        onEditExpense={handleEditExpense}
+                        onDeleteTodo={handleDeleteTodo}
+                        onDeleteExpense={handleDeleteExpense}
+                        onUpdateExpenseActual={handleUpdateExpenseActual}
+                        openMenuId={openMenuId}
+                        setOpenMenuId={setOpenMenuId}
+                        menuRef={menuRef}
+                        isInFolder
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              )}
+            </React.Fragment>
+          ))}
+          
+          {/* Root items in their OWN independent SortableContext */}
+          <SortableContext 
+            items={rootItems.map(i => i.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {rootItems.map(item => (
               <SortableItem
                 key={item.id}
@@ -1313,13 +1393,19 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
                 onUpdateExpenseActual={handleUpdateExpenseActual}
                 openMenuId={openMenuId}
                 setOpenMenuId={setOpenMenuId}
+                menuRef={menuRef}
               />
             ))}
-          </div>
-        </SortableContext>
+          </SortableContext>
+          
+          {/* Drop zone for root level - shows when dragging and no root items exist */}
+          {isDragging && rootItems.length === 0 && (
+            <EmptyRootDropZone />
+          )}
+        </div>
 
         {/* Drag Overlay - shows preview while dragging */}
-        <DragOverlay>
+        <DragOverlay dropAnimation={{ duration: 0 }}>
           {activeItem ? (
             <div className="opacity-90 shadow-xl pointer-events-none">
               <SortableItem
