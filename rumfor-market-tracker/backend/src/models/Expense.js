@@ -11,6 +11,11 @@ const expenseSchema = new mongoose.Schema({
     ref: 'Market',
     required: true
   },
+  folderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PlanningFolder',
+    default: null
+  },
   title: {
     type: String,
     required: [true, 'Expense title is required'],
@@ -191,6 +196,7 @@ expenseSchema.index({ isTaxDeductible: 1 })
 expenseSchema.index({ taxYear: 1 })
 expenseSchema.index({ isRecurring: 1 })
 expenseSchema.index({ sortOrder: 1 })
+expenseSchema.index({ folderId: 1 })
 
 // Text search index
 expenseSchema.index({

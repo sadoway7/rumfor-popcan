@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -7,6 +7,16 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  useDroppable,
+  UniqueIdentifier,
+  pointerWithin,
+  rectIntersection,
+  CollisionDetection,
+  DragStartEvent,
+  DragOverEvent,
+  DropAnimation,
+  defaultDropAnimation,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -19,14 +29,16 @@ import { CSS } from '@dnd-kit/utilities'
 import { usePlanning } from '@/features/tracking/hooks/usePlanning'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
 import { useExpenses } from '@/features/tracking/hooks/useExpenses'
-import { Todo, Expense, TodoPriority, ExpenseCategory, PlanningItem } from '@/types'
+import { useFolders } from '@/features/tracking/hooks/useFolders'
+import { Todo, Expense, TodoPriority, ExpenseCategory, PlanningItem, PlanningFolder, FolderColor } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import { cn } from '@/utils/cn'
-import { Plus, ChevronLeft, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronDown, ChevronRight, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo, FolderPlus, Folder as FolderIcon } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
 import { formatLocalDate } from '@/utils/formatDate'
+import * as Icons from 'lucide-react'
 
 interface VendorPlanningListProps {
   marketId: string
@@ -106,6 +118,410 @@ const categoryColors: Record<string, string> = {
   'revenue': 'bg-green-100 text-green-700'
 }
 
+const folderColorMap: Record<FolderColor, { bg: string; border: string; text: string }> = {
+  gray: { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-700' },
+  red: { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-700' },
+  orange: { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-700' },
+  amber: { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
+  yellow: { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-700' },
+  lime: { bg: 'bg-lime-50', border: 'border-lime-300', text: 'text-lime-700' },
+  green: { bg: 'bg-green-50', border: 'border-green-300', text: 'text-green-700' },
+  emerald: { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
+  teal: { bg: 'bg-teal-50', border: 'border-teal-300', text: 'text-teal-700' },
+  cyan: { bg: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-700' },
+  blue: { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700' },
+  indigo: { bg: 'bg-indigo-50', border: 'border-indigo-300', text: 'text-indigo-700' },
+  violet: { bg: 'bg-violet-50', border: 'border-violet-300', text: 'text-violet-700' },
+  purple: { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+  fuchsia: { bg: 'bg-fuchsia-50', border: 'border-fuchsia-300', text: 'text-fuchsia-700' },
+  pink: { bg: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-700' },
+}
+
+const iconMap: Record<string, React.ReactNode> = {
+  'folder': <FolderIcon className="w-4 h-4" />,
+  'briefcase': <Icons.Briefcase className="w-4 h-4" />,
+  'package': <Icons.Package className="w-4 h-4" />,
+  'truck': <Icons.Truck className="w-4 h-4" />,
+  'dollar-sign': <Icons.DollarSign className="w-4 h-4" />,
+  'calendar': <Icons.Calendar className="w-4 h-4" />,
+  'star': <Icons.Star className="w-4 h-4" />,
+  'tag': <Icons.Tag className="w-4 h-4" />,
+  'bookmark': <Icons.Bookmark className="w-4 h-4" />,
+  'flag': <Icons.Flag className="w-4 h-4" />,
+  'shopping-cart': <Icons.ShoppingCart className="w-4 h-4" />,
+  'gift': <Icons.Gift className="w-4 h-4" />,
+  'home': <Icons.Home className="w-4 h-4" />,
+  'map-pin': <Icons.MapPin className="w-4 h-4" />,
+  'clock': <Icons.Clock className="w-4 h-4" />,
+}
+
+interface RootDropZoneProps {
+  isOver: boolean
+  position?: 'top' | 'bottom'
+}
+
+const RootDropZone: React.FC<RootDropZoneProps> = ({ isOver, position = 'top' }) => {
+  const { setNodeRef, isOver: droppableOver } = useDroppable({
+    id: position === 'top' ? 'root-drop-zone-top' : 'root-drop-zone-bottom',
+    data: { isRootZone: true, position }
+  })
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      className={cn(
+        "h-2 rounded transition-all duration-200",
+        (isOver || droppableOver) ? "bg-accent/30 border-2 border-dashed border-accent h-12 scale-y-110" : ""
+      )}
+    />
+  )
+}
+
+interface FolderRowProps {
+  folder: PlanningFolder
+  isCollapsed: boolean
+  onToggleCollapse: () => void
+  onRename: (name: string) => void
+  onDelete: () => void
+  itemCount: number
+  onDropItem: (itemId: string, itemType: 'todo' | 'expense') => void
+  items?: PlanningItem[]
+  onToggleTodo?: (id: string) => void
+  onEditTodo?: (todo: Todo) => void
+  onEditExpense?: (expense: Expense) => void
+  onDeleteTodo?: (id: string) => void
+  onDeleteExpense?: (id: string) => void
+  onUpdateExpenseActual?: (id: string, actual: number | undefined) => void
+  openMenuId?: string | null
+  setOpenMenuId?: (id: string | null) => void
+}
+
+const FolderRow: React.FC<FolderRowProps> = ({ 
+  folder, 
+  isCollapsed, 
+  onToggleCollapse, 
+  onRename, 
+  onDelete, 
+  itemCount, 
+  onDropItem,
+  items = [],
+  onToggleTodo,
+  onEditTodo,
+  onEditExpense,
+  onDeleteTodo,
+  onDeleteExpense,
+  onUpdateExpenseActual,
+  openMenuId,
+  setOpenMenuId
+}) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(folder.name)
+  const [showMenu, setShowMenu] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const colors = folderColorMap[folder.color] || folderColorMap.blue
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `folder-${folder.id}`,
+    data: { folderId: folder.id, isFolder: true }
+  })
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditing])
+
+  const handleSave = () => {
+    if (editName.trim() && editName !== folder.name) {
+      onRename(editName.trim())
+    }
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave()
+    } else if (e.key === 'Escape') {
+      setEditName(folder.name)
+      setIsEditing(false)
+    }
+  }
+
+  const IconComponent = iconMap[folder.icon] || <FolderIcon className="w-4 h-4" />
+
+  return (
+    <div className="space-y-1">
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px] transition-colors",
+          colors.bg,
+          colors.border,
+          isOver && "ring-2 ring-accent ring-offset-2"
+        )}
+      >
+        {/* Drag Handle */}
+        <div className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+          <GripVertical className="w-5 h-5" />
+        </div>
+
+        {/* Clickable content area */}
+        <div 
+          className="flex-1 flex items-center gap-2 cursor-pointer"
+          onClick={() => !isEditing && onToggleCollapse()}
+        >
+          {/* Icon */}
+          <div className={cn("flex-shrink-0", colors.text)}>
+            {IconComponent}
+          </div>
+
+          {/* Name */}
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 px-2 py-0.5 text-sm font-medium bg-white border-2 border-accent rounded outline-none"
+            />
+          ) : (
+            <span className={cn("flex-1 text-sm font-medium", colors.text)}>
+              {folder.name}
+            </span>
+          )}
+
+          {/* Chevron - on right side */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {itemCount}
+            </span>
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+
+        {/* Menu */}
+        <div className="relative">
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+            className="p-1.5 rounded hover:bg-black/5 touch-manipulation"
+          >
+            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+          </button>
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+              >
+                <Edit2 className="w-4 h-4" /> Rename
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Folder Contents */}
+      {!isCollapsed && items.length > 0 && (
+        <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          <div className="ml-6 space-y-1 border-l-2 border-border pl-2">
+            {items.map(item => (
+              <SortableItem
+                key={item.id}
+                item={item}
+                onToggleTodo={onToggleTodo || (() => {})}
+                onEditTodo={onEditTodo || (() => {})}
+                onEditExpense={onEditExpense || (() => {})}
+                onDeleteTodo={onDeleteTodo || (() => {})}
+                onDeleteExpense={onDeleteExpense || (() => {})}
+                onUpdateExpenseActual={onUpdateExpenseActual || (() => {})}
+                openMenuId={openMenuId || null}
+                setOpenMenuId={setOpenMenuId || (() => {})}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      )}
+    </div>
+  )
+}
+
+interface FolderHeaderProps {
+  folder: PlanningFolder
+  isCollapsed: boolean
+  onToggleCollapse: () => void
+  onRename: (name: string) => void
+  onDelete: () => void
+  itemCount: number
+}
+
+const FolderHeader: React.FC<FolderHeaderProps> = ({
+  folder,
+  isCollapsed,
+  onToggleCollapse,
+  onRename,
+  onDelete,
+  itemCount
+}) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(folder.name)
+  const [showMenu, setShowMenu] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const colors = folderColorMap[folder.color] || folderColorMap.blue
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: `folder-${folder.id}`,
+    data: { type: 'folder', folder }
+  })
+
+  const { setNodeRef: setDroppableRef, isOver: droppableOver } = useDroppable({
+    id: `folder-${folder.id}`,
+    data: { folderId: folder.id, isFolder: true }
+  })
+
+  // Combine refs
+  const setNodeRef = (node: HTMLElement | null) => {
+    setSortableRef(node)
+    setDroppableRef(node)
+  }
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? transition : 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditing])
+
+  const handleSave = () => {
+    if (editName.trim() && editName !== folder.name) {
+      onRename(editName.trim())
+    }
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave()
+    } else if (e.key === 'Escape') {
+      setEditName(folder.name)
+      setIsEditing(false)
+    }
+  }
+
+  const IconComponent = iconMap[folder.icon] || <FolderIcon className="w-4 h-4" />
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px] transition-all duration-200",
+        colors.bg,
+        colors.border,
+        droppableOver && "ring-2 ring-accent ring-offset-2 scale-[1.02] shadow-lg"
+      )}
+    >
+      {/* Drag Handle */}
+      <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+        <GripVertical className="w-5 h-5" />
+      </button>
+
+      {/* Clickable content area */}
+      <div 
+        className="flex-1 flex items-center gap-2 cursor-pointer"
+        onClick={() => !isEditing && onToggleCollapse()}
+      >
+        {/* Icon */}
+        <div className={cn("flex-shrink-0", colors.text)}>
+          {IconComponent}
+        </div>
+
+        {/* Name */}
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 px-2 py-0.5 text-sm font-medium bg-white border-2 border-accent rounded outline-none"
+          />
+        ) : (
+          <span className={cn("flex-1 text-sm font-medium", colors.text)}>
+            {folder.name}
+          </span>
+        )}
+
+        {/* Chevron - on right side */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {itemCount}
+          </span>
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          )}
+        </div>
+      </div>
+
+      {/* Menu */}
+      <div className="relative">
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+          className="p-1.5 rounded hover:bg-black/5 touch-manipulation"
+        >
+          <MoreVertical className="w-4 h-4 text-muted-foreground" />
+        </button>
+        {showMenu && (
+          <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+            >
+              <Edit2 className="w-4 h-4" /> Rename
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
+              className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" /> Delete
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 interface SortableItemProps {
   item: PlanningItem
   onToggleTodo: (id: string) => void
@@ -116,6 +532,7 @@ interface SortableItemProps {
   onUpdateExpenseActual: (id: string, actual: number | undefined) => void
   openMenuId: string | null
   setOpenMenuId: (id: string | null) => void
+  isInFolder?: boolean
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({
@@ -127,7 +544,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
   onDeleteExpense,
   onUpdateExpenseActual,
   openMenuId,
-  setOpenMenuId
+  setOpenMenuId,
+  isInFolder = false
 }) => {
   const [isEditingActual, setIsEditingActual] = useState(false)
   const [actualValue, setActualValue] = useState('')
@@ -143,7 +561,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? transition : 'all 200ms ease',
     opacity: isDragging ? 0.5 : 1,
   }
 
@@ -159,7 +577,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
         todo.completed && "border-transparent",
         isOverdue && "border-red-200 bg-red-50/50"
       )}>
-        <button {...attributes} {...listeners} className="touch-none p-1.5 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+        <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
           <GripVertical className="w-5 h-5" />
         </button>
 
@@ -236,9 +654,11 @@ const SortableItem: React.FC<SortableItemProps> = ({
     setIsEditingActual(false)
   }
 
-return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]">
-      <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+ return (
+    <div ref={setNodeRef} style={style} className={cn(
+      "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]"
+    )}>
+      <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
         <GripVertical className="w-5 h-5" />
       </button>
 
@@ -317,6 +737,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const { planningItems, todos, expenses, isLoading, error, updateOrder, isUpdatingOrder } = usePlanning(marketId)
   const { toggleTodo, deleteTodo: deleteTodoApi, createTodo, updateTodo } = useTodos(marketId)
   const { createExpense, deleteExpense: deleteExpenseApi, updateExpense } = useExpenses(marketId)
+  const { folders, createFolder, updateFolder, deleteFolder, moveItemToFolder, isCreating: isCreatingFolder } = useFolders(marketId)
 
   const [showTodoPresets, setShowTodoPresets] = useState(false)
   const [showBudgetPresets, setShowBudgetPresets] = useState(false)
@@ -326,7 +747,16 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [showBudgetForm, setShowBudgetForm] = useState(false)
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+ const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set())
+  const [showFolderModal, setShowFolderModal] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [activeItem, setActiveItem] = useState<PlanningItem | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const hasInitializedFolders = useRef(false)
+  const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const [newTodoTitle, setNewTodoTitle] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
@@ -341,30 +771,252 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [newBudgetDescription, setNewBudgetDescription] = useState('')
   const [newBudgetDate, setNewBudgetDate] = useState('')
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (openMenuId && menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openMenuId])
+
+  useEffect(() => {
+    return () => {
+      if (expandTimeoutRef.current) {
+        clearTimeout(expandTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Initialize collapsed state from folder data (only once on mount)
+  useEffect(() => {
+    if (hasInitializedFolders.current || folders.length === 0) return
+    hasInitializedFolders.current = true
+    const collapsed = new Set<string>()
+    folders.forEach(f => {
+      if (f.isCollapsed) collapsed.add(f.id)
+    })
+    if (collapsed.size > 0) {
+      setCollapsedFolders(collapsed)
+    }
+  }, [folders])
+
+  // Group items by folder
+  const { rootItems, folderItems } = useMemo(() => {
+    const root: PlanningItem[] = []
+    const inFolder: Record<string, PlanningItem[]> = {}
+    
+    folders.forEach(f => { inFolder[f.id] = [] })
+    
+    planningItems.forEach(item => {
+      const folderId = (item.data as any).folderId
+      if (folderId && inFolder[folderId]) {
+        inFolder[folderId].push(item)
+      } else {
+        root.push(item)
+      }
+    })
+    
+    return { rootItems: root, folderItems: inFolder }
+  }, [planningItems, folders])
+
+  const toggleFolderCollapse = (folderId: string) => {
+    setCollapsedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(folderId)) {
+        next.delete(folderId)
+        updateFolder(folderId, { isCollapsed: false })
+      } else {
+        next.add(folderId)
+        updateFolder(folderId, { isCollapsed: true })
+      }
+      return next
+    })
+  }
+
+  const expandFolder = (folderId: string) => {
+    setCollapsedFolders(prev => {
+      if (prev.has(folderId)) {
+        updateFolder(folderId, { isCollapsed: false })
+        const next = new Set(prev)
+        next.delete(folderId)
+        return next
+      }
+      return prev
+    })
+  }
+
+  const handleCreateFolder = () => {
+    if (!newFolderName.trim()) return
+    createFolder({
+      marketId,
+      name: newFolderName.trim(),
+      color: 'blue',
+      icon: 'folder'
+    })
+    setNewFolderName('')
+    setShowFolderModal(false)
+  }
+
+  const handleRenameFolder = (folderId: string, name: string) => {
+    updateFolder(folderId, { name })
+  }
+
+  const handleDeleteFolder = (folderId: string) => {
+    if (confirm('Delete this folder? Items will be moved to root.')) {
+      deleteFolder(folderId, 'root')
+    }
+  }
+
+  const handleDropItemToFolder = (itemId: string, itemType: 'todo' | 'expense', folderId: string) => {
+    moveItemToFolder(itemId, itemType, folderId)
+  }
+
   // Use planning items directly - they come sorted from usePlanning
   const items = planningItems
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { 
+      activationConstraint: { 
+        distance: 5,
+        delay: 100,
+        tolerance: 5
+      } 
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
+  // Custom collision detection: prioritize folder drops, then closest item
+  const customCollisionDetection: CollisionDetection = useCallback((args) => {
+    // First, check if pointer is over a folder header (for folder drops)
+    const pointerCollisions = pointerWithin(args)
+    const folderCollision = pointerCollisions.find(({ id }) => 
+      String(id).startsWith('folder-')
+    )
+    
+    if (folderCollision) {
+      return [folderCollision]
+    }
+    
+    // Then use closestCenter for reordering
+    return closestCenter(args)
+  }, [])
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
-    if (!over || active.id === over.id) return
+    if (!over) return
+    
+    const activeId = String(active.id)
+    const overId = String(over.id)
+    
+    // Check if dropped on root drop zone
+    if (overId === 'root-drop-zone-top' || overId === 'root-drop-zone-bottom') {
+      const itemId = activeId.replace(/^(todo-|expense-)/, '')
+      const itemType = activeId.startsWith('todo-') ? 'todo' : 'expense'
+      moveItemToFolder(itemId, itemType, null)
+      return
+    }
+    
+    // Check if dropped on a folder header (not an item inside)
+    if (overId.startsWith('folder-')) {
+      const folderId = overId.replace('folder-', '')
+      const itemId = activeId.replace(/^(todo-|expense-)/, '')
+      const itemType = activeId.startsWith('todo-') ? 'todo' : 'expense'
+      moveItemToFolder(itemId, itemType, folderId)
+      return
+    }
+    
+    if (active.id === over.id) return
 
-    const oldIndex = items.findIndex(item => item.id === active.id)
-    const newIndex = items.findIndex(item => item.id === over.id)
-    const newItems = arrayMove(items, oldIndex, newIndex)
+    // Find source list and item
+    let sourceList: PlanningItem[] = []
+    let sourceFolderId: string | null = null
+    let activeItem: PlanningItem | null = null
+    
+    // Check root items
+    const activeRootIndex = rootItems.findIndex(item => item.id === activeId)
+    if (activeRootIndex !== -1) {
+      sourceList = rootItems
+      sourceFolderId = null
+      activeItem = rootItems[activeRootIndex]
+    } else {
+      // Check folder items
+      for (const folderId of Object.keys(folderItems)) {
+        const folderList = folderItems[folderId]
+        const idx = folderList.findIndex(item => item.id === activeId)
+        if (idx !== -1) {
+          sourceList = folderList
+          sourceFolderId = folderId
+          activeItem = folderList[idx]
+          break
+        }
+      }
+    }
+    
+    if (!activeItem) return
 
-    // Save new order to server
+    // Find target list (where we're dropping)
+    let targetList: PlanningItem[] = []
+    let targetFolderId: string | null = null
+    
+    // Check root items for drop target
+    const overRootIndex = rootItems.findIndex(item => item.id === overId)
+    if (overRootIndex !== -1) {
+      targetList = rootItems
+      targetFolderId = null
+    } else {
+      // Check folder items for drop target
+      for (const folderId of Object.keys(folderItems)) {
+        const folderList = folderItems[folderId]
+        const idx = folderList.findIndex(item => item.id === overId)
+        if (idx !== -1) {
+          targetList = folderList
+          targetFolderId = folderId
+          break
+        }
+      }
+    }
+    
+    if (targetList.length === 0) return
+
+    const overIndex = targetList.findIndex(item => item.id === overId)
+    if (overIndex === -1) return
+
+    // Cross-list move (root <-> folder or folder <-> folder)
+    if (sourceFolderId !== targetFolderId) {
+      const realId = activeId.replace(/^(todo-|expense-)/, '')
+      const itemType = activeId.startsWith('todo-') ? 'todo' : 'expense'
+      
+      // Move to new folder (optimistic update will handle UI)
+      moveItemToFolder(realId, itemType, targetFolderId)
+      
+      // Update sort order immediately (no delay)
+      const newList = [...targetList]
+      newList.splice(overIndex, 0, activeItem)
+      const orderUpdates = newList.map((item, index) => ({
+        id: item.id,
+        type: item.type,
+        sortOrder: index
+      }))
+      updateOrder(orderUpdates)
+      return
+    }
+
+    // Same-list reorder
+    const oldIndex = sourceList.findIndex(item => item.id === activeId)
+    if (oldIndex === -1) return
+    
+    const newItems = arrayMove(sourceList, oldIndex, overIndex)
+
     const orderUpdates = newItems.map((item, index) => ({
       id: item.id,
       type: item.type,
       sortOrder: index
     }))
     updateOrder(orderUpdates)
-  }, [items, updateOrder])
+  }, [rootItems, folderItems, updateOrder, moveItemToFolder])
 
   const handleToggleTodo = (id: string) => {
     toggleTodo(id)
@@ -520,6 +1172,9 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
           <Button size="sm" onClick={() => { resetBudgetForm(); setEditingExpense(null); setShowBudgetForm(true); }} className="h-8 w-8 p-0" variant="outline" title="Add budget item">
             <DollarSign className="w-4 h-4" />
           </Button>
+          <Button size="sm" onClick={() => setShowFolderModal(true)} className="h-8 w-8 p-0" variant="outline" title="Add folder">
+            <FolderPlus className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
@@ -553,28 +1208,135 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </Card>
       )}
 
-      {items.length > 0 && (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-1">
-              {items.map(item => (
-                <SortableItem
-                  key={item.id}
-                  item={item}
-                  onToggleTodo={handleToggleTodo}
-                  onEditTodo={handleEditTodo}
-                  onEditExpense={handleEditExpense}
-                  onDeleteTodo={handleDeleteTodo}
-                  onDeleteExpense={handleDeleteExpense}
-                  onUpdateExpenseActual={handleUpdateExpenseActual}
-                  openMenuId={openMenuId}
-                  setOpenMenuId={setOpenMenuId}
+      {/* Folders and Items in unified drag context */}
+      <DndContext 
+        sensors={sensors} 
+        collisionDetection={customCollisionDetection}
+        onDragStart={(event) => {
+          setIsDragging(true)
+          const activeId = String(event.active.id)
+          const item = planningItems.find(p => p.id === activeId)
+          setActiveItem(item || null)
+        }}
+        onDragEnd={(event) => {
+          setIsDragging(false)
+          setDragOverId(null)
+          setActiveItem(null)
+          if (expandTimeoutRef.current) {
+            clearTimeout(expandTimeoutRef.current)
+            expandTimeoutRef.current = null
+          }
+          handleDragEnd(event)
+        }}
+        onDragOver={(event) => {
+          const { over } = event
+          setDragOverId(over ? String(over.id) : null)
+          if (over) {
+            const overId = String(over.id)
+            if (overId.startsWith('folder-')) {
+              const folderId = overId.replace('folder-', '')
+              if (collapsedFolders.has(folderId) && !expandTimeoutRef.current) {
+                expandTimeoutRef.current = setTimeout(() => {
+                  expandFolder(folderId)
+                  expandTimeoutRef.current = null
+                }, 300)
+              }
+            }
+          } else {
+            if (expandTimeoutRef.current) {
+              clearTimeout(expandTimeoutRef.current)
+              expandTimeoutRef.current = null
+            }
+          }
+        }}
+      >
+        {/* Only root items in main SortableContext - folder items are separate */}
+        <SortableContext 
+          items={rootItems.map(i => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-1">
+            {/* Render folders with their items inline */}
+            {folders.map(folder => (
+              <React.Fragment key={folder.id}>
+                <FolderHeader
+                  folder={folder}
+                  isCollapsed={collapsedFolders.has(folder.id)}
+                  onToggleCollapse={() => toggleFolderCollapse(folder.id)}
+                  onRename={(name) => handleRenameFolder(folder.id, name)}
+                  onDelete={() => handleDeleteFolder(folder.id)}
+                  itemCount={folderItems[folder.id]?.length || 0}
                 />
-              ))}
+                {/* Folder items in their own SortableContext for reordering within folder */}
+                {!collapsedFolders.has(folder.id) && folderItems[folder.id] && folderItems[folder.id].length > 0 && (
+                  <SortableContext 
+                    items={folderItems[folder.id].map(i => i.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="ml-6 space-y-1 border-l-2 border-border pl-2">
+                      {folderItems[folder.id].map(item => (
+                        <SortableItem
+                          key={item.id}
+                          item={item}
+                          onToggleTodo={handleToggleTodo}
+                          onEditTodo={handleEditTodo}
+                          onEditExpense={handleEditExpense}
+                          onDeleteTodo={handleDeleteTodo}
+                          onDeleteExpense={handleDeleteExpense}
+                          onUpdateExpenseActual={handleUpdateExpenseActual}
+                          openMenuId={openMenuId}
+                          setOpenMenuId={setOpenMenuId}
+                          isInFolder
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                )}
+              </React.Fragment>
+            ))}
+            
+            {/* Root drop zone - shows when dragging items out of folders */}
+            {isDragging && (
+              <RootDropZone isOver={dragOverId === 'root-drop-zone-bottom'} position="bottom" />
+            )}
+            
+            {/* Root items */}
+            {rootItems.map(item => (
+              <SortableItem
+                key={item.id}
+                item={item}
+                onToggleTodo={handleToggleTodo}
+                onEditTodo={handleEditTodo}
+                onEditExpense={handleEditExpense}
+                onDeleteTodo={handleDeleteTodo}
+                onDeleteExpense={handleDeleteExpense}
+                onUpdateExpenseActual={handleUpdateExpenseActual}
+                openMenuId={openMenuId}
+                setOpenMenuId={setOpenMenuId}
+              />
+            ))}
+          </div>
+        </SortableContext>
+
+        {/* Drag Overlay - shows preview while dragging */}
+        <DragOverlay>
+          {activeItem ? (
+            <div className="opacity-90 shadow-xl pointer-events-none">
+              <SortableItem
+                item={activeItem}
+                onToggleTodo={() => {}}
+                onEditTodo={() => {}}
+                onEditExpense={() => {}}
+                onDeleteTodo={() => {}}
+                onDeleteExpense={() => {}}
+                onUpdateExpenseActual={() => {}}
+                openMenuId={null}
+                setOpenMenuId={() => {}}
+              />
             </div>
-          </SortableContext>
-        </DndContext>
-      )}
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {items.length === 0 && !isLoading && (
         <div className="text-center py-6 text-muted-foreground">
@@ -757,6 +1519,34 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
             {editingExpense && (
               <Button variant="ghost" className="w-full h-10 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => { handleDeleteExpense(editingExpense.id); setShowBudgetForm(false); }}>Delete</Button>
             )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Folder Modal */}
+      <Modal isOpen={showFolderModal} onClose={() => setShowFolderModal(false)} title="New Folder" showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
+        <div className="p-4 space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Folder Name</label>
+            <input
+              type="text"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="e.g., Setup Tasks"
+              className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleCreateFolder()
+              }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setShowFolderModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim() || isCreatingFolder} className="flex-1">
+              {isCreatingFolder ? 'Creating...' : 'Create Folder'}
+            </Button>
           </div>
         </div>
       </Modal>

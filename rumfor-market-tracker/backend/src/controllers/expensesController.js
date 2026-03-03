@@ -139,6 +139,7 @@ const getExpenses = catchAsync(async (req, res, next) => {
     id: expense._id.toString(),
     vendorId: expense.vendor?._id?.toString() || expense.vendor?.toString(),
     marketId: expense.market?._id?.toString() || expense.market?.toString(),
+    folderId: expense.folderId?.toString() || null,
     title: expense.title,
     description: expense.description || '',
     amount: expense.amount,
@@ -231,6 +232,7 @@ const createExpense = catchAsync(async (req, res, next) => {
     id: populatedExpense._id.toString(),
     vendorId: populatedExpense.vendor?._id?.toString() || populatedExpense.vendor?.toString(),
     marketId: populatedExpense.market?._id?.toString() || populatedExpense.market?.toString(),
+    folderId: populatedExpense.folderId?.toString() || null,
     title: populatedExpense.title,
     description: populatedExpense.description || '',
     amount: populatedExpense.amount,
@@ -238,6 +240,7 @@ const createExpense = catchAsync(async (req, res, next) => {
     category: populatedExpense.category,
     date: populatedExpense.date,
     receipt: populatedExpense.receipt?.url,
+    sortOrder: populatedExpense.sortOrder ?? 0,
     createdAt: populatedExpense.createdAt,
     updatedAt: populatedExpense.updatedAt
   }

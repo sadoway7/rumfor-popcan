@@ -11,6 +11,11 @@ const todoSchema = new mongoose.Schema({
     ref: 'Market',
     required: true
   },
+  folderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PlanningFolder',
+    default: null
+  },
   title: {
     type: String,
     required: [true, 'Todo title is required'],
@@ -190,6 +195,7 @@ todoSchema.index({ category: 1 })
 todoSchema.index({ isTemplate: 1 })
 todoSchema.index({ createdAt: -1 })
 todoSchema.index({ sortOrder: 1 })
+todoSchema.index({ folderId: 1 })
 
 // Method to mark as completed
 todoSchema.methods.complete = function(completedBy) {

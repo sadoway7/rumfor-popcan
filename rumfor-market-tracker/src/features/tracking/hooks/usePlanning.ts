@@ -2,7 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { trackingApi } from '../trackingApi'
 import { useAuthStore } from '@/features/auth/authStore'
-import { Todo, Expense, PlanningItem } from '@/types'
+import { Todo, Expense, PlanningItem, PaginatedResponse } from '@/types'
+
+const extractExpensesArray = (data: unknown): Expense[] => {
+  if (!data) return []
+  if (Array.isArray(data)) return data
+  if (typeof data === 'object' && data !== null && 'data' in data) {
+    const paginated = data as PaginatedResponse<Expense>
+    return Array.isArray(paginated.data) ? paginated.data : []
+  }
+  return []
+}
 
 export const usePlanning = (marketId?: string) => {
   const { user } = useAuthStore()
@@ -35,51 +45,43 @@ export const usePlanning = (marketId?: string) => {
     error: expensesError
   } = useQuery({
     queryKey: ['expenses', user?.id, marketId],
-    queryFn: async (): Promise<Expense[]> => {
+    queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated')
       try {
         const response = await trackingApi.getExpenses(marketId)
-        if (Array.isArray(response?.data)) return response.data
-        if (Array.isArray(response)) return response
-        return []
+        return response || { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
       } catch (err) {
         console.error('Failed to fetch expenses:', err)
-        return []
+        return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
       }
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
   })
 
+  const expensesArray = useMemo(() => extractExpensesArray(expensesData), [expensesData])
+  const todosArray = useMemo(() => (Array.isArray(todos) ? todos : []), [todos])
+
   const planningItems: PlanningItem[] = useMemo(() => {
-    const safeExpenses = Array.isArray(expensesData) ? expensesData : []
-    const safeTodos = Array.isArray(todos) ? todos : []
-    console.log('[DEBUG] Building planningItems:', {
-      todosCount: safeTodos.length,
-      expensesCount: safeExpenses.length,
-      todos: safeTodos.map(t => ({ id: t.id, title: t.title, sortOrder: t.sortOrder })),
-      expenses: safeExpenses.map(e => ({ id: e.id, title: e.title, sortOrder: e.sortOrder }))
-    })
     return [
-      ...safeTodos.map((todo: Todo) => ({
+      ...todosArray.map((todo: Todo) => ({
         id: `todo-${todo.id}`,
         type: 'todo' as const,
         data: todo,
         sortOrder: todo.sortOrder ?? 0
       })),
-      ...safeExpenses.map((expense: Expense) => ({
+      ...expensesArray.map((expense: Expense) => ({
         id: `expense-${expense.id}`,
         type: 'expense' as const,
         data: expense,
         sortOrder: expense.sortOrder ?? 0
       }))
     ].sort((a, b) => a.sortOrder - b.sortOrder)
-  }, [todos, expensesData])
+  }, [todosArray, expensesArray])
 
   const updateOrderMutation = useMutation({
     mutationFn: async (items: { id: string; type: 'todo' | 'expense'; sortOrder: number }[]) => {
-      console.log('[DEBUG] updateOrder mutation called with:', items)
       const updates = items.map(item => {
         const realId = item.id.replace(/^(todo-|expense-)/, '')
         if (item.type === 'todo') {
@@ -96,7 +98,7 @@ export const usePlanning = (marketId?: string) => {
       await queryClient.cancelQueries({ queryKey: ['expenses', user?.id, marketId] })
       
       const previousTodos = queryClient.getQueryData<Todo[]>(['todos', user?.id, marketId])
-      const previousExpenses = queryClient.getQueryData<Expense[]>(['expenses', user?.id, marketId])
+      const previousExpenses = queryClient.getQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId])
 
       newOrder.forEach(item => {
         if (item.type === 'todo') {
@@ -106,8 +108,14 @@ export const usePlanning = (marketId?: string) => {
           )
         } else {
           const realId = item.id.replace('expense-', '')
-          queryClient.setQueryData<Expense[]>(['expenses', user?.id, marketId],
-            (old) => old?.map(e => e.id === realId ? { ...e, sortOrder: item.sortOrder } : e) || []
+          queryClient.setQueryData<PaginatedResponse<Expense>>(['expenses', user?.id, marketId],
+            (old) => {
+              if (!old) return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
+              return {
+                ...old,
+                data: old.data.map(e => e.id === realId ? { ...e, sortOrder: item.sortOrder } : e)
+              }
+            }
           )
         }
       })
@@ -130,8 +138,8 @@ export const usePlanning = (marketId?: string) => {
 
   return {
     planningItems,
-    todos: Array.isArray(todos) ? todos : [],
-    expenses: Array.isArray(expensesData) ? expensesData : [],
+    todos: todosArray,
+    expenses: expensesArray,
     isLoading: todosLoading || expensesLoading,
     error: todosError?.message || expensesError?.message || null,
     updateOrder,

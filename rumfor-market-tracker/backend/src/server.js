@@ -70,6 +70,7 @@ const ralphCardsRoutes = require('./routes/ralphCards')
 const emailRoutes = require('./routes/email')
 const vendorRoutes = require('./routes/vendors')
 const bugReportRoutes = require('./routes/bugReports')
+const folderRoutes = require('./routes/folders')
 
 const app = express()
 
@@ -316,6 +317,7 @@ app.use('/api/notifications', notificationRoutes)
 app.use('/api/vendors', vendorRoutes)
 app.use('/api/bug-reports', bugReportRoutes)
 app.use('/api/ralph/cards', ralphCardsRoutes)
+app.use('/api/folders', folderRoutes)
 
 // Versioned routes (v1)
 app.use('/api/v1/auth/login', authRateLimiter)
@@ -340,6 +342,7 @@ app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1/vendors', vendorRoutes)
 app.use('/api/v1/bug-reports', bugReportRoutes)
 app.use('/api/v1/ralph/cards', ralphCardsRoutes)
+app.use('/api/v1/folders', folderRoutes)
 
 // CSRF error handler
 app.use(csrfErrorHandler)

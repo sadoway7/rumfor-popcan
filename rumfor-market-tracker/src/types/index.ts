@@ -513,6 +513,7 @@ export interface Todo {
   id: string;
   vendorId?: string;
   marketId?: string;
+  folderId?: string | null;
   title: string;
   description?: string;
   completed?: boolean;
@@ -539,6 +540,7 @@ export interface Expense {
   id: string;
   vendorId: string;
   marketId: string;
+  folderId?: string | null;
   title: string;
   description?: string;
   amount: number;
@@ -568,6 +570,39 @@ export type ExpenseCategory =
   | 'utilities'
   | 'miscellaneous'
   | 'revenue';
+
+export type FolderColor = 'gray' | 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green' | 'emerald' | 'teal' | 'cyan' | 'blue' | 'indigo' | 'violet' | 'purple' | 'fuchsia' | 'pink';
+
+export type FolderIcon = 'folder' | 'briefcase' | 'package' | 'truck' | 'dollar-sign' | 'calendar' | 'star' | 'tag' | 'bookmark' | 'flag' | 'shopping-cart' | 'gift' | 'home' | 'map-pin' | 'clock';
+
+export interface PlanningFolder {
+  id: string;
+  vendorId: string;
+  marketId: string;
+  name: string;
+  color: FolderColor;
+  icon: FolderIcon;
+  sortOrder: number;
+  isCollapsed: boolean;
+  itemCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFolderData {
+  marketId: string;
+  name: string;
+  color?: FolderColor;
+  icon?: FolderIcon;
+}
+
+export interface UpdateFolderData {
+  name?: string;
+  color?: FolderColor;
+  icon?: FolderIcon;
+  isCollapsed?: boolean;
+  sortOrder?: number;
+}
 
 // Notification Types
 export interface Notification {

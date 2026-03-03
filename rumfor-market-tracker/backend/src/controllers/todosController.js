@@ -67,7 +67,8 @@ const getTodos = catchAsync(async (req, res, next) => {
     ...todo.toObject(),
     id: todo._id.toString(),
     completed: todo.status === 'completed',
-    marketId: todo.market?._id?.toString() || todo.market?.toString()
+    marketId: todo.market?._id?.toString() || todo.market?.toString(),
+    folderId: todo.folderId?.toString() || null
   }))
 
   sendSuccess(res, {
@@ -103,7 +104,8 @@ const getTodo = catchAsync(async (req, res, next) => {
     ...todo.toObject(),
     id: todo._id.toString(),
     completed: todo.status === 'completed',
-    marketId: todo.market?._id?.toString() || todo.market?.toString()
+    marketId: todo.market?._id?.toString() || todo.market?.toString(),
+    folderId: todo.folderId?.toString() || null
   }
 
   sendSuccess(res, {
@@ -138,7 +140,8 @@ const createTodo = catchAsync(async (req, res, next) => {
     ...populatedTodo.toObject(),
     id: populatedTodo._id.toString(),
     completed: populatedTodo.status === 'completed',
-    marketId: populatedTodo.market?._id?.toString() || populatedTodo.market?.toString()
+    marketId: populatedTodo.market?._id?.toString() || populatedTodo.market?.toString(),
+    folderId: populatedTodo.folderId?.toString() || null
   }
 
   sendSuccess(res, {
