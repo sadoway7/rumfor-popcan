@@ -341,14 +341,14 @@ const FolderRow: React.FC<FolderRowProps> = ({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px] transition-colors",
+          "flex items-center gap-2 py-2 px-3 rounded-xl border bg-surface touch-manipulation min-h-[48px] transition-colors",
           colors.bg,
           colors.border,
           isOver && "ring-2 ring-accent ring-offset-2"
         )}
       >
         {/* Drag Handle */}
-        <div className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+        <div className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
           <GripVertical className="w-5 h-5" />
         </div>
 
@@ -611,14 +611,14 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px] transition-all duration-200",
+        "flex items-center gap-2 py-2 px-3 rounded-xl border bg-surface touch-manipulation min-h-[48px] transition-all duration-200",
         colors.bg,
         colors.border,
         droppableOver && "ring-2 ring-accent ring-offset-2 scale-[1.02] shadow-lg"
       )}
     >
       {/* Drag Handle */}
-      <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+      <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
         <GripVertical className="w-5 h-5" />
       </button>
 
@@ -805,11 +805,11 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
     return (
       <div ref={setNodeRef} style={style} className={cn(
-        "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]",
+        "flex items-center gap-2 py-3 px-3 rounded-2xl border bg-surface touch-manipulation min-h-[56px]",
         todo.completed && "border-transparent",
         isOverdue && "border-red-200 bg-red-50/50"
       )}>
-        <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+        <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
           <GripVertical className="w-5 h-5" />
         </button>
 
@@ -832,17 +832,16 @@ const SortableItem: React.FC<SortableItemProps> = ({
               {todo.description}
             </span>
           )}
+          {todo.dueDate && (
+            <span className={cn(
+              "text-xs flex items-center gap-0.5 mt-0.5",
+              isOverdue ? "text-red-600 font-medium" : "text-muted-foreground"
+            )}>
+              <Clock className="w-3 h-3" />
+              {isOverdue ? `${Math.abs(days!)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </span>
+          )}
         </div>
-
-        {todo.dueDate && (
-          <span className={cn(
-            "text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0",
-            isOverdue ? "bg-red-100 text-red-700 font-medium" : "text-foreground font-medium"
-          )}>
-            <Clock className="w-3 h-3" />
-            {isOverdue ? `${Math.abs(days!)}d overdue` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : new Date(todo.dueDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-          </span>
-        )}
 
         {todo.priority === 'urgent' && (
           <span className={cn("text-xs flex items-center gap-0.5 px-1.5 py-0.5 rounded flex-shrink-0", priority.color)}>
@@ -888,9 +887,9 @@ const SortableItem: React.FC<SortableItemProps> = ({
 
  return (
     <div ref={setNodeRef} style={style} className={cn(
-      "flex items-center gap-2 py-3 px-3 rounded-lg border bg-surface touch-manipulation min-h-[56px]"
+      "flex items-center gap-2 py-3 px-3 rounded-2xl border bg-surface touch-manipulation min-h-[56px]"
     )}>
-      <button {...attributes} {...listeners} className="touch-none p-2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+      <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
         <GripVertical className="w-5 h-5" />
       </button>
 
@@ -1430,14 +1429,14 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
       </div>
 
       {overdueCount > 0 && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm">
+        <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-xl text-sm">
           <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" />
           <span className="text-red-700 font-medium">{overdueCount} overdue</span>
         </div>
       )}
 
       {expenses.length > 0 && (
-        <Card className="p-3 bg-surface border border-border">
+        <Card className="p-3 bg-surface border border-border rounded-xl">
           <div className="flex items-center justify-between">
             <div className="flex gap-4">
               <div>

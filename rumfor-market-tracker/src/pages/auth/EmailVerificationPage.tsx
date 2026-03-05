@@ -42,6 +42,14 @@ export function EmailVerificationPage() {
     },
   })
 
+  const clearErrorsRef = React.useRef(clearErrors)
+  const clearSuccessRef = React.useRef(clearSuccess)
+
+  React.useEffect(() => {
+    clearErrorsRef.current = clearErrors
+    clearSuccessRef.current = clearSuccess
+  }, [clearErrors, clearSuccess])
+
   React.useEffect(() => {
     if (tokenFromUrl && !hasAttemptedVerification.current) {
       hasAttemptedVerification.current = true
@@ -51,10 +59,10 @@ export function EmailVerificationPage() {
 
   React.useEffect(() => {
     return () => {
-      clearErrors()
-      clearSuccess()
+      clearErrorsRef.current()
+      clearSuccessRef.current()
     }
-  }, [clearErrors, clearSuccess])
+  }, [])
 
   const onSubmit = async (data: VerificationFormData) => {
     clearErrors()
