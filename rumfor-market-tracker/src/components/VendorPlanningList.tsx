@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   DndContext,
   closestCenter,
@@ -489,26 +490,35 @@ const FolderRow: React.FC<FolderRowProps> = ({
       </div>
       
       {/* Folder Contents */}
-      {!isCollapsed && items.length > 0 && (
-        <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-          <div className={cn("ml-6 space-y-1 border-l-2 border-dashed pl-2", colors.border)}>
-            {items.map(item => (
-              <SortableItem
-                key={item.id}
-                item={item}
-                onToggleTodo={onToggleTodo || (() => {})}
-                onEditTodo={onEditTodo || (() => {})}
-                onEditExpense={onEditExpense || (() => {})}
-                onDeleteTodo={onDeleteTodo || (() => {})}
-                onDeleteExpense={onDeleteExpense || (() => {})}
-                onUpdateExpenseActual={onUpdateExpenseActual || (() => {})}
-                openMenuId={openMenuId || null}
-                setOpenMenuId={setOpenMenuId || (() => {})}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      )}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && items.length > 0 && (
+          <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+            <div className={cn("ml-6 space-y-1 border-l-2 border-dashed pl-2 overflow-hidden", colors.border)}>
+              {items.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15, delay: index * 0.03, ease: 'easeOut' }}
+                >
+                  <SortableItem
+                    item={item}
+                    onToggleTodo={onToggleTodo || (() => {})}
+                    onEditTodo={onEditTodo || (() => {})}
+                    onEditExpense={onEditExpense || (() => {})}
+                    onDeleteTodo={onDeleteTodo || (() => {})}
+                    onDeleteExpense={onDeleteExpense || (() => {})}
+                    onUpdateExpenseActual={onUpdateExpenseActual || (() => {})}
+                    openMenuId={openMenuId || null}
+                    setOpenMenuId={setOpenMenuId || (() => {})}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </SortableContext>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -941,7 +951,7 @@ const SortableItem: React.FC<SortableItemProps> = ({
             onChange={(e) => setActualValue(e.target.value)}
             onBlur={handleActualSave}
             onKeyDown={(e) => { if (e.key === 'Enter') handleActualSave(); else if (e.key === 'Escape') setIsEditingActual(false); }}
-            className="w-[64px] text-sm font-semibold text-center px-1.5 py-0 border-2 border-accent rounded-md bg-surface focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none leading-none h-[26px]"
+            className="w-[64px] text-sm font-semibold text-center px-1.5 py-0 border-2 border-black rounded-md bg-surface focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none leading-none h-[26px]"
             autoFocus
           />
         ) : (
@@ -950,8 +960,8 @@ const SortableItem: React.FC<SortableItemProps> = ({
             className={cn(
               "text-sm whitespace-nowrap text-center px-1.5 rounded-md transition-colors h-[26px] leading-none min-w-[44px]",
               actualAmount === undefined
-                ? "font-medium text-muted-foreground/60 border-2 border-muted-foreground/40 hover:text-foreground hover:border-accent"
-                : "font-bold text-foreground border-2 border-accent hover:bg-muted/30"
+                ? "font-medium text-muted-foreground/60 border-2 border-muted-foreground/40 hover:text-foreground hover:border-black"
+                : "font-bold text-foreground border-2 border-black hover:bg-muted/30"
             )}
           >
             {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
