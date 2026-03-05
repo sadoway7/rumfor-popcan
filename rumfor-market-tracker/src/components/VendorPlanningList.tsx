@@ -1436,22 +1436,20 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
       )}
 
       {expenses.length > 0 && (
-        <Card className="p-3 bg-surface border border-border rounded-xl">
+        <Card className="p-4 bg-surface border border-border rounded-xl">
           <div className="flex items-center justify-between">
-            <div className="flex gap-4">
-              <div>
-                <div className="text-xs text-muted-foreground">Budget</div>
-                <div className="text-sm font-bold">${totalExpected.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground">Actual</div>
-                <div className="text-sm font-bold">${totalActual.toLocaleString()}</div>
-              </div>
+            <div className="text-left">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Budget</div>
+              <div className="text-lg font-bold">${totalExpected.toLocaleString()}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Actual</div>
+              <div className="text-lg font-bold">${totalActual.toLocaleString()}</div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-muted-foreground">Diff</div>
-              <div className={cn("text-sm font-bold", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : 'text-foreground')}>
-                {variance > 0 ? '+' : ''}{variance.toLocaleString()}
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Diff</div>
+              <div className={cn("text-lg font-bold", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : 'text-foreground')}>
+                ${Math.abs(variance).toLocaleString()}
               </div>
             </div>
           </div>
