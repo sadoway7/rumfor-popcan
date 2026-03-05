@@ -16,10 +16,36 @@ import {
   Shield,
   Home,
   Plus,
-  Calendar,
-  Search,
-  Bookmark,
 } from 'lucide-react'
+
+const CustomSearch = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7"/>
+    <path d="M17 17l4 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+  </svg>
+)
+
+const CustomBookmark = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <path d="M6 3h12a2 2 0 012 2v16l-8-4-8 4V5a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+  </svg>
+)
+
+const CustomCalendar = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.7"/>
+    <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+  </svg>
+)
+
+const CustomGrid = ({ size = 24, className = '' }: { size?: number; className?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+    <rect x="3" y="3" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.7"/>
+    <rect x="13" y="3" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.7"/>
+    <rect x="3" y="13" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.7"/>
+    <rect x="13" y="13" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.7"/>
+  </svg>
+)
 
 interface BottomNavProps {
   role: UserRole
@@ -34,10 +60,10 @@ const navigationConfig = {
     { name: 'About', href: '/about', icon: HelpCircle },
   ],
   vendor: [
-    { name: 'Search', href: '/markets', icon: Search },
-    { name: 'Tracking', href: '/vendor/tracked-markets', icon: Bookmark },
-    { name: 'Calendar', href: '/vendor/calendar', icon: Calendar },
-    { name: 'Dashboard', href: '/vendor/dashboard', icon: LayoutDashboard },
+    { name: 'Search', href: '/markets', icon: CustomSearch },
+    { name: 'Tracking', href: '/vendor/tracked-markets', icon: CustomBookmark },
+    { name: 'Calendar', href: '/vendor/calendar', icon: CustomCalendar },
+    { name: 'Dashboard', href: '/vendor/dashboard', icon: CustomGrid },
     { name: 'Add Market', href: '/vendor/add-market', icon: Plus, isPrimary: true },
   ],
   promoter: [
@@ -123,7 +149,7 @@ export function BottomNav({ role }: BottomNavProps) {
         role="navigation"
         aria-label="Bottom Navigation"
         className={cn(
-          "bg-white dark:bg-black backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2 shadow-lg",
+          "bg-white dark:bg-black backdrop-blur-xl border border-surface-3 rounded-full flex items-center h-[60px] px-2 shadow-lg shadow-[0_6px_12px_rgba(0,0,0,0.15)]",
           "transition-all duration-300 ease-out",
           "will-change-transform"
         )}

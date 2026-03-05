@@ -283,11 +283,36 @@ const FolderRow: React.FC<FolderRowProps> = ({
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
+  const dragOpenTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const wasAutoOpenedRef = useRef(false)
 
   const { setNodeRef, isOver } = useDroppable({
     id: `folder-${folder.id}`,
     data: { folderId: folder.id, isFolder: true }
   })
+
+  useEffect(() => {
+    if (isOver && isCollapsed) {
+      dragOpenTimeoutRef.current = setTimeout(() => {
+        onToggleCollapse()
+        wasAutoOpenedRef.current = true
+      }, 600)
+    } else if (!isOver) {
+      if (dragOpenTimeoutRef.current) {
+        clearTimeout(dragOpenTimeoutRef.current)
+        dragOpenTimeoutRef.current = null
+      }
+      if (wasAutoOpenedRef.current && !isCollapsed) {
+        onToggleCollapse()
+        wasAutoOpenedRef.current = false
+      }
+    }
+    return () => {
+      if (dragOpenTimeoutRef.current) {
+        clearTimeout(dragOpenTimeoutRef.current)
+      }
+    }
+  }, [isOver, isCollapsed, onToggleCollapse])
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -520,6 +545,8 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const colors = folderColorMap[folder.color] || folderColorMap.blue
+  const dragOpenTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const wasAutoOpenedRef = useRef(false)
 
   const {
     attributes,
@@ -543,6 +570,29 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
     setSortableRef(node)
     setDroppableRef(node)
   }
+
+  useEffect(() => {
+    if (droppableOver && isCollapsed) {
+      dragOpenTimeoutRef.current = setTimeout(() => {
+        onToggleCollapse()
+        wasAutoOpenedRef.current = true
+      }, 600)
+    } else if (!droppableOver) {
+      if (dragOpenTimeoutRef.current) {
+        clearTimeout(dragOpenTimeoutRef.current)
+        dragOpenTimeoutRef.current = null
+      }
+      if (wasAutoOpenedRef.current && !isCollapsed) {
+        onToggleCollapse()
+        wasAutoOpenedRef.current = false
+      }
+    }
+    return () => {
+      if (dragOpenTimeoutRef.current) {
+        clearTimeout(dragOpenTimeoutRef.current)
+      }
+    }
+  }, [droppableOver, isCollapsed, onToggleCollapse])
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -883,18 +933,6 @@ const SortableItem: React.FC<SortableItemProps> = ({
         <GripVertical className="w-5 h-5" />
       </button>
 
-      <span className={cn(
-        "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
-        categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
-      )}>
-        {expenseCategories.find(c => c.id === expense.category)?.label.split(' ')[0]?.substring(0, 4) || expense.category}
-      </span>
-
-      <div className="flex-1 min-w-0">
-        <span className="block text-sm font-medium truncate">{expense.title}</span>
-        {expense.description && <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>}
-      </div>
-
       <div className="flex flex-col items-center gap-1">
         {isEditingActual ? (
           <input
@@ -903,18 +941,17 @@ const SortableItem: React.FC<SortableItemProps> = ({
             onChange={(e) => setActualValue(e.target.value)}
             onBlur={handleActualSave}
             onKeyDown={(e) => { if (e.key === 'Enter') handleActualSave(); else if (e.key === 'Escape') setIsEditingActual(false); }}
-            placeholder="0"
-            className="w-[64px] text-sm font-semibold text-center px-1.5 py-0 border-2 border-accent rounded-md bg-background focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none leading-none h-[26px]"
+            className="w-[64px] text-sm font-semibold text-center px-1.5 py-0 border-2 border-accent rounded-md bg-surface focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none leading-none h-[26px]"
             autoFocus
           />
         ) : (
           <button
             onClick={startEditing}
             className={cn(
-              "text-sm whitespace-nowrap text-center px-1.5 border rounded-md transition-colors h-[26px] leading-none min-w-[44px]",
+              "text-sm whitespace-nowrap text-center px-1.5 rounded-md transition-colors h-[26px] leading-none min-w-[44px]",
               actualAmount === undefined
-                ? "font-medium text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
-                : "font-bold text-foreground border-2 border-foreground hover:bg-muted/30"
+                ? "font-medium text-muted-foreground/60 border-2 border-muted-foreground/40 hover:text-foreground hover:border-accent"
+                : "font-bold text-foreground border-2 border-accent hover:bg-muted/30"
             )}
           >
             {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
@@ -924,6 +961,18 @@ const SortableItem: React.FC<SortableItemProps> = ({
           ${expense.amount.toLocaleString()}
         </span>
       </div>
+
+      <div className="flex-1 min-w-0">
+        <span className="block text-sm font-medium truncate">{expense.title}</span>
+        {expense.description && <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>}
+      </div>
+
+      <span className={cn(
+        "inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap flex-shrink-0",
+        categoryColors[expense.category] || 'bg-gray-100 text-gray-700'
+      )}>
+        {expenseCategories.find(c => c.id === expense.category)?.label.split(' ')[0]?.substring(0, 4) || expense.category}
+      </span>
 
       <div className="relative" ref={localMenuRef}>
         <button onClick={() => setOpenMenuId(openMenuId === expense.id ? null : expense.id)} className="p-1.5 rounded hover:bg-surface/50 touch-manipulation">
@@ -974,8 +1023,10 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
   const [activeItem, setActiveItem] = useState<PlanningItem | null>(null)
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null)
   const [showFolderDropdown, setShowFolderDropdown] = useState(false)
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const folderDropdownRef = useRef<HTMLDivElement>(null)
+  const categoryDropdownRef = useRef<HTMLDivElement>(null)
   const hasInitializedFolders = useRef(false)
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -1019,10 +1070,13 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
       if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(e.target as Node)) {
         setShowFolderDropdown(false)
       }
+      if (showCategoryDropdown && categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+        setShowCategoryDropdown(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [openMenuId, showFolderDropdown])
+  }, [openMenuId, showFolderDropdown, showCategoryDropdown])
 
   useEffect(() => {
     return () => {
@@ -1430,28 +1484,21 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
             {completedTodos.length}/{todos.length} tasks • {expenses.length} budget
           </span>
         )}
-        <div className="flex gap-2 ml-auto">
-          <button
-            onClick={() => { resetTodoForm(); setEditingTodo(null); setShowTodoForm(true); }}
-            className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
-            title="Add item"
-          >
-            <Plus className="w-5 h-5 stroke-[2.5]" />
-          </button>
+        <div className="flex gap-3 ml-auto">
           <button
             onClick={() => setShowFolderModal(true)}
-            className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+            className="p-1 text-foreground hover:text-accent transition-colors"
             title="Add folder"
           >
-            <FolderPlus className="w-5 h-5 stroke-[2.5]" />
+            <FolderPlus className="w-6 h-6" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+                className="p-1 text-foreground hover:text-accent transition-colors"
                 title="Options"
               >
-                <SlidersHorizontal className="w-5 h-5 stroke-[2.5]" />
+                <SlidersHorizontal className="w-6 h-6" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -1480,24 +1527,22 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
       )}
 
       {expenses.length > 0 && (
-        <Card className="p-4 bg-surface rounded-xl border-0">
-          <div className="flex items-center justify-between">
-            <div className="text-left">
-              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Budget</div>
-              <div className="text-2xl tracking-tight" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>${totalExpected.toLocaleString()}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Actual</div>
-              <div className="text-2xl tracking-tight" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>${totalActual.toLocaleString()}</div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Diff</div>
-              <div className={cn("text-2xl tracking-tight", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : 'text-foreground')} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>
-                ${Math.abs(variance).toLocaleString()}
-              </div>
+        <div className="flex items-center justify-between gap-2 py-2 px-3 bg-surface rounded-xl shadow-sm">
+          <div className="text-left">
+            <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Budget</div>
+            <div className="text-lg font-bold tracking-tight">${totalExpected.toLocaleString()}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Actual</div>
+            <div className="text-lg font-bold tracking-tight">${totalActual.toLocaleString()}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Diff</div>
+            <div className={cn("text-lg font-bold tracking-tight", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : '')}>
+              ${Math.abs(variance).toLocaleString()}
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Folders and Items in unified drag context */}
@@ -1823,9 +1868,40 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
                   <label className="block text-xs font-medium text-muted-foreground mb-1">Subtitle</label>
                   <textarea value={newBudgetDescription} onChange={e => setNewBudgetDescription(e.target.value)} placeholder="Add details..." rows={2} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none resize-none" />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Budgeted ($)</label>
-                  <input type="number" value={newBudgetExpected} onChange={e => setNewBudgetExpected(e.target.value)} placeholder="0" className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Budgeted ($)</label>
+                    <input type="number" value={newBudgetExpected} onChange={e => setNewBudgetExpected(e.target.value)} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none text-base" />
+                  </div>
+                  <div ref={categoryDropdownRef} className="relative">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Category</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                      className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none text-base text-left flex items-center justify-between"
+                    >
+                      <span>{expenseCategories.find(c => c.id === newBudgetCategory)?.icon}</span>
+                      <ChevronDown className={cn("w-4 h-4 transition-transform", showCategoryDropdown && "rotate-180")} />
+                    </button>
+                    {showCategoryDropdown && (
+                      <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-20 max-h-64 overflow-y-auto">
+                        {expenseCategories.map(cat => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => { setNewBudgetCategory(cat.id as ExpenseCategory); setShowCategoryDropdown(false); }}
+                            className={cn(
+                              "w-full p-3 text-left hover:bg-surface transition-colors text-base flex items-center gap-2",
+                              newBudgetCategory === cat.id && "bg-accent/10 text-accent font-medium"
+                            )}
+                          >
+                            <span>{cat.icon}</span>
+                            <span>{cat.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
