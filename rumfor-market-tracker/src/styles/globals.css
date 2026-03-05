@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   :root {
     /* Brand Colors - Light Grey System for Better Contrast */
     --background: 220 8% 96%; /* Very light grey background */

@@ -11,6 +11,12 @@ import { initPerformanceMonitoring } from './utils/performance'
 import './styles/globals.css'
 import 'uno.css'
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}
+
 // Enable React Router v7 future flags to suppress warnings
 
 // Initialize monitoring

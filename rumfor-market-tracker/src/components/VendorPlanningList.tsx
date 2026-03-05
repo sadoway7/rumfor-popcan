@@ -350,11 +350,6 @@ const FolderRow: React.FC<FolderRowProps> = ({
           isOver && "ring-2 ring-accent ring-offset-2"
         )}
       >
-        {/* Drag Handle */}
-        <div className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
-          <GripVertical className="w-5 h-5" />
-        </div>
-
         {/* Clickable content area */}
         <div 
           className="flex-1 flex items-center gap-2 cursor-pointer"
@@ -617,11 +612,6 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
         droppableOver && "ring-2 ring-accent ring-offset-2 scale-[1.02] shadow-lg"
       )}
     >
-      {/* Drag Handle */}
-      <button {...attributes} {...listeners} className="touch-none p-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground">
-        <GripVertical className="w-5 h-5" />
-      </button>
-
       {/* Clickable content area */}
       <div 
         className="flex-1 flex items-center gap-3 cursor-pointer"
@@ -905,43 +895,34 @@ const SortableItem: React.FC<SortableItemProps> = ({
         {expense.description && <span className="block text-xs text-muted-foreground truncate">{expense.description}</span>}
       </div>
 
-      <div className="text-xs text-muted-foreground whitespace-nowrap min-w-[60px] text-right">
-        ${expense.amount.toLocaleString()}
-      </div>
-
-      {isEditingActual ? (
-        <input
-          type="number"
-          value={actualValue}
-          onChange={(e) => setActualValue(e.target.value)}
-          onBlur={handleActualSave}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleActualSave(); else if (e.key === 'Escape') setIsEditingActual(false); }}
-          placeholder="0"
-          className="w-16 text-sm font-semibold text-right px-1 py-0.5 border-2 border-accent rounded bg-background focus:outline-none"
-          autoFocus
-        />
-      ) : (
-        <button
-          onClick={startEditing}
-          className={cn(
-            "text-sm font-semibold whitespace-nowrap min-w-[60px] text-right px-2 py-0.5 rounded transition-colors border",
-            actualAmount === undefined
-              ? "text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
-              : "border-border hover:text-accent hover:bg-accent/10"
-          )}
-        >
-          {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
-        </button>
-      )}
-
-      <div className={cn(
-        "text-xs font-medium min-w-[50px] text-right whitespace-nowrap hidden md:block",
-        variance === null && "text-muted-foreground/30",
-        variance === 0 && "text-muted-foreground",
-        variance && variance > 0 && "text-red-600",
-        variance && variance < 0 && "text-emerald-600"
-      )}>
-        {variance === null ? '-' : variance === 0 ? '$0' : (variance > 0 ? '+' : '') + `$${variance.toLocaleString()}`}
+      <div className="flex flex-col items-center gap-1">
+        {isEditingActual ? (
+          <input
+            type="number"
+            value={actualValue}
+            onChange={(e) => setActualValue(e.target.value)}
+            onBlur={handleActualSave}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleActualSave(); else if (e.key === 'Escape') setIsEditingActual(false); }}
+            placeholder="0"
+            className="w-[64px] text-sm font-semibold text-center px-1.5 py-0 border-2 border-accent rounded-md bg-background focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none leading-none h-[26px]"
+            autoFocus
+          />
+        ) : (
+          <button
+            onClick={startEditing}
+            className={cn(
+              "text-sm whitespace-nowrap text-center px-1.5 border rounded-md transition-colors h-[26px] leading-none min-w-[44px]",
+              actualAmount === undefined
+                ? "font-medium text-muted-foreground italic border-muted/30 hover:text-foreground hover:border-muted/60 hover:bg-muted/50"
+                : "font-bold text-foreground border-2 border-foreground hover:bg-muted/30"
+            )}
+          >
+            {actualAmount !== undefined ? `$${actualAmount.toLocaleString()}` : '-'}
+          </button>
+        )}
+        <span className="text-[11px] text-muted-foreground/80 font-medium whitespace-nowrap leading-none">
+          ${expense.amount.toLocaleString()}
+        </span>
       </div>
 
       <div className="relative" ref={localMenuRef}>

@@ -126,7 +126,9 @@
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-inspect": "^0.8.9",
-    "vitest": "^4.0.18"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.0.18",
+    "workbox-window": "^7.4.0"
   },
   "engines": {
     "node": ">=18.0.0",
