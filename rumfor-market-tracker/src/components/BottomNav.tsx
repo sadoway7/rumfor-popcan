@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
+import { useBottomNavOverride } from '@/contexts/BottomNavContext'
 import {
   LayoutDashboard,
   Store,
@@ -61,6 +62,7 @@ export function BottomNav({ role }: BottomNavProps) {
   const [isHidden, setIsHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+  const { override } = useBottomNavOverride()
 
   // Check if on mobile screen
   useEffect(() => {
@@ -130,32 +132,11 @@ export function BottomNav({ role }: BottomNavProps) {
           const Icon = item.icon
           const isActive = activeIndex === navigation.indexOf(item)
           const isPrimary = item.isPrimary
+          const hasOverride = isPrimary && override?.onPrimaryClick
+          const primaryColor = override?.primaryButtonColor || 'bg-amber-500 hover:bg-amber-600'
           
-          return (
-            <motion.div
-              key={item.name}
-              whileTap={{ scale: isPrimary ? 0.92 : 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30, mass: 0.5 }}
-              className={cn(isPrimary ? "ml-2 -mt-3 -mb-3" : "")}
-            >
-              <Link
-                to={item.href}
-                className={cn(
-                  "flex items-center justify-center rounded-full transition-colors duration-200 relative h-12 min-w-[50px]",
-                  isActive && activeIndex >= 0
-                    ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary"
-                    : isPrimary
-                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-[3px_3px_0px_0px] shadow-black/40"
-                    : "bg-transparent text-gray-400 dark:text-gray-500",
-                  "focus:outline-none focus-visible:ring-0",
-                  isPrimary ? "w-12" : "px-4",
-                  "-webkit-tap-highlight-color-transparent",
-                  "active:outline-none",
-                  "border-none outline-none"
-                )}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                aria-label={item.name}
-              >
+          const buttonContent = (
+            <>
               <Icon
                 size={isPrimary ? 22 : 25}
                 strokeWidth={2.5}
@@ -163,7 +144,6 @@ export function BottomNav({ role }: BottomNavProps) {
                 className="transition-colors duration-200"
               />
 
-              {/* Animated label */}
               {!isPrimary && (
                 <motion.span
                   initial={{ width: 0, opacity: 0 }}
@@ -187,7 +167,49 @@ export function BottomNav({ role }: BottomNavProps) {
                   {item.name}
                 </motion.span>
               )}
-              </Link>
+            </>
+          )
+          
+          const buttonClassName = cn(
+            "flex items-center justify-center rounded-full transition-colors duration-200 relative h-12 min-w-[50px]",
+            isActive && activeIndex >= 0
+              ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary"
+              : isPrimary
+              ? `${primaryColor} text-white shadow-[3px_3px_0px_0px] shadow-black/40`
+              : "bg-transparent text-gray-400 dark:text-gray-500",
+            "focus:outline-none focus-visible:ring-0",
+            isPrimary ? "w-12" : "px-4",
+            "-webkit-tap-highlight-color-transparent",
+            "active:outline-none",
+            "border-none outline-none"
+          )
+          
+          return (
+            <motion.div
+              key={item.name}
+              whileTap={{ scale: isPrimary ? 0.92 : 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30, mass: 0.5 }}
+              className={cn(isPrimary ? "ml-2 -mt-3 -mb-3" : "")}
+            >
+              {hasOverride ? (
+                <button
+                  onClick={override.onPrimaryClick}
+                  className={buttonClassName}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label={override.primaryButtonLabel || item.name}
+                >
+                  {buttonContent}
+                </button>
+              ) : (
+                <Link
+                  to={item.href}
+                  className={buttonClassName}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label={item.name}
+                >
+                  {buttonContent}
+                </Link>
+              )}
             </motion.div>
           )
         })}

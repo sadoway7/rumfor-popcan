@@ -1,8 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Calendar,
   MapPin,
   Clock,
   CheckCircle,
@@ -14,14 +13,17 @@ import {
   ChevronDown,
   CheckSquare,
   BarChart3,
-  Navigation
+  Navigation,
+  DollarSign
 } from 'lucide-react'
 import { useMarket } from '@/features/markets/hooks/useMarkets'
 import { useWeather } from '@/features/markets/hooks/useWeather'
 import { usePreferencesStore } from '@/features/theme/themeStore'
 import { useVendorApplications } from '@/features/applications/hooks/useApplications'
 import { useTodos } from '@/features/tracking/hooks/useTodos'
+import { useExpenses } from '@/features/tracking/hooks/useExpenses'
 import { useTrackedMarkets } from '@/features/markets/hooks/useMarkets'
+import { useBottomNavOverride } from '@/contexts/BottomNavContext'
 import { Todo } from '@/types'
 import { formatTime12Hour } from '@/utils/formatTime'
 import { formatLocalDate } from '@/utils/formatDate'
@@ -127,13 +129,29 @@ const { id } = useParams<{ id: string }>()
   const [selectedDates, setSelectedDates] = useState<string[]>([])
   const [hasInitializedDates, setHasInitializedDates] = useState(false)
   const [selectedWeatherDay, setSelectedWeatherDay] = useState<any>(null)
+  const [externalShowAddModal, setExternalShowAddModal] = useState(false)
+  const { setOverride } = useBottomNavOverride()
 
   const { market, isLoading, error } = useMarket(id!)
   const { myApplications } = useVendorApplications()
   const { todos } = useTodos(id!)
+  const { expenses } = useExpenses(id!)
   const { getTrackingStatus, trackMarket, trackingData } = useTrackedMarkets()
   const { weather, isLoading: weatherLoading } = useWeather(market)
   const { formatTemperature } = usePreferencesStore()
+
+  // Set up bottom nav override for the + button
+  useEffect(() => {
+    setOverride({
+      primaryButtonColor: 'bg-blue-500 hover:bg-blue-600',
+      primaryButtonLabel: 'Add Item',
+      onPrimaryClick: () => setExternalShowAddModal(true)
+    })
+    
+    return () => {
+      setOverride(null)
+    }
+  }, [setOverride])
 
   // Initialize selected dates from tracking data once after mount
   useEffect(() => {
@@ -421,7 +439,12 @@ const { id } = useParams<{ id: string }>()
 
       {/* About */}
       <Card className="p-4">
-        <h3 className="font-semibold mb-2">About</h3>
+        <div className="flex items-start justify-between mb-2">
+          <h3 className="font-semibold">About</h3>
+          <Badge variant="outline" className="text-xs">
+            {categoryLabels[market.category]}
+          </Badge>
+        </div>
         <p className="text-sm text-muted-foreground">{market.description}</p>
       </Card>
 
@@ -458,10 +481,14 @@ const { id } = useParams<{ id: string }>()
   )}
 
   const PlanningTabContent = () => (
-    <div className="space-y-4 -mt-2 p-4">
+    <div className="space-y-2 -mt-2 px-4 pt-2 pb-4">
       <ErrorBoundary fallback={<TabErrorFallback />}>
         <Suspense fallback={<TabContentLoader />}>
-          <VendorPlanningList marketId={market.id} />
+          <VendorPlanningList 
+            marketId={market.id} 
+            externalShowAddModal={externalShowAddModal}
+            onExternalModalClose={() => setExternalShowAddModal(false)}
+          />
         </Suspense>
       </ErrorBoundary>
     </div>
@@ -470,7 +497,7 @@ const { id } = useParams<{ id: string }>()
   return (
     <div className="min-h-screen bg-background -m-4">
       {/* Hero Image with Overlay - like VendorTrackedMarketRow */}
-      <div className="relative w-full h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-none sm:rounded-t-3xl overflow-hidden">
+      <div className="relative w-full h-32 sm:h-40 bg-gradient-to-br from-gray-800 to-gray-900 rounded-none sm:rounded-t-3xl overflow-hidden">
         {market.images && market.images.length > 0 ? (
           <img 
             src={market.images[selectedImageIndex]} 
@@ -493,12 +520,17 @@ const { id } = useParams<{ id: string }>()
           trackingStatus === 'completed' && "from-gray-500/20"
         )} />
         
-        <div className="absolute inset-0 p-4 flex flex-col">
+        <div className="absolute inset-0 p-3 sm:p-4 flex flex-col">
           {/* Top row: Back button + Status badge */}
           <div className="flex justify-between items-start mb-auto">
-            <Link to="/vendor/tracked-markets" className="p-2 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/vendor/tracked-markets')}
+              className="bg-white !border !border-[#9CA3AF] text-black hover:bg-white hover:brightness-105 h-8 px-3 shadow-[0_2px_6px_rgba(0,0,0,0.15)] focus-visible:ring-0 focus-visible:ring-offset-0"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
             
             <button
               onClick={() => setShowStatusModal(true)}
@@ -512,36 +544,15 @@ const { id } = useParams<{ id: string }>()
             </button>
           </div>
           
-          {/* Bottom info - market name and details */}
+          {/* Bottom info - market name */}
           <div className="text-white mt-auto">
-            <h1 className="font-bold text-xl leading-tight mb-2 drop-shadow-lg">{market.name}</h1>
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>{market.location.city}, {market.location.state}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{formatSchedule(market.schedule).split('·')[0] || formatSchedule(market.schedule)}</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-2 text-sm">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1">
-                  <CheckCircle className="w-4 h-4" />
-                  {completedTodos.length}/{todos.length}
-                </span>
-              </div>
-              <Badge variant="outline" className="text-white border-white/50 bg-white/10">
-                {categoryLabels[market.category]}
-              </Badge>
-            </div>
+            <h1 className="font-bold text-xl leading-tight drop-shadow-lg">{market.name}</h1>
           </div>
         </div>
         
         {/* Image dots if multiple images */}
         {market.images && market.images.length > 1 && (
-          <div className="absolute bottom-4 left-4 flex gap-1">
+          <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 flex gap-1">
             {market.images.slice(0, 5).map((_, index) => (
               <button
                 key={index}
@@ -560,20 +571,20 @@ const { id } = useParams<{ id: string }>()
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
-        variant="pills"
-        size="md"
-        listClassName="bg-black px-2 sm:px-4 py-3 gap-1 sm:gap-2 rounded-none sm:rounded-b-3xl"
+        variant="glow-pills"
+        size="lg"
+        listClassName="px-2 sm:px-4 py-2 mb-2"
         items={[
             {
               key: 'planning',
               label: 'Planning',
-              icon: <CheckSquare className="w-4 h-4" />,
+              icon: <CheckSquare className="w-5 h-5" />,
               content: <PlanningTabContent />
             },
             {
               key: 'info',
               label: 'Stats',
-              icon: <BarChart3 className="w-4 h-4" />,
+              icon: <BarChart3 className="w-5 h-5" />,
               content: <MarketInfoTabContent />
             }
           ]}

@@ -112,7 +112,7 @@ const Tabs: React.FC<TabsProps> = ({
   if (variant === 'glow-pills') {
     return (
       <div className={cn('w-full', className)}>
-        <div className={cn('bg-black rounded-none sm:rounded-b-3xl py-3', listClassName)}>
+        <div className={cn('bg-black rounded-b-3xl py-3', listClassName)}>
           <div 
             ref={trayRef}
             className="relative flex rounded-full p-1"

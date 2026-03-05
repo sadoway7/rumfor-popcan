@@ -3,6 +3,7 @@ import { BrowserRouter, ScrollRestoration } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ToastProvider } from './components/ui/Toast'
+import { BottomNavProvider } from './contexts/BottomNavContext'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { initSentry } from './utils/sentry'
@@ -37,8 +38,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          <App />
-          <ReactQueryDevtools initialIsOpen={false} />
+          <BottomNavProvider>
+            <App />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </BottomNavProvider>
         </ToastProvider>
       </QueryClientProvider>
     </BrowserRouter>

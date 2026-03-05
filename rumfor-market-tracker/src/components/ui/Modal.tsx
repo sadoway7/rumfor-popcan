@@ -128,13 +128,13 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div
         ref={modalRef}
-        className={cn(
-          'relative flex w-full max-h-[90vh] flex-col rounded-lg bg-surface border border-border shadow-lg',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-          sizes[size],
-          'animate-in fade-in-0 zoom-in-95 duration-200',
-          className
-        )}
+          className={cn(
+            'relative flex w-full max-h-[90vh] flex-col rounded-xl bg-surface shadow-xl',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            sizes[size],
+            'animate-in fade-in-0 zoom-in-95 duration-200',
+            className
+          )}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}

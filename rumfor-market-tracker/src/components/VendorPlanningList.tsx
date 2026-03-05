@@ -34,8 +34,9 @@ import { Todo, Expense, TodoPriority, ExpenseCategory, PlanningItem, PlanningFol
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/DropdownMenu'
 import { cn } from '@/utils/cn'
-import { Plus, ChevronLeft, ChevronDown, ChevronRight, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo, FolderPlus, Folder as FolderIcon, ArrowDown } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronDown, ChevronRight, MoreVertical, Trash2, Edit2, Check, Clock, AlertTriangle, Sparkles, GripVertical, DollarSign, ListTodo, FolderPlus, Folder as FolderIcon, ArrowDown, SlidersHorizontal } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/authStore'
 import { formatLocalDate } from '@/utils/formatDate'
 import * as Icons from 'lucide-react'
@@ -43,6 +44,8 @@ import * as Icons from 'lucide-react'
 interface VendorPlanningListProps {
   marketId: string
   className?: string
+  externalShowAddModal?: boolean
+  onExternalModalClose?: () => void
 }
 
 const todoCategories = [
@@ -403,19 +406,16 @@ const FolderRow: React.FC<FolderRowProps> = ({
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
           {showMenu && (
-            <div className={cn(
-              "absolute right-0 bg-background border rounded-lg shadow-lg py-1 z-20 min-w-[140px]",
-              menuPosition === 'bottom' ? "top-full mt-1" : "bottom-full mb-1"
-            )}>
+            <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg py-2 z-20 min-w-[160px]">
               <button
                 onClick={(e) => { e.stopPropagation(); onAddTodo?.(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Add Task
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onAddBudget?.(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <DollarSign className="w-4 h-4" /> Add Budget
               </button>
@@ -423,7 +423,7 @@ const FolderRow: React.FC<FolderRowProps> = ({
               <div className="relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center justify-between gap-2"
+                  className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center justify-between gap-2"
                 >
                   <span className="flex items-center gap-2">
                     <div className={cn("w-4 h-4 rounded", colors.bg, colors.border, "border")} />
@@ -432,14 +432,14 @@ const FolderRow: React.FC<FolderRowProps> = ({
                   <ChevronRight className="w-4 h-4" />
                 </button>
                 {showColorPicker && (
-                  <div className="absolute right-full top-0 mr-1 bg-background border rounded-lg shadow-lg p-2 z-30 min-w-[120px]">
-                    <div className="grid grid-cols-4 gap-1.5">
+                  <div className="absolute right-full top-0 mr-2 bg-white rounded-xl shadow-lg p-3 z-30 min-w-[140px]">
+                    <div className="grid grid-cols-4 gap-2">
                       {Object.keys(folderColorMap).map((color) => (
                         <button
                           key={color}
                           onClick={(e) => { e.stopPropagation(); onChangeColor?.(color as FolderColor); setShowColorPicker(false); setShowMenu(false); }}
                           className={cn(
-                            "w-7 h-7 rounded border-2 transition-all flex-shrink-0",
+                            "w-8 h-8 rounded border-2 transition-all flex-shrink-0",
                             folderColorMap[color as FolderColor].bg,
                             folderColorMap[color as FolderColor].border,
                             folder.color === color ? "ring-2 ring-accent ring-offset-1" : "hover:scale-110"
@@ -452,14 +452,14 @@ const FolderRow: React.FC<FolderRowProps> = ({
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <Edit2 className="w-4 h-4" /> Rename
               </button>
               <div className="border-t my-1" />
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface text-red-600 flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" /> Delete
               </button>
@@ -672,16 +672,16 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
         {showMenu && (
-            <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-20 min-w-[140px]">
+            <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg py-2 z-20 min-w-[160px]">
               <button
                 onClick={(e) => { e.stopPropagation(); onAddTodo?.(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Add Task
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onAddBudget?.(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <DollarSign className="w-4 h-4" /> Add Budget
               </button>
@@ -689,7 +689,7 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
               <div className="relative">
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center justify-between gap-2"
+                  className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center justify-between gap-2"
                 >
                   <span className="flex items-center gap-2">
                     <div className={cn("w-4 h-4 rounded", colors.bg, colors.border, "border")} />
@@ -698,14 +698,14 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
                   <ChevronRight className="w-4 h-4" />
                 </button>
                 {showColorPicker && (
-                  <div className="absolute right-full top-0 mr-1 bg-background border rounded-lg shadow-lg p-2 z-30 min-w-[120px]">
-                    <div className="grid grid-cols-4 gap-1.5">
+                  <div className="absolute right-full top-0 mr-2 bg-white rounded-xl shadow-lg p-3 z-30 min-w-[140px]">
+                    <div className="grid grid-cols-4 gap-2">
                       {Object.keys(folderColorMap).map((color) => (
                         <button
                           key={color}
                           onClick={(e) => { e.stopPropagation(); onChangeColor?.(color as FolderColor); setShowColorPicker(false); setShowMenu(false); }}
                           className={cn(
-                            "w-7 h-7 rounded border-2 transition-all flex-shrink-0",
+                            "w-8 h-8 rounded border-2 transition-all flex-shrink-0",
                             folderColorMap[color as FolderColor].bg,
                             folderColorMap[color as FolderColor].border,
                             folder.color === color ? "ring-2 ring-accent ring-offset-1" : "hover:scale-110"
@@ -718,14 +718,14 @@ const FolderHeader: React.FC<FolderHeaderProps> = ({
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2"
               >
                 <Edit2 className="w-4 h-4" /> Rename
               </button>
               <div className="border-t my-1" />
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setShowMenu(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2"
+                className="w-full px-3 py-3 text-left text-base hover:bg-surface text-red-600 flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" /> Delete
               </button>
@@ -854,11 +854,11 @@ const SortableItem: React.FC<SortableItemProps> = ({
             <MoreVertical className="w-4 h-4 text-muted-foreground" />
           </button>
           {openMenuId === todo.id && (
-            <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
-              <button onClick={() => { onEditTodo(todo); setOpenMenuId(null); }} className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2">
+            <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg py-2 z-10 min-w-[120px]">
+              <button onClick={() => { onEditTodo(todo); setOpenMenuId(null); }} className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2">
                 <Edit2 className="w-4 h-4" /> Edit
               </button>
-              <button onClick={() => onDeleteTodo(todo.id)} className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2">
+              <button onClick={() => onDeleteTodo(todo.id)} className="w-full px-3 py-3 text-left text-base hover:bg-surface text-red-600 flex items-center gap-2">
                 <Trash2 className="w-4 h-4" /> Delete
               </button>
             </div>
@@ -949,11 +949,11 @@ const SortableItem: React.FC<SortableItemProps> = ({
           <MoreVertical className="w-4 h-4 text-muted-foreground" />
         </button>
         {openMenuId === expense.id && (
-          <div className="absolute right-0 top-full mt-1 bg-background border rounded-lg shadow-lg py-1 z-10 min-w-[100px]">
-            <button onClick={() => { onEditExpense(expense); setOpenMenuId(null); }} className="w-full px-3 py-2 text-left text-sm hover:bg-surface flex items-center gap-2">
+          <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg py-2 z-10 min-w-[120px]">
+            <button onClick={() => { onEditExpense(expense); setOpenMenuId(null); }} className="w-full px-3 py-3 text-left text-base hover:bg-surface flex items-center gap-2">
               <Edit2 className="w-4 h-4" /> Edit
             </button>
-            <button onClick={() => onDeleteExpense(expense.id)} className="w-full px-3 py-2 text-left text-sm hover:bg-surface text-red-600 flex items-center gap-2">
+            <button onClick={() => onDeleteExpense(expense.id)} className="w-full px-3 py-3 text-left text-base hover:bg-surface text-red-600 flex items-center gap-2">
               <Trash2 className="w-4 h-4" /> Delete
             </button>
           </div>
@@ -963,7 +963,12 @@ const SortableItem: React.FC<SortableItemProps> = ({
   )
 }
 
-export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId, className }) => {
+export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ 
+  marketId, 
+  className,
+  externalShowAddModal,
+  onExternalModalClose 
+}) => {
   const { user } = useAuthStore()
   const { planningItems, todos, expenses, isLoading, error, updateOrder, isUpdatingOrder } = usePlanning(marketId)
   const { toggleTodo, deleteTodo: deleteTodoApi, createTodo, updateTodo } = useTodos(marketId)
@@ -987,7 +992,9 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [activeItem, setActiveItem] = useState<PlanningItem | null>(null)
   const [pendingFolderId, setPendingFolderId] = useState<string | null>(null)
+  const [showFolderDropdown, setShowFolderDropdown] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const folderDropdownRef = useRef<HTMLDivElement>(null)
   const hasInitializedFolders = useRef(false)
   const expandTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -1004,16 +1011,37 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
   const [newBudgetDescription, setNewBudgetDescription] = useState('')
   const [newBudgetDate, setNewBudgetDate] = useState('')
 
+  // Handle external modal trigger from bottom nav
+  useEffect(() => {
+    if (externalShowAddModal) {
+      resetTodoForm()
+      resetBudgetForm()
+      setEditingTodo(null)
+      setEditingExpense(null)
+      setShowTodoForm(true)
+    }
+  }, [externalShowAddModal])
+
+  // Sync internal state with external modal close
+  const handleExternalModalClose = () => {
+    setShowTodoForm(false)
+    setShowBudgetForm(false)
+    onExternalModalClose?.()
+  }
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (openMenuId && menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpenMenuId(null)
       }
+      if (showFolderDropdown && folderDropdownRef.current && !folderDropdownRef.current.contains(e.target as Node)) {
+        setShowFolderDropdown(false)
+      }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [openMenuId])
+  }, [openMenuId, showFolderDropdown])
 
   useEffect(() => {
     return () => {
@@ -1322,6 +1350,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     setEditingTodo(null)
     resetTodoForm()
     setPendingFolderId(null)
+    onExternalModalClose?.()
   }
 
   const handleSaveBudget = async () => {
@@ -1346,6 +1375,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     setEditingExpense(null)
     resetBudgetForm()
     setPendingFolderId(null)
+    onExternalModalClose?.()
   }
 
   const resetTodoForm = () => {
@@ -1365,10 +1395,14 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     setNewBudgetDate('')
   }
 
-  const handleSelectTodoPreset = async (preset: string) => {
-    createTodo({ title: preset, category: selectedTodoCategory || 'setup', priority: 'medium' })
+  const handleSelectTodoPreset = (preset: string) => {
+    setNewTodoTitle(preset)
+    setNewTodoDescription('')
+    setNewTodoPriority('medium')
+    setNewTodoDueDate('')
     setShowTodoPresets(false)
     setSelectedTodoCategory(null)
+    setShowTodoForm(true)
   }
 
   const handleSelectBudgetPreset = (preset: any) => {
@@ -1411,20 +1445,49 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
         {(todos.length > 0 || expenses.length > 0) && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-base font-semibold text-foreground">
             {completedTodos.length}/{todos.length} tasks • {expenses.length} budget
           </span>
         )}
-        <div className="flex gap-1 ml-auto">
-          <Button size="sm" onClick={() => { resetTodoForm(); setEditingTodo(null); setShowTodoForm(true); }} className="h-8 w-8 p-0" variant="outline" title="Add task">
-            <ListTodo className="w-4 h-4" />
-          </Button>
-          <Button size="sm" onClick={() => { resetBudgetForm(); setEditingExpense(null); setShowBudgetForm(true); }} className="h-8 w-8 p-0" variant="outline" title="Add budget item">
-            <DollarSign className="w-4 h-4" />
-          </Button>
-          <Button size="sm" onClick={() => setShowFolderModal(true)} className="h-8 w-8 p-0" variant="outline" title="Add folder">
-            <FolderPlus className="w-4 h-4" />
-          </Button>
+        <div className="flex gap-2 ml-auto">
+          <button
+            onClick={() => { resetTodoForm(); setEditingTodo(null); setShowTodoForm(true); }}
+            className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+            title="Add item"
+          >
+            <Plus className="w-5 h-5 stroke-[2.5]" />
+          </button>
+          <button
+            onClick={() => setShowFolderModal(true)}
+            className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+            title="Add folder"
+          >
+            <FolderPlus className="w-5 h-5 stroke-[2.5]" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white flex items-center justify-center shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+                title="Options"
+              >
+                <SlidersHorizontal className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-3 py-2 text-xs text-muted-foreground">Coming later</div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => console.log('Use preset list')}>
+                Use preset list
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => console.log('Save preset list')}>
+                Save preset list
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => console.log('Close out')}>
+                Close out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -1436,19 +1499,19 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
       )}
 
       {expenses.length > 0 && (
-        <Card className="p-4 bg-surface border border-border rounded-xl">
+        <Card className="p-4 bg-surface rounded-xl border-0">
           <div className="flex items-center justify-between">
             <div className="text-left">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Budget</div>
-              <div className="text-lg font-bold">${totalExpected.toLocaleString()}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Budget</div>
+              <div className="text-2xl tracking-tight" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>${totalExpected.toLocaleString()}</div>
             </div>
             <div className="text-center">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Actual</div>
-              <div className="text-lg font-bold">${totalActual.toLocaleString()}</div>
+              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Actual</div>
+              <div className="text-2xl tracking-tight" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>${totalActual.toLocaleString()}</div>
             </div>
             <div className="text-right">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Diff</div>
-              <div className={cn("text-lg font-bold", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : 'text-foreground')}>
+              <div className="text-[10px] font-semibold text-muted-foreground/60 tracking-wide">Diff</div>
+              <div className={cn("text-2xl tracking-tight", variance > 0 ? 'text-red-600' : variance < 0 ? 'text-emerald-600' : 'text-foreground')} style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif', fontWeight: 800 }}>
                 ${Math.abs(variance).toLocaleString()}
               </div>
             </div>
@@ -1667,110 +1730,177 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({ marketId
         </div>
       </Modal>
 
-      <Modal isOpen={showTodoForm} onClose={() => { setShowTodoForm(false); setPendingFolderId(null); }} title={editingTodo ? 'Edit Task' : 'New Task'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
-        <div className="h-full flex flex-col -mx-4">
-          {!editingTodo && (
-            <div className="px-4 pb-2 border-b">
-              <Button size="sm" onClick={() => { setShowTodoForm(false); setShowTodoPresets(true); }} className="w-full justify-center font-medium h-10" variant="outline">
+      {/* Unified Add Item Modal - Bottom Sheet Style */}
+      <Modal 
+        isOpen={showTodoForm || showBudgetForm} 
+        onClose={() => { 
+          setShowTodoForm(false); 
+          setShowBudgetForm(false); 
+          setPendingFolderId(null);
+          onExternalModalClose?.();
+        }} 
+        showCloseButton={false} 
+        className="fixed inset-x-0 bottom-0 top-auto max-w-none m-0 rounded-t-3xl rounded-b-none max-h-[90vh] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom data-[state=closed]:duration-200 data-[state=open]:duration-300"
+        backdropClassName="bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in"
+      >
+        <div className="flex flex-col max-h-[90vh]">
+          {/* Drag Handle */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+          </div>
+          
+          {/* Type Tabs */}
+          <div className="flex gap-2 px-4 pb-3">
+            <button
+              onClick={() => { setShowBudgetForm(false); setShowTodoForm(true); }}
+              className={cn(
+                "flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all border-2",
+                showTodoForm 
+                  ? "bg-accent/10 border-accent text-accent" 
+                  : "bg-white border-gray-200 text-muted-foreground"
+              )}
+            >
+              Task
+            </button>
+            <button
+              onClick={() => { setShowTodoForm(false); setShowBudgetForm(true); }}
+              className={cn(
+                "flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all border-2",
+                showBudgetForm 
+                  ? "bg-accent/10 border-accent text-accent" 
+                  : "bg-white border-gray-200 text-muted-foreground"
+              )}
+            >
+              Budget
+            </button>
+          </div>
+
+          {/* Preset Buttons */}
+          {!editingTodo && showTodoForm && (
+            <div className="px-4 pb-2">
+              <button 
+                onClick={() => { setShowTodoForm(false); setShowTodoPresets(true); }} 
+                className="w-full py-2.5 rounded-xl text-sm font-medium border-2 border-dashed border-gray-300 text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+              >
                 Use a Preset Task
-              </Button>
+              </button>
             </div>
           )}
-          <div className="flex-1 overflow-y-auto px-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
-                <input type="text" value={newTodoTitle} onChange={e => setNewTodoTitle(e.target.value)} placeholder="Task title" className="w-full p-3 text-base border-2 rounded-lg bg-background focus:border-accent outline-none" autoFocus />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
-                <textarea value={newTodoDescription} onChange={e => setNewTodoDescription(e.target.value)} placeholder="Add details..." rows={2} className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none resize-none" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+          
+          {!editingExpense && showBudgetForm && (
+            <div className="px-4 pb-2">
+              <button 
+                onClick={() => { setShowBudgetForm(false); setShowBudgetPresets(true); }} 
+                className="w-full py-2.5 rounded-xl text-sm font-medium border-2 border-dashed border-gray-300 text-muted-foreground hover:border-accent hover:text-accent transition-colors flex items-center justify-center gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Use a Preset
+              </button>
+            </div>
+          )}
+
+          {/* Task Form */}
+          {showTodoForm && (
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="space-y-4 pb-4">
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Category</label>
-                  <select value={newTodoCategory} onChange={e => setNewTodoCategory(e.target.value)} className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none">
-                    {todoCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>))}
-                  </select>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
+                  <input type="text" value={newTodoTitle} onChange={e => setNewTodoTitle(e.target.value)} placeholder="Task title" className="w-full p-3 text-base border-2 rounded-xl bg-white focus:border-accent outline-none" autoFocus />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
-                  <select value={newTodoPriority} onChange={e => setNewTodoPriority(e.target.value as TodoPriority)} className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Subtitle</label>
+                  <textarea value={newTodoDescription} onChange={e => setNewTodoDescription(e.target.value)} placeholder="Add details..." rows={2} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none resize-none" />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Due Date</label>
-                <input type="date" value={newTodoDueDate} onChange={e => setNewTodoDueDate(e.target.value)} className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Priority</label>
+                    <select value={newTodoPriority} onChange={e => setNewTodoPriority(e.target.value as TodoPriority)} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none">
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Due Date</label>
+                    <input type="date" value={newTodoDueDate} onChange={e => setNewTodoDueDate(e.target.value)} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none" />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="p-4 border-t space-y-2">
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 h-10" onClick={handleSaveTodo}>Save</Button>
-              {!editingTodo && (
-                <Button variant="secondary" className="flex-1 h-10" onClick={() => { if (newTodoTitle.trim()) { createTodo({ title: newTodoTitle, description: newTodoDescription, category: newTodoCategory, priority: newTodoPriority, dueDate: newTodoDueDate || undefined, folderId: pendingFolderId }); resetTodoForm(); setPendingFolderId(null); } }}>Quick Add</Button>
+          )}
+
+          {/* Budget Form */}
+          {showBudgetForm && (
+            <div className="flex-1 overflow-y-auto px-4">
+              <div className="space-y-4 pb-4">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
+                  <input type="text" value={newBudgetTitle} onChange={e => setNewBudgetTitle(e.target.value)} placeholder="Item name" className="w-full p-3 text-base border-2 rounded-xl bg-white focus:border-accent outline-none" autoFocus />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Subtitle</label>
+                  <textarea value={newBudgetDescription} onChange={e => setNewBudgetDescription(e.target.value)} placeholder="Add details..." rows={2} className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none resize-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Budgeted ($)</label>
+                  <input type="number" value={newBudgetExpected} onChange={e => setNewBudgetExpected(e.target.value)} placeholder="0" className="w-full p-3 border-2 rounded-xl bg-white focus:border-accent outline-none" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Folder Selector - only show if folders exist */}
+          {folders.length > 0 && (
+            <div className="px-4 pb-2 relative" ref={folderDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setShowFolderDropdown(!showFolderDropdown)}
+                className="w-full p-3 border-2 border-accent rounded-xl bg-white focus:border-accent outline-none text-left flex items-center justify-between"
+              >
+                <span className="text-sm">{pendingFolderId ? folders.find(f => f.id === pendingFolderId)?.name : 'Add to folder?'}</span>
+                <ChevronDown className={cn("w-4 h-4 transition-transform", showFolderDropdown && "rotate-180")} />
+              </button>
+              
+              {showFolderDropdown && (
+                <div className="absolute bottom-full left-4 right-4 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => { setPendingFolderId(null); setShowFolderDropdown(false); }}
+                    className={cn(
+                      "w-full p-3 text-left hover:bg-surface transition-colors text-sm",
+                      !pendingFolderId && "bg-accent/10 text-accent"
+                    )}
+                  >
+                    Add to folder?
+                  </button>
+                  {folders.map(folder => (
+                    <button
+                      key={folder.id}
+                      type="button"
+                      onClick={() => { setPendingFolderId(folder.id); setShowFolderDropdown(false); }}
+                      className={cn(
+                        "w-full p-3 text-left hover:bg-surface transition-colors text-sm",
+                        pendingFolderId === folder.id && "bg-accent/10 text-accent"
+                      )}
+                    >
+                      {folder.name}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-            {editingTodo && (
-              <Button variant="ghost" className="w-full h-10 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => { handleDeleteTodo(editingTodo.id); setShowTodoForm(false); }}>Delete</Button>
-            )}
-          </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={showBudgetForm} onClose={() => { setShowBudgetForm(false); setPendingFolderId(null); }} title={editingExpense ? 'Edit Budget Item' : 'Add Budget Item'} showCloseButton={true} className="sm:max-w-sm sm:rounded-xl max-w-none max-h-[85vh] m-0 sm:m-auto">
-        <div className="h-full flex flex-col -mx-4">
-          {!editingExpense && (
-            <div className="px-4 pb-2 border-b">
-              <Button size="sm" onClick={() => { setShowBudgetForm(false); setShowBudgetPresets(true); }} className="w-full justify-center font-medium h-10" variant="outline">
-                <Sparkles className="w-4 h-4 mr-2" /> Use a Preset
-              </Button>
-            </div>
           )}
-          <div className="flex-1 overflow-y-auto px-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Category</label>
-                <select value={newBudgetCategory} onChange={e => setNewBudgetCategory(e.target.value as ExpenseCategory)} className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none">
-                  {expenseCategories.map(cat => (<option key={cat.id} value={cat.id}>{cat.icon} {cat.label}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Name *</label>
-                <input type="text" value={newBudgetTitle} onChange={e => setNewBudgetTitle(e.target.value)} placeholder="Item name" className="w-full p-3 text-base border-2 rounded-lg bg-background focus:border-accent outline-none" autoFocus />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Expected *</label>
-                  <input type="number" value={newBudgetExpected} onChange={e => setNewBudgetExpected(e.target.value)} placeholder="0" className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Actual</label>
-                  <input type="number" value={newBudgetActual} onChange={e => setNewBudgetActual(e.target.value)} placeholder="0" className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
-                <textarea value={newBudgetDescription} onChange={e => setNewBudgetDescription(e.target.value)} placeholder="Add details..." rows={2} className="w-full p-3 border-2 rounded-lg bg-background focus:border-accent outline-none resize-none" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Date</label>
-                <input type="date" value={newBudgetDate} onChange={e => setNewBudgetDate(e.target.value)} className="w-full p-2.5 border-2 rounded-lg bg-background focus:border-accent outline-none" />
-              </div>
-            </div>
-          </div>
-          <div className="p-4 border-t space-y-2">
-            <Button className="w-full h-10" onClick={handleSaveBudget} disabled={!newBudgetTitle.trim() || !newBudgetExpected}>
-              {editingExpense ? 'Save Changes' : 'Add Budget Item'}
+
+          {/* Submit Button */}
+          <div className="p-4 border-t">
+            <Button 
+              className="w-full h-12 rounded-xl font-semibold" 
+              onClick={showTodoForm ? handleSaveTodo : handleSaveBudget} 
+              disabled={showBudgetForm && (!newBudgetTitle.trim() || !newBudgetExpected)}
+            >
+              Add Item
             </Button>
-            {editingExpense && (
-              <Button variant="ghost" className="w-full h-10 text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => { handleDeleteExpense(editingExpense.id); setShowBudgetForm(false); }}>Delete</Button>
-            )}
           </div>
         </div>
       </Modal>
