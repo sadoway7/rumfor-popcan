@@ -14,7 +14,7 @@ export function useEmailVerification() {
   /**
    * Verify email with the provided token
    */
-  const verifyEmail = useCallback(async (token: string) => {
+  const verifyEmail = useCallback(async (token: string, email?: string) => {
     if (!token) {
       return { 
         success: false, 
@@ -24,8 +24,11 @@ export function useEmailVerification() {
 
     setIsVerifyingEmail(true)
     try {
-      const request: EmailVerificationRequest = { token }
+      const request: EmailVerificationRequest = { token, email }
       await auth.verifyEmail(request)
+      
+      // After successful verification, we should check if auth state was updated
+      // The auth store should have updated isEmailVerified and set emailVerificationSuccess
       return { success: true }
     } catch (error) {
       return { 

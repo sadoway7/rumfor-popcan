@@ -13,7 +13,7 @@ interface AuthStore extends AuthState {
   forgotPassword: (request: PasswordResetRequest) => Promise<void>
   resetPassword: (request: PasswordResetConfirm) => Promise<void>
   
-  verifyEmail: (request: EmailVerificationRequest) => Promise<void>
+  verifyEmail: (request: EmailVerificationRequest) => Promise<{ message: string; user?: User }>
   resendVerification: (request: ResendVerificationRequest) => Promise<void>
   
   refreshTokens: () => Promise<void>
@@ -206,7 +206,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       // Email verification methods
-      verifyEmail: async (request: EmailVerificationRequest) => {
+      verifyEmail: async (request: EmailVerificationRequest): Promise<{ message: string; user?: User }> => {
         try {
           set({ 
             isEmailVerificationLoading: true, 
@@ -214,15 +214,23 @@ export const useAuthStore = create<AuthStore>()(
             emailVerificationSuccess: false 
           })
           
-          await authApi.verifyEmail(request.token)
+          const response = await authApi.verifyEmail(request.token) as { message: string; user?: User }
           
-          // Update user verification status
-          const { user } = get()
-          if (user) {
+          // Update user verification status with data from API response
+          if (response.user) {
             set({
-              user: { ...user, isEmailVerified: true },
-              isEmailVerified: true,
+              user: response.user,
+              isEmailVerified: response.user.isEmailVerified,
             })
+          } else {
+            // Fallback: update existing user
+            const { user } = get()
+            if (user) {
+              set({
+                user: { ...user, isEmailVerified: true },
+                isEmailVerified: true,
+              })
+            }
           }
           
           set({
@@ -230,6 +238,8 @@ export const useAuthStore = create<AuthStore>()(
             emailVerificationSuccess: true,
             emailVerificationError: null,
           })
+          
+          return response
         } catch (error) {
           set({
             isEmailVerificationLoading: false,

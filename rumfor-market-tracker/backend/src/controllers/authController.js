@@ -327,9 +327,9 @@ const resetPassword = catchAsync(async (req, res, next) => {
 
 // Verify email
 const verifyEmail = catchAsync(async (req, res, next) => {
-  const { token } = req.body
+  const { token, email } = req.body
 
-  console.log('[verifyEmail] Received verification request, token length:', token?.length)
+  console.log('[verifyEmail] Received verification request, token length:', token?.length, 'email:', email)
 
   if (!token) {
     console.log('[verifyEmail] No token provided')
@@ -355,10 +355,21 @@ const verifyEmail = catchAsync(async (req, res, next) => {
       return next(new AppError('Verification token has expired. Please request a new one.', 400))
     }
     
-    // Check if user is already verified (token cleared)
-    const verifiedUser = await User.findOne({ 
-      email: req.body.email 
-    }).select('+emailVerificationToken')
+    // Check if user is already verified (by email in body if provided, or any verified user)
+    let query = {}
+    if (email) {
+      query = { email: email.toLowerCase().trim() }
+    }
+    
+    const alreadyVerifiedUser = await User.findOne({
+      ...query,
+      isEmailVerified: true
+    })
+    
+    if (alreadyVerifiedUser) {
+      console.log('[verifyEmail] User is already verified:', alreadyVerifiedUser.email)
+      return sendSuccess(res, { user: alreadyVerifiedUser }, 'Email is already verified. You can now log in.')
+    }
     
     console.log('[verifyEmail] Token not found. User may already be verified or token invalid.')
     return next(new AppError('Invalid or expired verification token. If you already verified your email, please log in.', 400))
@@ -385,7 +396,7 @@ const verifyEmail = catchAsync(async (req, res, next) => {
     }
   })
 
-  sendSuccess(res, null, 'Email verified successfully')
+  sendSuccess(res, { user }, 'Email verified successfully')
 })
 
 // Resend email verification

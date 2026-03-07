@@ -93,6 +93,7 @@ export interface PasswordResetConfirm {
 
 export interface EmailVerificationRequest {
   token: string;
+  email?: string; // Optional: helps identify already-verified users
 }
 
 export interface ResendVerificationRequest {

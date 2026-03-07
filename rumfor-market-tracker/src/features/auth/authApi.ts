@@ -343,8 +343,8 @@ const realApi: AuthApi = {
     }
   },
 
-  verifyEmail: async (token: string): Promise<{ message: string }> => {
-    const response = await httpClient.post<ApiResponse<{ message: string }>>('/auth/verify-email', { token })
+  verifyEmail: async (token: string): Promise<{ message: string; user?: User }> => {
+    const response = await httpClient.post<ApiResponse<{ message: string; user?: User }>>('/auth/verify-email', { token })
     
     if (!response.success) {
       throw new AuthApiError(

@@ -53,9 +53,16 @@ export function EmailVerificationPage() {
   React.useEffect(() => {
     if (tokenFromUrl && !hasAttemptedVerification.current) {
       hasAttemptedVerification.current = true
-      verifyEmail(tokenFromUrl)
+      const verifyAndHandle = async () => {
+        clearErrors()
+        clearSuccess()
+        // Try to get email from URL params if available
+        const emailFromUrl = searchParams.get('email')
+        await verifyEmail(tokenFromUrl, emailFromUrl || undefined)
+      }
+      verifyAndHandle()
     }
-  }, [tokenFromUrl, verifyEmail])
+  }, [tokenFromUrl, verifyEmail, clearErrors, clearSuccess, searchParams])
 
   React.useEffect(() => {
     return () => {
@@ -67,7 +74,7 @@ export function EmailVerificationPage() {
   const onSubmit = async (data: VerificationFormData) => {
     clearErrors()
     clearSuccess()
-    await verifyEmail(data.token)
+    await verifyEmail(data.token, email || undefined)
   }
 
   const handleResendVerification = async () => {
