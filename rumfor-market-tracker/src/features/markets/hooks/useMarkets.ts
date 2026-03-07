@@ -87,7 +87,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   const queryClient = useQueryClient();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState<MarketFilters>(initialFilters || { showPastMarkets: true });
+  const [currentFilters, setCurrentFilters] = useState<MarketFilters>(initialFilters || { showPastMarkets: false });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [total, setTotal] = useState(0);
@@ -292,7 +292,7 @@ export const useMarkets = (options?: UseMarketsOptions): UseMarketsReturn => {
 
   // Clear filters function
   const clearFilters = useCallback(() => {
-    setCurrentFilters({ showPastMarkets: true });
+    setCurrentFilters({ showPastMarkets: false });
     setCurrentPage(1);
   }, []);
 

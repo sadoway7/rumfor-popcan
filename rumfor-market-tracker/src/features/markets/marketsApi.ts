@@ -884,6 +884,19 @@ export const marketsApi = {
     }
   },
 
+  async getWeatherForecast(
+    marketId: string,
+    marketDate?: string
+  ): Promise<ApiResponse<any>> {
+    const params = marketDate ? `?marketDate=${marketDate}` : '';
+    const response = await httpClient.get<ApiResponse<any>>(
+      `/markets/${marketId}/weather-forecast${params}`
+    );
+    if (!response.success)
+      throw new Error(response.error || 'Failed to fetch weather');
+    return response;
+  },
+
   // Get approved/attending vendors for a market
   async getMarketVendors(
     marketId: string

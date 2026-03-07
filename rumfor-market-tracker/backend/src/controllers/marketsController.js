@@ -1744,29 +1744,89 @@ const getLogistics = catchAsync(async (req, res, next) => {
   sendSuccess(res, logistics, 'Logistics information retrieved successfully');
 });
 
+const geocodeLocation = async (city, region) => {
+  try {
+    const response = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=5&language=en&format=json`
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      let match = data.results[0];
+      if (region) {
+        const regionMatch = data.results.find(r => 
+          r.admin1?.toLowerCase().includes(region.toLowerCase()) ||
+          region.toLowerCase().includes(r.admin1?.toLowerCase())
+        );
+        if (regionMatch) match = regionMatch;
+      }
+      return { lat: match.latitude, lon: match.longitude };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 // Get weather forecast for market dates using Open-Meteo (free, no API key)
 const getWeatherForecast = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  const { marketDate } = req.query;
 
   const market = await Market.findById(id);
   if (!market) {
     return next(new AppError('Market not found', 404));
   }
 
-  if (!market.location?.latitude || !market.location?.longitude) {
-    return sendSuccess(res, {
-      market: { id: market._id, name: market.name },
-      forecast: null,
-      error: 'Location coordinates not available'
-    }, 'Weather unavailable - no coordinates');
-  }
-
   try {
-    const lat = market.location.latitude;
-    const lon = market.location.longitude;
+    console.log('[Weather] Market location:', JSON.stringify(market.location));
+    let lat = market.location?.coordinates?.[1];
+    let lon = market.location?.coordinates?.[0];
+    console.log('[Weather] Coordinates from DB:', { lat, lon });
+
+    if (!lat || !lon || (lat === 0 && lon === 0)) {
+      const city = market.location?.address?.city || market.location?.city;
+      const state = market.location?.address?.state || market.location?.state;
+      console.log('[Weather] No coords, using city/state:', { city, state });
+      
+      if (!city) {
+        return sendSuccess(res, {
+          market: { id: market._id, name: market.name },
+          forecast: null,
+          error: 'Location not available'
+        }, 'Weather unavailable - no location');
+      }
+      
+      const coords = await geocodeLocation(city, state);
+      if (!coords) {
+        return sendSuccess(res, {
+          market: { id: market._id, name: market.name },
+          forecast: null,
+          error: 'Could not geocode location'
+        }, 'Weather unavailable - geocoding failed');
+      }
+      lat = coords.lat;
+      lon = coords.lon;
+    }
+    
+    let startDate, endDate;
+    const formatDate = (d) => d.toISOString().split('T')[0];
+    
+    if (marketDate) {
+      const marketDateObj = new Date(marketDate);
+      startDate = new Date(marketDateObj);
+      startDate.setDate(startDate.getDate() - 2);
+      endDate = new Date(marketDateObj);
+      endDate.setDate(endDate.getDate() + 2);
+    } else {
+      startDate = new Date();
+      endDate = new Date();
+      endDate.setDate(endDate.getDate() + 14);
+    }
     
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=auto&forecast_days=14`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset&hourly=temperature_2m,weathercode&timezone=auto&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}`
     );
     
     if (!response.ok) {
@@ -1777,40 +1837,83 @@ const getWeatherForecast = catchAsync(async (req, res, next) => {
     
     const weatherCodeMap = {
       0: { condition: 'Clear', icon: '☀️' },
-      1: { condition: 'Mainly Clear', icon: '🌤️' },
-      2: { condition: 'Partly Cloudy', icon: '⛅' },
+      1: { condition: 'Mainly clear', icon: '🌤️' },
+      2: { condition: 'Partly cloudy', icon: '⛅' },
       3: { condition: 'Overcast', icon: '☁️' },
       45: { condition: 'Foggy', icon: '🌫️' },
-      48: { condition: 'Rime Fog', icon: '🌫️' },
-      51: { condition: 'Light Drizzle', icon: '🌦️' },
-      53: { condition: 'Drizzle', icon: '🌦️' },
-      55: { condition: 'Heavy Drizzle', icon: '🌧️' },
-      61: { condition: 'Light Rain', icon: '🌧️' },
+      48: { condition: 'Foggy', icon: '🌫️' },
+      51: { condition: 'Drizzle', icon: '🌧️' },
+      53: { condition: 'Drizzle', icon: '🌧️' },
+      55: { condition: 'Drizzle', icon: '🌧️' },
+      61: { condition: 'Rain', icon: '🌧️' },
       63: { condition: 'Rain', icon: '🌧️' },
-      65: { condition: 'Heavy Rain', icon: '🌧️' },
-      71: { condition: 'Light Snow', icon: '🌨️' },
-      73: { condition: 'Snow', icon: '❄️' },
-      75: { condition: 'Heavy Snow', icon: '❄️' },
-      80: { condition: 'Light Showers', icon: '🌦️' },
-      81: { condition: 'Showers', icon: '🌧️' },
-      82: { condition: 'Heavy Showers', icon: '⛈️' },
+      65: { condition: 'Heavy rain', icon: '🌧️' },
+      71: { condition: 'Snow', icon: '🌨️' },
+      73: { condition: 'Snow', icon: '🌨️' },
+      75: { condition: 'Heavy snow', icon: '🌨️' },
+      77: { condition: 'Snow', icon: '🌨️' },
+      80: { condition: 'Showers', icon: '🌦️' },
+      81: { condition: 'Showers', icon: '🌦️' },
+      82: { condition: 'Heavy showers', icon: '⛈️' },
+      85: { condition: 'Snow showers', icon: '🌨️' },
+      86: { condition: 'Snow showers', icon: '🌨️' },
       95: { condition: 'Thunderstorm', icon: '⛈️' },
-      96: { condition: 'Thunderstorm with Hail', icon: '⛈️' },
-      99: { condition: 'Severe Thunderstorm', icon: '⛈️' },
+      96: { condition: 'Thunderstorm', icon: '⛈️' },
+      99: { condition: 'Thunderstorm', icon: '⛈️' },
+    };
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const formatTime = (iso) => {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const h = d.getHours();
+      const m = d.getMinutes();
+      const ampm = h >= 12 ? 'pm' : 'am';
+      const hour = h % 12 || 12;
+      return `${hour}:${m.toString().padStart(2, '0')}${ampm}`;
     };
     
     const forecast = data.daily.time.map((date, i) => {
-      const code = data.daily.weather_code[i];
+      const dateObj = new Date(date + 'T12:00:00');
+      const code = data.daily.weathercode[i];
       const weather = weatherCodeMap[code] || { condition: 'Unknown', icon: '🌡️' };
+      
+      const hourly = [];
+      if (data.hourly?.time) {
+        for (let h = 0; h < 24; h++) {
+          const hourIndex = data.hourly.time.findIndex(t => 
+            t.startsWith(date) && new Date(t).getHours() === h
+          );
+          if (hourIndex !== -1) {
+            const hourCode = data.hourly.weathercode[hourIndex];
+            const hourInfo = weatherCodeMap[hourCode] || { condition: 'Unknown', icon: '🌡️' };
+            hourly.push({
+              hour: h,
+              temp: Math.round(data.hourly.temperature_2m[hourIndex]),
+              icon: hourInfo.icon,
+              condition: hourInfo.condition,
+            });
+          }
+        }
+      }
+      
       return {
         date,
+        dayName: dayNames[dateObj.getDay()],
+        monthName: monthNames[dateObj.getMonth()],
+        dayNumber: dateObj.getDate(),
         condition: weather.condition,
         icon: weather.icon,
-        temperature: {
-          high: Math.round(data.daily.temperature_2m_max[i]),
-          low: Math.round(data.daily.temperature_2m_min[i])
-        },
-        precipitation: data.daily.precipitation_probability_max[i] || 0
+        high: Math.round(data.daily.temperature_2m_max[i]),
+        low: Math.round(data.daily.temperature_2m_min[i]),
+        precipitation: data.daily.precipitation_probability_max?.[i] || 0,
+        windSpeed: Math.round(data.daily.wind_speed_10m_max?.[i] || 0),
+        sunrise: formatTime(data.daily.sunrise?.[i]),
+        sunset: formatTime(data.daily.sunset?.[i]),
+        isMarketDay: date === marketDate,
+        hourly,
       };
     });
 
@@ -1820,7 +1923,10 @@ const getWeatherForecast = catchAsync(async (req, res, next) => {
         name: market.name,
         location: market.location,
       },
-      forecast,
+      forecast: {
+        marketDate: marketDate || null,
+        days: forecast,
+      },
       timezone: data.timezone,
     }, 'Weather forecast retrieved successfully');
   } catch (error) {

@@ -1,10 +1,9 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useRef } from 'react'
 import { Spinner } from '@/components/ui/Spinner'
 import { useHashtags } from '@/features/community/hooks/useHashtags'
 import { useAuthStore } from '@/features/auth/authStore'
-import { useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/utils/cn'
-import { ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface TagVotingProps {
@@ -21,8 +20,9 @@ export const TagVoting: React.FC<TagVotingProps> = ({
   hideHeading = false
 }) => {
   const { user } = useAuthStore()
-  const queryClient = useQueryClient()
   const [shuffledTags, setShuffledTags] = useState<string[]>([])
+  const hasInitialized = useRef(false)
+  
   const {
     hashtags,
     isLoading,
@@ -30,71 +30,46 @@ export const TagVoting: React.FC<TagVotingProps> = ({
     voteHashtag,
     getUserVote,
     getVoteCount,
-    isVoting,
     predefinedHashtags,
     addTagToMarket,
     isAddingTag,
-    addTagError
   } = useHashtags(marketId)
 
-  // Sort by votes and show up to 30 tags
   const marketHashtags = useMemo(() => {
     return [...hashtags]
       .sort((a, b) => getVoteCount(b.id) - getVoteCount(a.id))
       .slice(0, 30)
-  }, [hashtags])
+  }, [hashtags, getVoteCount])
 
-  // Generate shuffled tags only on initial load or refresh
-  const generateShuffledTags = () => {
-    if (!predefinedHashtags) return []
-    const usedTags = new Set(hashtags.map(h => h.name))
-    const availableTags = predefinedHashtags.filter(tag => !usedTags.has(tag))
-    const shuffled = [...availableTags].sort(() => 0.5 - Math.random())
-    return shuffled.slice(0, 8)
-  }
-
-  // Initialize on first load
   useEffect(() => {
-    if (predefinedHashtags && shuffledTags.length === 0) {
-      setShuffledTags(generateShuffledTags())
-    }
-  }, [predefinedHashtags])
+    if (hasInitialized.current) return
+    if (!predefinedHashtags || predefinedHashtags.length === 0) return
+    
+    hasInitialized.current = true
+    const usedTags = new Set(hashtags.map(h => h.name))
+    const availableTags = predefinedHashtags.filter((tag: string) => !usedTags.has(tag))
+    const shuffled = [...availableTags].sort(() => 0.5 - Math.random())
+    setShuffledTags(shuffled.slice(0, 8))
+  }, [predefinedHashtags, hashtags])
 
-  // Suggested tags - filter out any that have been added, without reshuffling
   const suggestedTags = useMemo(() => {
     const usedTags = new Set(hashtags.map(h => h.name))
-    return shuffledTags.filter(tag => !usedTags.has(tag))
+    return shuffledTags.filter((tag: string) => !usedTags.has(tag))
   }, [shuffledTags, hashtags])
 
-  // Refresh button - regenerate the shuffled list
   const handleRefresh = () => {
-    setShuffledTags(generateShuffledTags())
+    if (!predefinedHashtags) return
+    const usedTags = new Set(hashtags.map(h => h.name))
+    const availableTags = predefinedHashtags.filter((tag: string) => !usedTags.has(tag))
+    const shuffled = [...availableTags].sort(() => 0.5 - Math.random())
+    setShuffledTags(shuffled.slice(0, 8))
   }
 
-  // Track user's voting limit (3 votes total)
   const userVotes = useMemo(() => {
     return hashtags.filter(h => getUserVote(h.id)).length
   }, [hashtags, getUserVote])
 
   const canVote = userVotes < 3
-
-  const handleVote = async (tagName: string, value: 1 | -1 | 0) => {
-    if (!user || !canVote) return
-
-    try {
-      // Find existing hashtag or create new one
-      const existingHashtag = hashtags.find(h => h.name === tagName)
-      if (existingHashtag) {
-        await voteHashtag(existingHashtag.id, value)
-      } else {
-        // For market tags, we might need to create the hashtag first
-        // This would require backend changes, for now just handle existing ones
-        console.log('Voting on market tag:', tagName, value)
-      }
-    } catch (error) {
-      console.error('Failed to vote:', error)
-    }
-  }
 
   const handleAddSuggestedTag = async (tagName: string) => {
     if (!user) return
@@ -122,39 +97,30 @@ export const TagVoting: React.FC<TagVotingProps> = ({
 
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Market Tags with Voting */}
       <div className="space-y-3">
         {!hideHeading && (
           <div className="flex items-center justify-between pt-4">
             <h3 className="text-lg font-medium">Market Tags</h3>
           </div>
         )}
-<motion.div 
-            className="flex flex-wrap gap-3"
-          >
-            <AnimatePresence mode="popLayout">
-              {marketHashtags.map((hashtag) => {
-                const userVote = getUserVote(hashtag.id)
-                const voteCount = getVoteCount(hashtag.id)
-
-                return (
-                  <motion.div
-                    key={hashtag.name}
-                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="relative inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm shadow-[0_1px_2px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)] group whitespace-nowrap"
-                  >
-                    <span className="font-medium">{hashtag.name}</span>
-                  </motion.div>
-              )
-            })}
+        <motion.div className="flex flex-wrap gap-3">
+          <AnimatePresence mode="popLayout">
+            {marketHashtags.map((hashtag) => (
+              <motion.div
+                key={hashtag.name}
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="relative inline-flex items-center gap-2 px-3 py-1.5 bg-white rounded-full text-sm shadow-[0_1px_2px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.06)] group whitespace-nowrap"
+              >
+                <span className="font-medium">{hashtag.name}</span>
+              </motion.div>
+            ))}
           </AnimatePresence>
         </motion.div>
       </div>
 
-      {/* Suggested Tags */}
       {suggestedTags.length > 0 && user && (
         <div className="pt-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -170,7 +136,7 @@ export const TagVoting: React.FC<TagVotingProps> = ({
           </div>
 
           <div className="flex flex-wrap gap-3 overflow-hidden max-w-full">
-            {suggestedTags.map((tag) => (
+            {suggestedTags.map((tag: string) => (
               <button
                 key={tag}
                 onClick={() => handleAddSuggestedTag(tag)}
@@ -189,7 +155,6 @@ export const TagVoting: React.FC<TagVotingProps> = ({
         </div>
       )}
 
-      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}

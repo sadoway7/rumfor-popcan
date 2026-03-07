@@ -44,6 +44,7 @@ router.get('/category/:category', validatePagination, getMarketsByCategory)
 router.get('/type/:marketType', validateMarketTypeParam, validatePagination, getMarketsByType)
 router.get('/:id', validateMongoId('id'), getMarket)
 router.get('/:id/vendors', validateMongoId('id'), getMarketVendors)
+router.get('/:id/weather-forecast', validateMongoId('id'), getWeatherForecast)
 
 // Protected routes
 router.use(verifyToken)
@@ -70,7 +71,6 @@ router.post('/:id/promoter-messages', validateMongoId('id'), validateMessageCrea
 router.get('/:id/vendor-todos', validateMongoId('id'), requireVendor, getVendorTodos)
 router.get('/:id/vendor-expenses', validateMongoId('id'), requireVendor, getVendorExpenses)
 router.get('/:id/logistics', validateMongoId('id'), requireVendor, getLogistics)
-router.get('/:id/weather-forecast', validateMongoId('id'), requireVendor, getWeatherForecast)
 router.get('/:id/calendar-events', validateMongoId('id'), requireVendor, getCalendarEvents)
 
 module.exports = router
