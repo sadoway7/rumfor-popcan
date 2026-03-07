@@ -312,7 +312,7 @@ export const MarketDetailPage: React.FC = () => {
         </div>
 
         {/* Track/Status Button - Top Right */}
-        <div className="absolute top-0 right-0 p-3 z-10">
+        <div className="absolute top-0 right-0 p-4 z-10">
           {isMarketTracked(market.id) ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -359,6 +359,7 @@ export const MarketDetailPage: React.FC = () => {
               onClick={handleTrackToggle}
               disabled={isTracking}
               size="sm"
+              className="scale-[1.03]"
             />
           )}
         </div>

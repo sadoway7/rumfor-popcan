@@ -31,12 +31,15 @@ export const TrackButton = React.forwardRef<HTMLButtonElement, TrackButtonProps>
   status
 }, ref) => {
   const sizeClasses = {
-    sm: 'w-9 h-11',
-    md: 'w-11 h-14',
-    lg: 'w-14 h-17',
+    sm: 'w-[25px] h-[30px]',
+    md: 'w-8 h-10',
+    lg: 'w-10 h-12',
   }
 
   const fillColor = isTracked && status ? (STATUS_COLORS[status] || '#22C55E') : (isTracked ? '#22C55E' : '#FFFFFF')
+  
+  // Generate unique gradient ID for this instance
+  const [gradientId] = React.useState(() => `statusGradient-${Math.random().toString(36).substr(2, 9)}`)
 
   return (
     <button
@@ -45,38 +48,29 @@ export const TrackButton = React.forwardRef<HTMLButtonElement, TrackButtonProps>
       disabled={disabled}
       type="button"
       className={cn(
-        "relative drop-shadow-md active:scale-95 transition-transform",
+        "relative active:scale-95",
         sizeClasses[size],
-        disabled && 'opacity-50 cursor-not-allowed',
+        disabled && 'cursor-not-allowed',
         className
       )}
       style={{ background: 'none', border: 'none', padding: 0 }}
     >
       <svg
-        viewBox="0 0 24 32"
+        viewBox="0 0 26 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-full"
       >
         <defs>
-          <pattern id="stripes" patternUnits="userSpaceOnUse" width="4" height="4" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="4" stroke="rgba(0,0,0,0.15)" strokeWidth="2" />
-          </pattern>
-          <clipPath id="bookmarkClip">
-            <path d="M2 4C2 2.89543 2.89543 2 4 2H20C21.1046 2 22 2.89543 22 4V30L12 22L2 30V4Z" />
-          </clipPath>
+          <linearGradient id={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor={fillColor} stopOpacity="0.75"/>
+            <stop offset="100%" stopColor={fillColor} stopOpacity="1"/>
+          </linearGradient>
         </defs>
         <path
-          d="M2 4C2 2.89543 2.89543 2 4 2H20C21.1046 2 22 2.89543 22 4V30L12 22L2 30V4Z"
-          fill={fillColor}
-          stroke="#9CA3AF"
-          strokeWidth="1"
+          d="M3 0h20a3 3 0 0 1 3 3v29l-13-9L0 32V3a3 3 0 0 1 3-3z"
+          fill={isTracked ? `url(#${gradientId})` : "#FFFFFF"}
         />
-        {isTracked && (
-          <g clipPath="url(#bookmarkClip)">
-            <rect x="0" y="0" width="24" height="32" fill="url(#stripes)" />
-          </g>
-        )}
       </svg>
     </button>
   )

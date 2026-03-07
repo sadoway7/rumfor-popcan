@@ -110,18 +110,38 @@ const PROVINCES_AND_STATES = [
   { label: 'Wyoming', value: 'WY' },
 ]
 
+const normalizeUrl = (value: string | undefined): string => {
+  if (!value) return ''
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed
+  }
+  return `https://${trimmed}`
+}
+
+const isValidUrl = (value: string): boolean => {
+  if (!value) return true
+  try {
+    new URL(normalizeUrl(value))
+    return true
+  } catch {
+    return false
+  }
+}
+
 const profileSchema = z.object({
   businessName: z.string().max(100).optional().or(z.literal('')),
   tagline: z.string().max(100).optional().or(z.literal('')),
   blurb: z.string().max(500).optional().or(z.literal('')),
   bio: z.string().max(500).optional().or(z.literal('')),
-  website: z.string().url('Invalid URL').optional().or(z.literal('')),
+  website: z.string().refine(isValidUrl, 'Invalid URL').optional().or(z.literal('')),
   instagram: z.string().optional().or(z.literal('')),
   facebook: z.string().optional().or(z.literal('')),
   tiktok: z.string().optional().or(z.literal('')),
   publicPhone: z.string().optional().or(z.literal('')),
-  etsy: z.string().url('Invalid URL').optional().or(z.literal('')),
-  shoppingLink: z.string().url('Invalid URL').optional().or(z.literal('')),
+  etsy: z.string().refine(isValidUrl, 'Invalid URL').optional().or(z.literal('')),
+  shoppingLink: z.string().refine(isValidUrl, 'Invalid URL').optional().or(z.literal('')),
   city: z.string().optional().or(z.literal('')),
   state: z.string().optional().or(z.literal('')),
 })
@@ -273,7 +293,7 @@ export const VendorProfileEditPage: React.FC = () => {
           bio: data.bio || undefined,
           tagline: data.tagline || undefined,
           blurb: data.blurb || undefined,
-          website: data.website || undefined,
+          website: normalizeUrl(data.website) || undefined,
           productCategories: categories,
           cardColor: cardColor,
           instagram: data.instagram || undefined,
@@ -281,8 +301,8 @@ export const VendorProfileEditPage: React.FC = () => {
           tiktok: data.tiktok || undefined,
           publicPhone: data.publicPhone || undefined,
           galleryImages: galleryImages,
-          etsy: data.etsy || undefined,
-          shoppingLink: data.shoppingLink || undefined,
+          etsy: normalizeUrl(data.etsy) || undefined,
+          shoppingLink: normalizeUrl(data.shoppingLink) || undefined,
           city: data.city || undefined,
           state: data.state || undefined,
         },
@@ -294,7 +314,7 @@ export const VendorProfileEditPage: React.FC = () => {
           ...user.vendorProfile,
           tagline: data.tagline || undefined,
           blurb: data.blurb || undefined,
-          website: data.website || undefined,
+          website: normalizeUrl(data.website) || undefined,
           productCategories: categories,
           cardColor: cardColor,
           instagram: data.instagram || undefined,
@@ -302,8 +322,8 @@ export const VendorProfileEditPage: React.FC = () => {
           tiktok: data.tiktok || undefined,
           publicPhone: data.publicPhone || undefined,
           galleryImages: galleryImages,
-          etsy: data.etsy || undefined,
-          shoppingLink: data.shoppingLink || undefined,
+          etsy: normalizeUrl(data.etsy) || undefined,
+          shoppingLink: normalizeUrl(data.shoppingLink) || undefined,
           city: data.city || undefined,
           state: data.state || undefined,
         },

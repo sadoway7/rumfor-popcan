@@ -12,8 +12,8 @@ export function SettingsPage() {
   const { user, deleteProfile, isLoading } = useAuthStore()
   const { temperatureUnit, setTemperatureUnit } = usePreferencesStore()
   const navigate = useNavigate()
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(true)
+  const [emailNotifications, setEmailNotifications] = useState(false)
+  const [pushNotifications, setPushNotifications] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showBugReport, setShowBugReport] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -30,38 +30,28 @@ export function SettingsPage() {
           <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Account</h2>
           <Card padding="none">
             <CardContent className="divide-y divide-surface-3 px-4">
-              <div className="flex items-center justify-between py-3 min-w-0">
+              <div className="flex items-center justify-between py-3">
                 <div className="min-w-0 flex-1 pr-4">
-                  <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
-                  <p className="text-xs text-muted-foreground">Email address</p>
+                  <p className="text-sm font-medium text-foreground">Account type</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
                 </div>
                 <Link 
                   to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile'}
                   className="flex-shrink-0"
                 >
                   <Button variant="ghost" size="sm" className="text-accent hover:text-accent-light h-9 px-3">
-                    Edit
+                    Edit Profile
                   </Button>
                 </Link>
               </div>
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Account type</p>
-                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+              <div className="flex items-center justify-between py-3 min-w-0">
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-sm font-medium text-foreground truncate">{user?.email}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Security</h2>
-          <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
               <div className="flex items-center justify-between py-3">
                 <div className="min-w-0 flex-1 pr-4">
                   <p className="text-sm font-medium text-foreground">Password</p>
-                  <p className="text-xs text-muted-foreground">Last changed 30 days ago</p>
                 </div>
                 <Button variant="ghost" size="sm" className="text-accent hover:text-accent-light h-9 px-3 flex-shrink-0">
                   Change
@@ -72,13 +62,12 @@ export function SettingsPage() {
         </section>
 
         <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Display</h2>
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Options</h2>
           <Card padding="none">
             <CardContent className="divide-y divide-surface-3 px-4">
               <div className="flex items-center justify-between py-3">
                 <div className="min-w-0 flex-1 pr-4">
                   <p className="text-sm font-medium text-foreground">Temperature Unit</p>
-                  <p className="text-xs text-muted-foreground">Choose how temperatures are displayed</p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
                   <button
@@ -103,18 +92,10 @@ export function SettingsPage() {
                   </button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        <section>
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Notifications</h2>
-          <Card padding="none">
-            <CardContent className="divide-y divide-surface-3 px-4">
               <div className="flex items-center justify-between py-3">
                 <div className="min-w-0 flex-1 pr-4">
                   <p className="text-sm font-medium text-foreground">Email notifications</p>
-                  <p className="text-xs text-muted-foreground">Receive updates via email</p>
+                  <p className="text-xs text-muted-foreground">system disabled in beta</p>
                 </div>
                 <button
                   onClick={() => setEmailNotifications(!emailNotifications)}
@@ -130,7 +111,7 @@ export function SettingsPage() {
               <div className="flex items-center justify-between py-3">
                 <div className="min-w-0 flex-1 pr-4">
                   <p className="text-sm font-medium text-foreground">Push notifications</p>
-                  <p className="text-xs text-muted-foreground">Receive browser notifications</p>
+                  <p className="text-xs text-muted-foreground">system disabled in beta</p>
                 </div>
                 <button
                   onClick={() => setPushNotifications(!pushNotifications)}
@@ -174,7 +155,7 @@ export function SettingsPage() {
             <div className="flex items-center justify-between py-3">
               <div className="min-w-0 flex-1 pr-4">
                 <p className="text-sm font-medium text-foreground">Delete profile</p>
-                <p className="text-xs text-muted-foreground">Remove your personal data only</p>
+                <p className="text-xs text-muted-foreground">Remove your personal data</p>
               </div>
               <Button 
                 variant="ghost" 

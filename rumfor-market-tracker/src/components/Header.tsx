@@ -276,16 +276,19 @@ export function Header() {
                 )}
 
                 {user?.role === 'vendor' && (
-                  <Link to="/vendor/tracked-markets">
-                    <Button
-                      size="sm"
-                      className="bg-white text-black hover:bg-gray-100 transition-colors duration-200 rounded-full shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40"
-                    >
-                      <Bookmark className="h-4 w-4 mr-2" />
-                      My Markets
-                    </Button>
-                  </Link>
-                )}
+                   <Link to="/vendor/tracked-markets" className="inline-block">
+                     <span
+                       className={`inline-flex items-center py-[11px] px-4 text-sm bg-surface rounded-full border border-gray-200 transition-all duration-200 hover:bg-gray-50 hover:shadow-md ${
+                         theme === 'light'
+                           ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
+                           : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
+                       }`}
+                     >
+                       <Bookmark className="h-4 w-4 mr-2" />
+                       My Markets
+                     </span>
+                   </Link>
+                 )}
 
 {/* User Profile Menu */}
                 <UserDropdown 

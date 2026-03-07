@@ -137,6 +137,15 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Dropdown menu item hover - icons turn white */
+  [role="menuitem"] svg {
+    transition: color 0.15s ease-out;
+  }
+  [role="menuitem"][data-highlighted] svg,
+  [role="menuitem"]:focus svg {
+    color: hsl(var(--accent-foreground)) !important;
+  }
 }
 
 @layer utilities {

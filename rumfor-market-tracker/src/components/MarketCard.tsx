@@ -577,7 +577,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   if (variant === 'featured') {
     return (
       <Link to={detailPath || `/markets/${market.id}`} className="block">
-        <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] hover:scale-[1.02] transition-all duration-300 cursor-pointer', className)}>
+        <Card className={cn('overflow-hidden hover:shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_8px_30px_rgba(0,0,0,0.25)] hover:scale-[1.02] transition-transform duration-300 cursor-pointer', className)}>
           {market.images && market.images.length > 0 && (
             <div className="relative h-48">
               <img
@@ -762,7 +762,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         'overflow-hidden rounded-none md:rounded-lg',
         'shadow-none',
         'hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.15)] hover:md:-translate-y-1',
-        'transition-all duration-300',
+        'transition-transform duration-300',
         'relative',
         className
       )}>
@@ -774,7 +774,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
         <Link to={detailPath || `/markets/${market.id}`} className="block group relative z-20">
           {/* Image with overlaid details */}
           {market.images && market.images.length > 0 && (
-            <div className="relative h-96">
+            <div className="relative h-96 overflow-hidden">
               <img
                 src={market.images[0]}
                 alt={market.name}
@@ -782,8 +782,18 @@ export const MarketCard: React.FC<MarketCardProps> = ({
               />
 
               {/* Track Button + Comments - Top Right */}
-              <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-3">
-                <div ref={dropdownRef} className="relative">
+              <div className="absolute top-[10px] right-[10px] z-40 py-[5px] px-[16px] md:py-[2px] md:px-[8px] rounded-full flex flex-row items-center gap-[18px] md:gap-[8px]" style={{ background: 'rgba(0, 0, 0, 0.18)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+                <div
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    openComments(market.id, market.name)
+                  }}
+                  className="cursor-pointer drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] mt-[3px] md:mt-[1px] scale-100 md:scale-75 origin-center"
+                >
+                  <ChatNotificationIcon count={market.stats?.commentCount || 0} size="sm" />
+                </div>
+                <div ref={dropdownRef} className="relative drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] mt-[3px] md:mt-[1px] scale-100 md:scale-75 origin-center">
                   <TrackButton
                     ref={buttonRef}
                     isTracked={isTrackedOptimistic}
@@ -791,19 +801,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                     disabled={isLoading}
                     size="sm"
                     status={isTrackedOptimistic ? (optimisticStatus || 'interested') : undefined}
-                    className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
                   />
-                </div>
-                {/* Comments Button */}
-                <div
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    openComments(market.id, market.name)
-                  }}
-                  className="cursor-pointer drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] scale-95 -mr-1 mt-1"
-                >
-                  <ChatNotificationIcon count={market.stats?.commentCount || 0} />
                 </div>
               </div>
 
@@ -815,41 +813,41 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-white z-20" />
                        
                        {/* Location - left side, on white line */}
-                       <div className="absolute -top-3 left-3 z-30 flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-xs font-medium text-zinc-900 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
-                         <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
-                         <span>{formatLocation(market.location)}</span>
-                       </div>
-                       
-                       {/* Dates + Rotating Vendors - stacked above location */}
-                       <div className="absolute bottom-full left-3 mb-5 z-30 flex flex-col gap-2">
-                         {/* Rotating Vendors - top */}
-                         {market.tags?.some(tag => tag.startsWith('split-market:')) && (
-                           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-white w-fit">
-                             <Calendar className="w-4 h-4" />
-                             <span>Rotating Vendors</span>
-                           </div>
-                         )}
-                         {/* Dates */}
-                         {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
-                           <RelatedMarketDates market={market} />
-                         ) : (
-                           scheduleDates.length > 0 && (
-                             <div className={cn(
-                               "flex flex-col gap-1",
-                             )}>
-                               {scheduleDates.map((date, index) => (
-                                 <div key={index} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-zinc-900 w-fit">
-                                   <Calendar className="w-3.5 h-3.5" />
-                                   <span>{date}</span>
-                                 </div>
-                               ))}
-                             </div>
-                           )
-                         )}
-                       </div>
-                       
-                       {/* Category - right side, on white line */}
-                       <div className={`absolute -top-3 right-3 z-30 px-3 py-1 rounded-full text-xs font-medium ${categoryFlagColors[market.category] || 'bg-white'} drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]`}>
+                       <div className="absolute -top-3 left-3 z-30 flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full text-xs font-medium text-zinc-900 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
+                          <span>{formatLocation(market.location)}</span>
+                        </div>
+                        
+                        {/* Dates + Rotating Vendors - stacked above location */}
+                        <div className="absolute bottom-full left-3 mb-5 z-30 flex flex-col gap-2">
+                          {/* Rotating Vendors - top */}
+                          {market.tags?.some(tag => tag.startsWith('split-market:')) && (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-white w-fit">
+                              <Calendar className="w-4 h-4" />
+                              <span>Rotating Vendors</span>
+                            </div>
+                          )}
+                          {/* Dates */}
+                          {market.tags?.some(tag => tag.startsWith('split-market:')) ? (
+                            <RelatedMarketDates market={market} />
+                          ) : (
+                            scheduleDates.length > 0 && (
+                              <div className={cn(
+                                "flex flex-col gap-1",
+                              )}>
+                                {scheduleDates.map((date, index) => (
+                                  <div key={index} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)] text-zinc-900 w-fit">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{date}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          )}
+                        </div>
+                        
+                        {/* Category - right side, on white line */}
+                        <div className={`absolute -top-3 right-3 z-30 px-3 py-1.5 rounded-full text-xs font-medium ${categoryFlagColors[market.category] || 'bg-white'} drop-shadow-[0_1px_3px_rgba(0,0,0,0.2)]`}>
                          {MARKET_CATEGORY_LABELS[market.category]}
                        </div>
                        {/* Color accent layer */}
@@ -869,10 +867,10 @@ export const MarketCard: React.FC<MarketCardProps> = ({
                           }}
                         />
                           {/* Content */}
-                          <div className="relative px-5 pt-5 pb-5 z-10">
-                             <h3 className="text-zinc-900 font-quicksand font-bold text-lg leading-snug line-clamp-2 mb-2">
-                             {displayName}
-                            </h3>
+                           <div className="relative px-5 pt-5 pb-5 z-10">
+                              <h3 className="text-zinc-900 font-quicksand font-extrabold text-lg leading-snug line-clamp-2 mb-2 mt-1" style={{ WebkitTextStroke: '0.3px currentColor' }}>
+                              {displayName}
+                             </h3>
                           <p className="text-zinc-500 text-sm font-normal leading-relaxed line-clamp-2">
                             {market.description}
                           </p>
@@ -1087,7 +1085,7 @@ export const MarketCard: React.FC<MarketCardProps> = ({
   return (
     <div ref={cardRef}>
       <Link to={detailPath || `/markets/${market.id}`} className="block group">
-        <Card className={cn('overflow-hidden transition-all duration-300 cursor-pointer rounded-none md:rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_4px_20px_rgba(0,0,0,0.2)] hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.25)] hover:md:-translate-y-1', className)}>
+        <Card className={cn('overflow-hidden transition-transform duration-300 cursor-pointer rounded-none md:rounded-lg shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_4px_20px_rgba(0,0,0,0.2)] hover:md:shadow-[0_10px_40px_rgba(0,0,0,0.25)] hover:md:-translate-y-1', className)}>
         {market.images && market.images.length > 0 && (
           <div className="relative h-80">
             <img

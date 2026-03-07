@@ -53,7 +53,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             user={user || {}}
             size={avatarSize === 'sm' ? 'sm' : 'header'}
             shape="circle"
-            className={`bg-white border-2 border-surface-3 ${
+            className={`bg-white shadow-[0_1px_3px_rgba(0,0,0,0.25),0_6px_16px_rgba(0,0,0,0.15)] ${
               theme === 'light'
                 ? 'shadow-sm shadow-black/15 shadow-[2px_2px_0px_0px] shadow-black/25 shadow-[0.5px_0.5px_0px_0px] shadow-black/40'
                 : 'shadow-sm shadow-black/25 shadow-[2px_2px_0px_0px] shadow-black/40 shadow-[0.5px_0.5px_0px_0px] shadow-black/50'
@@ -62,48 +62,39 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-[calc(100vw-2rem)] md:w-64 bg-surface border border-surface-3 rounded-xl shadow-lg mx-4 md:mx-0"
+        className="z-[70] w-[calc(100vw-2rem)] md:w-64 bg-surface border border-surface-3 rounded-xl shadow-lg mx-4 md:mx-0"
         align="end"
         sideOffset={8}
       >
-        <DropdownMenuLabel className="flex items-center space-x-3 py-4">
-          <div className="w-12 h-12 md:w-10 md:h-10 bg-surface-2 border border-surface-3 rounded-lg flex items-center justify-center">
-            <User className="h-6 w-6 md:h-5 md:w-5 text-foreground" />
-          </div>
-          <div>
-            <div className="text-base md:text-sm font-medium text-foreground">
-              {user?.firstName}
+        <DropdownMenuLabel className="flex items-center justify-between py-4">
+          <Link
+            to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? `/vendors/${user?.id}` : '/profile'}
+            className="flex items-center space-x-3 flex-1"
+            onClick={() => setOpen(false)}
+          >
+            <UserAvatar
+              user={user || {}}
+              size="md"
+              shape="circle"
+              className="!w-12 !h-12"
+            />
+            <div>
+              <div className="text-base md:text-sm font-medium text-foreground">
+                {user?.firstName}
+              </div>
+              <div className="text-sm md:text-xs text-muted-foreground capitalize">
+                {user?.role}
+              </div>
             </div>
-            <div className="text-sm md:text-xs text-muted-foreground capitalize">
-              {user?.role}
-            </div>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuItem className="p-0">
-          <div className="flex items-center justify-between w-full py-3 md:py-2 px-2">
-            <Link
-              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? `/vendors/${user?.id}` : '/profile'}
-              className="flex items-center flex-1"
-              onClick={() => setOpen(false)}
-            >
-              <User className="h-5 w-5 md:h-5 md:w-5 mr-3 text-muted-foreground" />
-              <span className="text-base md:text-sm">View Profile</span>
-            </Link>
-            <Link
-              to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile/edit'}
-              className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-surface-3 transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              <Pencil className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          </div>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="flex items-center py-3 md:py-2">
-            <Settings className="h-5 w-5 md:h-5 md:w-5 mr-3 text-muted-foreground" />
-            <span className="text-base md:text-sm">Settings</span>
           </Link>
-        </DropdownMenuItem>
+          <Link
+            to={user?.role === 'vendor' || user?.role === 'promoter' || user?.role === 'admin' ? '/vendor/profile' : '/profile/edit'}
+            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-accent hover:text-accent-foreground [&_svg]:text-muted-foreground hover:[&_svg]:!text-accent-foreground transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Link>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {user?.role === 'vendor' && (
           <DropdownMenuItem asChild>
@@ -111,7 +102,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
               to="/vendor/tracked-markets"
               className="flex items-center py-3 md:py-2"
             >
-              <Store className="h-5 w-5 mr-3 text-amber-500" />
+              <Store className="h-5 w-5 mr-3" />
               <span className="text-base md:text-sm">My Markets</span>
             </Link>
           </DropdownMenuItem>
@@ -121,7 +112,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             to={`/${user?.role}/dashboard`}
             className="flex items-center py-3 md:py-2"
           >
-            <MapPin className="h-5 w-5 mr-3 text-muted-foreground" />
+            <MapPin className="h-5 w-5 mr-3" />
             <span className="text-base md:text-sm">Dashboard</span>
           </Link>
         </DropdownMenuItem>
@@ -131,7 +122,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
               to="/promoter/markets/create"
               className="flex items-center py-3 md:py-2"
             >
-              <Plus className="h-5 w-5 mr-3 text-amber-500" />
+              <Plus className="h-5 w-5 mr-3" />
               <span className="text-base md:text-sm">Add Market</span>
             </Link>
           </DropdownMenuItem>
@@ -142,7 +133,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
             to="/vendors"
             className="flex items-center py-3 md:py-2"
           >
-            <Users className="h-5 w-5 mr-3 text-muted-foreground" />
+            <Users className="h-5 w-5 mr-3" />
             <span className="text-base md:text-sm">Browse Vendors</span>
           </Link>
         </DropdownMenuItem>
@@ -154,7 +145,7 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
           }}
           className="flex items-center py-3 md:py-2"
         >
-          <Navigation className="h-5 w-5 mr-3 text-muted-foreground" />
+          <Navigation className="h-5 w-5 mr-3" />
           <span className="text-base md:text-sm">Set Location</span>
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -165,32 +156,37 @@ export const UserDropdown: React.FC<UserDropdownProps> = ({
           className="flex items-center py-3 md:py-2"
         >
           {theme === 'light' ? (
-            <Moon className="h-5 w-5 mr-3 text-muted-foreground" />
+            <Moon className="h-5 w-5 mr-3" />
           ) : (
-            <Sun className="h-5 w-5 mr-3 text-muted-foreground" />
+            <Sun className="h-5 w-5 mr-3" />
           )}
           <span className="text-base md:text-sm">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="flex items-center py-3 md:py-2">
+            <Settings className="h-5 w-5 md:h-5 md:w-5 mr-3" />
+            <span className="text-base md:text-sm">Settings</span>
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             setOpen(false)
             setShowBugReport(true)
           }}
-          className="flex items-center py-3 md:py-2 text-foreground focus:text-foreground"
+          className="flex items-center py-3 md:py-2"
         >
-          <Bug className="h-5 w-5 mr-3 text-muted-foreground" />
+          <Bug className="h-5 w-5 mr-3" />
           <span className="text-base md:text-sm">Report a Bug</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
             setOpen(false)
             logout()
           }}
-          className="flex items-center py-3 md:py-2 text-foreground focus:text-foreground"
+          className="flex items-center py-3 md:py-2"
         >
-          <LogOut className="h-5 w-5 mr-3 text-muted-foreground" />
+          <LogOut className="h-5 w-5 mr-3" />
           <span className="text-base md:text-sm">Sign Out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
