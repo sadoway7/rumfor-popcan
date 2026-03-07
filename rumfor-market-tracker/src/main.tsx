@@ -11,6 +11,34 @@ import { initPerformanceMonitoring } from './utils/performance'
 import './styles/globals.css'
 import 'uno.css'
 
+// Global handler for chunk load failures (stale builds after deployment)
+window.addEventListener('error', (event) => {
+  if (
+    event.message?.includes('Failed to fetch dynamically imported module') ||
+    event.message?.includes('Loading chunk') ||
+    event.message?.includes('Loading CSS chunk')
+  ) {
+    console.warn('Chunk load failed, reloading page to fetch fresh assets...')
+    window.location.reload()
+    return true
+  }
+  return false
+})
+
+// Also handle unhandled promise rejections from dynamic imports
+window.addEventListener('unhandledrejection', (event) => {
+  const message = (event.reason as Error)?.message || ''
+  if (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Loading chunk') ||
+    message.includes('Loading CSS chunk')
+  ) {
+    console.warn('Chunk load promise rejected, reloading page...')
+    window.location.reload()
+    event.preventDefault()
+  }
+})
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {})

@@ -8,78 +8,79 @@ import { ProtectedRoute } from './ProtectedRoute'
 import { RoleRoute } from './RoleRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Spinner } from '@/components/ui'
+import { safeLazy } from './safeLazy'
 
-// Lazy-loaded page imports for better performance
-const LoginPage = React.lazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.default })))
-const RegisterPage = React.lazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })))
-const PasswordRecoveryPage = React.lazy(() => import('@/pages/auth/PasswordRecoveryPage').then(module => ({ default: module.PasswordRecoveryPage })))
-const PasswordResetPage = React.lazy(() => import('@/pages/auth/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })))
-const EmailVerificationPage = React.lazy(() => import('@/pages/auth/EmailVerificationPage').then(module => ({ default: module.EmailVerificationPage })))
-const WelcomePage = React.lazy(() => import('@/pages/auth/WelcomePage').then(module => ({ default: module.WelcomePage })))
-const HomePage = React.lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
-const AboutPage = React.lazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
-const ContactPage = React.lazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
-const ProfilePage = React.lazy(() => import('@/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
-const SettingsPage = React.lazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
-const NotificationsPage = React.lazy(() => import('@/pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })))
-const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })))
+// Lazy-loaded page imports with chunk error recovery
+const LoginPage = safeLazy(() => import('@/pages/auth/LoginPage').then(module => ({ default: module.default })))
+const RegisterPage = safeLazy(() => import('@/pages/auth/RegisterPage').then(module => ({ default: module.RegisterPage })))
+const PasswordRecoveryPage = safeLazy(() => import('@/pages/auth/PasswordRecoveryPage').then(module => ({ default: module.PasswordRecoveryPage })))
+const PasswordResetPage = safeLazy(() => import('@/pages/auth/PasswordResetPage').then(module => ({ default: module.PasswordResetPage })))
+const EmailVerificationPage = safeLazy(() => import('@/pages/auth/EmailVerificationPage').then(module => ({ default: module.EmailVerificationPage })))
+const WelcomePage = safeLazy(() => import('@/pages/auth/WelcomePage').then(module => ({ default: module.WelcomePage })))
+const HomePage = safeLazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
+const AboutPage = safeLazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
+const ContactPage = safeLazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
+const ProfilePage = safeLazy(() => import('@/pages/ProfilePage').then(module => ({ default: module.ProfilePage })))
+const SettingsPage = safeLazy(() => import('@/pages/SettingsPage').then(module => ({ default: module.SettingsPage })))
+const NotificationsPage = safeLazy(() => import('@/pages/NotificationsPage').then(module => ({ default: module.NotificationsPage })))
+const NotFoundPage = safeLazy(() => import('@/pages/NotFoundPage').then(module => ({ default: module.NotFoundPage })))
 
 // Vendor pages - lazy loaded
-const VendorDashboardPage = React.lazy(() => import('@/pages/vendor/VendorDashboardPage').then(module => ({ default: module.VendorDashboardPage })))
-const FinancialReportsPage = React.lazy(() => import('@/pages/vendor/FinancialReportsPage').then(module => ({ default: module.FinancialReportsPage })))
-const MarketCalendarPage = React.lazy(() => import('@/pages/vendor/MarketCalendarPage').then(module => ({ default: module.MarketCalendarPage })))
-const AddMarketPage = React.lazy(() => import('@/pages/vendor/AddMarketPage').then(module => ({ default: module.AddMarketPage })))
-const VendorAddMarketForm = React.lazy(() => import('@/pages/vendor/VendorAddMarketForm').then(module => ({ default: module.VendorAddMarketForm })))
-const VendorTrackedMarketsPage = React.lazy(() => import('@/pages/vendor/VendorTrackedMarketsPage').then(module => ({ default: module.VendorTrackedMarketsPage })))
-const VendorTodosPage = React.lazy(() => import('@/pages/vendor/VendorTodosPage').then(module => ({ default: module.VendorTodosPage })))
-const VendorBudgetsPage = React.lazy(() => import('@/pages/vendor/VendorBudgetsPage').then(module => ({ default: module.VendorBudgetsPage })))
-const VendorMarketDetailPage = React.lazy(() => import('@/pages/vendor/VendorMarketDetailPage').then(module => ({ default: module.VendorMarketDetailPage })))
-const VendorEditMarketPage = React.lazy(() => import('@/pages/vendors/VendorEditMarketPage').then(module => ({ default: module.VendorEditMarketPage })))
+const VendorDashboardPage = safeLazy(() => import('@/pages/vendor/VendorDashboardPage').then(module => ({ default: module.VendorDashboardPage })))
+const FinancialReportsPage = safeLazy(() => import('@/pages/vendor/FinancialReportsPage').then(module => ({ default: module.FinancialReportsPage })))
+const MarketCalendarPage = safeLazy(() => import('@/pages/vendor/MarketCalendarPage').then(module => ({ default: module.MarketCalendarPage })))
+const AddMarketPage = safeLazy(() => import('@/pages/vendor/AddMarketPage').then(module => ({ default: module.AddMarketPage })))
+const VendorAddMarketForm = safeLazy(() => import('@/pages/vendor/VendorAddMarketForm').then(module => ({ default: module.VendorAddMarketForm })))
+const VendorTrackedMarketsPage = safeLazy(() => import('@/pages/vendor/VendorTrackedMarketsPage').then(module => ({ default: module.VendorTrackedMarketsPage })))
+const VendorTodosPage = safeLazy(() => import('@/pages/vendor/VendorTodosPage').then(module => ({ default: module.VendorTodosPage })))
+const VendorBudgetsPage = safeLazy(() => import('@/pages/vendor/VendorBudgetsPage').then(module => ({ default: module.VendorBudgetsPage })))
+const VendorMarketDetailPage = safeLazy(() => import('@/pages/vendor/VendorMarketDetailPage').then(module => ({ default: module.VendorMarketDetailPage })))
+const VendorEditMarketPage = safeLazy(() => import('@/pages/vendors/VendorEditMarketPage').then(module => ({ default: module.VendorEditMarketPage })))
 
 // Promoter pages - lazy loaded
-const PromoterDashboardPage = React.lazy(() => import('@/pages/promoter/PromoterDashboardPage').then(module => ({ default: module.PromoterDashboardPage })))
-const PromoterMarketsPage = React.lazy(() => import('@/pages/promoter/PromoterMarketsPage').then(module => ({ default: module.PromoterMarketsPage })))
-const PromoterApplicationsPage = React.lazy(() => import('@/pages/promoter/PromoterApplicationsPage').then(module => ({ default: module.PromoterApplicationsPage })))
-const PromoterVendorsPage = React.lazy(() => import('@/pages/promoter/PromoterVendorsPage').then(module => ({ default: module.PromoterVendorsPage })))
-const PromoterAnalyticsPage = React.lazy(() => import('@/pages/promoter/PromoterAnalyticsPage').then(module => ({ default: module.PromoterAnalyticsPage })))
-const PromoterCalendarPage = React.lazy(() => import('@/pages/promoter/PromoterCalendarPage').then(module => ({ default: module.PromoterCalendarPage })))
-const PromoterCreateMarketPage = React.lazy(() => import('@/pages/promoter/PromoterCreateMarketPage').then(module => ({ default: module.PromoterCreateMarketPage })))
-const BusinessPlanningPage = React.lazy(() => import('@/pages/promoter/BusinessPlanningPage').then(module => ({ default: module.BusinessPlanningPage })))
+const PromoterDashboardPage = safeLazy(() => import('@/pages/promoter/PromoterDashboardPage').then(module => ({ default: module.PromoterDashboardPage })))
+const PromoterMarketsPage = safeLazy(() => import('@/pages/promoter/PromoterMarketsPage').then(module => ({ default: module.PromoterMarketsPage })))
+const PromoterApplicationsPage = safeLazy(() => import('@/pages/promoter/PromoterApplicationsPage').then(module => ({ default: module.PromoterApplicationsPage })))
+const PromoterVendorsPage = safeLazy(() => import('@/pages/promoter/PromoterVendorsPage').then(module => ({ default: module.PromoterVendorsPage })))
+const PromoterAnalyticsPage = safeLazy(() => import('@/pages/promoter/PromoterAnalyticsPage').then(module => ({ default: module.PromoterAnalyticsPage })))
+const PromoterCalendarPage = safeLazy(() => import('@/pages/promoter/PromoterCalendarPage').then(module => ({ default: module.PromoterCalendarPage })))
+const PromoterCreateMarketPage = safeLazy(() => import('@/pages/promoter/PromoterCreateMarketPage').then(module => ({ default: module.PromoterCreateMarketPage })))
+const BusinessPlanningPage = safeLazy(() => import('@/pages/promoter/BusinessPlanningPage').then(module => ({ default: module.BusinessPlanningPage })))
 
 
 // Admin pages - lazy loaded
-const AdminDashboardPage = React.lazy(() => import('@/pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
-const AdminModerationPage = React.lazy(() => import('@/pages/admin/AdminModerationPage').then(module => ({ default: module.AdminModerationPage })))
-const AdminUsersPage = React.lazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
-const AdminEditUserPage = React.lazy(() => import('@/pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })))
-const AdminAnalyticsPage = React.lazy(() => import('@/pages/admin/AdminAnalyticsPage').then(module => ({ default: module.AdminAnalyticsPage })))
-const AdminSettingsPage = React.lazy(() => import('@/pages/admin/AdminSettingsPage').then(module => ({ default: module.AdminSettingsPage })))
-const AdminMarketsPage = React.lazy(() => import('@/pages/admin/AdminMarketsPage').then(module => ({ default: module.AdminMarketsPage })))
-const AdminEditMarketPage = React.lazy(() => import('@/pages/admin/AdminEditMarketPage').then(module => ({ default: module.AdminEditMarketPage })))
-const AdminApplicationsPage = React.lazy(() => import('@/pages/admin/AdminApplicationsPage').then(module => ({ default: module.AdminApplicationsPage })))
-const AdminSupportPage = React.lazy(() => import('@/pages/admin/AdminSupportPage').then(module => ({ default: module.AdminSupportPage })))
+const AdminDashboardPage = safeLazy(() => import('@/pages/admin/AdminDashboardPage').then(module => ({ default: module.AdminDashboardPage })))
+const AdminModerationPage = safeLazy(() => import('@/pages/admin/AdminModerationPage').then(module => ({ default: module.AdminModerationPage })))
+const AdminUsersPage = safeLazy(() => import('@/pages/admin/AdminUsersPage').then(module => ({ default: module.AdminUsersPage })))
+const AdminEditUserPage = safeLazy(() => import('@/pages/admin/AdminEditUserPage').then(module => ({ default: module.AdminEditUserPage })))
+const AdminAnalyticsPage = safeLazy(() => import('@/pages/admin/AdminAnalyticsPage').then(module => ({ default: module.AdminAnalyticsPage })))
+const AdminSettingsPage = safeLazy(() => import('@/pages/admin/AdminSettingsPage').then(module => ({ default: module.AdminSettingsPage })))
+const AdminMarketsPage = safeLazy(() => import('@/pages/admin/AdminMarketsPage').then(module => ({ default: module.AdminMarketsPage })))
+const AdminEditMarketPage = safeLazy(() => import('@/pages/admin/AdminEditMarketPage').then(module => ({ default: module.AdminEditMarketPage })))
+const AdminApplicationsPage = safeLazy(() => import('@/pages/admin/AdminApplicationsPage').then(module => ({ default: module.AdminApplicationsPage })))
+const AdminSupportPage = safeLazy(() => import('@/pages/admin/AdminSupportPage').then(module => ({ default: module.AdminSupportPage })))
 
 // Market pages - lazy loaded
-const MarketSearchPage = React.lazy(() => import('@/pages/markets/MarketSearchPage').then(module => ({ default: module.MarketSearchPage })))
-const MarketDetailPage = React.lazy(() => import('@/pages/markets/MarketDetailPage').then(module => ({ default: module.MarketDetailPage })))
+const MarketSearchPage = safeLazy(() => import('@/pages/markets/MarketSearchPage').then(module => ({ default: module.MarketSearchPage })))
+const MarketDetailPage = safeLazy(() => import('@/pages/markets/MarketDetailPage').then(module => ({ default: module.MarketDetailPage })))
 
 // Vendor public pages - lazy loaded
-const VendorListingPage = React.lazy(() => import('@/pages/vendors/VendorListingPage').then(module => ({ default: module.VendorListingPage })))
-const VendorProfilePage = React.lazy(() => import('@/pages/vendors/VendorProfilePage').then(module => ({ default: module.VendorProfilePage })))
+const VendorListingPage = safeLazy(() => import('@/pages/vendors/VendorListingPage').then(module => ({ default: module.VendorListingPage })))
+const VendorProfilePage = safeLazy(() => import('@/pages/vendors/VendorProfilePage').then(module => ({ default: module.VendorProfilePage })))
 
 // Vendor profile edit - lazy loaded
-const VendorProfileEditPage = React.lazy(() => import('@/pages/vendor/VendorProfileEditPage').then(module => ({ default: module.VendorProfileEditPage })))
+const VendorProfileEditPage = safeLazy(() => import('@/pages/vendor/VendorProfileEditPage').then(module => ({ default: module.VendorProfileEditPage })))
 
 // Application pages - lazy loaded
-const MyApplicationsPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.MyApplicationsPage })))
-const ApplicationDetailPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationDetailPage })))
-const ApplicationFormPage = React.lazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationFormPage })))
+const MyApplicationsPage = safeLazy(() => import('@/pages/applications').then(module => ({ default: module.MyApplicationsPage })))
+const ApplicationDetailPage = safeLazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationDetailPage })))
+const ApplicationFormPage = safeLazy(() => import('@/pages/applications').then(module => ({ default: module.ApplicationFormPage })))
 
 // Dashboard redirect - lazy loaded
-const DashboardRedirectPage = React.lazy(() => import('@/pages/DashboardRedirectPage').then(module => ({ default: module.DashboardRedirectPage })))
+const DashboardRedirectPage = safeLazy(() => import('@/pages/DashboardRedirectPage').then(module => ({ default: module.DashboardRedirectPage })))
 
 // Test pages - lazy loaded
-const UIComponentsTestPage = React.lazy(() => import('@/pages/test/UIComponentsTestPage').then(module => ({ default: module.UIComponentsTestPage })))
+const UIComponentsTestPage = safeLazy(() => import('@/pages/test/UIComponentsTestPage').then(module => ({ default: module.UIComponentsTestPage })))
 
 // Loading component for Suspense
 const PageLoader: React.FC = () => (

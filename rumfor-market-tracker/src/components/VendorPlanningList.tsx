@@ -1894,7 +1894,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
                       <ChevronDown className={cn("w-4 h-4 transition-transform", showCategoryDropdown && "rotate-180")} />
                     </button>
                     {showCategoryDropdown && (
-                      <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-20 max-h-64 overflow-y-auto">
+                      <div className="absolute bottom-full left-0 right-0 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
                         {expenseCategories.map(cat => (
                           <button
                             key={cat.id}
@@ -1930,7 +1930,7 @@ export const VendorPlanningList: React.FC<VendorPlanningListProps> = ({
               </button>
               
               {showFolderDropdown && (
-                <div className="absolute bottom-full left-4 right-4 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                <div className="absolute bottom-full left-4 right-4 mb-1 bg-white border-2 border-accent rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto">
                   <button
                     type="button"
                     onClick={() => { setPendingFolderId(null); setShowFolderDropdown(false); }}

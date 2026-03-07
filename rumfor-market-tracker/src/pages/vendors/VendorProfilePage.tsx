@@ -39,6 +39,49 @@ const ShoppingBagIcon = () => (
   </svg>
 )
 
+const extractInstagramUsername = (value: string): string => {
+  if (!value) return ''
+  if (value.startsWith('http')) {
+    const match = value.match(/instagram\.com\/([^/?]+)/i)
+    return match ? match[1].replace('@', '') : value.replace('@', '')
+  }
+  return value.replace('@', '')
+}
+
+const extractFacebookUsername = (value: string): string => {
+  if (!value) return ''
+  if (value.startsWith('http')) {
+    const match = value.match(/facebook\.com\/([^/?]+)/i)
+    return match ? match[1] : value
+  }
+  return value
+}
+
+const extractTiktokUsername = (value: string): string => {
+  if (!value) return ''
+  if (value.startsWith('http')) {
+    const match = value.match(/tiktok\.com\/@?([^/?]+)/i)
+    return match ? match[1] : value.replace('@', '')
+  }
+  return value.replace('@', '')
+}
+
+const getInstagramUrl = (value: string): string => {
+  const username = extractInstagramUsername(value)
+  return `https://instagram.com/${username}`
+}
+
+const getFacebookUrl = (value: string): string => {
+  if (!value) return ''
+  if (value.startsWith('http')) return value
+  return `https://facebook.com/${value}`
+}
+
+const getTiktokUrl = (value: string): string => {
+  const username = extractTiktokUsername(value)
+  return `https://tiktok.com/@${username}`
+}
+
 const formatMarketSchedule = (schedule: any): { dateStr: string; timeStr: string } => {
   if (!schedule) return { dateStr: 'TBD', timeStr: '' }
 
@@ -251,22 +294,22 @@ export const VendorProfilePage: React.FC = () => {
                   <span>Website</span>
                 </a>
               )}
-              {vendor.instagram && (
-                <a href={`https://instagram.com/${vendor.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+{vendor.instagram && (
+                <a href={getInstagramUrl(vendor.instagram)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                   <InstagramIcon />
-                  <span>{vendor.instagram}</span>
+                  <span>{extractInstagramUsername(vendor.instagram)}</span>
                 </a>
               )}
               {vendor.facebook && (
-                <a href={`https://facebook.com/${vendor.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+                <a href={getFacebookUrl(vendor.facebook)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                   <FacebookIcon />
                   <span>Facebook</span>
                 </a>
               )}
               {vendor.tiktok && (
-                <a href={`https://tiktok.com/${vendor.tiktok.startsWith('@') ? vendor.tiktok : '@' + vendor.tiktok}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+                <a href={getTiktokUrl(vendor.tiktok)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                   <TikTokIcon />
-                  <span>{vendor.tiktok}</span>
+                  <span>@{extractTiktokUsername(vendor.tiktok)}</span>
                 </a>
               )}
               {vendor.etsy && (
@@ -439,22 +482,22 @@ export const VendorProfilePage: React.FC = () => {
                           <span>{vendor.website.replace(/^https?:\/\//, '')}</span>
                         </a>
                       )}
-                      {vendor.instagram && (
-                        <a href={`https://instagram.com/${vendor.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+{vendor.instagram && (
+                        <a href={getInstagramUrl(vendor.instagram)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                           <InstagramIcon />
-                          <span>{vendor.instagram}</span>
+                          <span>{extractInstagramUsername(vendor.instagram)}</span>
                         </a>
                       )}
                       {vendor.facebook && (
-                        <a href={`https://facebook.com/${vendor.facebook}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+                        <a href={getFacebookUrl(vendor.facebook)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                           <FacebookIcon />
-                          <span>{vendor.facebook}</span>
+                          <span>{extractFacebookUsername(vendor.facebook)}</span>
                         </a>
                       )}
                       {vendor.tiktok && (
-                        <a href={`https://tiktok.com/${vendor.tiktok.startsWith('@') ? vendor.tiktok : '@' + vendor.tiktok}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
+                        <a href={getTiktokUrl(vendor.tiktok)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-md text-sm text-foreground font-medium hover:bg-gray-50 transition-colors">
                           <TikTokIcon />
-                          <span>{vendor.tiktok}</span>
+                          <span>@{extractTiktokUsername(vendor.tiktok)}</span>
                         </a>
                       )}
                       {vendor.etsy && (
